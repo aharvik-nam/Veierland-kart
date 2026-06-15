@@ -133,6 +133,11 @@ function MapSetup({ onReady, onMapClick }: { onReady: (m: L.Map) => void; onMapC
   useEffect(() => {
     onReady(map);
     map.on('click', onMapClick);
+    // Fit to actual POI bounds so the map always centers on the island
+    const coords = ALL_POIS.map(p => p.coordinates as [number, number]);
+    if (coords.length > 0) {
+      map.fitBounds(L.latLngBounds(coords).pad(0.08), { animate: false });
+    }
     return () => { map.off('click', onMapClick); };
   }, [map, onReady, onMapClick]);
   return null;
