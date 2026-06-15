@@ -1,9 +1,352 @@
 @import "tailwindcss";
 
-/* Fix for Leaflet in flex containers */
+:root {
+  --ink: #33402b;
+  --muted: #7c876f;
+  --card: #fffdf5;
+  --card2: #f6f4e6;
+  --line: #e7e5d2;
+  --line2: #efedde;
+  --accent: #e08a4f;
+  --onaccent: #fff;
+  --sea: #cfe7e1;
+  --land: #d6e5a6;
+  --me: #3d7ce0;
+  --font: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  --r: 18px;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  font-family: var(--font);
+  color: var(--ink);
+  background: #dfe6cf;
+}
+
+body { display: grid; place-items: center; }
+
+/* Leaflet overrides */
 .leaflet-container {
   width: 100%;
   height: 100%;
-  z-index: 10;
+  z-index: 0;
+  font-family: var(--font);
+}
+.leaflet-tile-pane {
+  filter: saturate(1.75) hue-rotate(6deg) brightness(1.01) contrast(1.04) sepia(.10);
+}
+.leaflet-control-attribution {
+  background: rgba(255,253,245,.78) !important;
+  color: #8a937c !important;
+  font-size: 10px !important;
+  padding: 2px 6px !important;
+  border-radius: 8px 0 0 0;
+}
+.leaflet-control-attribution a { color: #6f7a63 !important; }
+.leaflet-bar { display: none; }
+
+/* App shell */
+.vl-app {
+  position: relative;
+  width: min(100vw, 440px);
+  height: 100dvh;
+  max-height: 940px;
+  overflow: hidden;
+  background: var(--sea);
+  box-shadow: 0 30px 80px rgba(40,55,35,.28);
+}
+@media (min-width: 520px) { .vl-app { border-radius: 30px; } }
+
+/* Markers */
+.vl-pin {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--c);
+  border: 2.6px solid #fff;
+  box-shadow: 0 3px 9px rgba(30,45,40,.30);
+  display: grid; place-items: center;
+  transition: transform .18s, box-shadow .18s;
+  cursor: pointer;
+}
+.vl-pin svg { width: 20px; height: 20px; }
+.vl-pin.sel {
+  transform: scale(1.28); z-index: 1000;
+  box-shadow: 0 6px 16px rgba(30,45,40,.34), 0 0 0 4px color-mix(in srgb, var(--c) 30%, transparent);
+}
+.vl-me {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--me);
+  border: 3px solid #fff;
+  box-shadow: 0 2px 6px rgba(30,45,40,.3);
+  position: relative;
+}
+.vl-me::before {
+  content: '';
+  position: absolute; inset: -8px; border-radius: 50%;
+  background: var(--me);
+  opacity: .28;
+  animation: vlPulse 2.4s ease-out infinite;
+}
+@keyframes vlPulse {
+  0% { transform: scale(.5); opacity: .4; }
+  70% { transform: scale(2.6); opacity: 0; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .vl-me::before { animation: none; } }
+
+/* Top overlay */
+.vl-top {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 500;
+  padding: 14px 16px 14px;
+  pointer-events: none;
+  background: linear-gradient(var(--sea) 38%, transparent);
+}
+.vl-top > * { pointer-events: auto; }
+
+.vl-search {
+  display: flex; align-items: center; gap: 11px; padding: 13px 14px;
+  border-radius: var(--r);
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 26px rgba(40,55,35,.14);
+}
+.vl-search svg { color: var(--accent); flex: 0 0 auto; }
+.vl-search input {
+  border: none; outline: none; background: transparent; flex: 1;
+  font: inherit; font-size: 16px; color: var(--ink); min-width: 0;
+}
+.vl-search input::placeholder { color: var(--muted); }
+
+.vl-lang {
+  display: flex; align-items: center; gap: 2px; flex: 0 0 auto;
+  background: var(--card2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px;
+  font-size: 12px; font-weight: 700;
+}
+.vl-lang button {
+  border: none; background: transparent; font: inherit; font-weight: 700;
+  color: var(--muted); padding: 4px 9px; border-radius: 999px; cursor: pointer;
+}
+.vl-lang button.on { background: var(--ink); color: #fff; }
+
+.vl-chips {
+  display: flex; gap: 8px; margin-top: 11px; overflow-x: auto;
+  padding-bottom: 2px; scrollbar-width: none;
+}
+.vl-chips::-webkit-scrollbar { display: none; }
+.vl-chip {
+  display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 12px rgba(40,55,35,.08);
+  font-size: 14px; font-weight: 600;
+  white-space: nowrap; flex: 0 0 auto; cursor: pointer; color: var(--ink);
+  transition: background .15s, color .15s, border-color .15s;
+}
+.vl-chip .dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+.vl-chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.vl-chip.all.on .dot { display: none; }
+
+/* Right rail */
+.vl-rail {
+  position: absolute; right: 16px; z-index: 500;
+  display: flex; flex-direction: column; gap: 10px;
+  transition: bottom .34s cubic-bezier(.3,.8,.3,1);
+}
+.vl-rbtn {
+  width: 50px; height: 50px; border-radius: 15px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  display: grid; place-items: center; cursor: pointer;
+  box-shadow: 0 8px 22px rgba(40,55,35,.18); color: var(--accent);
+}
+.vl-rbtn.layers { color: var(--ink); }
+.vl-rbtn:active { transform: scale(.94); }
+
+/* Layer popup */
+.vl-pop {
+  position: absolute; right: 78px; z-index: 520; width: 210px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 18px 46px rgba(40,55,35,.22);
+  padding: 9px;
+  transition: bottom .34s cubic-bezier(.3,.8,.3,1), opacity .16s, transform .16s;
+  transform-origin: bottom right;
+}
+.vl-pop.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
+.vl-pop h5 {
+  margin: 5px 8px 7px;
+  font-size: 11.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+}
+.vl-opt {
+  display: flex; align-items: center; gap: 11px; padding: 7px 8px;
+  border-radius: 13px; cursor: pointer; transition: background .14s;
+}
+.vl-opt:hover { background: var(--card2); }
+.vl-opt.on { background: var(--card2); }
+.vl-opt .sw {
+  width: 40px; height: 40px; border-radius: 11px; flex: 0 0 auto;
+  border: 1px solid var(--line);
+}
+.vl-opt .nm { flex: 1; font-size: 15px; font-weight: 700; }
+.vl-opt .chk { color: var(--accent); opacity: 0; flex: 0 0 auto; }
+.vl-opt.on .chk { opacity: 1; }
+
+/* Bottom sheet */
+.vl-sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 600;
+  background: var(--card);
+  border-radius: 24px 24px 30px 30px;
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -12px 40px rgba(40,55,35,.16);
+  display: flex; flex-direction: column;
+  height: var(--sheet-h, 250px);
+  transition: height .34s cubic-bezier(.3,.8,.3,1);
+  will-change: height;
+}
+.vl-grab {
+  flex: 0 0 auto; padding: 10px 0 6px; cursor: grab; touch-action: none;
+}
+.vl-grab .bar {
+  width: 42px; height: 5px; border-radius: 99px;
+  background: var(--line); margin: 0 auto;
+}
+.vl-body {
+  flex: 1; overflow-y: auto; overscroll-behavior: contain;
+  padding: 6px 20px 24px; scrollbar-width: none;
+}
+.vl-body::-webkit-scrollbar { display: none; }
+
+/* Segment control */
+.vl-seg {
+  display: flex; gap: 4px;
+  background: var(--card2);
+  border: 1px solid var(--line);
+  border-radius: 13px; padding: 4px; margin: 2px 0 14px;
+}
+.vl-seg button {
+  flex: 1; border: none; background: transparent; font: inherit;
+  font-weight: 700; font-size: 14.5px; color: var(--muted);
+  padding: 9px; border-radius: 9px; cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.vl-seg button.on {
+  background: var(--card); color: var(--ink);
+  box-shadow: 0 2px 6px rgba(40,55,35,.1);
 }
 
+.vl-count { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 2px 10px; }
+
+/* List card */
+.vl-card {
+  display: flex; align-items: center; gap: 13px; padding: 11px;
+  border-radius: 16px;
+  border: 1px solid var(--line2);
+  background: var(--card);
+  margin-bottom: 9px; cursor: pointer;
+  transition: background .14s, border-color .14s, transform .1s;
+}
+.vl-card:active { transform: scale(.99); }
+.vl-card:hover { background: #fbfaf1; border-color: var(--line); }
+.vl-ic {
+  width: 42px; height: 42px; border-radius: 12px; flex: 0 0 auto;
+  display: grid; place-items: center;
+}
+.vl-ic svg { width: 22px; height: 22px; }
+.vl-card .tx { flex: 1; min-width: 0; }
+.vl-card .tx h4 { margin: 0; font-size: 16px; font-weight: 700; }
+.vl-card .tx p {
+  margin: 2px 0 0; font-size: 12.5px; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vl-card .chev { color: var(--muted); flex: 0 0 auto; }
+
+/* Detail view */
+.vl-back {
+  display: inline-flex; align-items: center; gap: 6px; border: none;
+  background: var(--card2); color: var(--ink); font: inherit; font-weight: 700;
+  font-size: 13.5px; padding: 8px 14px 8px 11px; border-radius: 999px;
+  cursor: pointer; margin-bottom: 14px;
+}
+.vl-catpill {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px;
+  border-radius: 999px; font-size: 12.5px; font-weight: 700; white-space: nowrap;
+}
+.vl-catpill .dot { width: 8px; height: 8px; border-radius: 50%; }
+.vl-h2 {
+  margin: 10px 0 2px; font-size: 28px; font-weight: 800;
+  letter-spacing: -.015em; line-height: 1.08;
+}
+.vl-sub { font-size: 14px; color: var(--muted); font-style: italic; }
+.vl-hero {
+  height: 120px; border-radius: 18px; border: 1px solid var(--line);
+  position: relative; overflow: hidden; margin-bottom: 14px;
+}
+.vl-desc { font-size: 15.5px; line-height: 1.5; margin: 0 0 14px; }
+.vl-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+.vl-tag {
+  font-size: 12.5px; font-weight: 600; color: var(--ink);
+  background: var(--card2);
+  border: 1px solid var(--line);
+  padding: 6px 11px; border-radius: 999px;
+}
+.vl-actions { display: flex; gap: 8px; margin-bottom: 16px; }
+.vl-btn {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; padding: 15px; border-radius: 15px; border: none; font: inherit;
+  font-weight: 700; font-size: 16px; cursor: pointer; text-decoration: none;
+}
+.vl-btn.pri { background: var(--accent); color: var(--onaccent); }
+.vl-btn.sec {
+  flex: 0 0 auto; width: 54px;
+  background: var(--card);
+  border: 1px solid var(--line); color: var(--ink);
+}
+.vl-btn.sec.on { background: #fbe7d8; color: var(--accent); border-color: #f3cfb6; }
+
+/* Trail metadata tiles */
+.vl-trailmeta { display: flex; gap: 10px; margin: 14px 0 16px; }
+.vl-tm {
+  flex: 1; background: var(--card2);
+  border: 1px solid var(--line);
+  border-radius: 14px; padding: 12px;
+}
+.vl-tm .k {
+  font-size: 11.5px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.vl-tm .v { font-size: 17px; font-weight: 800; margin-top: 3px; }
+
+/* API data sections */
+.vl-api-section {
+  background: var(--card2);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.vl-api-label {
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .06em; margin: 0 0 8px;
+}
+.vl-api-text { font-size: 14px; line-height: 1.55; color: var(--ink); margin: 0 0 8px; }
+.vl-api-link { font-size: 12px; font-weight: 600; color: var(--accent); text-decoration: none; }
+.vl-api-link:hover { text-decoration: underline; }
+.vl-api-img {
+  width: 100%; border-radius: 10px; margin-bottom: 8px;
+  object-fit: cover; border: 1px solid var(--line); display: block;
+}
+.vl-extra-meta { font-size: 13px; color: var(--muted); margin: 2px 0; }
+.vl-askeladden {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: var(--accent);
+  text-decoration: none; margin-top: 6px;
+}
+.vl-askeladden:hover { text-decoration: underline; }
