@@ -328,6 +328,16 @@ export function VeierlandApp() {
   const onMapReady = useCallback((m: L.Map) => { mapRef.current = m; }, []);
   const onMapClick = useCallback(() => setShowLayerPop(false), []);
 
+  // Fly to a coordinate but shift the center up so the marker is visible above the sheet
+  function flyToAboveSheet(coordinates: [number, number], zoom: number) {
+    const map = mapRef.current;
+    if (!map) return;
+    const peekH = computeSheetH('detail', 'peek'); // sheet height in peek mode
+    const offsetPx = peekH / 2; // shift center up by half the sheet height
+    const targetPoint = map.project(L.latLng(coordinates), zoom).subtract([0, offsetPx]);
+    map.flyTo(map.unproject(targetPoint, zoom), zoom, { duration: 0.7 });
+  }
+
   // Actions
   function selectPOI(poi: POI) {
     setSelectedPOI(poi);
@@ -335,7 +345,7 @@ export function VeierlandApp() {
     setTrailPath(null);
     setView('detail');
     setSheetMode('peek');
-    mapRef.current?.flyTo(poi.coordinates, 15, { duration: 0.7 });
+    flyToAboveSheet(poi.coordinates, 15);
   }
 
   function selectTrail(trail: Trail) {
