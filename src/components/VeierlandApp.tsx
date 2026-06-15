@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { MapContainer, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { ALL_POIS } from '../data/veierland';
+import turkartRaw from '../data/turkart.geojson?raw';
+const turkartData = JSON.parse(turkartRaw);
 import { POI, SNLData, LokalhistorieData, MuseumPhoto } from '../lib/types';
 import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum } from '../lib/api';
 
@@ -183,29 +185,18 @@ interface Trail {
   path: [number, number][];
 }
 
-const VL_TRAILS: Trail[] = [
-  {
-    id: 't-rundt', name: 'Rundt øya', en: 'Around the island',
-    km: '8,5 km', time: '2 t 30 min', diff: 'Lett',
-    no: 'Grusveier og smale stier hele veien rundt — innom skog, åpne jorder, enger og strender med utsyn over skjærgården.',
-    enT: 'Gravel roads and narrow paths all the way around — through forest, open fields, meadows and beaches with sea views.',
-    path: [[59.1829,10.4182],[59.1816,10.4214],[59.1760,10.4290],[59.1716,10.4308],[59.1692,10.4358],[59.1820,10.4430],[59.1879,10.4422],[59.1965,10.4289],[59.2008,10.4366],[59.1992,10.4242],[59.1902,10.4271],[59.1846,10.4296],[59.1829,10.4182]],
-  },
-  {
-    id: 't-hverv', name: 'Til Hvervodden', en: 'To Hvervodden',
-    km: '2,1 km', time: '35 min', diff: 'Lett',
-    no: 'Korteste vei fra brygga via øyas sentrum og ned til den fineste sandstranda i sør.',
-    enT: 'The shortest route from the quay through the island centre down to the best sandy beach in the south.',
-    path: [[59.1846,10.4296],[59.1820,10.4300],[59.1780,10.4305],[59.1745,10.4308],[59.1716,10.4308]],
-  },
-  {
-    id: 't-pilegrim', name: 'Pilegrimsleden', en: 'Pilgrim route',
-    km: '3,4 km', time: '50 min', diff: 'Lett',
-    no: 'Merket pilegrimsled tvers over øya, forbi den hvite kirka fra 1905 og ned mot nordbrygga.',
-    enT: 'A waymarked pilgrim route across the island, past the white church from 1905 and down to the north quay.',
-    path: [[59.1829,10.4182],[59.1846,10.4296],[59.1902,10.4271],[59.1965,10.4289],[59.1992,10.4242]],
-  },
-];
+const VL_TRAILS: Trail[] = (turkartData as any).features.map((f: any) => ({
+  id: f.properties.id,
+  name: f.properties.navn,
+  en: f.properties.en,
+  km: f.properties.km,
+  time: f.properties.tid,
+  diff: f.properties.vanskelighet,
+  no: f.properties.no,
+  enT: f.properties.enT,
+  // GeoJSON is [lng, lat]; Leaflet needs [lat, lng]
+  path: f.geometry.coordinates.map((c: number[]) => [c[1], c[0]] as [number, number]),
+}));
 
 // ─── Map sub-components ───────────────────────────────────────────────────────
 
