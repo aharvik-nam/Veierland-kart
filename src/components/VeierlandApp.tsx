@@ -354,7 +354,10 @@ export function VeierlandApp() {
     setSelectedTrail(null);
     setTrailPath(null);
     setSheetMode('peek');
-    mapRef.current?.flyTo(MAP_CENTER, MAP_ZOOM, { duration: 0.6 });
+    const coords = ALL_POIS.map(p => p.coordinates as [number, number]);
+    if (coords.length > 0 && mapRef.current) {
+      mapRef.current.fitBounds(L.latLngBounds(coords).pad(0.08));
+    }
   }
 
   function locate() {
