@@ -77,7 +77,78 @@ const ICONS: Record<string, string> = {
   kultur: '<path d="M-7,-3 L0,-8 L7,-3"/><path d="M-5,-3 v8"/><path d="M0,-3 v8"/><path d="M5,-3 v8"/><path d="M-7,5 H7"/>',
   telt:   '<path d="M0,-7 L7.5,6 L-7.5,6 Z"/><path d="M0,-7 L0,6"/><path d="M0,6 L-2.5,6"/>',
   wc:     '<circle cx="0" cy="0" r="6.5"/><path d="M0,-2.6 v0.2"/><path d="M0,0 v3.2"/>',
+  blad:   '<path d="M0,8 Q-8,-1 0,-9 Q8,-1 0,8Z"/><path d="M0,-9 Q-2,0 0,8"/>',
 };
+
+// ─── Nature (Artsdatabanken) ──────────────────────────────────────────────────
+
+// GBIF backbone taxon keys for Veierland groups
+const NATURE_GROUPS = {
+  Fugler:        { no: 'Fugler',        en: 'Birds',        color: '#3b7fc4', taxonKey: 212 },
+  Karplanter:    { no: 'Karplanter',    en: 'Plants',       color: '#4a8a2a', taxonKey: 6   },
+  Pattedyr:      { no: 'Pattedyr',      en: 'Mammals',      color: '#8b5c2a', taxonKey: 359 },
+  Sommerfugler:  { no: 'Sommerfugler',  en: 'Butterflies',  color: '#b84fa0', taxonKey: 797 },
+  Sopper:        { no: 'Sopper',        en: 'Fungi',        color: '#c07a3a', taxonKey: 5   },
+} as const;
+type NatureGroup = keyof typeof NATURE_GROUPS;
+
+interface NatureObs {
+  scientificName: string;
+  popularName: string;
+  group: NatureGroup;
+  lat: number;
+  lng: number;
+  date: string;
+  obsCount: number;
+  gbifKey: number;
+}
+
+// WGS84 bounding box covering Veierland island
+const GBIF_POLYGON = encodeURIComponent('POLYGON((10.38 59.13,10.47 59.13,10.47 59.22,10.38 59.22,10.38 59.13))');
+
+async function fetchNatureGroup(group: NatureGroup): Promise<{ group: NatureGroup; obs: unknown[] }> {
+  try {
+    const url = `https://api.gbif.org/v1/occurrence/search?geometry=${GBIF_POLYGON}&taxonKey=${NATURE_GROUPS[group].taxonKey}&limit=300`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return { group, obs: data.results ?? [] };
+  } catch {
+    return { group, obs: [] };
+  }
+}
+
+function processNatureData(rawGroups: { group: NatureGroup; obs: unknown[] }[]): NatureObs[] {
+  const countMap = new Map<number, number>();
+  const latestMap = new Map<number, { raw: Record<string, unknown>; group: NatureGroup; date: string }>();
+
+  for (const { group, obs } of rawGroups) {
+    for (const o of obs as Record<string, unknown>[]) {
+      const key = o.speciesKey as number;
+      if (!key || !o.decimalLatitude || !o.species) continue;
+      countMap.set(key, (countMap.get(key) ?? 0) + 1);
+      const date = String(o.eventDate ?? '');
+      const existing = latestMap.get(key);
+      if (!existing || date > existing.date) latestMap.set(key, { raw: o, group, date });
+    }
+  }
+
+  const result: NatureObs[] = [];
+  for (const [key, { raw, group, date }] of latestMap) {
+    result.push({
+      scientificName: String(raw.species ?? ''),
+      popularName: String(raw.vernacularName ?? ''),
+      group,
+      lat: raw.decimalLatitude as number,
+      lng: raw.decimalLongitude as number,
+      date,
+      obsCount: countMap.get(key) ?? 1,
+      gbifKey: key,
+    });
+  }
+
+  return result.sort((a, b) => b.obsCount - a.obsCount || a.scientificName.localeCompare(b.scientificName));
+}
 
 function markerSize(zoom: number): number {
   return Math.round(Math.max(14, Math.min(34, 14 + (zoom - 11) * 5)));
@@ -92,6 +163,10 @@ function makeIconHtml(icon: string, color: string, selected: boolean, sz: number
 
 function coloredSvg(icon: string, color: string): string {
   return `<svg viewBox="-12 -12 24 24" fill="none" stroke="${color}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[icon] ?? ICONS.wc}</svg>`;
+}
+
+function makeNatureIconHtml(color: string, selected: boolean, sz: number): string {
+  return `<div class="vl-nat${selected ? ' sel' : ''}" style="--c:${color};width:${sz}px;height:${sz}px"></div>`;
 }
 
 // ─── Trail data ───────────────────────────────────────────────────────────────
@@ -247,7 +322,7 @@ const USER_ICON = L.divIcon({
 export function VeierlandApp() {
   const [lang, setLang] = useState<'no' | 'en'>('no');
   const [activeCats, setActiveCats] = useState<Set<string>>(new Set());
-  const [mode, setMode] = useState<'places' | 'trails'>('places');
+  const [mode, setMode] = useState<'places' | 'trails' | 'nature'>('places');
   const [searchQ, setSearchQ] = useState('');
   const [view, setView] = useState<'browse' | 'detail'>('browse');
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
@@ -259,6 +334,13 @@ export function VeierlandApp() {
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [trailPath, setTrailPath] = useState<[number, number][] | null>(null);
+
+  // Nature state
+  const [natureObs, setNatureObs] = useState<NatureObs[]>([]);
+  const [natureLoading, setNatureLoading] = useState(false);
+  const [natureFetched, setNatureFetched] = useState(false);
+  const [natureFilter, setNatureFilter] = useState<NatureGroup | null>(null);
+  const [selectedNature, setSelectedNature] = useState<NatureObs | null>(null);
 
   // API state for detail view
   const [apiLoading, setApiLoading] = useState(false);
@@ -338,6 +420,17 @@ export function VeierlandApp() {
   const onMapReady = useCallback((m: L.Map) => { mapRef.current = m; }, []);
   const onMapClick = useCallback(() => setShowLayerPop(false), []);
   const onZoom = useCallback((z: number) => setMapZoom(z), []);
+
+  useEffect(() => {
+    if (mode !== 'nature' || natureFetched) return;
+    setNatureLoading(true);
+    const groups = Object.keys(NATURE_GROUPS) as NatureGroup[];
+    Promise.all(groups.map(fetchNatureGroup)).then(rawGroups => {
+      setNatureObs(processNatureData(rawGroups));
+      setNatureFetched(true);
+      setNatureLoading(false);
+    });
+  }, [mode, natureFetched]);
 
   // Fly to a coordinate but shift the center up so the marker is visible above the sheet
   function flyToAboveSheet(coordinates: [number, number], zoom: number) {
@@ -439,19 +532,123 @@ export function VeierlandApp() {
   // Text strings
   const T = lang === 'no' ? {
     search: 'Søk på Veierland', all: 'Alle', explore: 'Utforsk Veierland',
-    places: 'Steder', trails: 'Turer', back: 'Tilbake',
+    places: 'Steder', trails: 'Turer', nature: 'Natur', back: 'Tilbake',
     directions: 'Veibeskrivelse', length: 'Lengde', duration: 'Tid', diff: 'Vanskelighet',
     layers: 'Kartlag', nohit: 'Ingen treff', easy: 'Lett', showRoute: 'Vis rute',
+    natObs: (n: number) => `${n} ${n === 1 ? 'art' : 'arter'} observert`,
     np: (n: number) => `${n} ${n === 1 ? 'sted' : 'steder'}`,
     nt: (n: number) => `${n} ${n === 1 ? 'tur' : 'turer'}`,
   } : {
     search: 'Search Veierland', all: 'All', explore: 'Explore Veierland',
-    places: 'Places', trails: 'Trails', back: 'Back',
+    places: 'Places', trails: 'Trails', nature: 'Nature', back: 'Back',
     directions: 'Directions', length: 'Length', duration: 'Time', diff: 'Difficulty',
     layers: 'Map layer', nohit: 'No matches', easy: 'Easy', showRoute: 'Show route',
+    natObs: (n: number) => `${n} ${n === 1 ? 'species' : 'species'} observed`,
     np: (n: number) => `${n} ${n === 1 ? 'place' : 'places'}`,
     nt: (n: number) => `${n} ${n === 1 ? 'trail' : 'trails'}`,
   };
+
+  // ── Render: nature ──────────────────────────────────────────────────────────
+
+  function renderNature() {
+    if (selectedNature) {
+      const cfg = NATURE_GROUPS[selectedNature.group];
+      const dateStr = selectedNature.date.slice(0, 10).replace(/-/g, '.');
+      return (
+        <>
+          <button className="vl-back" onClick={() => setSelectedNature(null)}><BackSvg />{T.back}</button>
+          <div>
+            <span className="vl-catpill" style={{ background: cfg.color + '22', color: cfg.color }}>
+              <span className="dot" style={{ background: cfg.color }} />
+              {lang === 'no' ? cfg.no : cfg.en}
+            </span>
+          </div>
+          <div className="vl-h2">{selectedNature.popularName || selectedNature.scientificName}</div>
+          {selectedNature.popularName && (
+            <div className="vl-sub" style={{ marginBottom: 14 }}><em>{selectedNature.scientificName}</em></div>
+          )}
+          <div className="vl-trailmeta">
+            <div className="vl-tm">
+              <div className="k">{lang === 'no' ? 'Observasjoner' : 'Observations'}</div>
+              <div className="v">{selectedNature.obsCount}</div>
+            </div>
+            <div className="vl-tm">
+              <div className="k">{lang === 'no' ? 'Sist sett' : 'Last seen'}</div>
+              <div className="v" style={{ fontSize: 14 }}>{dateStr}</div>
+            </div>
+          </div>
+          <a
+            href={`https://www.gbif.org/species/${selectedNature.gbifKey}`}
+            target="_blank" rel="noreferrer" className="vl-btn pri"
+            style={{ textDecoration: 'none', marginBottom: 10 }}
+          >
+            Se art på GBIF ↗
+          </a>
+          <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 10 }}>
+            Kilde: GBIF (CC BY 4.0)
+          </p>
+        </>
+      );
+    }
+
+    const filtered = natureFilter ? natureObs.filter(o => o.group === natureFilter) : natureObs;
+
+    return (
+      <>
+        {natureLoading ? (
+          <p style={{ color: 'var(--muted)', fontSize: 13, margin: '12px 0' }}>
+            {lang === 'no' ? 'Henter naturdata…' : 'Loading nature data…'}
+          </p>
+        ) : (
+          <div className="vl-count">{T.natObs(filtered.length)}</div>
+        )}
+
+        <div className="vl-chips" style={{ marginBottom: 10 }}>
+          <div className={`vl-chip all${!natureFilter ? ' on' : ''}`} onClick={() => setNatureFilter(null)}>
+            <span className="dot" />{T.all}
+          </div>
+          {(Object.entries(NATURE_GROUPS) as [NatureGroup, typeof NATURE_GROUPS[NatureGroup]][]).map(([g, cfg]) => {
+            const count = natureObs.filter(o => o.group === g).length;
+            if (count === 0) return null;
+            return (
+              <div key={g} className={`vl-chip${natureFilter === g ? ' on' : ''}`} onClick={() => setNatureFilter(natureFilter === g ? null : g)}>
+                <span className="dot" style={{ background: natureFilter === g ? '#fff' : cfg.color }} />
+                {lang === 'no' ? cfg.no : cfg.en} {count}
+              </div>
+            );
+          })}
+        </div>
+
+        {filtered.map(obs => {
+          const cfg = NATURE_GROUPS[obs.group];
+          return (
+            <div key={obs.gbifKey} className="vl-card" onClick={() => {
+              setSelectedNature(obs);
+              flyToAboveSheet([obs.lat, obs.lng], 14);
+              setSheetMode('peek');
+            }}>
+              <div className="vl-ic" style={{ background: cfg.color + '22', color: cfg.color }}
+                dangerouslySetInnerHTML={{ __html: coloredSvg('blad', cfg.color) }} />
+              <div className="tx">
+                <h4>{obs.popularName || obs.scientificName}</h4>
+                <p>
+                  <em>{obs.popularName ? obs.scientificName : ''}</em>
+                  {obs.popularName ? ' · ' : ''}{lang === 'no' ? cfg.no : cfg.en} · {obs.obsCount} obs.
+                </p>
+              </div>
+              <span className="chev"><ChevSvg /></span>
+            </div>
+          );
+        })}
+
+        {!natureLoading && (
+          <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
+            Kilde: GBIF (CC BY 4.0)
+          </p>
+        )}
+      </>
+    );
+  }
 
   // ── Render: browse ──────────────────────────────────────────────────────────
 
@@ -462,11 +659,12 @@ export function VeierlandApp() {
           {T.explore}
         </h2>
         <div className="vl-seg">
-          <button className={mode === 'places' ? 'on' : ''} onClick={() => setMode('places')}>{T.places}</button>
-          <button className={mode === 'trails' ? 'on' : ''} onClick={() => setMode('trails')}>{T.trails}</button>
+          <button className={mode === 'places' ? 'on' : ''} onClick={() => { setMode('places'); setSelectedNature(null); }}>{T.places}</button>
+          <button className={mode === 'trails' ? 'on' : ''} onClick={() => { setMode('trails'); setSelectedNature(null); }}>{T.trails}</button>
+          <button className={mode === 'nature' ? 'on' : ''} onClick={() => { setMode('nature'); setSelectedNature(null); }}>{T.nature}</button>
         </div>
 
-        {mode === 'places' ? (
+        {mode === 'nature' ? renderNature() : mode === 'places' ? (
           <>
             <div className="vl-count">{filteredPOIs.length ? T.np(filteredPOIs.length) : T.nohit}</div>
             {filteredPOIs.map(poi => {
@@ -697,7 +895,30 @@ export function VeierlandApp() {
       >
         <MapSetup onReady={onMapReady} onMapClick={onMapClick} onZoom={onZoom} />
         <TileController layer={currentLayer} />
-        {poiMarkers}
+        {mode !== 'nature' && poiMarkers}
+        {mode === 'nature' && natureObs.map(obs => {
+          const cfg = NATURE_GROUPS[obs.group];
+          const selected = selectedNature?.gbifKey === obs.gbifKey;
+          const sz = Math.max(10, Math.min(20, 10 + (mapZoom - 11) * 2.5));
+          const icon = L.divIcon({
+            className: '',
+            iconSize: [sz, sz],
+            iconAnchor: [sz / 2, sz / 2],
+            html: makeNatureIconHtml(cfg.color, selected, sz),
+          });
+          return (
+            <Marker
+              key={obs.gbifKey}
+              position={[obs.lat, obs.lng]}
+              icon={icon}
+              eventHandlers={{ click: () => {
+                setSelectedNature(obs);
+                setSheetMode('peek');
+                flyToAboveSheet([obs.lat, obs.lng], Math.max(mapZoom, 13));
+              }}}
+            />
+          );
+        })}
         {userPos && (
           <Marker position={userPos} icon={USER_ICON} interactive={false} />
         )}
@@ -733,7 +954,7 @@ export function VeierlandApp() {
             <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
           </div>
         </div>
-        <div className="vl-chips">
+        {mode !== 'nature' && <div className="vl-chips">
           <div
             className={`vl-chip all${activeCats.size === 0 ? ' on' : ''}`}
             onClick={() => setActiveCats(new Set())}
@@ -751,7 +972,7 @@ export function VeierlandApp() {
               </div>
             );
           })}
-        </div>
+        </div>}
       </div>
 
       {/* Layer popup */}
