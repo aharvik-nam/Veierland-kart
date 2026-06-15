@@ -79,9 +79,15 @@ const ICONS: Record<string, string> = {
   wc:     '<circle cx="0" cy="0" r="6.5"/><path d="M0,-2.6 v0.2"/><path d="M0,0 v3.2"/>',
 };
 
-function makeIconHtml(icon: string, color: string, selected: boolean): string {
-  const svg = `<svg viewBox="-12 -12 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[icon] ?? ICONS.wc}</svg>`;
-  return `<div class="vl-pin${selected ? ' sel' : ''}" style="--c:${color}">${svg}</div>`;
+function markerSize(zoom: number): number {
+  return Math.round(Math.max(14, Math.min(34, 14 + (zoom - 11) * 5)));
+}
+
+function makeIconHtml(icon: string, color: string, selected: boolean, sz: number): string {
+  const svgSz = Math.round(sz * 0.59);
+  const sw = Math.max(1.2, 1.7 * sz / 34).toFixed(2);
+  const svg = `<svg viewBox="-12 -12 24 24" fill="none" stroke="#fff" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" width="${svgSz}" height="${svgSz}">${ICONS[icon] ?? ICONS.wc}</svg>`;
+  return `<div class="vl-pin${selected ? ' sel' : ''}" style="--c:${color};width:${sz}px;height:${sz}px">${svg}</div>`;
 }
 
 function coloredSvg(icon: string, color: string): string {
@@ -128,18 +134,20 @@ const VL_TRAILS: Trail[] = [
 
 // ─── Map sub-components ───────────────────────────────────────────────────────
 
-function MapSetup({ onReady, onMapClick }: { onReady: (m: L.Map) => void; onMapClick: () => void }) {
+function MapSetup({ onReady, onMapClick, onZoom }: { onReady: (m: L.Map) => void; onMapClick: () => void; onZoom: (z: number) => void }) {
   const map = useMap();
   useEffect(() => {
     onReady(map);
     map.on('click', onMapClick);
-    // Fit to actual POI bounds so the map always centers on the island
+    const zoomHandler = () => onZoom(map.getZoom());
+    map.on('zoomend', zoomHandler);
     const coords = ALL_POIS.map(p => p.coordinates as [number, number]);
     if (coords.length > 0) {
       map.fitBounds(L.latLngBounds(coords).pad(0.08), { animate: false });
+      onZoom(map.getZoom());
     }
-    return () => { map.off('click', onMapClick); };
-  }, [map, onReady, onMapClick]);
+    return () => { map.off('click', onMapClick); map.off('zoomend', zoomHandler); };
+  }, [map, onReady, onMapClick, onZoom]);
   return null;
 }
 
@@ -258,6 +266,8 @@ export function VeierlandApp() {
   const [lokalData, setLokalData] = useState<LokalhistorieData | null>(null);
   const [dimuData, setDimuData] = useState<MuseumPhoto[]>([]);
 
+  const [mapZoom, setMapZoom] = useState<number>(MAP_ZOOM);
+
   const mapRef = useRef<L.Map | null>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ startY: number; startH: number } | null>(null);
@@ -327,6 +337,7 @@ export function VeierlandApp() {
 
   const onMapReady = useCallback((m: L.Map) => { mapRef.current = m; }, []);
   const onMapClick = useCallback(() => setShowLayerPop(false), []);
+  const onZoom = useCallback((z: number) => setMapZoom(z), []);
 
   // Fly to a coordinate but shift the center up so the marker is visible above the sheet
   function flyToAboveSheet(coordinates: [number, number], zoom: number) {
@@ -649,14 +660,16 @@ export function VeierlandApp() {
   // ── POI markers (re-created when selection changes for the `.sel` class) ────
 
   const poiMarkers = useMemo(() => {
+    const sz = markerSize(mapZoom);
+    const half = Math.round(sz / 2);
     return filteredPOIs.map(poi => {
       const cat = getCat(poi.kategori);
       const selected = selectedPOI?.id === poi.id && view === 'detail';
       const icon = L.divIcon({
         className: '',
-        iconSize: [34, 34],
-        iconAnchor: [17, 17],
-        html: makeIconHtml(cat.icon, cat.color, selected),
+        iconSize: [sz, sz],
+        iconAnchor: [half, half],
+        html: makeIconHtml(cat.icon, cat.color, selected, sz),
       });
       return (
         <Marker
@@ -668,7 +681,7 @@ export function VeierlandApp() {
       );
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredPOIs, selectedPOI?.id, view]);
+  }, [filteredPOIs, selectedPOI?.id, view, mapZoom]);
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -682,7 +695,7 @@ export function VeierlandApp() {
         attributionControl
         style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
       >
-        <MapSetup onReady={onMapReady} onMapClick={onMapClick} />
+        <MapSetup onReady={onMapReady} onMapClick={onMapClick} onZoom={onZoom} />
         <TileController layer={currentLayer} />
         {poiMarkers}
         {userPos && (
