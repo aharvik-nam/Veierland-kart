@@ -332,9 +332,10 @@ export function VeierlandApp() {
   function flyToAboveSheet(coordinates: [number, number], zoom: number) {
     const map = mapRef.current;
     if (!map) return;
-    const peekH = computeSheetH('detail', 'peek'); // sheet height in peek mode
-    const offsetPx = peekH / 2; // shift center up by half the sheet height
-    const targetPoint = map.project(L.latLng(coordinates), zoom).subtract([0, offsetPx]);
+    const peekH = computeSheetH('detail', 'peek');
+    const offsetPx = peekH / 2;
+    // Add to Y (move center south) so the marker appears above the sheet
+    const targetPoint = map.project(L.latLng(coordinates), zoom).add(L.point(0, offsetPx));
     map.flyTo(map.unproject(targetPoint, zoom), zoom, { duration: 0.7 });
   }
 
