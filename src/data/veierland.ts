@@ -34,16 +34,18 @@ const poisFromGeoJSON = poiData.features.map((feature: any, index: number) => {
   };
 });
 
-const stedsnavnFromGeoJSON = stedsnavnData.features.map((feature: any, index: number) => {
-  return {
-    ...feature.properties,
-    id: `sted-${index}`,
-    navn: feature.properties.navn,
-    kategori: feature.properties.kategori || "stedsnavn",
-    beskrivelse: feature.properties.forklaring || "",
-    coordinates: [feature.geometry.coordinates[1], feature.geometry.coordinates[0]] as [number, number],
-  };
-});
+const stedsnavnFromGeoJSON = stedsnavnData.features
+  .filter((feature: any) => feature.properties.visibility !== false)
+  .map((feature: any, index: number) => {
+    return {
+      ...feature.properties,
+      id: `sted-${index}`,
+      navn: feature.properties.navn,
+      kategori: feature.properties.kategori || "stedsnavn",
+      beskrivelse: feature.properties.forklaring || "",
+      coordinates: [feature.geometry.coordinates[1], feature.geometry.coordinates[0]] as [number, number],
+    };
+  });
 
 // Combines POIs and Stedsnavn
 export const ALL_POIS: POI[] = [...poisFromGeoJSON, ...stedsnavnFromGeoJSON];
