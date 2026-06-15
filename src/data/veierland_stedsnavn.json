@@ -1,0 +1,1025 @@
+{
+  "type": "FeatureCollection",
+  "name": "veierland_stedsnavn",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "metadata": {
+    "tittel": "Veierland – gamle stedsnavn med forklaringer",
+    "beskrivelse": "Georefererte stedsnavn fra Veierland med folkelige og historiske forklaringer. Hentet fra stedsnavnslistene i «Natur og miljø – Veierland» (1984) og «Veierland» (minnebok 1998, kap. 14). Alle koordinater er omtrentlige og bør verifiseres mot Kartverket/Norgeskart.",
+    "kilder": [
+      "«Natur og miljø – Veierland» – Veierland Vel 1984, s. 35–37",
+      "«Veierland» – minnebok, Veierland Vel 1998, kap. 14, s. 108–110"
+    ]
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Alby",
+        "forklaring": "Aðalbýr – Hovedgården. Øyas eldste gård, eide opprinnelig hele øya.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3515,
+          59.1642
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Anund-diket",
+        "forklaring": "Vannhull (høl) hvor Anund vannet dyra.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.346,
+          59.1615
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Bangbakken",
+        "forklaring": "Bakken forbi Alf Bang (før Davidsen).",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3455,
+          59.1648
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Bergshagen (Bærshagan)",
+        "forklaring": "Mellom hytta til K. Olausen og Klyve. Fint for unger å stå på ski.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3445,
+          59.1635
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Bestemoråsen",
+        "forklaring": "Åsen oppkalt etter en «bestemor» i området.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.35,
+          59.1555
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Bestemorskjær",
+        "forklaring": "Skjær i sjøen ved sørøstsiden av øya.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.353,
+          59.143
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Bettybakken",
+        "forklaring": "Bakken opp til Betty Amundsen.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3475,
+          59.1632
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Brekke",
+        "forklaring": "Bakke. Gårdsområde mellom Krika og Oslebakke.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.353,
+          59.152
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Brentås",
+        "forklaring": "Sannsynligvis oppkalt etter en brann. Øyas høyeste punkt, 56 moh.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.354,
+          59.159
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Bringebæråsen",
+        "forklaring": "Åsen med bringebær.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3415,
+          59.151
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Båsløkka",
+        "forklaring": "Nevnt som «Båsen» i bygdeboka. Gårdsområde på vestkysten.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.34,
+          59.1525
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Bygg-glova",
+        "forklaring": "Her ble det dyrket bygg under krigen.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.349,
+          59.165
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Den svarte grinda",
+        "forklaring": "Spøkeri som tok form av at hestene skydde stedet.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3425,
+          59.1495
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Det brente",
+        "forklaring": "Her var det brann, som militæret på Håøya kom og slukket.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.354,
+          59.144
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Dorabakken",
+        "forklaring": "Etter Dora Berns.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3455,
+          59.1595
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Driversgrenda",
+        "forklaring": "Langs her ble kyrne på Vestgården sluppet og kunne gå rett på skogsbeite.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3378,
+          59.1655
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Dynås",
+        "forklaring": "En folkelig forklaring på formasjonene i terrenget.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3565,
+          59.159
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Flyndrehøl",
+        "forklaring": "God fiskeplass for flyndre.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.345,
+          59.139
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Fritzebakken",
+        "forklaring": "Bakken oppkalt etter Fritze.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3505,
+          59.151
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Gata",
+        "forklaring": "Driftsgate – veien der dyra ble drevet mellom inn- og utmark.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3415,
+          59.152
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Godthøl",
+        "forklaring": "God ly, nødhavn. Lun bukt for båter.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.345,
+          59.138
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Gregerskilen",
+        "forklaring": "Etter Hans Gregers.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3345,
+          59.1465
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Gråten",
+        "forklaring": "Jordet mot skauen, øst for Aslak Kaasa.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3525,
+          59.1608
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Guttormhuset",
+        "forklaring": "Her bodde Guttorm (nå Hov).",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3505,
+          59.16
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Himbær",
+        "forklaring": "Herfra måtte Antoni Jacobsen bære høyet hjem.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3455,
+          59.148
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Hverven",
+        "forklaring": "Her ble det bygget skuter. Skutebygging var en viktig næring på Veierland.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.338,
+          59.147
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Iversolla",
+        "forklaring": "Olla til mor Iversen – en liten dam/vannkilde.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3465,
+          59.1595
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Jesperløkka",
+        "forklaring": "Gitt av Lars Christensen til fotballplass. Her var det også dans i lyse sommernetter, med dansegulv i det sørøstre hjørnet.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3505,
+          59.155
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Jonseløkka",
+        "forklaring": "Løkka etter Jonse.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3495,
+          59.154
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Jordbærskjær",
+        "forklaring": "Liten holme med jordbær.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.346,
+          59.1415
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Jutodden",
+        "forklaring": "Et dansk skip skal ha gått ned utenfor her.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.345,
+          59.17
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Karen-brygga",
+        "forklaring": "Etter Karen Pers (Karen til Per).",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3455,
+          59.144
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Kjelane",
+        "forklaring": "Her er det jettegryter skapt av bølger under istiden. Flott geologisk severdighet på sørvest-spissen.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3335,
+          59.146
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Kjøia",
+        "forklaring": "Myrlendt område.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.344,
+          59.148
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Kjølholmen",
+        "forklaring": "Antagelig av ordet kjølhaling – her ble båter kjølhalt for vedlikehold.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3601789,
+          59.164907
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Krika",
+        "forklaring": "Vrå, vinkel – en avkrok eller vinkel i terrenget. Krika nevnes første gang skriftlig mot slutten av 1500-tallet.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3475,
+          59.156
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Kvie",
+        "forklaring": "Trang innhegning hvor kyrne ble melket.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3488,
+          59.1568
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Løkka",
+        "forklaring": "Havn, jorde opprinnelig inngjerdet for seg selv i utmarka.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3505,
+          59.165
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Makrellberget",
+        "forklaring": "Her tørket Kristian Nilsen sine tjærebredde makrellgarn i terrenget.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.346,
+          59.1475
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Meglova",
+        "forklaring": "Av «med» – siktemerke til å orientere seg etter i terrenget.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3355,
+          59.1592
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Mekkelhagan",
+        "forklaring": "Mikkel bodde her. Her var også mye havrekål.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3488,
+          59.1492
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Mor Weiers løkke",
+        "forklaring": "Løkken etter Mor Weier – inunder bratt fjellvegg ved østkysten.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.356,
+          59.1505
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Myra",
+        "forklaring": "Myrlendte jorder. Ofte er det rene innsjøen her.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3515,
+          59.158
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Neperoa",
+        "forklaring": "Jordet øst for «Revegår'n» der de dyrket neper.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3545,
+          59.16
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Nøttaberget",
+        "forklaring": "Her var det mye hasselnøtter.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3498,
+          59.1555
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Oslebakke",
+        "forklaring": "Muligens av Aslaug. Opprinnelig Hamna/Höfn (havn) – Oslebakke nevnes 1593 som Haffuenn.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3558,
+          59.1505
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Pershage",
+        "forklaring": "Etter David Pedersen.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3475,
+          59.1608
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Praten",
+        "forklaring": "Der veier og folk møttes. Veiene nord-syd og øst-vest krysset her, og det ble et naturlig samlingssted.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.349,
+          59.1547
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Putås",
+        "forklaring": "En folkelig forklaring på formasjonene i terrenget.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3565,
+          59.156
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Rispa",
+        "forklaring": "Smalt jorde mellom to åser, ei rispe. Lars Kristensens drengstue lå her – seinere kalt Rispestua, nå grendemuseum.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.349,
+          59.1598
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Rønningen",
+        "forklaring": "Gårdsområde mellom Krika og Brekka langs østkysten.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.354,
+          59.153
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Salteriodden",
+        "forklaring": "Her drev man med salting under sildeinsiget i 1890-årene.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.343,
+          59.144
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Seilersberget",
+        "forklaring": "Her speidet de hjemmeværende etter hjemvendende skuter.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3542,
+          59.155
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Sibylleskjær",
+        "forklaring": "Sibylla ble en gang rodd over fra Stokke og satt i land her.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.336,
+          59.17
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Skolebakken",
+        "forklaring": "Etter skolen som holdt til på dagens posthus inntil 1918. Her foregikk også 17. mai-feiringene.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3487,
+          59.1595
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Skytterbanen",
+        "forklaring": "Øvelsesskytebane for soldatene på Håøya, brukt før, under og etter 1. verdenskrig.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.336,
+          59.1485
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Sommersbakken",
+        "forklaring": "Her samlet ungdommene seg til dans om sommeren.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.347,
+          59.1522
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Sommerfjøset",
+        "forklaring": "Hvor kuene sto natta over om sommeren. Sommerfjøset sto helst i skillet mellom inn- og utmark.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3465,
+          59.1642
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Sperrabakken",
+        "forklaring": "Etter forpakter Hans Sperre på Alby.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.342,
+          59.1655
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Svenskeglova",
+        "forklaring": "Et svensk ektepar slo seg ned her for en kortere tid, antagelig rundt århundreskiftet – våre tidligere fremmedarbeidere.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3548,
+          59.1632
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Tangen",
+        "forklaring": "Rent naturbeskrivende – odden/tangen. Skriftlig belegg fra 1315.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.336,
+          59.153
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Tillas tomt",
+        "forklaring": "Etter Tilla Båsen.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3372,
+          59.1527
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Thorseløkka",
+        "forklaring": "Etter Markus Thorsen.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3455,
+          59.1537
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Torskesprekka",
+        "forklaring": "God torskeplass utenfor her.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.346,
+          59.171
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Trinaberget",
+        "forklaring": "Berget oppkalt etter Trina.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.345,
+          59.1532
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Vatninga",
+        "forklaring": "Drikkeplass for dyrene – en olle med årssikkert vann der kuene fikk drikke.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3458,
+          59.1592
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Vestgården",
+        "forklaring": "Den vestre gården – navnsatt i forhold til Alby. Skriftlig belegg fra 1398.",
+        "kategori": "stedsnavn"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3435,
+          59.1645
+        ]
+      }
+    }
+  ]
+}

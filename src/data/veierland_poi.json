@@ -1,0 +1,543 @@
+{
+  "type": "FeatureCollection",
+  "name": "veierland_poi",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "metadata": {
+    "title": "Veierland – severdigheter og steder",
+    "description": "Georefererte punkter for besøkende på Veierland (Færder kommune, Vestfold). Koordinater i WGS84 (lon, lat). Punkter merket verifisert=false er omtrentlige og bør sjekkes mot Kartverket/Norgeskart før publisering.",
+    "kommune": "Færder",
+    "fylke": "Vestfold",
+    "sist_oppdatert": "2026-06-15",
+    "kilder": [
+      "Google Places",
+      "Store norske leksikon",
+      "Wikipedia",
+      "lokalhistoriewiki.no",
+      "Veierland Velforening (veierland.org)",
+      "«Een øe langt fra landet» – kulturminneregistrering i skjærgården (Velforeningens rapport 1984)",
+      "«Natur og miljø – Veierland» – utredning fra Veierland Vel 1984 (plankomité: Iversen, Solberg, Pedersen, Løken; fagkonsulenter: Ann og Magnar Norderhaug)",
+      "«Veierland» – minnebok, Veierland Vel 1998 (red. Kari Paulsen og Inger Løken; initiativtaker Sverre Solberg)",
+      "Askeladden / Riksantikvaren – offisielle kulturminnedata (Vestfold fylkeskommune, Færder kommune)"
+    ],
+    "beskrivelse": "Georefererte punkter for besøkende på Veierland (Færder kommune, Vestfold). Kun koordinater verifisert via Google Places API eller Riksantikvarens Askeladden-database (EU89/WGS84). Koordinater i WGS84 (lon, lat)."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Tenvik fergekai",
+        "kategori": "ferge",
+        "beskrivelse": "Fergeleie på fastlandet (Nøtterøy). Herfra går MF Jutøya til Veierland. Parkering og bussforbindelse.",
+        "verifisert": true,
+        "koordinat_kilde": "Google Places API"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3650278,
+          59.1744885
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Vestgården fergeleie",
+        "kategori": "ferge",
+        "beskrivelse": "Nordre fergeleie på Veierland. Venteskur og gratis sykkelutlån.",
+        "verifisert": true,
+        "koordinat_kilde": "Google Places API"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3434834,
+          59.1650133
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Tangen fergekai",
+        "kategori": "ferge",
+        "beskrivelse": "Søndre fergeleie på Veierland. Venterom, WC og vannpost. Godt startpunkt for turer sørover.",
+        "verifisert": true,
+        "koordinat_kilde": "Google Places API"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3380491,
+          59.1535242
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Veierland kirke",
+        "kategori": "kultur",
+        "beskrivelse": "Laftet trekirke fra 1905, en av de siste bygde i Vestfold. Alterbilde av Maria Vigeland (Kristus til sjøs). Gravlund ved siden av.",
+        "verifisert": true,
+        "koordinat_kilde": "Google Places API"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3444613,
+          59.1604113
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Villa Veierland (kafé)",
+        "kategori": "mat",
+        "beskrivelse": "Kafé, pizza og butikk. Albyveien 27. Sommeråpent.",
+        "verifisert": true,
+        "koordinat_kilde": "Google Places API"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3530783,
+          59.155874
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Veierland vel (grendehus)",
+        "kategori": "kultur",
+        "beskrivelse": "Velforeningens område med lekeplass og petanquebane.",
+        "verifisert": true,
+        "koordinat_kilde": "Google Places API"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.352249,
+          59.1548327
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Hverveoddbukta badeplass",
+        "kategori": "bad",
+        "beskrivelse": "Populær badeplass sør på øya, sandbunn og brygge.",
+        "verifisert": true,
+        "koordinat_kilde": "Google Places API"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3513601,
+          59.1454892
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Kongshavn badeplass",
+        "kategori": "bad",
+        "beskrivelse": "Badeplass sørvest på øya.",
+        "verifisert": true,
+        "koordinat_kilde": "Google Places API"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3378852,
+          59.1457908
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Kjølholmen",
+        "kategori": "bad",
+        "beskrivelse": "Holme og badeplass nordøst på Veierland.",
+        "verifisert": true,
+        "koordinat_kilde": "Google Places API"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3601789,
+          59.164907
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Alby (nordre gjestehavn)",
+        "kategori": "havn",
+        "beskrivelse": "Nordre gjestehavn. Opprinnelig Aðalbýr – historisk hovedgård som eide hele øya. Servicebygg og strøm til båt.",
+        "verifisert": true,
+        "koordinat_kilde": "Google Places API"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.356444,
+          59.1655994
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Teltplass (Kjølholmen)",
+        "kategori": "friluft",
+        "beskrivelse": "Teltplass markert på turkart fra 1984 ved Kjølholmen nordøst. Regulert friluftsområde med plass til telt, avtrede og søppeldunker. Kilde: natur/miljø-utredningen 1984.",
+        "verifisert": true,
+        "koordinat_kilde": "Google Places API"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.3601789,
+          59.164907
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Sjøholmåsen, Gravrøys",
+        "kategori": "arkeologi",
+        "art": "Gravrøys",
+        "gaard": "Alby",
+        "datering": "Bronsealder–jernalder",
+        "vernestatus": "Automatisk fredet",
+        "synlig": true,
+        "under_vann": false,
+        "askeladden_id": 31430,
+        "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/31430",
+        "beskrivelse": "Rundrøys oppe på berget før det faller bratt av mot S, V og Ø. Forholdsvis klart markert. Bygget av overveiende middels store bruddstein, deriblant en del heller. Midten av røysa er helt utkastet (d 1m). I SØ er røysa noe utrast. Bevokst med lyng og mose. D 5m, h 0,3–0,5m. Funn: mynt, engelsk longcross. Askeladden ID 31430.",
+        "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
+        "verifisert": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.360283502556,
+          59.159736033836
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Oslebakken, Gravrøys",
+        "kategori": "arkeologi",
+        "art": "Gravrøys",
+        "gaard": "Oslebakken",
+        "datering": "Jernalder",
+        "vernestatus": "Automatisk fredet",
+        "synlig": true,
+        "under_vann": false,
+        "askeladden_id": 21552,
+        "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/21552",
+        "beskrivelse": "Rundrøys, forholdsvis klart markert, noe utkastet. Lagt over en glove i berget, bygget av rundkamp og bruddstein av varierende størrelse. Utkastet i midten (d 1,5m, dybde 0,5m). Større helle i SV (1,1×0,6×0,1m). Bevokst med lyng og bringebærkratt. D 6m, h 0,5m. Kontrollregistrering 2010. 13m NNV og 20m SSØ ligger to groper av ukjent funksjon. Askeladden ID 21552.",
+        "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
+        "verifisert": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.348115564074,
+          59.164420931792
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Alby, Gravhaug",
+        "kategori": "arkeologi",
+        "art": "Gravhaug",
+        "gaard": "Alby",
+        "datering": "Jernalder",
+        "vernestatus": "Automatisk fredet",
+        "synlig": true,
+        "under_vann": false,
+        "askeladden_id": 78210,
+        "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/78210",
+        "beskrivelse": "Gravhaug, diameter 4m, høyde 0,3m med søkk i midten. Bygd av jord. 13m NNV og 20m SSØ for denne ligger det to groper uten voll av ukjent funksjon (kontrollregistrert 2010). Askeladden ID 78210.",
+        "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
+        "verifisert": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.348998952619,
+          59.163822613239
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Vestgården, Gravrøys",
+        "kategori": "arkeologi",
+        "art": "Gravrøys",
+        "gaard": "Vestgården",
+        "datering": "Jernalder",
+        "vernestatus": "Automatisk fredet",
+        "synlig": true,
+        "under_vann": false,
+        "askeladden_id": 21553,
+        "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/21553",
+        "beskrivelse": "Rundrøys på N-enden av åsryggen der denne smalner og faller av mot Ø og V. Uklart markert, utkastet. Bygget av liten og middels stor rundkamp og bruddstein. I midten berget i dagen. Røysas anslåtte d 7m, h 0,3–0,4m. Askeladden ID 21553.",
+        "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
+        "verifisert": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.34858041963,
+          59.163622898706
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Alby, Gravhaug",
+        "kategori": "arkeologi",
+        "art": "Gravhaug",
+        "gaard": "Alby",
+        "datering": "Jernalder",
+        "vernestatus": "Automatisk fredet",
+        "synlig": true,
+        "under_vann": false,
+        "askeladden_id": 29753,
+        "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/29753",
+        "beskrivelse": "Gravhaug, diameter 3m, høyde 0,5–0,7m. Regelmessig rund og kuplet haug. Bygd av jord. 50m SSØ for Askeladden 21553. Askeladden ID 29753.",
+        "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
+        "verifisert": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.349318063545,
+          59.163348741235
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Vestgården, Gravrøys (mannsgravfunn)",
+        "kategori": "arkeologi",
+        "art": "Gravrøys",
+        "gaard": "Vestgården",
+        "datering": "Jernalder",
+        "vernestatus": "Automatisk fredet",
+        "synlig": true,
+        "under_vann": false,
+        "askeladden_id": 11683,
+        "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/11683",
+        "beskrivelse": "Langaktig røys på kronen av berget, trolig opprinnelig rund. Uklart markert, utkastet. Bygget av middels stor rundkamp og bruddstein. Krateri i midten (3×3m, dybde 0,6m). L 12m, br 8m, h 0,3–1m. Da gjerde ble satt opp ca. 1935, ble røysa utkastet og man fant gjenstand (C18715). Askeladden ID 11683.",
+        "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
+        "verifisert": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.348451807937,
+          59.163094275405
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Vestgården, Gravhaug (vikingtid – fjernet)",
+        "kategori": "arkeologi",
+        "art": "Gravhaug",
+        "gaard": "Vestgården",
+        "datering": "Bronsealder–jernalder",
+        "vernestatus": "Uavklart",
+        "synlig": false,
+        "under_vann": false,
+        "askeladden_id": 58470,
+        "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/58470",
+        "beskrivelse": "Rundhaug, klart markert, steinblandet. Nå helt fjernet. Her ble det ca. 1885 gjort et mannsgravfunn fra vikingtiden. Dette er det viktigste arkeologiske funnet på Veierland – en velutstyrt mannsgrav. Askeladden ID 58470.",
+        "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
+        "verifisert": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.347944961175,
+          59.162540254106
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Løsfunn: Engelsk middelaldersmynt",
+        "kategori": "arkeologi",
+        "art": "Løsfunn",
+        "gaard": null,
+        "datering": "Høymiddelalder",
+        "vernestatus": "Uavklart",
+        "synlig": false,
+        "under_vann": false,
+        "askeladden_id": 222472,
+        "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/222472",
+        "beskrivelse": "Mynt, engelsk longcross. Funnet av Kim Eilertsen med metalldetektor. Høymiddelalder. Askeladden ID 222472.",
+        "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
+        "verifisert": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.355121727844,
+          59.156468485809
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Løsfunn: Spinnehjul i kobberlegering",
+        "kategori": "arkeologi",
+        "art": "Løsfunn",
+        "gaard": null,
+        "datering": "Jernalder–middelalder",
+        "vernestatus": "Uavklart",
+        "synlig": false,
+        "under_vann": false,
+        "askeladden_id": 247775,
+        "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/247775",
+        "beskrivelse": "Spinnehjul i kobberlegering. Askeladden ID 247775.",
+        "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
+        "verifisert": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.354432463532,
+          59.156700303839
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Løsfunn: Slaggbit (Krika)",
+        "kategori": "arkeologi",
+        "art": "Løsfunn",
+        "gaard": "Kriken",
+        "datering": "Førreformatorisk tid",
+        "vernestatus": "Uavklart",
+        "synlig": false,
+        "under_vann": false,
+        "askeladden_id": 250230,
+        "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/250230",
+        "beskrivelse": "Liten slaggbit, mulig renneslagg. Største mål 24mm. Kan tyde på smedvirksomhet i Krika-området. Askeladden ID 250230.",
+        "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
+        "verifisert": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.354595555839,
+          59.156402209674
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Løsfunn: Spinnehjul i bly",
+        "kategori": "arkeologi",
+        "art": "Løsfunn",
+        "gaard": null,
+        "datering": "Førreformatorisk tid",
+        "vernestatus": "Uavklart",
+        "synlig": false,
+        "under_vann": false,
+        "askeladden_id": 238144,
+        "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/238144",
+        "beskrivelse": "Spinnehjul i bly, kjegleformet med lett hvelving. Største diameter 22mm, høyde 10mm. Funnet av Kim Eilertsen. Askeladden ID 238144.",
+        "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
+        "verifisert": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.344018032212,
+          59.152003309987
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Løsfunn: Sammenbrettet bly",
+        "kategori": "arkeologi",
+        "art": "Løsfunn",
+        "gaard": null,
+        "datering": "Førreformatorisk tid",
+        "vernestatus": "Uavklart",
+        "synlig": false,
+        "under_vann": false,
+        "askeladden_id": 238146,
+        "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/238146",
+        "beskrivelse": "Sammenbrettet bly. Funnet av Kim Eilertsen med metalldetektor. Askeladden ID 238146.",
+        "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
+        "verifisert": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.344518424495,
+          59.151387382475
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Marint løsfunn: Keramikkrukke",
+        "kategori": "arkeologi",
+        "art": "Marint løsfunn",
+        "gaard": null,
+        "datering": "1800-tallet",
+        "vernestatus": "Uavklart",
+        "synlig": false,
+        "under_vann": false,
+        "askeladden_id": 133205,
+        "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/133205",
+        "beskrivelse": "Funn under vann: Vinkrukke av en type vanlig i middelhavslandene. 21,3 cm høy, 14,3 cm i største diameter. Hals ca 3 cm diameter, 5 cm høy med to omløpende vulster. Askeladden ID 133205.",
+        "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
+        "verifisert": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.352719771051,
+          59.167810451979
+        ]
+      }
+    }
+  ]
+}
