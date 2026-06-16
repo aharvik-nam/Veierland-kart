@@ -16,6 +16,8 @@ interface LayerCfg {
   url: string;
   opts: Record<string, unknown>;
   filter: string;
+  wms?: boolean;
+  wmsLayers?: string;
 }
 
 const LAYERS: Record<string, LayerCfg> = {
@@ -40,8 +42,17 @@ const LAYERS: Record<string, LayerCfg> = {
     opts: { maxZoom: 18, attribution: '© Esri · Maxar' },
     filter: 'none',
   },
+  historisk: {
+    label: { no: 'Historisk', en: 'Historic' },
+    sw: 'linear-gradient(135deg,#e8dfc8,#c8b89a)',
+    url: 'https://wms.geonorge.no/skwms1/wms.historiskekart2',
+    wms: true,
+    wmsLayers: 'historisk_bakgrunnskart',
+    opts: { maxZoom: 16, attribution: '© Kartverket' },
+    filter: 'sepia(.4) contrast(1.1) brightness(1.05)',
+  },
 };
-const LAYER_ORDER = ['soleng', 'friluft', 'flyfoto'] as const;
+const LAYER_ORDER = ['soleng', 'friluft', 'flyfoto', 'historisk'] as const;
 
 // ─── Category configs ─────────────────────────────────────────────────────────
 
@@ -246,7 +257,9 @@ function TileController({ layer }: { layer: string }) {
     const cfg = LAYERS[layer];
     if (!cfg) return;
     if (tileRef.current) map.removeLayer(tileRef.current);
-    const tile = L.tileLayer(cfg.url, { ...cfg.opts, zIndex: 0 } as L.TileLayerOptions);
+    const tile = cfg.wms
+      ? L.tileLayer.wms(cfg.url, { layers: cfg.wmsLayers ?? '', format: 'image/png', transparent: false, ...cfg.opts, zIndex: 0 } as L.WMSOptions)
+      : L.tileLayer(cfg.url, { ...cfg.opts, zIndex: 0 } as L.TileLayerOptions);
     tile.addTo(map);
     tileRef.current = tile;
     const tp = document.querySelector('.leaflet-tile-pane') as HTMLElement | null;
