@@ -320,11 +320,14 @@ export function VeierlandApp() {
   const [selectedTrail, setSelectedTrail] = useState<Trail | null>(null);
   const [sheetMode, setSheetMode] = useState<'peek' | 'full'>('peek');
   const [sheetH, setSheetH] = useState(250);
-  const [currentLayer, setCurrentLayer] = useState('soleng');
+  const [currentLayer, setCurrentLayer] = useState<string>(() => {
+    try { return localStorage.getItem('vl-layer') || 'soleng'; } catch { return 'soleng'; }
+  });
   const [showLayerPop, setShowLayerPop] = useState(false);
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [trailPath, setTrailPath] = useState<[number, number][] | null>(null);
+  const [heartAnim, setHeartAnim] = useState(false);
 
   // Nature state
   const [natureObs, setNatureObs] = useState<NatureObs[]>([]);
@@ -587,27 +590,32 @@ export function VeierlandApp() {
     return (
       <>
         {natureLoading ? (
-          <p style={{ color: 'var(--muted)', fontSize: 13, margin: '12px 0' }}>
-            {lang === 'no' ? 'Henter naturdata…' : 'Loading nature data…'}
-          </p>
+          <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
+            <div className="vl-spinner" />
+            <p style={{ color: 'var(--muted)', fontSize: 13, margin: 0 }}>
+              {lang === 'no' ? 'Henter naturdata…' : 'Loading nature data…'}
+            </p>
+          </div>
         ) : (
           <div className="vl-count">{T.natObs(filtered.length)}</div>
         )}
 
-        <div className="vl-chips" style={{ marginBottom: 10 }}>
-          <div className={`vl-chip all${!natureFilter ? ' on' : ''}`} onClick={() => setNatureFilter(null)}>
-            <span className="dot" />{T.all}
+        <div className="vl-chips-wrap" style={{ marginBottom: 10 }}>
+          <div className="vl-chips">
+            <div className={`vl-chip all${!natureFilter ? ' on' : ''}`} onClick={() => setNatureFilter(null)}>
+              <span className="dot" />{T.all}
+            </div>
+            {(Object.entries(NATURE_GROUPS) as [NatureGroup, typeof NATURE_GROUPS[NatureGroup]][]).map(([g, cfg]) => {
+              const count = natureObs.filter(o => o.group === g).length;
+              if (count === 0) return null;
+              return (
+                <div key={g} className={`vl-chip${natureFilter === g ? ' on' : ''}`} onClick={() => setNatureFilter(natureFilter === g ? null : g)}>
+                  <span className="dot" style={{ background: natureFilter === g ? '#fff' : cfg.color }} />
+                  {lang === 'no' ? cfg.no : cfg.en} {count}
+                </div>
+              );
+            })}
           </div>
-          {(Object.entries(NATURE_GROUPS) as [NatureGroup, typeof NATURE_GROUPS[NatureGroup]][]).map(([g, cfg]) => {
-            const count = natureObs.filter(o => o.group === g).length;
-            if (count === 0) return null;
-            return (
-              <div key={g} className={`vl-chip${natureFilter === g ? ' on' : ''}`} onClick={() => setNatureFilter(natureFilter === g ? null : g)}>
-                <span className="dot" style={{ background: natureFilter === g ? '#fff' : cfg.color }} />
-                {lang === 'no' ? cfg.no : cfg.en} {count}
-              </div>
-            );
-          })}
         </div>
 
         {filtered.map(obs => {
@@ -717,7 +725,9 @@ export function VeierlandApp() {
           </span>
         </div>
         <div className="vl-h2">{poi.navn}</div>
-        <div className="vl-hero" dangerouslySetInnerHTML={{ __html: heroArt(cat.color) }} />
+        {!lokalData?.bilde && dimuData.length === 0 && (
+          <div className="vl-hero" dangerouslySetInnerHTML={{ __html: heroArt(cat.color) }} />
+        )}
         <p className="vl-desc">{poi.beskrivelse}</p>
 
         {poi.datering && (
@@ -729,9 +739,10 @@ export function VeierlandApp() {
 
         <div className="vl-actions">
           <button
-            className={`vl-btn sec${saved ? ' on' : ''}`}
-            onClick={() => toggleSaved(poi.id)}
+            className={`vl-btn sec${saved ? ' on' : ''}${heartAnim ? ' heart-pop' : ''}`}
+            onClick={() => { toggleSaved(poi.id); setHeartAnim(true); setTimeout(() => setHeartAnim(false), 350); }}
             style={{ flex: '0 0 auto' }}
+            aria-label={saved ? 'Fjern fra favoritter' : 'Lagre som favoritt'}
           >
             <HeartSvg />
           </button>
@@ -945,24 +956,26 @@ export function VeierlandApp() {
             <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
           </div>
         </div>
-        {mode !== 'nature' && <div className="vl-chips">
-          <div
-            className={`vl-chip all${activeCats.size === 0 ? ' on' : ''}`}
-            onClick={() => setActiveCats(new Set())}
-          >
-            <span className="dot" />
-            {T.all}
+        {mode !== 'nature' && <div className="vl-chips-wrap">
+          <div className="vl-chips">
+            <div
+              className={`vl-chip all${activeCats.size === 0 ? ' on' : ''}`}
+              onClick={() => setActiveCats(new Set())}
+            >
+              <span className="dot" />
+              {T.all}
+            </div>
+            {allCats.map(k => {
+              const cat = getCat(k);
+              const on = activeCats.has(k);
+              return (
+                <div key={k} className={`vl-chip${on ? ' on' : ''}`} onClick={() => toggleCat(k)}>
+                  <span className="dot" style={{ background: on ? '#fff' : cat.color }} />
+                  {lang === 'no' ? cat.no : cat.en}
+                </div>
+              );
+            })}
           </div>
-          {allCats.map(k => {
-            const cat = getCat(k);
-            const on = activeCats.has(k);
-            return (
-              <div key={k} className={`vl-chip${on ? ' on' : ''}`} onClick={() => toggleCat(k)}>
-                <span className="dot" style={{ background: on ? '#fff' : cat.color }} />
-                {lang === 'no' ? cat.no : cat.en}
-              </div>
-            );
-          })}
         </div>}
       </div>
 
@@ -980,7 +993,7 @@ export function VeierlandApp() {
             <div
               key={k}
               className={`vl-opt${on ? ' on' : ''}`}
-              onClick={() => { setCurrentLayer(k); setShowLayerPop(false); }}
+              onClick={() => { setCurrentLayer(k); setShowLayerPop(false); try { localStorage.setItem('vl-layer', k); } catch {} }}
             >
               <span className="sw" style={{ background: cfg.sw }} />
               <span className="nm">{lang === 'no' ? cfg.label.no : cfg.label.en}</span>
