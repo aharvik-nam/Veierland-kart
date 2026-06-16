@@ -78,7 +78,7 @@ const CAT_CFG: Record<string, CatCfg> = {
   stedsnavn:  { no: 'Stedsnavn',     en: 'Place names',  color: '#7c876f', icon: 'wc'     },
 };
 
-const PRAKTISK_CATS = ['bad', 'ferge', 'havn', 'mat', 'friluft', 'kultur'];
+const PRAKTISK_CATS = ['bad', 'ferge', 'havn', 'mat', 'friluft', 'kultur', 'info'];
 const HISTORISK_CATS = ['arkeologi'];
 
 function getCat(k: string): CatCfg {

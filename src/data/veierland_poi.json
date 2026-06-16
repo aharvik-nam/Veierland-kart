@@ -116,6 +116,34 @@
     {
       "type": "Feature",
       "properties": {
+        "navn": "Fotballbane",
+        "kategori": "friluft",
+        "beskrivelse": "Fotballbane på Veierland.",
+        "verifisert": true,
+        "koordinat_kilde": "manuelt verifisert"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [10.35211, 59.15536]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Postkontoret",
+        "kategori": "info",
+        "beskrivelse": "Postkontor på Veierland.",
+        "verifisert": true,
+        "koordinat_kilde": "manuelt verifisert"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [10.35189, 59.15494]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
         "navn": "Dagros kafé",
         "kategori": "mat",
         "beskrivelse": "Kafé på Veierland. Sommeråpent.",
