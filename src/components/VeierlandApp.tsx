@@ -928,6 +928,11 @@ export function VeierlandApp() {
           >
             <HeartSvg />
           </button>
+          {poi.nettside && (
+            <a href={poi.nettside} target="_blank" rel="noreferrer" className="vl-btn pri">
+              Nettside ↗
+            </a>
+          )}
           {poi.askeladden_url && (
             <a href={poi.askeladden_url} target="_blank" rel="noreferrer" className="vl-btn pri">
               <RouteSvg /> Askeladden ↗

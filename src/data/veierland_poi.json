@@ -101,6 +101,7 @@
         "navn": "Villa Veierland (kafé)",
         "kategori": "mat",
         "beskrivelse": "Kafé, pizza og butikk. Albyveien 27. Sommeråpent.",
+        "nettside": "https://www.villaveierland.no/",
         "verifisert": true,
         "koordinat_kilde": "Google Places API"
       },
@@ -110,6 +111,36 @@
           10.3530783,
           59.155874
         ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Dagros kafé",
+        "kategori": "mat",
+        "beskrivelse": "Kafé på Veierland. Sommeråpent.",
+        "nettside": "https://www.dagroskafe.no/",
+        "verifisert": true,
+        "koordinat_kilde": "manuelt verifisert"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [10.35122, 59.15292]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Veierland golfbane (6 hull)",
+        "kategori": "friluft",
+        "beskrivelse": "6-hulls golfbane på Veierland.",
+        "nettside": "https://www.facebook.com/groups/289659609256387/",
+        "verifisert": true,
+        "koordinat_kilde": "manuelt verifisert"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [10.35200, 59.16464]
       }
     },
     {
