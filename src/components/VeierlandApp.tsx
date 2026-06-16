@@ -689,6 +689,23 @@ export function VeierlandApp() {
 
         {mode === 'nature' ? renderNature() : mode === 'places' ? (
           <>
+            <div className="vl-chips-wrap" style={{ margin: '0 -20px 10px' }}>
+              <div className="vl-chips">
+                <div className={`vl-chip all${activeCats.size === 0 ? ' on' : ''}`} onClick={() => setActiveCats(new Set())}>
+                  <span className="dot" />{T.all}
+                </div>
+                {allCats.map(k => {
+                  const cat = getCat(k);
+                  const on = activeCats.has(k);
+                  return (
+                    <div key={k} className={`vl-chip${on ? ' on' : ''}`} onClick={() => toggleCat(k)}>
+                      <span className="dot" style={{ background: on ? '#fff' : cat.color }} />
+                      {lang === 'no' ? cat.no : cat.en}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
             <div className="vl-count">{filteredPOIs.length ? T.np(filteredPOIs.length) : T.nohit}</div>
             {filteredPOIs.map(poi => {
               const cat = getCat(poi.kategori);
@@ -953,27 +970,6 @@ export function VeierlandApp() {
             <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
           </div>
         </div>
-        {mode !== 'nature' && <div className="vl-chips-wrap">
-          <div className="vl-chips">
-            <div
-              className={`vl-chip all${activeCats.size === 0 ? ' on' : ''}`}
-              onClick={() => setActiveCats(new Set())}
-            >
-              <span className="dot" />
-              {T.all}
-            </div>
-            {allCats.map(k => {
-              const cat = getCat(k);
-              const on = activeCats.has(k);
-              return (
-                <div key={k} className={`vl-chip${on ? ' on' : ''}`} onClick={() => toggleCat(k)}>
-                  <span className="dot" style={{ background: on ? '#fff' : cat.color }} />
-                  {lang === 'no' ? cat.no : cat.en}
-                </div>
-              );
-            })}
-          </div>
-        </div>}
       </div>
 
       {/* Layer popup */}
