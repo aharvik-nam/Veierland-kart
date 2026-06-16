@@ -106,8 +106,8 @@ interface NatureObs {
   gbifKey: number;
 }
 
-// WGS84 bounding box covering Veierland island
-const GBIF_POLYGON = encodeURIComponent('POLYGON((10.38 59.13,10.47 59.13,10.47 59.22,10.38 59.22,10.38 59.13))');
+// WGS84 bounding box covering Veierland island (lng 10.32–10.37, lat 59.13–59.18)
+const GBIF_POLYGON = encodeURIComponent('POLYGON((10.32 59.13,10.37 59.13,10.37 59.18,10.32 59.18,10.32 59.13))');
 
 async function fetchNatureGroup(group: NatureGroup): Promise<{ group: NatureGroup; obs: unknown[] }> {
   try {
