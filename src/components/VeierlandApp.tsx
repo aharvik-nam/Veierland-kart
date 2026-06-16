@@ -334,7 +334,7 @@ export function VeierlandApp() {
   const [view, setView] = useState<'browse' | 'detail'>('browse');
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
   const [selectedTrail, setSelectedTrail] = useState<Trail | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [currentLayer, setCurrentLayer] = useState<string>(() => {
     try { return localStorage.getItem('vl-layer') || 'soleng'; } catch { return 'soleng'; }
   });
@@ -681,9 +681,6 @@ export function VeierlandApp() {
   function renderBrowse() {
     return (
       <>
-        <h2 style={{ margin: '2px 0 12px', fontSize: 21, fontWeight: 800, letterSpacing: '-.01em' }}>
-          {T.explore}
-        </h2>
         <div className="vl-seg">
           <button className={mode === 'places' ? 'on' : ''} onClick={() => { setMode('places'); setSelectedNature(null); }}>{T.places}</button>
           <button className={mode === 'trails' ? 'on' : ''} onClick={() => { setMode('trails'); setSelectedNature(null); }}>{T.trails}</button>
