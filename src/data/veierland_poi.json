@@ -260,9 +260,10 @@
     {
       "type": "Feature",
       "properties": {
-        "navn": "Alby (nordre gjestehavn)",
+        "navn": "Albykilen – Veierland Båtforening",
         "kategori": "havn",
-        "beskrivelse": "Nordre gjestehavn. Opprinnelig Aðalbýr – historisk hovedgård som eide hele øya. Servicebygg og strøm til båt.",
+        "beskrivelse": "Gjestehavn ved Alby. Opprinnelig Aðalbýr – historisk hovedgård som eide hele øya. Servicebygg og strøm til båt.",
+        "nettside": "https://www.norskhavneguide.no/no/havn/albykilen-veierland-batforening",
         "verifisert": true,
         "koordinat_kilde": "Google Places API"
       },
@@ -272,21 +273,6 @@
           10.356444,
           59.1655994
         ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "navn": "Albykilen – Veierland Båtforening",
-        "kategori": "havn",
-        "beskrivelse": "Gjestehavn driftet av Veierland Båtforening.",
-        "nettside": "https://www.norskhavneguide.no/no/havn/albykilen-veierland-batforening",
-        "verifisert": true,
-        "koordinat_kilde": "manuelt verifisert"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [10.35667, 59.16572]
       }
     },
     {
