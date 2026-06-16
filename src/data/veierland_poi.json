@@ -153,13 +153,13 @@
         "kategori": "bad",
         "beskrivelse": "Badeplass sørvest på øya.",
         "verifisert": true,
-        "koordinat_kilde": "Google Places API"
+        "koordinat_kilde": "manuelt verifisert"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          10.3378852,
-          59.1457908
+          10.33569,
+          59.14567
         ]
       }
     },
