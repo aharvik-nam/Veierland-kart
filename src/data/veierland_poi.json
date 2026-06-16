@@ -33,6 +33,7 @@
         "navn": "Tenvik fergekai",
         "kategori": "ferge",
         "beskrivelse": "Fergeleie på fastlandet (Nøtterøy). Herfra går MF Jutøya til Veierland. Parkering og bussforbindelse.",
+        "nettside": "https://jutoya.veierland.org/",
         "verifisert": true,
         "koordinat_kilde": "Google Places API"
       },
@@ -50,6 +51,7 @@
         "navn": "Vestgården fergeleie",
         "kategori": "ferge",
         "beskrivelse": "Nordre fergeleie på Veierland. Venteskur og gratis sykkelutlån.",
+        "nettside": "https://jutoya.veierland.org/",
         "verifisert": true,
         "koordinat_kilde": "Google Places API"
       },
@@ -67,6 +69,7 @@
         "navn": "Tangen fergekai",
         "kategori": "ferge",
         "beskrivelse": "Søndre fergeleie på Veierland. Venterom, WC og vannpost. Godt startpunkt for turer sørover.",
+        "nettside": "https://jutoya.veierland.org/",
         "verifisert": true,
         "koordinat_kilde": "Google Places API"
       },
@@ -76,6 +79,21 @@
           10.3380491,
           59.1535242
         ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Engø fergeleie",
+        "kategori": "ferge",
+        "beskrivelse": "Fergeleie ved Engø. MF Jutøya stopper her på enkelte avganger.",
+        "nettside": "https://jutoya.veierland.org/",
+        "verifisert": true,
+        "koordinat_kilde": "manuelt verifisert"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [10.31831, 59.14750]
       }
     },
     {
