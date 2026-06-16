@@ -241,11 +241,6 @@ function TileController({ layer }: { layer: string }) {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function computeSheetH(view: 'browse' | 'detail', mode: 'peek' | 'full'): number {
-  if (mode === 'full') return Math.min(window.innerHeight * 0.74, 700);
-  if (view === 'detail') return Math.min(window.innerHeight * 0.62, 560);
-  return 250;
-}
 
 // ─── SVG icon components ──────────────────────────────────────────────────────
 
@@ -319,8 +314,7 @@ export function VeierlandApp() {
   const [view, setView] = useState<'browse' | 'detail'>('browse');
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
   const [selectedTrail, setSelectedTrail] = useState<Trail | null>(null);
-  const [sheetMode, setSheetMode] = useState<'peek' | 'full'>('peek');
-  const [sheetH, setSheetH] = useState(250);
+  const [sheetOpen, setSheetOpen] = useState(true);
   const [currentLayer, setCurrentLayer] = useState<string>(() => {
     try { return localStorage.getItem('vl-layer') || 'soleng'; } catch { return 'soleng'; }
   });
@@ -347,7 +341,6 @@ export function VeierlandApp() {
 
   const mapRef = useRef<L.Map | null>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef<{ startY: number; startH: number } | null>(null);
 
   // Derive category list from actual POI data
   const allCats = useMemo(
@@ -366,24 +359,6 @@ export function VeierlandApp() {
       return true;
     });
   }, [activeCats, searchQ]);
-
-  // Sync sheet height when view/mode changes
-  useEffect(() => {
-    const h = computeSheetH(view, sheetMode);
-    setSheetH(h);
-  }, [view, sheetMode]);
-
-  // Apply sheet height to CSS custom property
-  useEffect(() => {
-    sheetRef.current?.style.setProperty('--sheet-h', `${sheetH}px`);
-  }, [sheetH]);
-
-  // Resize handler
-  useEffect(() => {
-    const handle = () => setSheetH(computeSheetH(view, sheetMode));
-    window.addEventListener('resize', handle);
-    return () => window.removeEventListener('resize', handle);
-  }, [view, sheetMode]);
 
   // Close layer popup on document click
   useEffect(() => {
@@ -475,9 +450,8 @@ export function VeierlandApp() {
   function flyToAboveSheet(coordinates: [number, number], zoom: number) {
     const map = mapRef.current;
     if (!map) return;
-    const peekH = computeSheetH('detail', 'peek');
-    const offsetPx = peekH / 2;
-    // Add to Y (move center south) so the marker appears above the sheet
+    const expandedH = Math.min(window.innerHeight * 0.55, 680);
+    const offsetPx = expandedH / 2;
     const targetPoint = map.project(L.latLng(coordinates), zoom).add(L.point(0, offsetPx));
     map.flyTo(map.unproject(targetPoint, zoom), zoom, { duration: 0.7 });
   }
@@ -488,7 +462,7 @@ export function VeierlandApp() {
     setSelectedTrail(null);
     setTrailPath(null);
     setView('detail');
-    setSheetMode('peek');
+    setSheetOpen(true);
     flyToAboveSheet(poi.coordinates, 15);
   }
 
@@ -496,7 +470,7 @@ export function VeierlandApp() {
     setSelectedTrail(trail);
     setSelectedPOI(null);
     setView('detail');
-    setSheetMode('peek');
+    setSheetOpen(true);
     setTrailPath(trail.path);
     const bounds = L.latLngBounds(trail.path);
     mapRef.current?.fitBounds(bounds.pad(0.35), { paddingBottomRight: [0, 260] });
@@ -507,7 +481,6 @@ export function VeierlandApp() {
     setSelectedPOI(null);
     setSelectedTrail(null);
     setTrailPath(null);
-    setSheetMode('peek');
     const coords = ALL_POIS.map(p => p.coordinates as [number, number]);
     if (coords.length > 0 && mapRef.current) {
       mapRef.current.fitBounds(L.latLngBounds(coords).pad(0.08));
@@ -542,31 +515,18 @@ export function VeierlandApp() {
     });
   }
 
-  // Grab drag handlers
-  function onGrabPointerDown(e: React.PointerEvent<HTMLDivElement>) {
-    dragRef.current = { startY: e.clientY, startH: sheetH };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }
-  function onGrabPointerMove(e: React.PointerEvent<HTMLDivElement>) {
-    if (!dragRef.current) return;
-    const h = Math.max(140, Math.min(window.innerHeight * 0.82, dragRef.current.startH + (dragRef.current.startY - e.clientY)));
-    if (sheetRef.current) {
-      sheetRef.current.style.transition = 'none';
-      sheetRef.current.style.setProperty('--sheet-h', `${h}px`);
-    }
-    setSheetH(h);
-  }
-  function onGrabPointerUp() {
-    if (!dragRef.current) return;
-    dragRef.current = null;
-    if (sheetRef.current) sheetRef.current.style.transition = '';
-    setSheetMode(sheetH > window.innerHeight * 0.5 ? 'full' : 'peek');
-  }
-  function onGrabClick() {
-    setSheetMode(prev => prev === 'full' ? 'peek' : 'full');
-  }
+  const SHEET_COLLAPSED_H = 80;
+  const sheetCurrentH = sheetOpen ? Math.min(window.innerHeight * 0.55, 680) : SHEET_COLLAPSED_H;
+  const railBottom = sheetCurrentH + 16;
 
-  const railBottom = sheetH + 16;
+  function sheetTitle() {
+    if (view === 'detail') {
+      if (selectedPOI) return selectedPOI.navn;
+      if (selectedTrail) return lang === 'no' ? selectedTrail.name : selectedTrail.en;
+      if (selectedNature) return selectedNature.popularName || selectedNature.scientificName;
+    }
+    return lang === 'no' ? 'Utforsk Veierland' : 'Explore Veierland';
+  }
 
   // Text strings
   const T = lang === 'no' ? {
@@ -668,8 +628,8 @@ export function VeierlandApp() {
           return (
             <div key={obs.gbifKey} className="vl-card" onClick={() => {
               setSelectedNature(obs);
+              setSheetOpen(true);
               flyToAboveSheet([obs.lat, obs.lng], 14);
-              setSheetMode('peek');
             }}>
               <div className="vl-ic" style={{ background: cfg.color + '22', color: cfg.color }}
                 dangerouslySetInnerHTML={{ __html: coloredSvg('blad', cfg.color) }} />
@@ -892,7 +852,6 @@ export function VeierlandApp() {
               setTrailPath(trail.path);
               const bounds = L.latLngBounds(trail.path);
               mapRef.current?.fitBounds(bounds.pad(0.35), { paddingBottomRight: [0, 260] });
-              setSheetMode('peek');
             }}
           >
             <RouteSvg /> {T.showRoute}
@@ -934,7 +893,7 @@ export function VeierlandApp() {
               icon={icon}
               eventHandlers={{ click: () => {
                 setSelectedNature(obs);
-                setSheetMode('peek');
+                setSheetOpen(true);
                 flyToAboveSheet([obs.lat, obs.lng], Math.max(mapZoom, 13));
               }}}
             />
@@ -1043,17 +1002,12 @@ export function VeierlandApp() {
       {/* Bottom sheet */}
       <div
         ref={sheetRef}
-        className="vl-sheet"
+        className={`vl-sheet${sheetOpen ? ' open' : ''}`}
         onClick={() => setShowLayerPop(false)}
       >
-        <div
-          className="vl-grab"
-          onClick={onGrabClick}
-          onPointerDown={onGrabPointerDown}
-          onPointerMove={onGrabPointerMove}
-          onPointerUp={onGrabPointerUp}
-        >
+        <div className="vl-grab" onClick={() => setSheetOpen(o => !o)}>
           <div className="bar" />
+          <span className="vl-sheet-title">{sheetTitle()}</span>
         </div>
         <div className="vl-body">
           {view === 'browse' && renderBrowse()}
