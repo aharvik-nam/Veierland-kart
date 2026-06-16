@@ -50,7 +50,7 @@
       "properties": {
         "navn": "Vestgården fergeleie",
         "kategori": "ferge",
-        "beskrivelse": "Nordre fergeleie på Veierland. Venteskur og gratis sykkelutlån.",
+        "beskrivelse": "Nordre fergeleie på Veierland. Venteskur og gratis sykkelutlån. Gården het på norrønt Vestgarðr og er over tusen år gammel – gravfunn bekrefter bosetning fra jernalderen. Beliggenheten 10–12 meter over havnivå ga full oversikt over den beskyttede vika den gang sjøen stod 5–6 meter høyere. I 1398 ble gården gitt i gave til kirken i Tjølling.",
         "nettside": "https://jutoya.veierland.org/",
         "verifisert": true,
         "koordinat_kilde": "Google Places API"
@@ -68,7 +68,7 @@
       "properties": {
         "navn": "Tangen fergekai",
         "kategori": "ferge",
-        "beskrivelse": "Søndre fergeleie på Veierland. Venterom, WC og vannpost. Godt startpunkt for turer sørover.",
+        "beskrivelse": "Søndre fergeleie på Veierland. Venterom, WC og vannpost. Gården Tangen (norrønt: Tangi) ble skilt ut som sørlig part av Vestgården. En kilde fra 1315 bekrefter at ridder Bjarne Audunsson eide gården og ga parter til tre kirker i Tønsberg. Øya lå sentralt for forsvar av innseilingen til Tønsberg, og den norske kongen eide trolig flere gårder på Veierland allerede på 1200-tallet.",
         "nettside": "https://jutoya.veierland.org/",
         "verifisert": true,
         "koordinat_kilde": "Google Places API"
@@ -262,7 +262,7 @@
       "properties": {
         "navn": "Albykilen – Veierland Båtforening",
         "kategori": "havn",
-        "beskrivelse": "Gjestehavn ved Alby. Opprinnelig Aðalbýr – historisk hovedgård som eide hele øya. Servicebygg og strøm til båt.",
+        "beskrivelse": "Gjestehavn ved Alby. Gårdsnavnet Aðalbýr betyr «hovedgården» – rundt år 800 ble øya delt i to, og Alby beholdt halve øya. Gården hadde tydelige internasjonale kontakter: en kvinnegrav fra tidlig vikingtid (første halvdel av 800-tallet) inneholdt en spenne med elefant-ornamenter fra handelsbyen Hedeby i Danmark, skjelettet av en hest, rester av et spyd og muligens en ringbrynje. I 1897 ble det også funnet en armring i bronse under pløying. Servicebygg og strøm til båt.",
         "nettside": "https://www.norskhavneguide.no/no/havn/albykilen-veierland-batforening",
         "verifisert": true,
         "koordinat_kilde": "Google Places API"
@@ -385,7 +385,7 @@
         "under_vann": false,
         "askeladden_id": 78210,
         "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/78210",
-        "beskrivelse": "Gravhaug, diameter 4m, høyde 0,3m med søkk i midten. Bygd av jord. 13m NNV og 20m SSØ for denne ligger det to groper uten voll av ukjent funksjon (kontrollregistrert 2010). Askeladden ID 78210.",
+        "beskrivelse": "Gravhaug, diameter 4m, høyde 0,3m med søkk i midten. Bygd av jord. En av to fredede gravhauger fra jernalderen på Alby. I nærheten er det funnet en særlig interessant kvinnegrav fra folkevandringstiden (400–600 e.Kr.) med en bøylespenne, to leirkrukker, en krumkniv og et spinnehjul – tydelige tegn på helårs bosetning allerede på denne tiden. Askeladden ID 78210.",
         "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
         "verifisert": true
       },
@@ -435,7 +435,7 @@
         "under_vann": false,
         "askeladden_id": 29753,
         "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/29753",
-        "beskrivelse": "Gravhaug, diameter 3m, høyde 0,5–0,7m. Regelmessig rund og kuplet haug. Bygd av jord. 50m SSØ for Askeladden 21553. Askeladden ID 29753.",
+        "beskrivelse": "Gravhaug, diameter 3m, høyde 0,5–0,7m. Regelmessig rund og kuplet haug. Bygd av jord. En av to fredede gravhauger fra jernalderen på Alby. En stormannsgrav fra tidlig vikingtid (800-tallet) er knyttet til dette området – funnet inneholdt en spenne med elefant-ornamenter fra Hedeby i Danmark, hestelskjelett og spydrester. I 1897 ble det under pløying funnet en armring i bronse fra vikingtiden. Askeladden ID 29753.",
         "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
         "verifisert": true
       },
@@ -485,7 +485,7 @@
         "under_vann": false,
         "askeladden_id": 58470,
         "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/58470",
-        "beskrivelse": "Rundhaug, klart markert, steinblandet. Nå helt fjernet. Her ble det ca. 1885 gjort et mannsgravfunn fra vikingtiden. Dette er det viktigste arkeologiske funnet på Veierland – en velutstyrt mannsgrav. Askeladden ID 58470.",
+        "beskrivelse": "Rundhaug, nå helt fjernet. Ca. 1885 ble det her gjort et mannsgravfunn fra vikingtiden – regnet som det viktigste arkeologiske funnet på Veierland. Vestgården (norrønt: Vestgarðr) er over tusen år gammel, og Krika ble skilt ut som øyas femte gård fra Vestgården en gang før 1398. Askeladden ID 58470.",
         "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
         "verifisert": true
       },
@@ -510,7 +510,7 @@
         "under_vann": false,
         "askeladden_id": 222472,
         "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/222472",
-        "beskrivelse": "Mynt, engelsk longcross. Funnet av Kim Eilertsen med metalldetektor. Høymiddelalder. Askeladden ID 222472.",
+        "beskrivelse": "Engelsk sølvmynt (longcross) fra kong Edward I (1272–1307), funnet med metalldetektor. Mynten er knyttet til Krika-området og antyder at folk fra øya deltok i den etablerte handelen mellom Tønsberg og England – muligens som mannskap på kongens skip. Høymiddelalder. Askeladden ID 222472.",
         "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
         "verifisert": true
       },
