@@ -277,6 +277,51 @@
     {
       "type": "Feature",
       "properties": {
+        "navn": "Albykilen – Veierland Båtforening",
+        "kategori": "havn",
+        "beskrivelse": "Gjestehavn driftet av Veierland Båtforening.",
+        "nettside": "https://www.norskhavneguide.no/no/havn/albykilen-veierland-batforening",
+        "verifisert": true,
+        "koordinat_kilde": "manuelt verifisert"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [10.35667, 59.16572]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Tangen Bryggesameie",
+        "kategori": "havn",
+        "beskrivelse": "Gjestehavn ved Tangen.",
+        "nettside": "https://www.norskhavneguide.no/no/havn/tangen-bryggesameie-veierland",
+        "verifisert": true,
+        "koordinat_kilde": "manuelt verifisert"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [10.33694, 59.15364]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Korsholmen",
+        "kategori": "havn",
+        "beskrivelse": "Gjestehavn ved Korsholmen.",
+        "nettside": "https://www.norskhavneguide.no/no/havn/korsholmen",
+        "verifisert": true,
+        "koordinat_kilde": "manuelt verifisert"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [10.37228, 59.14078]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
         "navn": "Teltplass (Kjølholmen)",
         "kategori": "friluft",
         "beskrivelse": "Teltplass markert på turkart fra 1984 ved Kjølholmen nordøst. Regulert friluftsområde med plass til telt, avtrede og søppeldunker. Kilde: natur/miljø-utredningen 1984.",
