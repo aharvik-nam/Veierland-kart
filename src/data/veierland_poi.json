@@ -260,9 +260,23 @@
     {
       "type": "Feature",
       "properties": {
+        "navn": "Alby gård",
+        "kategori": "kultur",
+        "beskrivelse": "Gårdsnavnet Aðalbýr betyr «hovedgården» – rundt år 800 ble øya delt i to, og Alby beholdt halve øya. Gården hadde tydelige internasjonale kontakter: en kvinnegrav fra tidlig vikingtid (første halvdel av 800-tallet) inneholdt en spenne med elefant-ornamenter fra handelsbyen Hedeby i Danmark, skjelettet av en hest, rester av et spyd og muligens en ringbrynje. I 1897 ble det også funnet en armring i bronse under pløying.",
+        "verifisert": true,
+        "koordinat_kilde": "manuelt verifisert"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [10.3535, 59.1648]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
         "navn": "Albykilen – Veierland Båtforening",
         "kategori": "havn",
-        "beskrivelse": "Gjestehavn ved Alby. Gårdsnavnet Aðalbýr betyr «hovedgården» – rundt år 800 ble øya delt i to, og Alby beholdt halve øya. Gården hadde tydelige internasjonale kontakter: en kvinnegrav fra tidlig vikingtid (første halvdel av 800-tallet) inneholdt en spenne med elefant-ornamenter fra handelsbyen Hedeby i Danmark, skjelettet av en hest, rester av et spyd og muligens en ringbrynje. I 1897 ble det også funnet en armring i bronse under pløying. Servicebygg og strøm til båt.",
+        "beskrivelse": "Gjestehavn ved Alby. Servicebygg og strøm til båt.",
         "nettside": "https://www.norskhavneguide.no/no/havn/albykilen-veierland-batforening",
         "verifisert": true,
         "koordinat_kilde": "Google Places API"
