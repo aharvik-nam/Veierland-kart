@@ -119,11 +119,23 @@ body { display: grid; place-items: center; }
 /* Top overlay */
 .vl-top {
   position: absolute; top: 0; left: 0; right: 0; z-index: 500;
-  padding: 14px 16px 14px;
+  padding: 14px 16px;
   pointer-events: none;
-  background: linear-gradient(var(--sea) 38%, transparent);
 }
 .vl-top > * { pointer-events: auto; }
+.vl-top-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.vl-search-btn {
+  width: 46px; height: 46px; border-radius: 50%;
+  background: var(--card); border: 1px solid var(--line);
+  box-shadow: 0 4px 16px rgba(40,55,35,.16);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--accent);
+  -webkit-tap-highlight-color: transparent;
+}
+.vl-search-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 .vl-search {
   display: flex; align-items: center; gap: 11px; padding: 13px 14px;
@@ -138,6 +150,10 @@ body { display: grid; place-items: center; }
   font: inherit; font-size: 16px; color: var(--ink); min-width: 0;
 }
 .vl-search input::placeholder { color: var(--muted); }
+.vl-clear {
+  background: none; border: none; cursor: pointer; padding: 2px;
+  color: var(--muted); display: flex; align-items: center;
+}
 
 .vl-lang {
   display: flex; align-items: center; gap: 2px; flex: 0 0 auto;

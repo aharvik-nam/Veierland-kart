@@ -344,6 +344,7 @@ export function VeierlandApp() {
   const [activeCats, setActiveCats] = useState<Set<string>>(new Set());
   const [mode, setMode] = useState<'places' | 'trails' | 'nature'>('places');
   const [searchQ, setSearchQ] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
   const [view, setView] = useState<'browse' | 'detail'>('browse');
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
   const [selectedTrail, setSelectedTrail] = useState<Trail | null>(null);
@@ -783,9 +784,6 @@ export function VeierlandApp() {
           </span>
         </div>
         <div className="vl-h2">{poi.navn}</div>
-        {!lokalData?.bilde && dimuData.length === 0 && wikimediaImages.length === 0 && (
-          <div className="vl-hero" dangerouslySetInnerHTML={{ __html: heroArt(cat.color) }} />
-        )}
         <p className="vl-desc">{poi.beskrivelse}</p>
 
         {wikimediaImages.length > 0 && (
@@ -984,24 +982,44 @@ export function VeierlandApp() {
         )}
       </MapContainer>
 
-      {/* Top overlay: search + chips */}
+      {/* Top overlay */}
       <div className="vl-top">
-        <div className="vl-search">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
-            <circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>
-          </svg>
-          <input
-            type="text"
-            placeholder={T.search}
-            value={searchQ}
-            onChange={e => setSearchQ(e.target.value)}
-            autoComplete="off"
-          />
+        <div className="vl-top-row">
+          <button
+            className={`vl-search-btn${searchQ ? ' active' : ''}`}
+            onClick={() => setSearchOpen(o => !o)}
+            aria-label="Søk"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
+              <circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>
+            </svg>
+          </button>
           <div className="vl-lang">
             <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>NO</button>
             <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
           </div>
         </div>
+        {searchOpen && (
+          <div className="vl-search">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
+              <circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>
+            </svg>
+            <input
+              type="text"
+              placeholder={T.search}
+              value={searchQ}
+              onChange={e => setSearchQ(e.target.value)}
+              onBlur={() => setSearchOpen(false)}
+              autoFocus
+              autoComplete="off"
+            />
+            {searchQ && (
+              <button className="vl-clear" onMouseDown={() => { setSearchQ(''); setSearchOpen(false); }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Layer popup */}
