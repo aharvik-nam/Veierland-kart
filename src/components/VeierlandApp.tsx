@@ -787,12 +787,6 @@ export function VeierlandApp() {
   function renderBrowse() {
     return (
       <>
-        <div className="vl-seg">
-          <button className={mode === 'places' ? 'on' : ''} onClick={() => { setMode('places'); setSelectedNature(null); }}>{T.places}</button>
-          <button className={mode === 'trails' ? 'on' : ''} onClick={() => { setMode('trails'); setSelectedNature(null); }}>{T.trails}</button>
-          <button className={mode === 'nature' ? 'on' : ''} onClick={() => { setMode('nature'); setSelectedNature(null); }}>{T.nature}</button>
-        </div>
-
         {mode === 'nature' ? renderNature() : mode === 'places' ? (
           <>
             <div className="vl-chips-wrap" style={{ margin: '0 -20px 10px' }}>
@@ -1150,6 +1144,13 @@ export function VeierlandApp() {
             <circle cx="12" cy="12" r="3.4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>
           </svg>
         </button>
+      </div>
+
+      {/* Floating mode pill above sheet */}
+      <div className="vl-mode-pill">
+        <button className={mode === 'places' ? 'on' : ''} onClick={() => { setMode('places'); setSelectedNature(null); setView('browse'); }}>{T.places}</button>
+        <button className={mode === 'trails' ? 'on' : ''} onClick={() => { setMode('trails'); setSelectedNature(null); setView('browse'); }}>{T.trails}</button>
+        <button className={mode === 'nature' ? 'on' : ''} onClick={() => { setMode('nature'); setSelectedNature(null); setView('browse'); }}>{T.nature}</button>
       </div>
 
       {/* Bottom sheet */}
