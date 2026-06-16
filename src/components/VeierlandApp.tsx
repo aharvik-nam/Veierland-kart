@@ -68,7 +68,7 @@ interface CatCfg {
 const CAT_CFG: Record<string, CatCfg> = {
   bad:        { no: 'Badeplasser',   en: 'Beaches',      color: '#2f9e8f', icon: 'bade'   },
   ferge:      { no: 'Brygge',        en: 'Quays',        color: '#3d6ea5', icon: 'ferge'  },
-  havn:       { no: 'Havn',          en: 'Harbour',      color: '#3d6ea5', icon: 'ferge'  },
+  havn:       { no: 'Havn',          en: 'Harbour',      color: '#3d6ea5', icon: 'anker'  },
   kultur:     { no: 'Kulturminner',  en: 'Heritage',     color: '#b5673e', icon: 'kultur' },
   hvalfangst: { no: 'Hvalfangst',   en: 'Whaling',      color: '#7b5ea7', icon: 'utsikt' },
   info:       { no: 'Fasiliteter',   en: 'Facilities',   color: '#6b7a86', icon: 'wc'     },
@@ -92,6 +92,7 @@ const ICONS: Record<string, string> = {
   tur:    '<path d="M-5,6 C-8,1 -1,2 0,-2 C1,-6 7,-5 4,-9"/>',
   utsikt: '<path d="M-7,0 C-4,-4.5 4,-4.5 7,0 C4,4.5 -4,4.5 -7,0 Z"/><circle cx="0" cy="0" r="1.7" fill="#fff" stroke="none"/>',
   ferge:  '<path d="M-7,2 L7,2 L5,6 L-5,6 Z"/><path d="M0,2 L0,-6"/><path d="M0,-6 L5,-3 L0,-1" fill="#fff"/>',
+  anker:  '<circle cx="0" cy="-5" r="2.2" fill="none"/><path d="M0,-2.8 L0,6"/><path d="M-5,0 H5"/><path d="M-5,6 C-8,6 -8,3 -5,3"/><path d="M5,6 C8,6 8,3 5,3"/>',
   mat:    '<path d="M-5,-3 L5,-3 L4,3 a2.4,2.4 0 0 1-2.4,2.4L-1.6,2.4a2.4,2.4 0 0 1-2.4,-2.4Z"/><path d="M5,-2 a2.6,2.6 0 0 1 0,4.4"/><path d="M-1,-7 v2.4"/>',
   kultur: '<path d="M-7,-3 L0,-8 L7,-3"/><path d="M-5,-3 v8"/><path d="M0,-3 v8"/><path d="M5,-3 v8"/><path d="M-7,5 H7"/>',
   telt:   '<path d="M0,-7 L7.5,6 L-7.5,6 Z"/><path d="M0,-7 L0,6"/><path d="M0,6 L-2.5,6"/>',
