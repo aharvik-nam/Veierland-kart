@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { ALL_POIS } from '../data/veierland';
 import turkartRaw from '../data/turkart.geojson?raw';
 import boundaryData from '../data/veierland_boundary.json';
+import natureCacheData from '../data/nature_cache.json';
 import 'leaflet.markercluster';
 const turkartData = JSON.parse(turkartRaw);
 import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, WikipediaData } from '../lib/types';
@@ -512,15 +513,36 @@ export function VeierlandApp() {
 
   useEffect(() => {
     if (mode !== 'nature' || natureFetched) return;
-    setNatureLoading(true);
+
+    // 1. Load pre-baked static cache instantly
+    const staticCache = natureCacheData as { generatedAt: string; obs: NatureObs[] };
+    setNatureObs(staticCache.obs);
+    setNatureFetched(true);
+
+    // 2. In background: fetch new observations since cache was generated
+    const since = staticCache.generatedAt.slice(0, 10);
     const groups = Object.keys(NATURE_GROUPS) as NatureGroup[];
-    Promise.all(groups.map(fetchNatureGroup))
-      .then(rawGroups => enrichWithINaturalist(processNatureData(rawGroups)))
-      .then(enriched => {
-        setNatureObs(enriched);
-        setNatureFetched(true);
-        setNatureLoading(false);
+    Promise.all(groups.map(async (group) => {
+      const cfg = NATURE_GROUPS[group];
+      try {
+        const url = `https://api.gbif.org/v1/occurrence/search?geometry=${GBIF_POLYGON}&taxonKey=${cfg.taxonKey}&eventDate=${since},*&limit=300`;
+        const res = await fetch(url);
+        if (!res.ok) return { group, obs: [] };
+        const data = await res.json();
+        return { group, obs: data.results ?? [] };
+      } catch { return { group, obs: [] }; }
+    })).then(rawGroups => {
+      const newObs = processNatureData(rawGroups);
+      const existingKeys = new Set(staticCache.obs.map(o => o.gbifKey));
+      const truly_new = newObs.filter(o => !existingKeys.has(o.gbifKey));
+      if (truly_new.length === 0) return;
+      return enrichWithINaturalist(truly_new).then(enrichedNew => {
+        setNatureObs(prev => {
+          const merged = [...prev, ...enrichedNew];
+          return merged.sort((a, b) => b.obsCount - a.obsCount || a.scientificName.localeCompare(b.scientificName));
+        });
       });
+    });
   }, [mode, natureFetched]);
 
   // Fly to a coordinate but shift the center up so the marker is visible above the sheet
