@@ -121,6 +121,26 @@ async function fetchNatureGroup(group: NatureGroup): Promise<{ group: NatureGrou
   }
 }
 
+async function fetchNorwegianName(speciesKey: number): Promise<string> {
+  try {
+    const res = await fetch(`https://api.gbif.org/v1/species/${speciesKey}/vernacularNames?limit=100`);
+    if (!res.ok) return '';
+    const data = await res.json();
+    const hit = (data.results as { vernacularName: string; language: string }[])
+      .find(n => n.language === 'nor' || n.language === 'nob');
+    return hit?.vernacularName ?? '';
+  } catch {
+    return '';
+  }
+}
+
+async function enrichWithNorwegianNames(obs: NatureObs[]): Promise<NatureObs[]> {
+  const uniqueKeys = [...new Set(obs.map(o => o.gbifKey))];
+  const names = await Promise.all(uniqueKeys.map(k => fetchNorwegianName(k)));
+  const nameMap = new Map(uniqueKeys.map((k, i) => [k, names[i]]));
+  return obs.map(o => ({ ...o, popularName: nameMap.get(o.gbifKey) || o.popularName }));
+}
+
 function processNatureData(rawGroups: { group: NatureGroup; obs: unknown[] }[]): NatureObs[] {
   const countMap = new Map<number, number>();
   const latestMap = new Map<number, { raw: Record<string, unknown>; group: NatureGroup; date: string }>();
@@ -439,11 +459,13 @@ export function VeierlandApp() {
     if (mode !== 'nature' || natureFetched) return;
     setNatureLoading(true);
     const groups = Object.keys(NATURE_GROUPS) as NatureGroup[];
-    Promise.all(groups.map(fetchNatureGroup)).then(rawGroups => {
-      setNatureObs(processNatureData(rawGroups));
-      setNatureFetched(true);
-      setNatureLoading(false);
-    });
+    Promise.all(groups.map(fetchNatureGroup))
+      .then(rawGroups => enrichWithNorwegianNames(processNatureData(rawGroups)))
+      .then(enriched => {
+        setNatureObs(enriched);
+        setNatureFetched(true);
+        setNatureLoading(false);
+      });
   }, [mode, natureFetched]);
 
   // Fly to a coordinate but shift the center up so the marker is visible above the sheet
