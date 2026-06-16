@@ -388,6 +388,7 @@ export function VeierlandApp() {
   const [natureLoading, setNatureLoading] = useState(false);
   const [natureFetched, setNatureFetched] = useState(false);
   const [natureFilter, setNatureFilter] = useState<NatureGroup | null>(null);
+  const filteredNatureObs = natureFilter ? natureObs.filter(o => o.group === natureFilter) : natureObs;
   const [selectedNature, setSelectedNature] = useState<NatureObs | null>(null);
   const [speciesWiki, setSpeciesWiki] = useState<WikipediaData | null>(null);
   const [speciesWikiLoading, setSpeciesWikiLoading] = useState(false);
@@ -717,7 +718,7 @@ export function VeierlandApp() {
       );
     }
 
-    const filtered = natureFilter ? natureObs.filter(o => o.group === natureFilter) : natureObs;
+    const filtered = filteredNatureObs;
 
     return (
       <>
@@ -1029,7 +1030,7 @@ export function VeierlandApp() {
       >
         <MapSetup onReady={onMapReady} onMapClick={onMapClick} onZoom={onZoom} />
         <TileController layer={currentLayer} />
-        {mode === 'nature' && natureObs.map(obs => {
+        {mode === 'nature' && filteredNatureObs.map(obs => {
           const cfg = NATURE_GROUPS[obs.group];
           const selected = selectedNature?.gbifKey === obs.gbifKey;
           const sz = Math.max(10, Math.min(20, 10 + (mapZoom - 11) * 2.5));
