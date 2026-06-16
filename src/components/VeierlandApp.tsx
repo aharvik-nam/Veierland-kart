@@ -45,9 +45,9 @@ const LAYERS: Record<string, LayerCfg> = {
   historisk: {
     label: { no: 'Historisk', en: 'Historic' },
     sw: 'linear-gradient(135deg,#e8dfc8,#c8b89a)',
-    url: 'https://wms.geonorge.no/skwms1/wms.historiskekart2',
+    url: 'https://wms.geonorge.no/skwms1/wms.historiskekart',
     wms: true,
-    wmsLayers: 'historisk_bakgrunnskart',
+    wmsLayers: 'historiskekart',
     opts: { maxZoom: 16, attribution: '© Kartverket' },
     filter: 'sepia(.4) contrast(1.1) brightness(1.05)',
   },
