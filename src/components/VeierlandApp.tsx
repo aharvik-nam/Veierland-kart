@@ -78,6 +78,8 @@ const CAT_CFG: Record<string, CatCfg> = {
   stedsnavn:  { no: 'Stedsnavn',     en: 'Place names',  color: '#7c876f', icon: 'wc'     },
 };
 
+const STEDER_CATS = ['bad', 'ferge', 'havn', 'mat', 'friluft'];
+
 function getCat(k: string): CatCfg {
   return CAT_CFG[k] ?? { no: k, en: k, color: '#7c876f', icon: 'wc' };
 }
@@ -599,6 +601,16 @@ export function VeierlandApp() {
     );
   }
 
+  function toggleSteder() {
+    setActiveCats(prev => {
+      const next = new Set(prev);
+      const anyOn = STEDER_CATS.some(k => next.has(k));
+      if (anyOn) STEDER_CATS.forEach(k => next.delete(k));
+      else STEDER_CATS.forEach(k => next.add(k));
+      return next;
+    });
+  }
+
   function toggleCat(k: string) {
     setActiveCats(prev => {
       const next = new Set(prev);
@@ -794,7 +806,16 @@ export function VeierlandApp() {
                 <div className={`vl-chip all${activeCats.size === 0 ? ' on' : ''}`} onClick={() => setActiveCats(new Set())}>
                   <span className="dot" />{T.all}
                 </div>
-                {allCats.map(k => {
+                {(() => {
+                  const stederOn = STEDER_CATS.some(k => activeCats.has(k));
+                  return (
+                    <div className={`vl-chip${stederOn ? ' on' : ''}`} onClick={toggleSteder}>
+                      <span className="dot" style={{ background: stederOn ? '#fff' : '#3d6ea5' }} />
+                      {lang === 'no' ? 'Steder' : 'Places'}
+                    </div>
+                  );
+                })()}
+                {allCats.filter(k => !STEDER_CATS.includes(k)).map(k => {
                   const cat = getCat(k);
                   const on = activeCats.has(k);
                   return (
