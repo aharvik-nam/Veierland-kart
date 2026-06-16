@@ -3,6 +3,7 @@ import { MapContainer, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { ALL_POIS } from '../data/veierland';
 import turkartRaw from '../data/turkart.geojson?raw';
+import boundaryData from '../data/veierland_boundary.json';
 import 'leaflet.markercluster';
 const turkartData = JSON.parse(turkartRaw);
 import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, WikipediaData } from '../lib/types';
@@ -119,8 +120,12 @@ interface NatureObs {
   gbifKey: number;
 }
 
-// WGS84 bounding box covering Veierland island (lng 10.32–10.37, lat 59.13–59.18)
-const GBIF_POLYGON = encodeURIComponent('POLYGON((10.32 59.13,10.37 59.13,10.37 59.18,10.32 59.18,10.32 59.13))');
+// WGS84 polygon tracing Veierland's coastline (from veierland_boundary.json)
+const GBIF_POLYGON = encodeURIComponent(
+  'POLYGON((' +
+  (boundaryData as any).coordinates[0].map((c: number[]) => `${c[0]} ${c[1]}`).join(',') +
+  '))'
+);
 
 async function fetchNatureGroup(group: NatureGroup): Promise<{ group: NatureGroup; obs: unknown[] }> {
   try {
