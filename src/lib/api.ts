@@ -182,11 +182,12 @@ async function tryWikipedia(wiki: string, title: string): Promise<WikipediaData 
 }
 
 export async function fetchWikipediaSpecies(scientificName: string, popularName: string, lang: 'no' | 'en'): Promise<WikipediaData | null> {
-  if (lang === 'no' && popularName) {
-    const r = await tryWikipedia('no', popularName);
-    if (r) return r;
-  }
-  return (await tryWikipedia('en', scientificName)) ?? (await tryWikipedia('no', scientificName));
+  // Always try scientific name first to avoid popular name ambiguity (e.g. "Bispelue" → Pope's hat)
+  const byScientific = (await tryWikipedia('en', scientificName)) ?? (await tryWikipedia('no', scientificName));
+  if (byScientific) return byScientific;
+  // Fall back to popular name only if scientific lookup fails
+  if (lang === 'no' && popularName) return tryWikipedia('no', popularName);
+  return null;
 }
 
 // 7. DigitaltMuseum
