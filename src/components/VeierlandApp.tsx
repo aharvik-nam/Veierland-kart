@@ -78,7 +78,8 @@ const CAT_CFG: Record<string, CatCfg> = {
   stedsnavn:  { no: 'Stedsnavn',     en: 'Place names',  color: '#7c876f', icon: 'wc'     },
 };
 
-const STEDER_CATS = ['bad', 'ferge', 'havn', 'mat', 'friluft'];
+const PRAKTISK_CATS = ['bad', 'ferge', 'havn', 'mat', 'friluft', 'kultur'];
+const HISTORISK_CATS = ['arkeologi'];
 
 function getCat(k: string): CatCfg {
   return CAT_CFG[k] ?? { no: k, en: k, color: '#7c876f', icon: 'wc' };
@@ -601,12 +602,12 @@ export function VeierlandApp() {
     );
   }
 
-  function toggleSteder() {
+  function toggleGroup(cats: string[]) {
     setActiveCats(prev => {
       const next = new Set(prev);
-      const anyOn = STEDER_CATS.some(k => next.has(k));
-      if (anyOn) STEDER_CATS.forEach(k => next.delete(k));
-      else STEDER_CATS.forEach(k => next.add(k));
+      const anyOn = cats.some(k => next.has(k));
+      if (anyOn) cats.forEach(k => next.delete(k));
+      else cats.forEach(k => next.add(k));
       return next;
     });
   }
@@ -807,15 +808,22 @@ export function VeierlandApp() {
                   <span className="dot" />{T.all}
                 </div>
                 {(() => {
-                  const stederOn = STEDER_CATS.some(k => activeCats.has(k));
+                  const praktiskOn = PRAKTISK_CATS.some(k => activeCats.has(k));
+                  const historiskOn = HISTORISK_CATS.some(k => activeCats.has(k));
                   return (
-                    <div className={`vl-chip${stederOn ? ' on' : ''}`} onClick={toggleSteder}>
-                      <span className="dot" style={{ background: stederOn ? '#fff' : '#3d6ea5' }} />
-                      {lang === 'no' ? 'Steder' : 'Places'}
-                    </div>
+                    <>
+                      <div className={`vl-chip${praktiskOn ? ' on' : ''}`} onClick={() => toggleGroup(PRAKTISK_CATS)}>
+                        <span className="dot" style={{ background: praktiskOn ? '#fff' : '#3d6ea5' }} />
+                        {lang === 'no' ? 'Praktisk' : 'Practical'}
+                      </div>
+                      <div className={`vl-chip${historiskOn ? ' on' : ''}`} onClick={() => toggleGroup(HISTORISK_CATS)}>
+                        <span className="dot" style={{ background: historiskOn ? '#fff' : '#b5673e' }} />
+                        {lang === 'no' ? 'Historisk' : 'Historic'}
+                      </div>
+                    </>
                   );
                 })()}
-                {allCats.filter(k => !STEDER_CATS.includes(k)).map(k => {
+                {allCats.filter(k => ![...PRAKTISK_CATS, ...HISTORISK_CATS].includes(k)).map(k => {
                   const cat = getCat(k);
                   const on = activeCats.has(k);
                   return (
