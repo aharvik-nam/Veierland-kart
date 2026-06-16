@@ -405,7 +405,7 @@ export function VeierlandApp() {
       tasks.push(fetchDigitalMuseum(selectedPOI.dimu_søk, selectedPOI.dimu_eier).then(r => { if (alive) setDimuData(r); }));
     }
     tasks.push(
-      fetchWikimediaImages(selectedPOI.coordinates[0], selectedPOI.coordinates[1]).then(r => { if (alive) setWikimediaImages(r); })
+      fetchWikimediaImages(selectedPOI.coordinates[0], selectedPOI.coordinates[1], 50).then(r => { if (alive) setWikimediaImages(r); })
     );
     Promise.all(tasks).then(() => { if (alive) setApiLoading(false); });
     return () => { alive = false; };
