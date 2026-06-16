@@ -5,8 +5,8 @@ import { ALL_POIS } from '../data/veierland';
 import turkartRaw from '../data/turkart.geojson?raw';
 import 'leaflet.markercluster';
 const turkartData = JSON.parse(turkartRaw);
-import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage } from '../lib/types';
-import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages } from '../lib/api';
+import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, WikipediaData } from '../lib/types';
+import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages, fetchWikipediaSpecies } from '../lib/api';
 
 // ─── Layer configs ────────────────────────────────────────────────────────────
 
@@ -364,6 +364,8 @@ export function VeierlandApp() {
   const [natureFetched, setNatureFetched] = useState(false);
   const [natureFilter, setNatureFilter] = useState<NatureGroup | null>(null);
   const [selectedNature, setSelectedNature] = useState<NatureObs | null>(null);
+  const [speciesWiki, setSpeciesWiki] = useState<WikipediaData | null>(null);
+  const [speciesWikiLoading, setSpeciesWikiLoading] = useState(false);
 
   // API state for detail view
   const [apiLoading, setApiLoading] = useState(false);
@@ -394,6 +396,17 @@ export function VeierlandApp() {
       return true;
     });
   }, [activeCats, searchQ]);
+
+  // Fetch Wikipedia when a nature obs is selected
+  useEffect(() => {
+    if (!selectedNature) { setSpeciesWiki(null); return; }
+    let alive = true;
+    setSpeciesWiki(null);
+    setSpeciesWikiLoading(true);
+    fetchWikipediaSpecies(selectedNature.scientificName, selectedNature.popularName, lang)
+      .then(r => { if (alive) { setSpeciesWiki(r); setSpeciesWikiLoading(false); } });
+    return () => { alive = false; };
+  }, [selectedNature, lang]);
 
   // Close layer popup on document click
   useEffect(() => {
@@ -616,6 +629,24 @@ export function VeierlandApp() {
               <div className="v" style={{ fontSize: 14 }}>{dateStr}</div>
             </div>
           </div>
+          {speciesWikiLoading && (
+            <p style={{ color: 'var(--muted)', fontSize: 13, margin: '8px 0' }}>
+              {lang === 'no' ? 'Henter artsinformasjon…' : 'Loading species info…'}
+            </p>
+          )}
+
+          {speciesWiki && (
+            <div className="vl-api-section">
+              {speciesWiki.imageUrl && (
+                <img src={speciesWiki.imageUrl} alt={speciesWiki.title} className="vl-api-img" />
+              )}
+              <p className="vl-api-text">{speciesWiki.extract}</p>
+              <a href={speciesWiki.pageUrl} target="_blank" rel="noreferrer" className="vl-api-link">
+                {lang === 'no' ? 'Les mer på Wikipedia ↗' : 'Read more on Wikipedia ↗'}
+              </a>
+            </div>
+          )}
+
           <a
             href={`https://www.gbif.org/species/${selectedNature.gbifKey}`}
             target="_blank" rel="noreferrer" className="vl-btn pri"
@@ -624,7 +655,7 @@ export function VeierlandApp() {
             Se art på GBIF ↗
           </a>
           <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 10 }}>
-            Kilde: GBIF (CC BY 4.0)
+            Kilde: GBIF (CC BY 4.0) · Wikipedia (CC BY-SA)
           </p>
         </>
       );

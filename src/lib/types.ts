@@ -65,6 +65,13 @@ export interface MuseumPhoto {
   objektUrl: string;
 }
 
+export interface WikipediaData {
+  title: string;
+  extract: string;
+  imageUrl?: string;
+  pageUrl: string;
+}
+
 export interface WikimediaImage {
   title: string;
   thumbUrl: string;

@@ -1,4 +1,4 @@
-import { WeatherData, ArtskartObservation, SNLData, LokalhistorieData, MuseumPhoto, TideWater, WikimediaImage } from "./types";
+import { WeatherData, ArtskartObservation, SNLData, LokalhistorieData, MuseumPhoto, TideWater, WikimediaImage, WikipediaData } from "./types";
 import { VEIERLAND_POLYGON_UTM33 } from "../data/veierland";
 
 // 1. Weather (Via our local proxy to MET)
@@ -165,7 +165,31 @@ export async function fetchWikimediaImages(lat: number, lng: number, radius = 30
   }
 }
 
-// 6. DigitaltMuseum
+// 6. Wikipedia species lookup
+async function tryWikipedia(wiki: string, title: string): Promise<WikipediaData | null> {
+  try {
+    const res = await fetch(`https://${wiki}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
+    if (!res.ok) return null;
+    const d = await res.json();
+    if (d.type === 'disambiguation' || !d.extract) return null;
+    return {
+      title: d.title,
+      extract: d.extract,
+      imageUrl: d.thumbnail?.source,
+      pageUrl: d.content_urls?.desktop?.page ?? `https://${wiki}.wikipedia.org/wiki/${encodeURIComponent(title)}`,
+    };
+  } catch { return null; }
+}
+
+export async function fetchWikipediaSpecies(scientificName: string, popularName: string, lang: 'no' | 'en'): Promise<WikipediaData | null> {
+  if (lang === 'no' && popularName) {
+    const r = await tryWikipedia('no', popularName);
+    if (r) return r;
+  }
+  return (await tryWikipedia('en', scientificName)) ?? (await tryWikipedia('no', scientificName));
+}
+
+// 7. DigitaltMuseum
 const DIMU_API_KEY = 'demo'; 
 export async function fetchDigitalMuseum(query: string, ownerCode?: string): Promise<MuseumPhoto[]> {
   try {
