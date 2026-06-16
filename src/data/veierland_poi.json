@@ -499,7 +499,7 @@
         "under_vann": false,
         "askeladden_id": 58470,
         "askeladden_url": "https://kulturminnesok.no/minne/?queryString=https://data.kulturminne.no/askeladden/lokalitet/58470",
-        "beskrivelse": "Rundhaug, nå helt fjernet. Ca. 1885 ble det her gjort et mannsgravfunn fra vikingtiden – regnet som det viktigste arkeologiske funnet på Veierland. Vestgården (norrønt: Vestgarðr) er over tusen år gammel, og Krika ble skilt ut som øyas femte gård fra Vestgården en gang før 1398. Askeladden ID 58470.",
+        "beskrivelse": "Rundhaug, nå helt fjernet. Ca. 1885 ble det her gjort et mannsgravfunn fra vikingtiden – regnet som det viktigste arkeologiske funnet på Veierland. Askeladden ID 58470.",
         "koordinat_kilde": "Askeladden/Riksantikvaren (EU89/WGS84)",
         "verifisert": true
       },
@@ -559,6 +559,22 @@
           10.354432463532,
           59.156700303839
         ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "navn": "Krika",
+        "kategori": "arkeologi",
+        "art": "Stedsnavn",
+        "datering": "Middelalder",
+        "beskrivelse": "Krika (norrønt: kriki, «den innerste kroken i en bukt») ble øyas femte gård, skilt ut fra Vestgården en gang under middelalderen, men før 1398. En engelsk sølvmynt fra kong Edward I (1272–1307) funnet her antyder at folk fra øya deltok i handelen mellom Tønsberg og England. Det er også funnet en liten slaggbit som kan tyde på smedvirksomhet i området.",
+        "verifisert": true,
+        "koordinat_kilde": "manuelt verifisert"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [10.3546, 59.1564]
       }
     },
     {
