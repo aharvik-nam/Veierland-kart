@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-16T19:21:04.089Z",
+  "generatedAt": "2026-06-16T20:25:28.491Z",
   "obs": [
     {
       "scientificName": "Eptesicus nilssonii",
-      "popularName": "",
+      "popularName": "Nordflaggermus",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Pattedyr",
@@ -51,9 +51,9 @@
     },
     {
       "scientificName": "Buteo buteo",
-      "popularName": "",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/28307358/medium.jpg",
-      "photoAttribution": "(c) Greg Lasley, some rights reserved (CC BY-NC), uploaded by Greg Lasley",
+      "popularName": "Musvåk",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/192398523/medium.jpeg",
+      "photoAttribution": "(c) rociomar, some rights reserved (CC BY-NC)",
       "group": "Fugler",
       "lat": 59.158984,
       "lng": 10.352437,
@@ -111,7 +111,7 @@
     },
     {
       "scientificName": "Daedalea quercina",
-      "popularName": "",
+      "popularName": "eikemusling",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -147,9 +147,9 @@
     },
     {
       "scientificName": "Sciurus vulgaris",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "Ekorn",
+      "photoUrl": "https://static.inaturalist.org/photos/6235808/medium.jpg",
+      "photoAttribution": "(c) guido parmeggiani, all rights reserved, uploaded by guido parmeggiani",
       "group": "Pattedyr",
       "lat": 59.148575,
       "lng": 10.337182,
@@ -171,9 +171,9 @@
     },
     {
       "scientificName": "Malus sylvestris",
-      "popularName": "eple",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/268437/medium.jpg",
-      "photoAttribution": "(c) Vilma Bharatan, some rights reserved (CC BY-NC-ND)",
+      "popularName": "villeple",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/492442243/medium.jpeg",
+      "photoAttribution": "no rights reserved, uploaded by Thomas",
       "group": "Karplanter",
       "lat": 59.151591,
       "lng": 10.35524,
@@ -183,9 +183,9 @@
     },
     {
       "scientificName": "Pyrrhula pyrrhula",
-      "popularName": "Dompaper",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/12714/medium.jpg",
-      "photoAttribution": "(c) Didier, some rights reserved (CC BY-SA)",
+      "popularName": "Dompap",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/43443143/medium.jpeg",
+      "photoAttribution": "(c) Ольга Курякова, some rights reserved (CC BY-NC), uploaded by Ольга Курякова",
       "group": "Fugler",
       "lat": 59.148575,
       "lng": 10.337182,
@@ -231,7 +231,7 @@
     },
     {
       "scientificName": "Myotis mystacinus",
-      "popularName": "",
+      "popularName": "skjeggflaggermus",
       "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/78198311/medium.jpeg",
       "photoAttribution": "(c) Manuel Ruedi, some rights reserved (CC BY-NC), uploaded by Manuel Ruedi",
       "group": "Pattedyr",
@@ -291,9 +291,9 @@
     },
     {
       "scientificName": "Chloris chloris",
-      "popularName": "Grønnfinker",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/43705228/medium.jpg",
-      "photoAttribution": "(c) Геннадий, some rights reserved (CC BY-NC), uploaded by Геннадий",
+      "popularName": "Grønnfink",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/61258110/medium.jpg",
+      "photoAttribution": "(c) Martin Kunz, some rights reserved (CC BY)",
       "group": "Fugler",
       "lat": 59.156995,
       "lng": 10.351988,
@@ -363,7 +363,7 @@
     },
     {
       "scientificName": "Quercus robur",
-      "popularName": "",
+      "popularName": "eck",
       "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/482832455/medium.jpg",
       "photoAttribution": "(c) Karen Andrea Boehme, some rights reserved (CC BY-NC), uploaded by Karen Andrea Boehme",
       "group": "Karplanter",
@@ -436,8 +436,8 @@
     {
       "scientificName": "Capreolus capreolus",
       "popularName": "Rådyr",
-      "photoUrl": "https://static.inaturalist.org/photos/14019330/medium.jpg",
-      "photoAttribution": "(c) johsan65, all rights reserved, uploaded by johsan65",
+      "photoUrl": "https://static.inaturalist.org/photos/180450991/medium.jpeg",
+      "photoAttribution": "(c) Titouan Roguet, all rights reserved, uploaded by Titouan Roguet",
       "group": "Pattedyr",
       "lat": 59.148575,
       "lng": 10.337182,
@@ -447,9 +447,9 @@
     },
     {
       "scientificName": "Carduelis carduelis",
-      "popularName": "Stillitser",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/58184530/medium.jpg",
-      "photoAttribution": "(c) admss, some rights reserved (CC BY-NC), uploaded by admss",
+      "popularName": "Stillits",
+      "photoUrl": "https://static.inaturalist.org/photos/61457230/medium.jpg",
+      "photoAttribution": "(c) Paul, all rights reserved, uploaded by Paul",
       "group": "Fugler",
       "lat": 59.158984,
       "lng": 10.352437,
@@ -459,7 +459,7 @@
     },
     {
       "scientificName": "Coccothraustes coccothraustes",
-      "popularName": "Typiske kjernebitere",
+      "popularName": "Kjernebiter",
       "photoUrl": "https://static.inaturalist.org/photos/188331058/medium.jpg",
       "photoAttribution": "(c) Vladimir Ovchinnikov, all rights reserved, uploaded by Vladimir Ovchinnikov",
       "group": "Fugler",
@@ -483,9 +483,9 @@
     },
     {
       "scientificName": "Felis catus",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "Katt",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/129658776/medium.jpg",
+      "photoAttribution": "(c) Von.grzanka, some rights reserved (CC BY-SA)",
       "group": "Pattedyr",
       "lat": 59.150335,
       "lng": 10.339477,
@@ -531,7 +531,7 @@
     },
     {
       "scientificName": "Quercusia quercus",
-      "popularName": "",
+      "popularName": "Eikestjertvinge",
       "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/462118/medium.jpg",
       "photoAttribution": "(c) Allan Hopkins, some rights reserved (CC BY-NC-ND)",
       "group": "Sommerfugler",
@@ -543,9 +543,9 @@
     },
     {
       "scientificName": "Anser anser",
-      "popularName": "Andefugler",
-      "photoUrl": "https://static.inaturalist.org/photos/65733687/medium.jpg",
-      "photoAttribution": "(c) Carlos N. G. Bocos, all rights reserved, uploaded by Carlos N. G. Bocos",
+      "popularName": "Grågås",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/61334030/medium.jpg",
+      "photoAttribution": "(c) Frans Vandewalle, some rights reserved (CC BY-NC)",
       "group": "Fugler",
       "lat": 59.158984,
       "lng": 10.352437,
@@ -592,8 +592,8 @@
     {
       "scientificName": "Craterellus undulatus",
       "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/179637889/medium.jpg",
+      "photoAttribution": "(c) Неруш Владимир, some rights reserved (CC BY-NC), uploaded by Неруш Владимир",
       "group": "Sopper",
       "lat": 59.149191,
       "lng": 10.361815,
@@ -615,9 +615,9 @@
     },
     {
       "scientificName": "Filipendula ulmaria",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "Mjødurt",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/51718/medium.jpg",
+      "photoAttribution": "(c) Liisa-Maija Harju, some rights reserved (CC BY-NC-ND)",
       "group": "Karplanter",
       "lat": 59.144778,
       "lng": 10.34764,
@@ -747,9 +747,9 @@
     },
     {
       "scientificName": "Scytinostroma portentosum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "naftalinlærsopp",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/120397531/medium.jpeg",
+      "photoAttribution": "(c) Juha Tuomola, niektoré práva vyhradené (CC BY-NC), uploaded by Juha Tuomola",
       "group": "Sopper",
       "lat": 59.141175,
       "lng": 10.360773,
@@ -771,9 +771,9 @@
     },
     {
       "scientificName": "Sedum album",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "hellknop",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/39057705/medium.jpg",
+      "photoAttribution": "(c) mobbini, some rights reserved (CC BY-NC), uploaded by mobbini",
       "group": "Karplanter",
       "lat": 59.164896,
       "lng": 10.343651,
@@ -879,9 +879,9 @@
     },
     {
       "scientificName": "Vanellus vanellus",
-      "popularName": "Viper",
-      "photoUrl": "https://static.inaturalist.org/photos/94757595/medium.jpeg",
-      "photoAttribution": "(c) 조흥상, all rights reserved, uploaded by 조흥상",
+      "popularName": "Vipe",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/96099602/medium.jpg",
+      "photoAttribution": "(c) Анна Голубева, some rights reserved (CC BY-NC-ND), uploaded by Анна Голубева",
       "group": "Fugler",
       "lat": 59.158984,
       "lng": 10.352437,
@@ -903,7 +903,7 @@
     },
     {
       "scientificName": "Achillea millefolium",
-      "popularName": "",
+      "popularName": "Engklokke",
       "photoUrl": "https://static.inaturalist.org/photos/19971995/medium.jpeg",
       "photoAttribution": "(c) gdeheij, all rights reserved",
       "group": "Karplanter",
@@ -927,9 +927,9 @@
     },
     {
       "scientificName": "Aglais urticae",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "Neslesommerfugl",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/257869609/medium.jpg",
+      "photoAttribution": "(c) simben, some rights reserved (CC BY-NC-ND), uploaded by simben",
       "group": "Sommerfugler",
       "lat": 59.155866,
       "lng": 10.352633,
@@ -939,9 +939,9 @@
     },
     {
       "scientificName": "Apus apus",
-      "popularName": "Typiske seilere",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/26163/medium.jpg",
-      "photoAttribution": "(c) Mark Kilner, some rights reserved (CC BY-NC-SA)",
+      "popularName": "Tårnseiler",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/40612214/medium.jpg",
+      "photoAttribution": "(c) Алексей Эбель, some rights reserved (CC BY-NC), uploaded by Алексей Эбель",
       "group": "Fugler",
       "lat": 59.150024,
       "lng": 10.357097,
@@ -951,9 +951,9 @@
     },
     {
       "scientificName": "Argentina anserina",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "gåsemure",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/43334473/medium.jpeg",
+      "photoAttribution": "(c) Zdeňka Nováková, some rights reserved (CC BY-NC), uploaded by Zdeňka Nováková",
       "group": "Karplanter",
       "lat": 59.154263,
       "lng": 10.352428,
@@ -1011,9 +1011,9 @@
     },
     {
       "scientificName": "Calocera cornea",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "dverggaffel",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/77713738/medium.jpeg",
+      "photoAttribution": "(c) Suso Tizón, some rights reserved (CC BY-NC-SA), uploaded by Suso Tizón",
       "group": "Sopper",
       "lat": 59.143009,
       "lng": 10.337713,
@@ -1023,9 +1023,9 @@
     },
     {
       "scientificName": "Calocera viscosa",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "gullgaffel",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/18635/medium.jpg",
+      "photoAttribution": "(c) Didier, some rights reserved (CC BY-SA)",
       "group": "Sopper",
       "lat": 59.1545,
       "lng": 10.3514,
@@ -1035,7 +1035,7 @@
     },
     {
       "scientificName": "Calycina citrina",
-      "popularName": "",
+      "popularName": "gult dvergbeger",
       "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/34594282/medium.jpg",
       "photoAttribution": "(c) Alison Pollack, some rights reserved (CC BY-NC), uploaded by Alison Pollack",
       "group": "Sopper",
@@ -1047,9 +1047,9 @@
     },
     {
       "scientificName": "Cantharellus cibarius",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "kantarell",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/309948593/medium.jpg",
+      "photoAttribution": "(c) Federico Calledda, some rights reserved (CC BY-NC), uploaded by Federico Calledda",
       "group": "Sopper",
       "lat": 59.159909,
       "lng": 10.361995,
@@ -1071,9 +1071,9 @@
     },
     {
       "scientificName": "Centaurium pulchellum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "dverggylden",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/28197268/medium.jpeg",
+      "photoAttribution": "no rights reserved, uploaded by 葉子",
       "group": "Karplanter",
       "lat": 59.150325,
       "lng": 10.3661,
@@ -1095,9 +1095,9 @@
     },
     {
       "scientificName": "Cheimonophyllum candidissimum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "snømusling",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/1672325/medium.jpg",
+      "photoAttribution": "(c) Jerry Cooper, some rights reserved (CC BY), uploaded by Jerry Cooper",
       "group": "Sopper",
       "lat": 59.163474,
       "lng": 10.34923,
@@ -1119,9 +1119,9 @@
     },
     {
       "scientificName": "Climacocystis borealis",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "vasskjuke",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/156115943/medium.jpeg",
+      "photoAttribution": "(c) marsusram, some rights reserved (CC BY-NC), uploaded by marsusram",
       "group": "Sopper",
       "lat": 59.157409,
       "lng": 10.360585,
@@ -1143,9 +1143,9 @@
     },
     {
       "scientificName": "Cortinarius bolaris",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "rødskjellslørsopp",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/49533956/medium.jpg",
+      "photoAttribution": "(c) Marco Floriani, some rights reserved (CC BY-NC), uploaded by Marco Floriani",
       "group": "Sopper",
       "lat": 59.1523252,
       "lng": 10.3535506,
@@ -1155,9 +1155,9 @@
     },
     {
       "scientificName": "Cortinarius cinnamomeus",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "kanelslørsopp",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/258911360/medium.jpeg",
+      "photoAttribution": "(c) Mandy Hackney, some rights reserved (CC BY), uploaded by Mandy Hackney",
       "group": "Sopper",
       "lat": 59.1545,
       "lng": 10.3514,
@@ -1203,7 +1203,7 @@
     },
     {
       "scientificName": "Craterellus tubaeformis",
-      "popularName": "",
+      "popularName": "traktkantarell",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1215,7 +1215,7 @@
     },
     {
       "scientificName": "Cuscuta europaea",
-      "popularName": "",
+      "popularName": "(nesle-snikjetråd)",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1228,8 +1228,8 @@
     {
       "scientificName": "Epilobium ciliatum",
       "popularName": "amerikamjølke",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/296254377/medium.jpg",
-      "photoAttribution": "(c) Eli Loftis, some rights reserved (CC BY-NC), uploaded by Eli Loftis",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Karplanter",
       "lat": 59.164284,
       "lng": 10.350038,
@@ -1239,7 +1239,7 @@
     },
     {
       "scientificName": "Exidia pithya",
-      "popularName": "",
+      "popularName": "tjærebevre",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1251,7 +1251,7 @@
     },
     {
       "scientificName": "Ficedula hypoleuca",
-      "popularName": "",
+      "popularName": "svarthvit fluesnapper",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -1263,9 +1263,9 @@
     },
     {
       "scientificName": "Fraxinus excelsior",
-      "popularName": "ask",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/218128525/medium.jpeg",
-      "photoAttribution": "(c) nicky-by-nature, some rights reserved (CC BY-NC)",
+      "popularName": "Asketre",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Karplanter",
       "lat": 59.159412,
       "lng": 10.353084,
@@ -1275,7 +1275,7 @@
     },
     {
       "scientificName": "Galium verum",
-      "popularName": "",
+      "popularName": "Jomfru Mariae seng-foor",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1287,9 +1287,9 @@
     },
     {
       "scientificName": "Gallinago gallinago",
-      "popularName": "Bekkasiner",
-      "photoUrl": "https://static.inaturalist.org/photos/42802182/medium.jpg",
-      "photoAttribution": "(c) Kyle Blaney, all rights reserved, uploaded by Kyle Blaney",
+      "popularName": "enkeltbekkasin",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Fugler",
       "lat": 59.158984,
       "lng": 10.352437,
@@ -1299,7 +1299,7 @@
     },
     {
       "scientificName": "Geranium pusillum",
-      "popularName": "",
+      "popularName": "småstorkenebb",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1311,7 +1311,7 @@
     },
     {
       "scientificName": "Geranium robertianum",
-      "popularName": "",
+      "popularName": "stankstorkenebb",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1323,7 +1323,7 @@
     },
     {
       "scientificName": "Geranium sanguineum",
-      "popularName": "",
+      "popularName": "blodstorkenebb",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1335,9 +1335,9 @@
     },
     {
       "scientificName": "Gymnopus dryophilus",
-      "popularName": "blek flathatt",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/11990816/medium.jpg",
-      "photoAttribution": "(c) Christian Schwarz, some rights reserved (CC BY-NC), uploaded by Christian Schwarz",
+      "popularName": "bleik flathatt",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Sopper",
       "lat": 59.147653,
       "lng": 10.340004,
@@ -1347,7 +1347,7 @@
     },
     {
       "scientificName": "Honckenya peploides",
-      "popularName": "",
+      "popularName": "fjære-norell",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1359,7 +1359,7 @@
     },
     {
       "scientificName": "Hygrocybe punicea",
-      "popularName": "",
+      "popularName": "skarlagenvokssopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1371,7 +1371,7 @@
     },
     {
       "scientificName": "Hygrophorus hypothejus",
-      "popularName": "",
+      "popularName": "frostvokssopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1383,7 +1383,7 @@
     },
     {
       "scientificName": "Iris pseudacorus",
-      "popularName": "",
+      "popularName": "guul sverd-lillie",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1395,7 +1395,7 @@
     },
     {
       "scientificName": "Juncus effusus",
-      "popularName": "",
+      "popularName": "korg-sæv",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1407,7 +1407,7 @@
     },
     {
       "scientificName": "Jynx torquilla",
-      "popularName": "",
+      "popularName": "Vendehals",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -1419,7 +1419,7 @@
     },
     {
       "scientificName": "Lactarius quietus",
-      "popularName": "",
+      "popularName": "eikeriske",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1431,7 +1431,7 @@
     },
     {
       "scientificName": "Lapsana communis",
-      "popularName": "",
+      "popularName": "Haremat",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1443,7 +1443,7 @@
     },
     {
       "scientificName": "Leccinum albostipitatum",
-      "popularName": "",
+      "popularName": "ospeskrubb",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1455,7 +1455,7 @@
     },
     {
       "scientificName": "Lonicera periclymenum",
-      "popularName": "",
+      "popularName": "ringtræ",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1467,7 +1467,7 @@
     },
     {
       "scientificName": "Lysimachia nummularia",
-      "popularName": "",
+      "popularName": "krypfredlaus",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1479,7 +1479,7 @@
     },
     {
       "scientificName": "Lythria cruentaria",
-      "popularName": "",
+      "popularName": "purpurmålar",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sommerfugler",
@@ -1491,7 +1491,7 @@
     },
     {
       "scientificName": "Melampyrum pratense",
-      "popularName": "",
+      "popularName": "engmarimjelle",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1503,7 +1503,7 @@
     },
     {
       "scientificName": "Meles meles",
-      "popularName": "",
+      "popularName": "Grevling",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Pattedyr",
@@ -1515,7 +1515,7 @@
     },
     {
       "scientificName": "Melica nutans",
-      "popularName": "",
+      "popularName": "hanggras",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1527,7 +1527,7 @@
     },
     {
       "scientificName": "Mycelis muralis",
-      "popularName": "",
+      "popularName": "hængblomster",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1540,8 +1540,8 @@
     {
       "scientificName": "Mycena metata",
       "popularName": "frosthette",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/236585064/medium.jpg",
-      "photoAttribution": "(c) Иван Матершев, some rights reserved (CC BY-NC), uploaded by Иван Матершев",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Sopper",
       "lat": 59.150518,
       "lng": 10.357944,
@@ -1551,7 +1551,7 @@
     },
     {
       "scientificName": "Myxomphalia maura",
-      "popularName": "",
+      "popularName": "branntussehatt",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1563,7 +1563,7 @@
     },
     {
       "scientificName": "Oxyporus populinus",
-      "popularName": "",
+      "popularName": "lønnekjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1575,7 +1575,7 @@
     },
     {
       "scientificName": "Panellus stipticus",
-      "popularName": "",
+      "popularName": "beisk lêrhatt",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1587,7 +1587,7 @@
     },
     {
       "scientificName": "Periparus ater",
-      "popularName": "",
+      "popularName": "svartmeis",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -1599,7 +1599,7 @@
     },
     {
       "scientificName": "Peziza varia",
-      "popularName": "",
+      "popularName": "flat begersopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1611,7 +1611,7 @@
     },
     {
       "scientificName": "Phaeotremella foliacea",
-      "popularName": "",
+      "popularName": "bladgelésopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1623,7 +1623,7 @@
     },
     {
       "scientificName": "Phragmites australis",
-      "popularName": "",
+      "popularName": "røjr",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1635,9 +1635,9 @@
     },
     {
       "scientificName": "Polypodium vulgare",
-      "popularName": "",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/19678/medium.jpg",
-      "photoAttribution": "(c) dogtooth77, some rights reserved (CC BY-NC-SA)",
+      "popularName": "heil-søta",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Karplanter",
       "lat": 59.152043,
       "lng": 10.3373,
@@ -1647,7 +1647,7 @@
     },
     {
       "scientificName": "Populus tremula",
-      "popularName": "",
+      "popularName": "asp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1659,7 +1659,7 @@
     },
     {
       "scientificName": "Russula fragilis",
-      "popularName": "",
+      "popularName": "skjørkremle",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1671,7 +1671,7 @@
     },
     {
       "scientificName": "Russula ochroleuca",
-      "popularName": "",
+      "popularName": "skarp gulkremle",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1683,9 +1683,9 @@
     },
     {
       "scientificName": "Sambucus racemosa",
-      "popularName": "rødhyll",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/23366234/medium.jpg",
-      "photoAttribution": "no rights reserved, uploaded by neotrigonia",
+      "popularName": "buskhyll",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Karplanter",
       "lat": 59.15371,
       "lng": 10.338549,
@@ -1695,7 +1695,7 @@
     },
     {
       "scientificName": "Scirpus sylvaticus",
-      "popularName": "",
+      "popularName": "skogsevaks",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1707,7 +1707,7 @@
     },
     {
       "scientificName": "Skeletocutis nivea",
-      "popularName": "",
+      "popularName": "småporekjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1719,7 +1719,7 @@
     },
     {
       "scientificName": "Somateria mollissima",
-      "popularName": "",
+      "popularName": "Ea",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -1731,7 +1731,7 @@
     },
     {
       "scientificName": "Stellaria graminea",
-      "popularName": "",
+      "popularName": "blomgras",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1743,7 +1743,7 @@
     },
     {
       "scientificName": "Sylvia curruca",
-      "popularName": "",
+      "popularName": "Møller",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -1755,7 +1755,7 @@
     },
     {
       "scientificName": "Szczepkamyces campestris",
-      "popularName": "",
+      "popularName": "hasselkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1767,7 +1767,7 @@
     },
     {
       "scientificName": "Tanacetum vulgare",
-      "popularName": "",
+      "popularName": "Byreséda",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1779,7 +1779,7 @@
     },
     {
       "scientificName": "Trametes versicolor",
-      "popularName": "",
+      "popularName": "buntsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1791,7 +1791,7 @@
     },
     {
       "scientificName": "Tringa ochropus",
-      "popularName": "",
+      "popularName": "skogsnipe",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -1803,7 +1803,7 @@
     },
     {
       "scientificName": "Ulmus glabra",
-      "popularName": "",
+      "popularName": "alm",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1815,7 +1815,7 @@
     },
     {
       "scientificName": "Urtica dioica",
-      "popularName": "",
+      "popularName": "stornesle",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1827,7 +1827,7 @@
     },
     {
       "scientificName": "Viscaria vulgaris",
-      "popularName": "",
+      "popularName": "engtjæreblom",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1839,7 +1839,7 @@
     },
     {
       "scientificName": "Vulpes vulpes",
-      "popularName": "",
+      "popularName": "Rev",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Pattedyr",
@@ -1851,7 +1851,7 @@
     },
     {
       "scientificName": "Xylaria hypoxylon",
-      "popularName": "",
+      "popularName": "finger-sopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1863,7 +1863,7 @@
     },
     {
       "scientificName": "Accipiter gentilis",
-      "popularName": "",
+      "popularName": "Hønsehauk",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -1875,7 +1875,7 @@
     },
     {
       "scientificName": "Acer platanoides",
-      "popularName": "",
+      "popularName": "løn",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1887,7 +1887,7 @@
     },
     {
       "scientificName": "Acrocephalus palustris",
-      "popularName": "",
+      "popularName": "myrsanger",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -1899,7 +1899,7 @@
     },
     {
       "scientificName": "Agrostis gigantea",
-      "popularName": "",
+      "popularName": "storkvein",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1911,9 +1911,9 @@
     },
     {
       "scientificName": "Alliaria petiolata",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "løkurt",
+      "photoUrl": "https://static.inaturalist.org/photos/189247854/medium.jpg",
+      "photoAttribution": "(c) ivanshapvalov, all rights reserved",
       "group": "Karplanter",
       "lat": 59.160655,
       "lng": 10.352886,
@@ -1923,7 +1923,7 @@
     },
     {
       "scientificName": "Allium oleraceum",
-      "popularName": "",
+      "popularName": "Gråambrosia",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1935,7 +1935,7 @@
     },
     {
       "scientificName": "Alnus glutinosa",
-      "popularName": "",
+      "popularName": "aare",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1947,7 +1947,7 @@
     },
     {
       "scientificName": "Alopecurus pratensis",
-      "popularName": "",
+      "popularName": "(engrevehale)",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -1959,7 +1959,7 @@
     },
     {
       "scientificName": "Amanita citrina",
-      "popularName": "",
+      "popularName": "gul fluesopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1971,7 +1971,7 @@
     },
     {
       "scientificName": "Amanita fulva",
-      "popularName": "",
+      "popularName": "brun kamfluesopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -1995,7 +1995,7 @@
     },
     {
       "scientificName": "Amanita submembranacea",
-      "popularName": "",
+      "popularName": "oliven kamfluesopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2007,7 +2007,7 @@
     },
     {
       "scientificName": "Amanita vaginata",
-      "popularName": "",
+      "popularName": "grå kamfluesopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2019,7 +2019,7 @@
     },
     {
       "scientificName": "Amanita virosa",
-      "popularName": "",
+      "popularName": "hvit fluesopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2031,7 +2031,7 @@
     },
     {
       "scientificName": "Amylostereum laevigatum",
-      "popularName": "",
+      "popularName": "einerlærsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2043,7 +2043,7 @@
     },
     {
       "scientificName": "Anemone nemorosa",
-      "popularName": "",
+      "popularName": "gjet-simmer",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2055,9 +2055,9 @@
     },
     {
       "scientificName": "Angelica sylvestris",
-      "popularName": "sløkje",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/561388632/medium.jpg",
-      "photoAttribution": "(c) judithlee, some rights reserved (CC BY-NC), uploaded by judithlee",
+      "popularName": "gede-joll",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Karplanter",
       "lat": 59.159375,
       "lng": 10.347469,
@@ -2067,7 +2067,7 @@
     },
     {
       "scientificName": "Anser brachyrhynchus",
-      "popularName": "",
+      "popularName": "kortnebbgås",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -2079,9 +2079,9 @@
     },
     {
       "scientificName": "Anthocharis cardamines",
-      "popularName": "aurorasommerfugl",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/118125338/medium.jpg",
-      "photoAttribution": "(c) Felipe Hidalgo, some rights reserved (CC BY-NC), uploaded by Felipe Hidalgo",
+      "popularName": "aurorasommarfugl",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Sommerfugler",
       "lat": 59.155866,
       "lng": 10.352633,
@@ -2091,7 +2091,7 @@
     },
     {
       "scientificName": "Anthoxanthum odoratum",
-      "popularName": "",
+      "popularName": "gulaks",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2103,7 +2103,7 @@
     },
     {
       "scientificName": "Antrodiella serpula",
-      "popularName": "",
+      "popularName": "vortekjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2115,7 +2115,7 @@
     },
     {
       "scientificName": "Aphantopus hyperantus",
-      "popularName": "",
+      "popularName": "gullringveng",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sommerfugler",
@@ -2127,7 +2127,7 @@
     },
     {
       "scientificName": "Arctium minus",
-      "popularName": "",
+      "popularName": "Bete",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2140,8 +2140,8 @@
     {
       "scientificName": "Armillaria borealis",
       "popularName": "skoghonningsopp",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/28528884/medium.jpg",
-      "photoAttribution": "(c) Иван Матершев, some rights reserved (CC BY-NC), uploaded by Иван Матершев",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Sopper",
       "lat": 59.162111,
       "lng": 10.34896,
@@ -2151,7 +2151,7 @@
     },
     {
       "scientificName": "Artemisia vulgaris",
-      "popularName": "",
+      "popularName": "bue",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2163,7 +2163,7 @@
     },
     {
       "scientificName": "Arvicola amphibius",
-      "popularName": "",
+      "popularName": "jordrotte",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Pattedyr",
@@ -2175,7 +2175,7 @@
     },
     {
       "scientificName": "Ascocoryne sarcoides",
-      "popularName": "",
+      "popularName": "syskenfiolbeger",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2199,7 +2199,7 @@
     },
     {
       "scientificName": "Atriplex prostrata",
-      "popularName": "",
+      "popularName": "fjæremelde",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2211,7 +2211,7 @@
     },
     {
       "scientificName": "Autographa gamma",
-      "popularName": "",
+      "popularName": "gammafly",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sommerfugler",
@@ -2223,9 +2223,9 @@
     },
     {
       "scientificName": "Avenella flexuosa",
-      "popularName": "smyle",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/150447888/medium.jpeg",
-      "photoAttribution": "(c) Giovanni Perico, some rights reserved (CC BY-NC), uploaded by Giovanni Perico",
+      "popularName": "berbunke",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Karplanter",
       "lat": 59.153227,
       "lng": 10.346212,
@@ -2235,7 +2235,7 @@
     },
     {
       "scientificName": "Baeospora myosura",
-      "popularName": "",
+      "popularName": "konglemyldrehatt",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2247,7 +2247,7 @@
     },
     {
       "scientificName": "Betula pendula",
-      "popularName": "",
+      "popularName": "(lavlandsbjerk)",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2259,7 +2259,7 @@
     },
     {
       "scientificName": "Biscogniauxia repanda",
-      "popularName": "",
+      "popularName": "rognekolsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2271,9 +2271,9 @@
     },
     {
       "scientificName": "Boletus edulis",
-      "popularName": "Steinsopp",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/328303120/medium.jpg",
-      "photoAttribution": "(c) wp-polzin, some rights reserved (CC BY-NC)",
+      "popularName": "bu-sop",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Sopper",
       "lat": 59.141313,
       "lng": 10.3366,
@@ -2283,7 +2283,7 @@
     },
     {
       "scientificName": "Boletus reticulatus",
-      "popularName": "",
+      "popularName": "bleiklòden steinsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2295,7 +2295,7 @@
     },
     {
       "scientificName": "Branta canadensis",
-      "popularName": "",
+      "popularName": "Kanadagås",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -2307,7 +2307,7 @@
     },
     {
       "scientificName": "Briza media",
-      "popularName": "",
+      "popularName": "befver-græs",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2319,7 +2319,7 @@
     },
     {
       "scientificName": "Bromus hordeaceus",
-      "popularName": "",
+      "popularName": "lodnefaks",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2343,7 +2343,7 @@
     },
     {
       "scientificName": "Buteo lagopus",
-      "popularName": "",
+      "popularName": "fjellvåk",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -2355,7 +2355,7 @@
     },
     {
       "scientificName": "Byssocorticium atrovirens",
-      "popularName": "",
+      "popularName": "asurskinn",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2367,7 +2367,7 @@
     },
     {
       "scientificName": "Byssomerulius corium",
-      "popularName": "",
+      "popularName": "bleik nettsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2379,7 +2379,7 @@
     },
     {
       "scientificName": "Calystegia sepium",
-      "popularName": "",
+      "popularName": "gjærsvinda",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2391,7 +2391,7 @@
     },
     {
       "scientificName": "Campanula persicifolia",
-      "popularName": "",
+      "popularName": "fagerklokke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2403,7 +2403,7 @@
     },
     {
       "scientificName": "Candolleomyces candolleanus",
-      "popularName": "",
+      "popularName": "hvit sprøsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2415,7 +2415,7 @@
     },
     {
       "scientificName": "Caprimulgus europaeus",
-      "popularName": "",
+      "popularName": "Natteramn",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -2427,7 +2427,7 @@
     },
     {
       "scientificName": "Cardamine impatiens",
-      "popularName": "",
+      "popularName": "lundkarse",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2439,7 +2439,7 @@
     },
     {
       "scientificName": "Carex hirta",
-      "popularName": "",
+      "popularName": "lodnestarr",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2451,7 +2451,7 @@
     },
     {
       "scientificName": "Carex leporina",
-      "popularName": "",
+      "popularName": "harestarr",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2463,7 +2463,7 @@
     },
     {
       "scientificName": "Carex pallescens",
-      "popularName": "",
+      "popularName": "bleek-star",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2476,8 +2476,8 @@
     {
       "scientificName": "Carpodacus erythrinus",
       "popularName": "Rosenfink",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/28920664/medium.jpg",
-      "photoAttribution": "(c) Геннадий, some rights reserved (CC BY-NC), uploaded by Геннадий",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Fugler",
       "lat": 59.158984,
       "lng": 10.352437,
@@ -2487,7 +2487,7 @@
     },
     {
       "scientificName": "Cerioporus leptocephalus",
-      "popularName": "",
+      "popularName": "sokkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2499,7 +2499,7 @@
     },
     {
       "scientificName": "Ceriporia purpurea",
-      "popularName": "",
+      "popularName": "purpurkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2511,7 +2511,7 @@
     },
     {
       "scientificName": "Cerrena unicolor",
-      "popularName": "",
+      "popularName": "labyrintkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2523,7 +2523,7 @@
     },
     {
       "scientificName": "Certhia familiaris",
-      "popularName": "",
+      "popularName": "trekrypar",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -2535,7 +2535,7 @@
     },
     {
       "scientificName": "Cerura vinula",
-      "popularName": "",
+      "popularName": "stor gaffelstjert",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sommerfugler",
@@ -2547,7 +2547,7 @@
     },
     {
       "scientificName": "Chalciporus piperatus",
-      "popularName": "",
+      "popularName": "peparrøyrsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2559,7 +2559,7 @@
     },
     {
       "scientificName": "Chamaenerion angustifolium",
-      "popularName": "",
+      "popularName": "geitrams",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2571,7 +2571,7 @@
     },
     {
       "scientificName": "Cheilymenia granulata",
-      "popularName": "",
+      "popularName": "kumøkkbeger",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2583,7 +2583,7 @@
     },
     {
       "scientificName": "Chelidonium majus",
-      "popularName": "",
+      "popularName": "svale-urt",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2595,7 +2595,7 @@
     },
     {
       "scientificName": "Chenopodium album",
-      "popularName": "",
+      "popularName": "hvid melde",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2607,7 +2607,7 @@
     },
     {
       "scientificName": "Chlorociboria aeruginascens",
-      "popularName": "",
+      "popularName": "småspora grønbeger",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2619,7 +2619,7 @@
     },
     {
       "scientificName": "Chlorociboria aeruginosa",
-      "popularName": "",
+      "popularName": "storspora grønbeger",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2631,9 +2631,9 @@
     },
     {
       "scientificName": "Chondrostereum purpureum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "sølvglanssopp",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/388071/medium.jpg",
+      "photoAttribution": "(c) Amadej Trnkoczy, some rights reserved (CC BY-NC-SA)",
       "group": "Sopper",
       "lat": 59.1545,
       "lng": 10.3514,
@@ -2643,7 +2643,7 @@
     },
     {
       "scientificName": "Chroicocephalus ridibundus",
-      "popularName": "",
+      "popularName": "hettemåke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -2655,7 +2655,7 @@
     },
     {
       "scientificName": "Chroogomphus rutilus",
-      "popularName": "",
+      "popularName": "rabarbrasopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2667,9 +2667,9 @@
     },
     {
       "scientificName": "Circus cyaneus",
-      "popularName": "Mørkmyrhauk",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/114355770/medium.jpg",
-      "photoAttribution": "(c) Cin-Ty Lee, some rights reserved (CC BY-NC), uploaded by Cin-Ty Lee",
+      "popularName": "Myrhauk",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Fugler",
       "lat": 59.158984,
       "lng": 10.352437,
@@ -2679,7 +2679,7 @@
     },
     {
       "scientificName": "Cirsium arvense",
-      "popularName": "",
+      "popularName": "Alperips",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2691,7 +2691,7 @@
     },
     {
       "scientificName": "Cirsium palustre",
-      "popularName": "",
+      "popularName": "myrtistel",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2703,7 +2703,7 @@
     },
     {
       "scientificName": "Cirsium vulgare",
-      "popularName": "",
+      "popularName": "Fuglestjerne",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2715,7 +2715,7 @@
     },
     {
       "scientificName": "Clitocybe metachroa",
-      "popularName": "",
+      "popularName": "grå traktsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2727,7 +2727,7 @@
     },
     {
       "scientificName": "Clitocybe nebularis",
-      "popularName": "",
+      "popularName": "puddertraktsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2739,7 +2739,7 @@
     },
     {
       "scientificName": "Clitopilus prunulus",
-      "popularName": "",
+      "popularName": "melsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2751,7 +2751,7 @@
     },
     {
       "scientificName": "Coenonympha pamphilus",
-      "popularName": "",
+      "popularName": "engringveng",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sommerfugler",
@@ -2763,7 +2763,7 @@
     },
     {
       "scientificName": "Collybiopsis peronata",
-      "popularName": "",
+      "popularName": "peparflathatt",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2775,9 +2775,9 @@
     },
     {
       "scientificName": "Collybiopsis ramealis",
-      "popularName": "",
-      "photoUrl": "https://static.inaturalist.org/photos/29608938/medium.jpg",
-      "photoAttribution": "(c) Alexis Robiolle, all rights reserved, uploaded by Alexis Robiolle",
+      "popularName": "greinseigsopp",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Sopper",
       "lat": 59.1545,
       "lng": 10.3514,
@@ -2787,7 +2787,7 @@
     },
     {
       "scientificName": "Colpoma quercinum",
-      "popularName": "",
+      "popularName": "eikesprekkbeger",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2799,7 +2799,7 @@
     },
     {
       "scientificName": "Coniophora arida",
-      "popularName": "",
+      "popularName": "gulbrun kjellarsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2811,7 +2811,7 @@
     },
     {
       "scientificName": "Coniophora puteana",
-      "popularName": "",
+      "popularName": "kjellarsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2823,7 +2823,7 @@
     },
     {
       "scientificName": "Convallaria majalis",
-      "popularName": "",
+      "popularName": "liljekonvall",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2835,7 +2835,7 @@
     },
     {
       "scientificName": "Coprinellus micaceus",
-      "popularName": "",
+      "popularName": "glimmerblekksopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2847,7 +2847,7 @@
     },
     {
       "scientificName": "Cortinarius croceus",
-      "popularName": "",
+      "popularName": "sennepslørsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2859,7 +2859,7 @@
     },
     {
       "scientificName": "Cortinarius elatior",
-      "popularName": "",
+      "popularName": "rynkeslørsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2871,7 +2871,7 @@
     },
     {
       "scientificName": "Cortinarius helvelloides",
-      "popularName": "",
+      "popularName": "gulbelta oreslørsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2895,7 +2895,7 @@
     },
     {
       "scientificName": "Cortinarius pellstonianus",
-      "popularName": "",
+      "popularName": "mørk kanelslørsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2907,7 +2907,7 @@
     },
     {
       "scientificName": "Cortinarius pinisquamulosus",
-      "popularName": "",
+      "popularName": "stigslørsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2931,7 +2931,7 @@
     },
     {
       "scientificName": "Cortinarius sanguineus",
-      "popularName": "",
+      "popularName": "blodraud kanelslørsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2943,7 +2943,7 @@
     },
     {
       "scientificName": "Cortinarius semisanguineus",
-      "popularName": "",
+      "popularName": "falsk raudskiveslørsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2955,7 +2955,7 @@
     },
     {
       "scientificName": "Cortinarius umbrinolens",
-      "popularName": "",
+      "popularName": "jordslørsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2967,7 +2967,7 @@
     },
     {
       "scientificName": "Cortinarius violaceus",
-      "popularName": "",
+      "popularName": "mørkfiolett slørsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -2979,7 +2979,7 @@
     },
     {
       "scientificName": "Cotoneaster bullatus",
-      "popularName": "",
+      "popularName": "bulkemispel",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -2991,7 +2991,7 @@
     },
     {
       "scientificName": "Cotoneaster horizontalis",
-      "popularName": "",
+      "popularName": "krypmispel",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3003,7 +3003,7 @@
     },
     {
       "scientificName": "Crepidotus mollis",
-      "popularName": "",
+      "popularName": "mjuk muslingsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3015,7 +3015,7 @@
     },
     {
       "scientificName": "Crepis tectorum",
-      "popularName": "",
+      "popularName": "Drakehovud",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3051,7 +3051,7 @@
     },
     {
       "scientificName": "Cupido minimus",
-      "popularName": "",
+      "popularName": "dvergblåveng",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sommerfugler",
@@ -3063,7 +3063,7 @@
     },
     {
       "scientificName": "Cylindrobasidium evolvens",
-      "popularName": "",
+      "popularName": "famnvedsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3075,7 +3075,7 @@
     },
     {
       "scientificName": "Cystoderma amianthinum",
-      "popularName": "",
+      "popularName": "okergul grynhatt",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3087,7 +3087,7 @@
     },
     {
       "scientificName": "Dacrymyces lacrymalis",
-      "popularName": "",
+      "popularName": "rukketåre",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3099,7 +3099,7 @@
     },
     {
       "scientificName": "Dacrymyces stillatus",
-      "popularName": "",
+      "popularName": "tåresopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3111,7 +3111,7 @@
     },
     {
       "scientificName": "Dactylis glomerata",
-      "popularName": "",
+      "popularName": "hund-grass",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3123,7 +3123,7 @@
     },
     {
       "scientificName": "Daedaleopsis confragosa",
-      "popularName": "",
+      "popularName": "teglkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3135,7 +3135,7 @@
     },
     {
       "scientificName": "Diatrype bullata",
-      "popularName": "",
+      "popularName": "seljerundskorpe",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3147,7 +3147,7 @@
     },
     {
       "scientificName": "Digitalis purpurea",
-      "popularName": "",
+      "popularName": "finger-guld",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3159,7 +3159,7 @@
     },
     {
       "scientificName": "Dryobates minor",
-      "popularName": "",
+      "popularName": "dvergspett",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -3171,7 +3171,7 @@
     },
     {
       "scientificName": "Dryopteris filix-mas",
-      "popularName": "",
+      "popularName": "bu-jæske",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3183,7 +3183,7 @@
     },
     {
       "scientificName": "Dumontinia tuberosa",
-      "popularName": "",
+      "popularName": "symrebeger",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3195,7 +3195,7 @@
     },
     {
       "scientificName": "Elaphomyces granulatus",
-      "popularName": "",
+      "popularName": "grynlaupekule",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3207,7 +3207,7 @@
     },
     {
       "scientificName": "Elymus caninus",
-      "popularName": "",
+      "popularName": "hundekveke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3219,7 +3219,7 @@
     },
     {
       "scientificName": "Elymus repens",
-      "popularName": "",
+      "popularName": "kveke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3231,7 +3231,7 @@
     },
     {
       "scientificName": "Encoelia furfuracea",
-      "popularName": "",
+      "popularName": "lærskål",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3243,7 +3243,7 @@
     },
     {
       "scientificName": "Entoloma hirtipes",
-      "popularName": "",
+      "popularName": "snøraudskivesopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3267,7 +3267,7 @@
     },
     {
       "scientificName": "Epilobium hirsutum",
-      "popularName": "",
+      "popularName": "stormjølke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3279,7 +3279,7 @@
     },
     {
       "scientificName": "Epilobium montanum",
-      "popularName": "",
+      "popularName": "bjerg-mjølke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3291,7 +3291,7 @@
     },
     {
       "scientificName": "Equisetum arvense",
-      "popularName": "",
+      "popularName": "heste-snell",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3303,7 +3303,7 @@
     },
     {
       "scientificName": "Erinaceus europaeus",
-      "popularName": "",
+      "popularName": "Europeisk piggsvin",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Pattedyr",
@@ -3315,7 +3315,7 @@
     },
     {
       "scientificName": "Euphorbia palustris",
-      "popularName": "",
+      "popularName": "strandvortemelk",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3327,7 +3327,7 @@
     },
     {
       "scientificName": "Exidia saccharina",
-      "popularName": "",
+      "popularName": "kandisbevre",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3339,7 +3339,7 @@
     },
     {
       "scientificName": "Falco peregrinus",
-      "popularName": "",
+      "popularName": "Vandrefalk",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -3351,7 +3351,7 @@
     },
     {
       "scientificName": "Festuca rubra",
-      "popularName": "",
+      "popularName": "raudsvingel",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3363,7 +3363,7 @@
     },
     {
       "scientificName": "Fomes fomentarius",
-      "popularName": "",
+      "popularName": "knuskkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3375,7 +3375,7 @@
     },
     {
       "scientificName": "Fomitiporia punctata",
-      "popularName": "",
+      "popularName": "putekjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3387,7 +3387,7 @@
     },
     {
       "scientificName": "Fomitopsis betulina",
-      "popularName": "",
+      "popularName": "knivkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3399,7 +3399,7 @@
     },
     {
       "scientificName": "Fomitopsis pinicola",
-      "popularName": "",
+      "popularName": "raudrandkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3411,7 +3411,7 @@
     },
     {
       "scientificName": "Fragaria vesca",
-      "popularName": "",
+      "popularName": "jordbær",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3423,7 +3423,7 @@
     },
     {
       "scientificName": "Frangula alnus",
-      "popularName": "",
+      "popularName": "brakald",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3447,7 +3447,7 @@
     },
     {
       "scientificName": "Galerina marginata",
-      "popularName": "",
+      "popularName": "flatklokkehatt",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3459,7 +3459,7 @@
     },
     {
       "scientificName": "Galerina sideroides",
-      "popularName": "",
+      "popularName": "fnokket stubbeklokkehatt",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3471,7 +3471,7 @@
     },
     {
       "scientificName": "Galium album",
-      "popularName": "",
+      "popularName": "engstormaure",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3483,7 +3483,7 @@
     },
     {
       "scientificName": "Galium aparine",
-      "popularName": "",
+      "popularName": "klengemaure",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3495,7 +3495,7 @@
     },
     {
       "scientificName": "Galium boreale",
-      "popularName": "",
+      "popularName": "fægre",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3507,7 +3507,7 @@
     },
     {
       "scientificName": "Galium palustre",
-      "popularName": "",
+      "popularName": "dy-mour",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3519,7 +3519,7 @@
     },
     {
       "scientificName": "Ganoderma applanatum",
-      "popularName": "",
+      "popularName": "flatkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3531,7 +3531,7 @@
     },
     {
       "scientificName": "Geranium macrorrhizum",
-      "popularName": "",
+      "popularName": "rosestorkenebb",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3543,7 +3543,7 @@
     },
     {
       "scientificName": "Geum rivale",
-      "popularName": "",
+      "popularName": "botsmands-buxer",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3555,7 +3555,7 @@
     },
     {
       "scientificName": "Geum urbanum",
-      "popularName": "",
+      "popularName": "kratthumleblom",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3567,7 +3567,7 @@
     },
     {
       "scientificName": "Glechoma hederacea",
-      "popularName": "",
+      "popularName": "aakerdull",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3579,7 +3579,7 @@
     },
     {
       "scientificName": "Gliophorus laetus",
-      "popularName": "",
+      "popularName": "seig vokssopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3591,9 +3591,9 @@
     },
     {
       "scientificName": "Gloeophyllum sepiarium",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "vedmusling",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/13086468/medium.jpeg",
+      "photoAttribution": "(c) mycowalt, some rights reserved (CC BY-SA), uploaded by mycowalt",
       "group": "Sopper",
       "lat": 59.14558,
       "lng": 10.364519,
@@ -3603,7 +3603,7 @@
     },
     {
       "scientificName": "Gomphidius glutinosus",
-      "popularName": "",
+      "popularName": "sleipsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3615,7 +3615,7 @@
     },
     {
       "scientificName": "Gymnopilus penetrans",
-      "popularName": "",
+      "popularName": "fregnebittersopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3627,7 +3627,7 @@
     },
     {
       "scientificName": "Gymnopus putillus",
-      "popularName": "",
+      "popularName": "nåleflathatt",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3639,7 +3639,7 @@
     },
     {
       "scientificName": "Gyromitra esculenta",
-      "popularName": "",
+      "popularName": "sandmorkel",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3651,7 +3651,7 @@
     },
     {
       "scientificName": "Gyromitra infula",
-      "popularName": "",
+      "popularName": "bispelue",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3663,7 +3663,7 @@
     },
     {
       "scientificName": "Hebeloma mesophaeum",
-      "popularName": "",
+      "popularName": "slørreddiksopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3675,7 +3675,7 @@
     },
     {
       "scientificName": "Helvella crispa",
-      "popularName": "",
+      "popularName": "lys haustmorkel",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3687,7 +3687,7 @@
     },
     {
       "scientificName": "Hemaris fuciformis",
-      "popularName": "",
+      "popularName": "bredkantet humlesvermer",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sommerfugler",
@@ -3699,7 +3699,7 @@
     },
     {
       "scientificName": "Hericium cirrhatum",
-      "popularName": "",
+      "popularName": "børstepiggsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3711,7 +3711,7 @@
     },
     {
       "scientificName": "Hipparchia semele",
-      "popularName": "",
+      "popularName": "kystringveng",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sommerfugler",
@@ -3723,7 +3723,7 @@
     },
     {
       "scientificName": "Hippolais icterina",
-      "popularName": "",
+      "popularName": "gulsanger",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -3735,7 +3735,7 @@
     },
     {
       "scientificName": "Holcus lanatus",
-      "popularName": "",
+      "popularName": "englodnegras",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3747,7 +3747,7 @@
     },
     {
       "scientificName": "Hydnoporia tabacina",
-      "popularName": "",
+      "popularName": "tobakksbroddsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3759,7 +3759,7 @@
     },
     {
       "scientificName": "Hygrocybe chlorophana",
-      "popularName": "",
+      "popularName": "gul vokssopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3771,7 +3771,7 @@
     },
     {
       "scientificName": "Hygrocybe helobia",
-      "popularName": "",
+      "popularName": "brunfnokket vokssopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3783,7 +3783,7 @@
     },
     {
       "scientificName": "Hygrophoropsis aurantiaca",
-      "popularName": "",
+      "popularName": "falsk kantarell",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3795,7 +3795,7 @@
     },
     {
       "scientificName": "Hygrophorus olivaceoalbus",
-      "popularName": "",
+      "popularName": "olivenbrun vokssopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3807,7 +3807,7 @@
     },
     {
       "scientificName": "Hygrophorus piceae",
-      "popularName": "",
+      "popularName": "hvit granvokssopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3819,7 +3819,7 @@
     },
     {
       "scientificName": "Hygrophorus russula",
-      "popularName": "",
+      "popularName": "kremlevokssopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3831,7 +3831,7 @@
     },
     {
       "scientificName": "Hylotelephium maximum",
-      "popularName": "",
+      "popularName": "smørbukk",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3843,7 +3843,7 @@
     },
     {
       "scientificName": "Hypericum maculatum",
-      "popularName": "",
+      "popularName": "firkantperikum",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3855,7 +3855,7 @@
     },
     {
       "scientificName": "Hypericum perforatum",
-      "popularName": "",
+      "popularName": "apotheker-pericum",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3867,7 +3867,7 @@
     },
     {
       "scientificName": "Hypholoma lateritium",
-      "popularName": "",
+      "popularName": "teglraud svovelsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3879,7 +3879,7 @@
     },
     {
       "scientificName": "Hypomyces chrysospermus",
-      "popularName": "",
+      "popularName": "rørsoppsnylter",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3891,7 +3891,7 @@
     },
     {
       "scientificName": "Hypoxylon fuscum",
-      "popularName": "",
+      "popularName": "hasselkolsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3903,7 +3903,7 @@
     },
     {
       "scientificName": "Hypoxylon rubiginosum",
-      "popularName": "",
+      "popularName": "koparkolsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3915,7 +3915,7 @@
     },
     {
       "scientificName": "Hysterium pulicare",
-      "popularName": "",
+      "popularName": "riflesprekksopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3927,7 +3927,7 @@
     },
     {
       "scientificName": "Infundibulicybe gibba",
-      "popularName": "",
+      "popularName": "sommartrektsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3939,7 +3939,7 @@
     },
     {
       "scientificName": "Inocutis rheades",
-      "popularName": "",
+      "popularName": "revekjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3951,7 +3951,7 @@
     },
     {
       "scientificName": "Jackrogersella multiformis",
-      "popularName": "",
+      "popularName": "bjørkekolsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -3963,7 +3963,7 @@
     },
     {
       "scientificName": "Juncus alpinoarticulatus",
-      "popularName": "",
+      "popularName": "skogsev",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3975,7 +3975,7 @@
     },
     {
       "scientificName": "Juncus conglomeratus",
-      "popularName": "",
+      "popularName": "knap-frytle",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3987,7 +3987,7 @@
     },
     {
       "scientificName": "Juncus gerardi",
-      "popularName": "",
+      "popularName": "saltsev",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -3999,7 +3999,7 @@
     },
     {
       "scientificName": "Juncus tenuis",
-      "popularName": "",
+      "popularName": "ballastsev",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4023,7 +4023,7 @@
     },
     {
       "scientificName": "Knautia arvensis",
-      "popularName": "",
+      "popularName": "raudknapp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4035,7 +4035,7 @@
     },
     {
       "scientificName": "Kuehneromyces mutabilis",
-      "popularName": "",
+      "popularName": "stubbeskjellsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4047,7 +4047,7 @@
     },
     {
       "scientificName": "Laccaria laccata",
-      "popularName": "",
+      "popularName": "lakssopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4059,7 +4059,7 @@
     },
     {
       "scientificName": "Lactarius deterrimus",
-      "popularName": "",
+      "popularName": "granmatriske",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4071,7 +4071,7 @@
     },
     {
       "scientificName": "Lactarius flexuosus",
-      "popularName": "",
+      "popularName": "bølgeriske",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4083,7 +4083,7 @@
     },
     {
       "scientificName": "Lactarius lignyotus",
-      "popularName": "",
+      "popularName": "sotriske",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4095,7 +4095,7 @@
     },
     {
       "scientificName": "Lactarius mammosus",
-      "popularName": "",
+      "popularName": "mørk kokosriske",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4107,7 +4107,7 @@
     },
     {
       "scientificName": "Lactifluus piperatus",
-      "popularName": "",
+      "popularName": "hvit pepperriske",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4119,7 +4119,7 @@
     },
     {
       "scientificName": "Larus canus",
-      "popularName": "",
+      "popularName": "fiskemåke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -4131,7 +4131,7 @@
     },
     {
       "scientificName": "Lasallia pustulata",
-      "popularName": "",
+      "popularName": "blærelav",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4143,7 +4143,7 @@
     },
     {
       "scientificName": "Lasiommata megera",
-      "popularName": "",
+      "popularName": "sydlig ringvinge",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sommerfugler",
@@ -4155,7 +4155,7 @@
     },
     {
       "scientificName": "Lathyrus linifolius",
-      "popularName": "",
+      "popularName": "goukmat",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4167,7 +4167,7 @@
     },
     {
       "scientificName": "Lathyrus oleraceus",
-      "popularName": "",
+      "popularName": "ert",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4179,7 +4179,7 @@
     },
     {
       "scientificName": "Lathyrus pratensis",
-      "popularName": "",
+      "popularName": "gulflatbelg",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4191,7 +4191,7 @@
     },
     {
       "scientificName": "Leccinum scabrum",
-      "popularName": "",
+      "popularName": "brunskrubb",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4203,7 +4203,7 @@
     },
     {
       "scientificName": "Leccinum versipelle",
-      "popularName": "",
+      "popularName": "raudskrubb",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4215,7 +4215,7 @@
     },
     {
       "scientificName": "Leccinum vulpinum",
-      "popularName": "",
+      "popularName": "bartreskrubb",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4227,7 +4227,7 @@
     },
     {
       "scientificName": "Lentinus substrictus",
-      "popularName": "",
+      "popularName": "finporet vinterstilkkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4239,7 +4239,7 @@
     },
     {
       "scientificName": "Leotia lubrica",
-      "popularName": "",
+      "popularName": "slimmorkel",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4251,7 +4251,7 @@
     },
     {
       "scientificName": "Lepista nuda",
-      "popularName": "",
+      "popularName": "blå riddarhatt",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4263,7 +4263,7 @@
     },
     {
       "scientificName": "Lepus timidus",
-      "popularName": "",
+      "popularName": "Fjellhare",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Pattedyr",
@@ -4275,7 +4275,7 @@
     },
     {
       "scientificName": "Leucanthemum vulgare",
-      "popularName": "",
+      "popularName": "Brakkvalmue",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4287,7 +4287,7 @@
     },
     {
       "scientificName": "Leucocybe candicans",
-      "popularName": "",
+      "popularName": "krittraktsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4299,7 +4299,7 @@
     },
     {
       "scientificName": "Limonium humile",
-      "popularName": "",
+      "popularName": "strandrisp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4311,7 +4311,7 @@
     },
     {
       "scientificName": "Linaria vulgaris",
-      "popularName": "",
+      "popularName": "lintorskemunn",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4323,7 +4323,7 @@
     },
     {
       "scientificName": "Lolium pratense",
-      "popularName": "",
+      "popularName": "engsvingel",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4335,7 +4335,7 @@
     },
     {
       "scientificName": "Lomaspilis marginata",
-      "popularName": "",
+      "popularName": "randmålar",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sommerfugler",
@@ -4347,7 +4347,7 @@
     },
     {
       "scientificName": "Lophodermium pinastri",
-      "popularName": "",
+      "popularName": "furuskyttesopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4359,7 +4359,7 @@
     },
     {
       "scientificName": "Lupinus polyphyllus",
-      "popularName": "",
+      "popularName": "hagelupin",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4371,7 +4371,7 @@
     },
     {
       "scientificName": "Lycoperdon nigrescens",
-      "popularName": "",
+      "popularName": "mørk vorterøyksopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4383,7 +4383,7 @@
     },
     {
       "scientificName": "Lyophyllum decastes",
-      "popularName": "",
+      "popularName": "grå knippesopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4395,7 +4395,7 @@
     },
     {
       "scientificName": "Lysimachia arvensis",
-      "popularName": "",
+      "popularName": "nonsblom",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4407,7 +4407,7 @@
     },
     {
       "scientificName": "Lysimachia punctata",
-      "popularName": "",
+      "popularName": "fagerfredlaus",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4419,7 +4419,7 @@
     },
     {
       "scientificName": "Macrolepiota procera",
-      "popularName": "",
+      "popularName": "knylsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4431,7 +4431,7 @@
     },
     {
       "scientificName": "Maianthemum bifolium",
-      "popularName": "",
+      "popularName": "bittekonvall",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4443,7 +4443,7 @@
     },
     {
       "scientificName": "Maniola jurtina",
-      "popularName": "",
+      "popularName": "rappringveng",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sommerfugler",
@@ -4455,7 +4455,7 @@
     },
     {
       "scientificName": "Marasmius oreades",
-      "popularName": "",
+      "popularName": "nelliksopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4467,7 +4467,7 @@
     },
     {
       "scientificName": "Mareca penelope",
-      "popularName": "",
+      "popularName": "brunnakke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -4479,7 +4479,7 @@
     },
     {
       "scientificName": "Matricaria discoidea",
-      "popularName": "",
+      "popularName": "Engreverumpe",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4491,7 +4491,7 @@
     },
     {
       "scientificName": "Medicago lupulina",
-      "popularName": "",
+      "popularName": "sneglebelg",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4503,7 +4503,7 @@
     },
     {
       "scientificName": "Megacollybia platyphylla",
-      "popularName": "",
+      "popularName": "tægersopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4515,7 +4515,7 @@
     },
     {
       "scientificName": "Melampyrum sylvaticum",
-      "popularName": "",
+      "popularName": "skogmarimjelle",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4527,7 +4527,7 @@
     },
     {
       "scientificName": "Melanoleuca cognata",
-      "popularName": "",
+      "popularName": "vårmunkehatt",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4539,7 +4539,7 @@
     },
     {
       "scientificName": "Melanoleuca polioleuca",
-      "popularName": "",
+      "popularName": "bymunkehatt",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4551,7 +4551,7 @@
     },
     {
       "scientificName": "Mycena cinerella",
-      "popularName": "",
+      "popularName": "melhette",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4563,7 +4563,7 @@
     },
     {
       "scientificName": "Mycena galericulata",
-      "popularName": "",
+      "popularName": "rukkehette",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4575,7 +4575,7 @@
     },
     {
       "scientificName": "Mycena inclinata",
-      "popularName": "",
+      "popularName": "eikehette",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4587,7 +4587,7 @@
     },
     {
       "scientificName": "Mycena polygramma",
-      "popularName": "",
+      "popularName": "sølvhette",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4599,7 +4599,7 @@
     },
     {
       "scientificName": "Mycetinis querceus",
-      "popularName": "",
+      "popularName": "eikelauksopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4611,7 +4611,7 @@
     },
     {
       "scientificName": "Nectriopsis violacea",
-      "popularName": "",
+      "popularName": "trollsmørsnylter",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4623,7 +4623,7 @@
     },
     {
       "scientificName": "Noccaea caerulescens",
-      "popularName": "",
+      "popularName": "vårpengeurt",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4635,7 +4635,7 @@
     },
     {
       "scientificName": "Nymphalis antiopa",
-      "popularName": "",
+      "popularName": "sørgekåpe",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sommerfugler",
@@ -4659,7 +4659,7 @@
     },
     {
       "scientificName": "Oenanthe oenanthe",
-      "popularName": "",
+      "popularName": "steinskvett",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -4671,7 +4671,7 @@
     },
     {
       "scientificName": "Oligoporus davidiae",
-      "popularName": "",
+      "popularName": "eikekremkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4683,7 +4683,7 @@
     },
     {
       "scientificName": "Oxalis acetosella",
-      "popularName": "",
+      "popularName": "gaukesyre",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4695,7 +4695,7 @@
     },
     {
       "scientificName": "Panellus mitis",
-      "popularName": "",
+      "popularName": "vinterlærhatt",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4707,7 +4707,7 @@
     },
     {
       "scientificName": "Papilio machaon",
-      "popularName": "",
+      "popularName": "svalestjert",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sommerfugler",
@@ -4719,7 +4719,7 @@
     },
     {
       "scientificName": "Paragymnopus perforans",
-      "popularName": "",
+      "popularName": "barnålsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4731,7 +4731,7 @@
     },
     {
       "scientificName": "Parthenocissus inserta",
-      "popularName": "",
+      "popularName": "villvin",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4743,7 +4743,7 @@
     },
     {
       "scientificName": "Paxillus rubicundulus",
-      "popularName": "",
+      "popularName": "orepluggsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4755,7 +4755,7 @@
     },
     {
       "scientificName": "Peniophora limitata",
-      "popularName": "",
+      "popularName": "askebarksopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4767,7 +4767,7 @@
     },
     {
       "scientificName": "Persicaria maculosa",
-      "popularName": "",
+      "popularName": "hønsegras",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4779,7 +4779,7 @@
     },
     {
       "scientificName": "Phaeolus schweinitzii",
-      "popularName": "",
+      "popularName": "gulrandkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4791,7 +4791,7 @@
     },
     {
       "scientificName": "Phalaris arundinacea",
-      "popularName": "",
+      "popularName": "rørflok",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4803,7 +4803,7 @@
     },
     {
       "scientificName": "Phedimus spurius",
-      "popularName": "",
+      "popularName": "gravbergknapp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4815,7 +4815,7 @@
     },
     {
       "scientificName": "Phellinus laevigatus",
-      "popularName": "",
+      "popularName": "flakkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4827,7 +4827,7 @@
     },
     {
       "scientificName": "Phellinus tremulae",
-      "popularName": "",
+      "popularName": "ospeeldkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4839,7 +4839,7 @@
     },
     {
       "scientificName": "Phlebia radiata",
-      "popularName": "",
+      "popularName": "rosettsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4851,7 +4851,7 @@
     },
     {
       "scientificName": "Phlebia rufa",
-      "popularName": "",
+      "popularName": "labyrintskinn",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4899,7 +4899,7 @@
     },
     {
       "scientificName": "Phoca vitulina",
-      "popularName": "",
+      "popularName": "Steinkobbe",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Pattedyr",
@@ -4911,7 +4911,7 @@
     },
     {
       "scientificName": "Pholiota squarrosa",
-      "popularName": "",
+      "popularName": "raspskjellsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -4923,7 +4923,7 @@
     },
     {
       "scientificName": "Phylloscopus trochilus",
-      "popularName": "",
+      "popularName": "lauvsongar",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -4935,7 +4935,7 @@
     },
     {
       "scientificName": "Picea abies",
-      "popularName": "",
+      "popularName": "gran",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4959,7 +4959,7 @@
     },
     {
       "scientificName": "Pipistrellus pygmaeus",
-      "popularName": "",
+      "popularName": "dvergflaggermus",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Pattedyr",
@@ -4971,7 +4971,7 @@
     },
     {
       "scientificName": "Plantago lanceolata",
-      "popularName": "",
+      "popularName": "smalkjempe",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4983,7 +4983,7 @@
     },
     {
       "scientificName": "Plantago major",
-      "popularName": "",
+      "popularName": "groblad",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -4995,7 +4995,7 @@
     },
     {
       "scientificName": "Plantago maritima",
-      "popularName": "",
+      "popularName": "strand-kaal",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5007,7 +5007,7 @@
     },
     {
       "scientificName": "Platanthera bifolia",
-      "popularName": "",
+      "popularName": "huvendel",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5019,7 +5019,7 @@
     },
     {
       "scientificName": "Plicatura nivea",
-      "popularName": "",
+      "popularName": "hvit rynkesopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5031,7 +5031,7 @@
     },
     {
       "scientificName": "Pluteus leoninus",
-      "popularName": "",
+      "popularName": "gul skjermsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5043,7 +5043,7 @@
     },
     {
       "scientificName": "Polygonum aviculare",
-      "popularName": "",
+      "popularName": "greintungras",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5055,7 +5055,7 @@
     },
     {
       "scientificName": "Polyommatus icarus",
-      "popularName": "",
+      "popularName": "tiriltungeblåveng",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sommerfugler",
@@ -5067,7 +5067,7 @@
     },
     {
       "scientificName": "Porodaedalea pini",
-      "popularName": "",
+      "popularName": "furustokkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5079,7 +5079,7 @@
     },
     {
       "scientificName": "Potentilla argentea",
-      "popularName": "",
+      "popularName": "sølvmure",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5091,7 +5091,7 @@
     },
     {
       "scientificName": "Potentilla erecta",
-      "popularName": "",
+      "popularName": "blodrood",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5103,7 +5103,7 @@
     },
     {
       "scientificName": "Primula veris",
-      "popularName": "",
+      "popularName": "marianøkleblom",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5115,7 +5115,7 @@
     },
     {
       "scientificName": "Prunella vulgaris",
-      "popularName": "",
+      "popularName": "blåkoll",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5127,7 +5127,7 @@
     },
     {
       "scientificName": "Prunus padus",
-      "popularName": "",
+      "popularName": "hegg",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5139,7 +5139,7 @@
     },
     {
       "scientificName": "Psathyrella fibrillosa",
-      "popularName": "",
+      "popularName": "fibret sprøsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5151,7 +5151,7 @@
     },
     {
       "scientificName": "Pseudoclitocybe cyathiformis",
-      "popularName": "",
+      "popularName": "kaffebrun traktsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5163,7 +5163,7 @@
     },
     {
       "scientificName": "Pteridium aquilinum",
-      "popularName": "",
+      "popularName": "eenfötting",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5175,7 +5175,7 @@
     },
     {
       "scientificName": "Ranunculus acris",
-      "popularName": "",
+      "popularName": "(engsoleie)",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5187,7 +5187,7 @@
     },
     {
       "scientificName": "Rhodocollybia asema",
-      "popularName": "",
+      "popularName": "horngrå flathatt",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5199,7 +5199,7 @@
     },
     {
       "scientificName": "Rhodocollybia maculata",
-      "popularName": "",
+      "popularName": "flekket flathatt",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5211,7 +5211,7 @@
     },
     {
       "scientificName": "Riparia riparia",
-      "popularName": "",
+      "popularName": "sandsvale",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -5223,7 +5223,7 @@
     },
     {
       "scientificName": "Rubus saxatilis",
-      "popularName": "",
+      "popularName": "klase-bær",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5235,7 +5235,7 @@
     },
     {
       "scientificName": "Rumex acetosa",
-      "popularName": "",
+      "popularName": "engsyre",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5247,7 +5247,7 @@
     },
     {
       "scientificName": "Rumex crispus",
-      "popularName": "",
+      "popularName": "krushøymol",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5259,7 +5259,7 @@
     },
     {
       "scientificName": "Rumex longifolius",
-      "popularName": "",
+      "popularName": "høymol",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5271,7 +5271,7 @@
     },
     {
       "scientificName": "Russula aeruginea",
-      "popularName": "",
+      "popularName": "grønkremle",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5295,7 +5295,7 @@
     },
     {
       "scientificName": "Russula grata",
-      "popularName": "",
+      "popularName": "marsipankremle",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5307,7 +5307,7 @@
     },
     {
       "scientificName": "Russula puellaris",
-      "popularName": "",
+      "popularName": "frøkenkremle",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5319,7 +5319,7 @@
     },
     {
       "scientificName": "Russula vinosa",
-      "popularName": "",
+      "popularName": "vinraud kremle",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5331,7 +5331,7 @@
     },
     {
       "scientificName": "Russula xerampelina",
-      "popularName": "",
+      "popularName": "raud sildekremle",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5343,7 +5343,7 @@
     },
     {
       "scientificName": "Salix alba",
-      "popularName": "",
+      "popularName": "hvitpil",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5367,7 +5367,7 @@
     },
     {
       "scientificName": "Saxicola rubetra",
-      "popularName": "",
+      "popularName": "buskskvett",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -5379,7 +5379,7 @@
     },
     {
       "scientificName": "Scolopax rusticola",
-      "popularName": "",
+      "popularName": "rugde",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -5391,7 +5391,7 @@
     },
     {
       "scientificName": "Scorzoneroides autumnalis",
-      "popularName": "",
+      "popularName": "Følblom",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5403,7 +5403,7 @@
     },
     {
       "scientificName": "Scrophularia nodosa",
-      "popularName": "",
+      "popularName": "brunrot",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5415,7 +5415,7 @@
     },
     {
       "scientificName": "Scutellaria galericulata",
-      "popularName": "",
+      "popularName": "skjoldberar",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5427,7 +5427,7 @@
     },
     {
       "scientificName": "Senecio viscosus",
-      "popularName": "",
+      "popularName": "Tungras",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5439,7 +5439,7 @@
     },
     {
       "scientificName": "Sesia apiformis",
-      "popularName": "",
+      "popularName": "ospeglassvinge",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sommerfugler",
@@ -5451,7 +5451,7 @@
     },
     {
       "scientificName": "Silene dioica",
-      "popularName": "",
+      "popularName": "aaker-nelliker",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5475,7 +5475,7 @@
     },
     {
       "scientificName": "Silene nutans",
-      "popularName": "",
+      "popularName": "lutglime",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5487,7 +5487,7 @@
     },
     {
       "scientificName": "Solanum dulcamara",
-      "popularName": "",
+      "popularName": "slyngsøtvier",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5499,7 +5499,7 @@
     },
     {
       "scientificName": "Solidago virgaurea",
-      "popularName": "",
+      "popularName": "akeleje",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5511,7 +5511,7 @@
     },
     {
       "scientificName": "Sonchus asper",
-      "popularName": "",
+      "popularName": "Skogstjerne",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5523,7 +5523,7 @@
     },
     {
       "scientificName": "Sorbus aucuparia",
-      "popularName": "",
+      "popularName": "rogn",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5535,7 +5535,7 @@
     },
     {
       "scientificName": "Spergularia marina",
-      "popularName": "",
+      "popularName": "saltbendel",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5547,7 +5547,7 @@
     },
     {
       "scientificName": "Steccherinum fimbriatum",
-      "popularName": "",
+      "popularName": "frynsepiggflak",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5559,7 +5559,7 @@
     },
     {
       "scientificName": "Stellaria media",
-      "popularName": "",
+      "popularName": "svinearv",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5571,7 +5571,7 @@
     },
     {
       "scientificName": "Stereum gausapatum",
-      "popularName": "",
+      "popularName": "eikelærsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5583,7 +5583,7 @@
     },
     {
       "scientificName": "Stereum hirsutum",
-      "popularName": "",
+      "popularName": "ragglærsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5595,7 +5595,7 @@
     },
     {
       "scientificName": "Stereum sanguinolentum",
-      "popularName": "",
+      "popularName": "toppråtesopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5607,7 +5607,7 @@
     },
     {
       "scientificName": "Sturnus vulgaris",
-      "popularName": "",
+      "popularName": "stær",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
@@ -5619,7 +5619,7 @@
     },
     {
       "scientificName": "Suillus luteus",
-      "popularName": "",
+      "popularName": "smørsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5631,7 +5631,7 @@
     },
     {
       "scientificName": "Telekia speciosa",
-      "popularName": "",
+      "popularName": "Fløyelsmarikåpe",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5643,7 +5643,7 @@
     },
     {
       "scientificName": "Thelephora terrestris",
-      "popularName": "",
+      "popularName": "frynsesopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5655,7 +5655,7 @@
     },
     {
       "scientificName": "Thlaspi arvense",
-      "popularName": "",
+      "popularName": "pengegræs",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5667,7 +5667,7 @@
     },
     {
       "scientificName": "Trametes cinnabarina",
-      "popularName": "",
+      "popularName": "sinoberkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5679,7 +5679,7 @@
     },
     {
       "scientificName": "Trametes hirsuta",
-      "popularName": "",
+      "popularName": "raggkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5691,7 +5691,7 @@
     },
     {
       "scientificName": "Trametes ochracea",
-      "popularName": "",
+      "popularName": "beltekjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5703,7 +5703,7 @@
     },
     {
       "scientificName": "Trichaptum abietinum",
-      "popularName": "",
+      "popularName": "fiolkjuke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5715,7 +5715,7 @@
     },
     {
       "scientificName": "Tricholoma album",
-      "popularName": "",
+      "popularName": "eikereddikmusserong",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5739,7 +5739,7 @@
     },
     {
       "scientificName": "Tricholoma saponaceum",
-      "popularName": "",
+      "popularName": "skjelet såpemusserong",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5751,7 +5751,7 @@
     },
     {
       "scientificName": "Tricholoma viridilutescens",
-      "popularName": "",
+      "popularName": "gulkantmusserong",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5763,7 +5763,7 @@
     },
     {
       "scientificName": "Trifolium hybridum",
-      "popularName": "",
+      "popularName": "(alsikekløver)",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5775,7 +5775,7 @@
     },
     {
       "scientificName": "Trifolium medium",
-      "popularName": "",
+      "popularName": "skogkløver",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5787,7 +5787,7 @@
     },
     {
       "scientificName": "Trifolium repens",
-      "popularName": "",
+      "popularName": "hvidkol",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5799,7 +5799,7 @@
     },
     {
       "scientificName": "Tripleurospermum inodorum",
-      "popularName": "",
+      "popularName": "Skogskjegg",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5811,7 +5811,7 @@
     },
     {
       "scientificName": "Tripleurospermum maritimum",
-      "popularName": "",
+      "popularName": "strandbalderbrå",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5823,7 +5823,7 @@
     },
     {
       "scientificName": "Tripolium pannonicum",
-      "popularName": "",
+      "popularName": "strandstjerne",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5835,7 +5835,7 @@
     },
     {
       "scientificName": "Tulasnella violea",
-      "popularName": "",
+      "popularName": "fiolsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5847,7 +5847,7 @@
     },
     {
       "scientificName": "Turritis glabra",
-      "popularName": "",
+      "popularName": "glat taarn-sinnep",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5859,7 +5859,7 @@
     },
     {
       "scientificName": "Tylopilus felleus",
-      "popularName": "",
+      "popularName": "gallerørsopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5871,9 +5871,9 @@
     },
     {
       "scientificName": "Typha latifolia",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "brei dunkjevle",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/4280840/medium.jpeg",
+      "photoAttribution": "(c) cgbb2004, some rights reserved (CC BY-NC), uploaded by cgbb2004",
       "group": "Karplanter",
       "lat": 59.16439,
       "lng": 10.351961,
@@ -5895,7 +5895,7 @@
     },
     {
       "scientificName": "Veronica chamaedrys",
-      "popularName": "",
+      "popularName": "tveskjeggveronika",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5907,7 +5907,7 @@
     },
     {
       "scientificName": "Veronica officinalis",
-      "popularName": "",
+      "popularName": "bu-sleik",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5919,7 +5919,7 @@
     },
     {
       "scientificName": "Vespertilio murinus",
-      "popularName": "",
+      "popularName": "Skimmelflaggermus",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Pattedyr",
@@ -5931,7 +5931,7 @@
     },
     {
       "scientificName": "Vicia cracca",
-      "popularName": "",
+      "popularName": "fuglevikke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5943,7 +5943,7 @@
     },
     {
       "scientificName": "Vicia sepium",
-      "popularName": "",
+      "popularName": "gjerdevikke",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
@@ -5955,7 +5955,7 @@
     },
     {
       "scientificName": "Vuilleminia comedens",
-      "popularName": "",
+      "popularName": "barksprengersopp",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5979,7 +5979,7 @@
     },
     {
       "scientificName": "Xeromphalina campanella",
-      "popularName": "",
+      "popularName": "stubberusthette",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
@@ -5991,7 +5991,7 @@
     },
     {
       "scientificName": "Xylaria filiformis",
-      "popularName": "",
+      "popularName": "staudehorn",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",

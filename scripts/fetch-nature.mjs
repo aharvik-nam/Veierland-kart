@@ -1,6 +1,6 @@
 /**
  * Run with: node scripts/fetch-nature.mjs
- * Fetches all GBIF occurrences + iNaturalist enrichment for Veierland
+ * Fetches all GBIF occurrences + iNaturalist/GBIF enrichment for Veierland
  * and writes src/data/nature_cache.json
  */
 import { writeFileSync, readFileSync } from 'fs';
@@ -77,8 +77,11 @@ async function fetchINat(scientificName) {
       `https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(scientificName)}&locale=nb&per_page=5`
     );
     const data = await res.json();
-    const genus = scientificName.split(' ')[0].toLowerCase();
-    const taxon = data.results?.find(t => t.name.toLowerCase().startsWith(genus));
+    const nameLower = scientificName.toLowerCase();
+    const genus = nameLower.split(' ')[0];
+    // Prefer exact match, fall back to genus match
+    const taxon = data.results?.find(t => t.name.toLowerCase() === nameLower)
+               ?? data.results?.find(t => t.name.toLowerCase().startsWith(genus));
     if (!taxon) return { norwegianName: '', photoUrl: '', photoAttribution: '' };
     return {
       norwegianName: taxon.preferred_common_name ?? '',
@@ -86,6 +89,30 @@ async function fetchINat(scientificName) {
       photoAttribution: taxon.default_photo?.attribution ?? '',
     };
   } catch { return { norwegianName: '', photoUrl: '', photoAttribution: '' }; }
+}
+
+const NOR_LANGS = new Set(['nor', 'nob', 'nno', 'no', 'nb']);
+
+async function fetchGBIFVernacular(gbifKey) {
+  try {
+    const res = await fetch(`https://api.gbif.org/v1/species/${gbifKey}/vernacularNames?limit=200`);
+    const data = await res.json();
+    const hit = data.results?.find(r => NOR_LANGS.has((r.language ?? '').toLowerCase()));
+    return hit?.vernacularName ?? '';
+  } catch { return ''; }
+}
+
+async function batchMap(items, fn, batchSize = 20) {
+  const results = [];
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    const batchResults = await Promise.all(batch.map(fn));
+    results.push(...batchResults);
+    if (i + batchSize < items.length) {
+      process.stdout.write(`  ${Math.min(i + batchSize, items.length)}/${items.length}\r`);
+    }
+  }
+  return results;
 }
 
 async function main() {
@@ -98,13 +125,29 @@ async function main() {
 
   console.log('Enriching with iNaturalist (Norwegian names + photos)…');
   const uniqueNames = [...new Set(obs.map(o => o.scientificName))];
-  const results = await Promise.all(uniqueNames.map(n => fetchINat(n)));
-  const map = new Map(uniqueNames.map((n, i) => [n, results[i]]));
+  const inatResults = await batchMap(uniqueNames, fetchINat, 30);
+  const inatMap = new Map(uniqueNames.map((n, i) => [n, inatResults[i]]));
 
-  const enriched = obs.map(o => {
-    const r = map.get(o.scientificName);
-    return { ...o, popularName: r.norwegianName || o.popularName, photoUrl: r.photoUrl, photoAttribution: r.photoAttribution };
+  // First pass: apply iNaturalist data
+  let enriched = obs.map(o => {
+    const r = inatMap.get(o.scientificName);
+    return { ...o, popularName: r.norwegianName || '', photoUrl: r.photoUrl, photoAttribution: r.photoAttribution };
   });
+
+  // Second pass: GBIF vernacular names for species still missing Norwegian name
+  const missingName = enriched.filter(o => !o.popularName);
+  if (missingName.length > 0) {
+    console.log(`Fetching GBIF vernacular names for ${missingName.length} species without Norwegian name…`);
+    const gbifNames = await batchMap(missingName.map(o => o.gbifKey), fetchGBIFVernacular, 20);
+    const gbifMap = new Map(missingName.map((o, i) => [o.gbifKey, gbifNames[i]]));
+    enriched = enriched.map(o => ({
+      ...o,
+      popularName: o.popularName || gbifMap.get(o.gbifKey) || '',
+    }));
+  }
+
+  const withName = enriched.filter(o => o.popularName).length;
+  console.log(`  ${withName}/${enriched.length} species have Norwegian names`);
 
   const out = { generatedAt: new Date().toISOString(), obs: enriched };
   writeFileSync(OUT, JSON.stringify(out, null, 2));
