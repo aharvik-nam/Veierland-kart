@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-16T19:16:45.183Z",
+  "generatedAt": "2026-06-16T19:21:04.089Z",
   "obs": [
     {
       "scientificName": "Eptesicus nilssonii",
@@ -10,7 +10,7 @@
       "lat": 59.160724,
       "lng": 10.352581,
       "date": "2018-10-03",
-      "obsCount": 24,
+      "obsCount": 30,
       "gbifKey": 7261816
     },
     {
@@ -26,6 +26,30 @@
       "gbifKey": 9761484
     },
     {
+      "scientificName": "Rosa rugosa",
+      "popularName": "rukkerose",
+      "photoUrl": "https://static.inaturalist.org/photos/74197363/medium.jpg",
+      "photoAttribution": "(c) Meghan Thornburg, all rights reserved, uploaded by Meghan Thornburg",
+      "group": "Karplanter",
+      "lat": 59.164445,
+      "lng": 10.343831,
+      "date": "2021-10-01",
+      "obsCount": 21,
+      "gbifKey": 3003979
+    },
+    {
+      "scientificName": "Dendrocopos major",
+      "popularName": "Flaggspett",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/259132621/medium.jpeg",
+      "photoAttribution": "(c) Elio Giacone, some rights reserved (CC BY-NC), uploaded by Elio Giacone",
+      "group": "Fugler",
+      "lat": 59.158984,
+      "lng": 10.352437,
+      "date": "2026-04-26",
+      "obsCount": 18,
+      "gbifKey": 2477968
+    },
+    {
       "scientificName": "Buteo buteo",
       "popularName": "",
       "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/28307358/medium.jpg",
@@ -36,18 +60,6 @@
       "date": "2026-05-10",
       "obsCount": 17,
       "gbifKey": 2480537
-    },
-    {
-      "scientificName": "Dendrocopos major",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.158984,
-      "lng": 10.352437,
-      "date": "2026-04-26",
-      "obsCount": 15,
-      "gbifKey": 2477968
     },
     {
       "scientificName": "Gallinula chloropus",
@@ -62,18 +74,6 @@
       "gbifKey": 5228199
     },
     {
-      "scientificName": "Picus viridis",
-      "popularName": "Grønnspett",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/242668015/medium.jpg",
-      "photoAttribution": "(c) Andrea Poggi, some rights reserved (CC BY), uploaded by Andrea Poggi",
-      "group": "Fugler",
-      "lat": 59.158984,
-      "lng": 10.352437,
-      "date": "2026-05-10",
-      "obsCount": 13,
-      "gbifKey": 2478523
-    },
-    {
       "scientificName": "Anas crecca",
       "popularName": "Krikkand",
       "photoUrl": "https://static.inaturalist.org/photos/112626129/medium.jpg",
@@ -82,7 +82,7 @@
       "lat": 59.158984,
       "lng": 10.352437,
       "date": "2026-05-10",
-      "obsCount": 12,
+      "obsCount": 11,
       "gbifKey": 8214667
     },
     {
@@ -98,6 +98,18 @@
       "gbifKey": 2480482
     },
     {
+      "scientificName": "Cyanistes caeruleus",
+      "popularName": "Blåmeis",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/41677354/medium.jpeg",
+      "photoAttribution": "(c) rorygardner79, some rights reserved (CC BY-NC)",
+      "group": "Fugler",
+      "lat": 59.148575,
+      "lng": 10.337182,
+      "date": "2026-01-29",
+      "obsCount": 10,
+      "gbifKey": 2487879
+    },
+    {
       "scientificName": "Daedalea quercina",
       "popularName": "",
       "photoUrl": "",
@@ -106,8 +118,92 @@
       "lat": 59.153282,
       "lng": 10.350317,
       "date": "2023-06-25",
-      "obsCount": 9,
+      "obsCount": 10,
       "gbifKey": 8879395
+    },
+    {
+      "scientificName": "Parus major",
+      "popularName": "Kjøttmeis",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/340613122/medium.jpg",
+      "photoAttribution": "(c) Oscar Valencoso - Salomé Planas, some rights reserved (CC BY-NC)",
+      "group": "Fugler",
+      "lat": 59.148575,
+      "lng": 10.337182,
+      "date": "2026-01-29",
+      "obsCount": 10,
+      "gbifKey": 9705453
+    },
+    {
+      "scientificName": "Picus viridis",
+      "popularName": "Grønnspett",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/242668015/medium.jpg",
+      "photoAttribution": "(c) Andrea Poggi, some rights reserved (CC BY), uploaded by Andrea Poggi",
+      "group": "Fugler",
+      "lat": 59.158984,
+      "lng": 10.352437,
+      "date": "2026-05-10",
+      "obsCount": 10,
+      "gbifKey": 2478523
+    },
+    {
+      "scientificName": "Sciurus vulgaris",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Pattedyr",
+      "lat": 59.148575,
+      "lng": 10.337182,
+      "date": "2026-01-29",
+      "obsCount": 10,
+      "gbifKey": 8211070
+    },
+    {
+      "scientificName": "Sitta europaea",
+      "popularName": "Spettmeis",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/98789726/medium.jpg",
+      "photoAttribution": "(c) Frank Vassen, some rights reserved (CC BY)",
+      "group": "Fugler",
+      "lat": 59.148575,
+      "lng": 10.337182,
+      "date": "2026-01-29",
+      "obsCount": 10,
+      "gbifKey": 2484916
+    },
+    {
+      "scientificName": "Malus sylvestris",
+      "popularName": "eple",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/268437/medium.jpg",
+      "photoAttribution": "(c) Vilma Bharatan, some rights reserved (CC BY-NC-ND)",
+      "group": "Karplanter",
+      "lat": 59.151591,
+      "lng": 10.35524,
+      "date": "2022-10-01",
+      "obsCount": 9,
+      "gbifKey": 3001509
+    },
+    {
+      "scientificName": "Pyrrhula pyrrhula",
+      "popularName": "Dompaper",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/12714/medium.jpg",
+      "photoAttribution": "(c) Didier, some rights reserved (CC BY-SA)",
+      "group": "Fugler",
+      "lat": 59.148575,
+      "lng": 10.337182,
+      "date": "2026-01-29",
+      "obsCount": 9,
+      "gbifKey": 2494543
+    },
+    {
+      "scientificName": "Turdus merula",
+      "popularName": "Svarttrost",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/356885346/medium.jpg",
+      "photoAttribution": "(c) Luiz Lapa, some rights reserved (CC BY)",
+      "group": "Fugler",
+      "lat": 59.148575,
+      "lng": 10.337182,
+      "date": "2026-01-29",
+      "obsCount": 9,
+      "gbifKey": 2490719
     },
     {
       "scientificName": "Fistulina hepatica",
@@ -122,10 +218,34 @@
       "gbifKey": 2531012
     },
     {
-      "scientificName": "Accipiter nisus",
+      "scientificName": "Impatiens parviflora",
+      "popularName": "mongolspringfrø",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/52078988/medium.jpeg",
+      "photoAttribution": "(c) Denis Ivanov, some rights reserved (CC BY-NC), uploaded by Denis Ivanov",
+      "group": "Karplanter",
+      "lat": 59.150974,
+      "lng": 10.361007,
+      "date": "2025-07-07",
+      "obsCount": 8,
+      "gbifKey": 2891782
+    },
+    {
+      "scientificName": "Myotis mystacinus",
       "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/78198311/medium.jpeg",
+      "photoAttribution": "(c) Manuel Ruedi, some rights reserved (CC BY-NC), uploaded by Manuel Ruedi",
+      "group": "Pattedyr",
+      "lat": 59.144054,
+      "lng": 10.364771,
+      "date": "2005-07-03",
+      "obsCount": 8,
+      "gbifKey": 9754263
+    },
+    {
+      "scientificName": "Accipiter nisus",
+      "popularName": "Spurvehauk",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/60499639/medium.jpg",
+      "photoAttribution": "(c) john.purvis, some rights reserved (CC BY-NC-SA)",
       "group": "Fugler",
       "lat": 59.158984,
       "lng": 10.352437,
@@ -134,52 +254,28 @@
       "gbifKey": 2480637
     },
     {
-      "scientificName": "Cyanistes caeruleus",
-      "popularName": "Blåmeis",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/41677354/medium.jpeg",
-      "photoAttribution": "(c) rorygardner79, some rights reserved (CC BY-NC)",
-      "group": "Fugler",
-      "lat": 59.156995,
-      "lng": 10.351988,
-      "date": "2026-01-24",
+      "scientificName": "Cantharellus pallens",
+      "popularName": "blek kantarell",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/111940893/medium.jpg",
+      "photoAttribution": "(c) Federico Calledda, some rights reserved (CC BY-NC), uploaded by Federico Calledda",
+      "group": "Sopper",
+      "lat": 59.168027,
+      "lng": 10.347056,
+      "date": "2008-08-04",
       "obsCount": 7,
-      "gbifKey": 2487879
+      "gbifKey": 5249496
     },
     {
-      "scientificName": "Delichon urbicum",
-      "popularName": "Taksvale",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/370662370/medium.jpg",
-      "photoAttribution": "(c) Thomas Landgren, some rights reserved (CC BY-NC-ND)",
+      "scientificName": "Corvus cornix",
+      "popularName": "Kråke",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/114176979/medium.jpg",
+      "photoAttribution": "(c) hedera.baltica, some rights reserved (CC BY-SA)",
       "group": "Fugler",
-      "lat": 59.158984,
-      "lng": 10.352437,
-      "date": "2025-05-11",
+      "lat": 59.148575,
+      "lng": 10.337182,
+      "date": "2026-01-29",
       "obsCount": 7,
-      "gbifKey": 2489214
-    },
-    {
-      "scientificName": "Dryocopus martius",
-      "popularName": "Svartspett",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/31574109/medium.jpg",
-      "photoAttribution": "(c) Александр, some rights reserved (CC BY-NC-SA), uploaded by Александр",
-      "group": "Fugler",
-      "lat": 59.158984,
-      "lng": 10.352437,
-      "date": "2026-05-09",
-      "obsCount": 7,
-      "gbifKey": 2477872
-    },
-    {
-      "scientificName": "Myotis mystacinus",
-      "popularName": "",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/78198311/medium.jpeg",
-      "photoAttribution": "(c) Manuel Ruedi, some rights reserved (CC BY-NC), uploaded by Manuel Ruedi",
-      "group": "Pattedyr",
-      "lat": 59.162715,
-      "lng": 10.346082,
-      "date": "2005-07-02",
-      "obsCount": 7,
-      "gbifKey": 9754263
+      "gbifKey": 2482515
     },
     {
       "scientificName": "Reynoutria japonica",
@@ -194,6 +290,42 @@
       "gbifKey": 2889173
     },
     {
+      "scientificName": "Chloris chloris",
+      "popularName": "Grønnfinker",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/43705228/medium.jpg",
+      "photoAttribution": "(c) Геннадий, some rights reserved (CC BY-NC), uploaded by Геннадий",
+      "group": "Fugler",
+      "lat": 59.156995,
+      "lng": 10.351988,
+      "date": "2026-01-24",
+      "obsCount": 6,
+      "gbifKey": 5845582
+    },
+    {
+      "scientificName": "Dryocopus martius",
+      "popularName": "Svartspett",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/31574109/medium.jpg",
+      "photoAttribution": "(c) Александр, some rights reserved (CC BY-NC-SA), uploaded by Александр",
+      "group": "Fugler",
+      "lat": 59.158984,
+      "lng": 10.352437,
+      "date": "2026-05-09",
+      "obsCount": 6,
+      "gbifKey": 2477872
+    },
+    {
+      "scientificName": "Emberiza citrinella",
+      "popularName": "Gulspurv",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/115890496/medium.jpg",
+      "photoAttribution": "(c) Pekka Malinen, some rights reserved (CC BY-NC-SA), uploaded by Pekka Malinen",
+      "group": "Fugler",
+      "lat": 59.148575,
+      "lng": 10.337182,
+      "date": "2026-01-29",
+      "obsCount": 6,
+      "gbifKey": 2491534
+    },
+    {
       "scientificName": "Lysimachia vulgaris",
       "popularName": "fredløs",
       "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/80592838/medium.jpg",
@@ -206,16 +338,40 @@
       "gbifKey": 3169386
     },
     {
-      "scientificName": "Parus major",
-      "popularName": "Kjøttmeis",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/340613122/medium.jpg",
-      "photoAttribution": "(c) Oscar Valencoso - Salomé Planas, some rights reserved (CC BY-NC)",
+      "scientificName": "Passer montanus",
+      "popularName": "Pilfink",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/165351252/medium.jpg",
+      "photoAttribution": "(c) Дмитрий Осипов, some rights reserved (CC BY-NC), uploaded by Дмитрий Осипов",
       "group": "Fugler",
-      "lat": 59.156995,
-      "lng": 10.351988,
-      "date": "2026-01-24",
+      "lat": 59.148575,
+      "lng": 10.337182,
+      "date": "2026-01-29",
       "obsCount": 6,
-      "gbifKey": 9705453
+      "gbifKey": 5231198
+    },
+    {
+      "scientificName": "Pica pica",
+      "popularName": "Skjærer",
+      "photoUrl": "https://static.inaturalist.org/photos/256224620/medium.jpg",
+      "photoAttribution": "(c) Dietmar Kuballa, all rights reserved, uploaded by Dietmar Kuballa",
+      "group": "Fugler",
+      "lat": 59.148575,
+      "lng": 10.337182,
+      "date": "2026-01-29",
+      "obsCount": 6,
+      "gbifKey": 5229490
+    },
+    {
+      "scientificName": "Quercus robur",
+      "popularName": "",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/482832455/medium.jpg",
+      "photoAttribution": "(c) Karen Andrea Boehme, some rights reserved (CC BY-NC), uploaded by Karen Andrea Boehme",
+      "group": "Karplanter",
+      "lat": 59.146414,
+      "lng": 10.344765,
+      "date": "2024-07-27",
+      "obsCount": 6,
+      "gbifKey": 2878688
     },
     {
       "scientificName": "Vinca minor",
@@ -230,28 +386,16 @@
       "gbifKey": 3169707
     },
     {
-      "scientificName": "Cantharellus pallens",
-      "popularName": "blek kantarell",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/111940893/medium.jpg",
-      "photoAttribution": "(c) Federico Calledda, some rights reserved (CC BY-NC), uploaded by Federico Calledda",
-      "group": "Sopper",
-      "lat": 59.149256,
-      "lng": 10.347855,
-      "date": "2008-07-04",
-      "obsCount": 5,
-      "gbifKey": 5249496
-    },
-    {
-      "scientificName": "Chloris chloris",
-      "popularName": "Grønnfinker",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/43705228/medium.jpg",
-      "photoAttribution": "(c) Геннадий, some rights reserved (CC BY-NC), uploaded by Геннадий",
+      "scientificName": "Delichon urbicum",
+      "popularName": "Taksvale",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/370662370/medium.jpg",
+      "photoAttribution": "(c) Thomas Landgren, some rights reserved (CC BY-NC-ND)",
       "group": "Fugler",
-      "lat": 59.156995,
-      "lng": 10.351988,
-      "date": "2026-01-24",
+      "lat": 59.158984,
+      "lng": 10.352437,
+      "date": "2025-05-11",
       "obsCount": 5,
-      "gbifKey": 5845582
+      "gbifKey": 2489214
     },
     {
       "scientificName": "Emberiza schoeniclus",
@@ -266,52 +410,52 @@
       "gbifKey": 2491557
     },
     {
-      "scientificName": "Hirundo rustica",
-      "popularName": "Låvesvale",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/122469139/medium.jpg",
-      "photoAttribution": "(c) Ad Konings, some rights reserved (CC BY-NC), uploaded by Ad Konings",
+      "scientificName": "Erithacus rubecula",
+      "popularName": "Rødstrupe",
+      "photoUrl": "https://static.inaturalist.org/photos/331946615/medium.jpeg",
+      "photoAttribution": "(c) Jakob W., all rights reserved, uploaded by Jakob W.",
+      "group": "Fugler",
+      "lat": 59.148575,
+      "lng": 10.337182,
+      "date": "2026-01-29",
+      "obsCount": 5,
+      "gbifKey": 2492462
+    },
+    {
+      "scientificName": "Laetiporus sulphureus",
+      "popularName": "svovelkjuke",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/42106925/medium.jpg",
+      "photoAttribution": "(c) Stephen John Davies, some rights reserved (CC BY-NC), uploaded by Stephen John Davies",
+      "group": "Sopper",
+      "lat": 59.142484,
+      "lng": 10.360665,
+      "date": "2021-09-29",
+      "obsCount": 5,
+      "gbifKey": 9072021
+    },
+    {
+      "scientificName": "Capreolus capreolus",
+      "popularName": "Rådyr",
+      "photoUrl": "https://static.inaturalist.org/photos/14019330/medium.jpg",
+      "photoAttribution": "(c) johsan65, all rights reserved, uploaded by johsan65",
+      "group": "Pattedyr",
+      "lat": 59.148575,
+      "lng": 10.337182,
+      "date": "2015-02-01",
+      "obsCount": 4,
+      "gbifKey": 5220126
+    },
+    {
+      "scientificName": "Carduelis carduelis",
+      "popularName": "Stillitser",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/58184530/medium.jpg",
+      "photoAttribution": "(c) admss, some rights reserved (CC BY-NC), uploaded by admss",
       "group": "Fugler",
       "lat": 59.158984,
       "lng": 10.352437,
       "date": "2025-05-11",
-      "obsCount": 5,
-      "gbifKey": 9515886
-    },
-    {
-      "scientificName": "Sciurus vulgaris",
-      "popularName": "Ekorn",
-      "photoUrl": "https://static.inaturalist.org/photos/6235808/medium.jpg",
-      "photoAttribution": "(c) guido parmeggiani, all rights reserved, uploaded by guido parmeggiani",
-      "group": "Pattedyr",
-      "lat": 59.159296,
-      "lng": 10.347157,
-      "date": "2026-01-24",
-      "obsCount": 5,
-      "gbifKey": 8211070
-    },
-    {
-      "scientificName": "Sitta europaea",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.156995,
-      "lng": 10.351988,
-      "date": "2026-01-24",
-      "obsCount": 5,
-      "gbifKey": 2484916
-    },
-    {
-      "scientificName": "Ardea cinerea",
-      "popularName": "Gråhegre",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/73516715/medium.jpg",
-      "photoAttribution": "(c) Frank Sengpiel, some rights reserved (CC BY), uploaded by Frank Sengpiel",
-      "group": "Fugler",
-      "lat": 59.158984,
-      "lng": 10.352437,
-      "date": "2026-04-26",
       "obsCount": 4,
-      "gbifKey": 9797180
+      "gbifKey": 2494686
     },
     {
       "scientificName": "Coccothraustes coccothraustes",
@@ -326,30 +470,6 @@
       "gbifKey": 2494329
     },
     {
-      "scientificName": "Emberiza citrinella",
-      "popularName": "Gulspurv",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/115890496/medium.jpg",
-      "photoAttribution": "(c) Pekka Malinen, some rights reserved (CC BY-NC-SA), uploaded by Pekka Malinen",
-      "group": "Fugler",
-      "lat": 59.156995,
-      "lng": 10.351988,
-      "date": "2026-01-24",
-      "obsCount": 4,
-      "gbifKey": 2491534
-    },
-    {
-      "scientificName": "Exidia glandulosa",
-      "popularName": "eikebevre",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/160018244/medium.jpeg",
-      "photoAttribution": "(c) Denis Ivanov, some rights reserved (CC BY-NC), uploaded by Denis Ivanov",
-      "group": "Sopper",
-      "lat": 59.162935,
-      "lng": 10.347766,
-      "date": "2010-11-04",
-      "obsCount": 4,
-      "gbifKey": 2553607
-    },
-    {
       "scientificName": "Falco subbuteo",
       "popularName": "Lerkefalk",
       "photoUrl": "https://static.inaturalist.org/photos/127170560/medium.jpg",
@@ -362,52 +482,40 @@
       "gbifKey": 2481035
     },
     {
-      "scientificName": "Impatiens parviflora",
-      "popularName": "mongolspringfrø",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/52078988/medium.jpeg",
-      "photoAttribution": "(c) Denis Ivanov, some rights reserved (CC BY-NC), uploaded by Denis Ivanov",
-      "group": "Karplanter",
-      "lat": 59.160655,
-      "lng": 10.352886,
-      "date": "2023-06-25",
-      "obsCount": 4,
-      "gbifKey": 2891782
-    },
-    {
-      "scientificName": "Malus sylvestris",
+      "scientificName": "Felis catus",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
+      "group": "Pattedyr",
+      "lat": 59.150335,
+      "lng": 10.339477,
+      "date": "2020-01-25",
+      "obsCount": 4,
+      "gbifKey": 2435035
+    },
+    {
+      "scientificName": "Hirundo rustica",
+      "popularName": "Låvesvale",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/122469139/medium.jpg",
+      "photoAttribution": "(c) Ad Konings, some rights reserved (CC BY-NC), uploaded by Ad Konings",
+      "group": "Fugler",
+      "lat": 59.15295,
+      "lng": 10.363567,
+      "date": "2025-05-27",
+      "obsCount": 4,
+      "gbifKey": 9515886
+    },
+    {
+      "scientificName": "Odontites litoralis",
+      "popularName": "strandrødtopp",
+      "photoUrl": "https://static.inaturalist.org/photos/14106/medium.jpg",
+      "photoAttribution": "(c) Tig, all rights reserved",
       "group": "Karplanter",
-      "lat": 59.151591,
-      "lng": 10.35524,
-      "date": "2022-10-01",
+      "lat": 59.143308,
+      "lng": 10.367852,
+      "date": "2021-09-28",
       "obsCount": 4,
-      "gbifKey": 3001509
-    },
-    {
-      "scientificName": "Passer montanus",
-      "popularName": "Pilfink",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/165351252/medium.jpg",
-      "photoAttribution": "(c) Дмитрий Осипов, some rights reserved (CC BY-NC), uploaded by Дмитрий Осипов",
-      "group": "Fugler",
-      "lat": 59.156995,
-      "lng": 10.351988,
-      "date": "2026-01-24",
-      "obsCount": 4,
-      "gbifKey": 5231198
-    },
-    {
-      "scientificName": "Pica pica",
-      "popularName": "Skjærer",
-      "photoUrl": "https://static.inaturalist.org/photos/256224620/medium.jpg",
-      "photoAttribution": "(c) Dietmar Kuballa, all rights reserved, uploaded by Dietmar Kuballa",
-      "group": "Fugler",
-      "lat": 59.156995,
-      "lng": 10.351988,
-      "date": "2026-01-24",
-      "obsCount": 4,
-      "gbifKey": 5229490
+      "gbifKey": 7911410
     },
     {
       "scientificName": "Polygonatum odoratum",
@@ -422,18 +530,6 @@
       "gbifKey": 2770228
     },
     {
-      "scientificName": "Pyrrhula pyrrhula",
-      "popularName": "Dompaper",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/12714/medium.jpg",
-      "photoAttribution": "(c) Didier, some rights reserved (CC BY-SA)",
-      "group": "Fugler",
-      "lat": 59.156995,
-      "lng": 10.351988,
-      "date": "2026-01-24",
-      "obsCount": 4,
-      "gbifKey": 2494543
-    },
-    {
       "scientificName": "Quercusia quercus",
       "popularName": "",
       "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/462118/medium.jpg",
@@ -446,58 +542,10 @@
       "gbifKey": 1926324
     },
     {
-      "scientificName": "Tringa glareola",
-      "popularName": "Grønnstilk",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/323621890/medium.jpg",
-      "photoAttribution": "(c) Erik Eckstein, some rights reserved (CC BY-NC), uploaded by Erik Eckstein",
-      "group": "Fugler",
-      "lat": 59.158984,
-      "lng": 10.352437,
-      "date": "2026-05-09",
-      "obsCount": 4,
-      "gbifKey": 2481713
-    },
-    {
-      "scientificName": "Tringa nebularia",
-      "popularName": "Gluttsnipe",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/52660452/medium.jpg",
-      "photoAttribution": "(c) Ximo Galarza, some rights reserved (CC BY-NC-SA)",
-      "group": "Fugler",
-      "lat": 59.158984,
-      "lng": 10.352437,
-      "date": "2026-05-09",
-      "obsCount": 4,
-      "gbifKey": 2481726
-    },
-    {
-      "scientificName": "Turdus merula",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.156995,
-      "lng": 10.351988,
-      "date": "2026-01-24",
-      "obsCount": 4,
-      "gbifKey": 2490719
-    },
-    {
-      "scientificName": "Vaccinium myrtillus",
-      "popularName": "Blåbær",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/191246192/medium.jpeg",
-      "photoAttribution": "(c) Дмитрий Власов, some rights reserved (CC BY-NC), uploaded by Дмитрий Власов",
-      "group": "Karplanter",
-      "lat": 59.153945,
-      "lng": 10.341846,
-      "date": "2023-06-25",
-      "obsCount": 4,
-      "gbifKey": 2882833
-    },
-    {
       "scientificName": "Anser anser",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "Andefugler",
+      "photoUrl": "https://static.inaturalist.org/photos/65733687/medium.jpg",
+      "photoAttribution": "(c) Carlos N. G. Bocos, all rights reserved, uploaded by Carlos N. G. Bocos",
       "group": "Fugler",
       "lat": 59.158984,
       "lng": 10.352437,
@@ -506,40 +554,28 @@
       "gbifKey": 2498036
     },
     {
-      "scientificName": "Apus apus",
-      "popularName": "Typiske seilere",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/26163/medium.jpg",
-      "photoAttribution": "(c) Mark Kilner, some rights reserved (CC BY-NC-SA)",
-      "group": "Fugler",
-      "lat": 59.155866,
-      "lng": 10.352633,
-      "date": "2024-06-03",
-      "obsCount": 3,
-      "gbifKey": 5228676
-    },
-    {
-      "scientificName": "Argentina anserina",
-      "popularName": "gåsemure",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/43334473/medium.jpeg",
-      "photoAttribution": "(c) Zdeňka Nováková, some rights reserved (CC BY-NC), uploaded by Zdeňka Nováková",
-      "group": "Karplanter",
-      "lat": 59.154263,
-      "lng": 10.352428,
-      "date": "2025-05-31",
-      "obsCount": 3,
-      "gbifKey": 5367246
-    },
-    {
-      "scientificName": "Carduelis carduelis",
-      "popularName": "Stillitser",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/58184530/medium.jpg",
-      "photoAttribution": "(c) admss, some rights reserved (CC BY-NC), uploaded by admss",
+      "scientificName": "Ardea cinerea",
+      "popularName": "Gråhegre",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/73516715/medium.jpg",
+      "photoAttribution": "(c) Frank Sengpiel, some rights reserved (CC BY), uploaded by Frank Sengpiel",
       "group": "Fugler",
       "lat": 59.158984,
       "lng": 10.352437,
-      "date": "2025-05-11",
+      "date": "2026-04-26",
       "obsCount": 3,
-      "gbifKey": 2494686
+      "gbifKey": 9797180
+    },
+    {
+      "scientificName": "Campanula rotundifolia",
+      "popularName": "blåklokke-aggregatet",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/214019457/medium.jpg",
+      "photoAttribution": "(c) Thomas Shahan, some rights reserved (CC BY-NC), uploaded by Thomas Shahan",
+      "group": "Karplanter",
+      "lat": 59.144806,
+      "lng": 10.364591,
+      "date": "2025-07-07",
+      "obsCount": 3,
+      "gbifKey": 5410907
     },
     {
       "scientificName": "Corvus corax",
@@ -554,64 +590,40 @@
       "gbifKey": 2482492
     },
     {
-      "scientificName": "Corvus cornix",
-      "popularName": "Kråke",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/114176979/medium.jpg",
-      "photoAttribution": "(c) hedera.baltica, some rights reserved (CC BY-SA)",
-      "group": "Fugler",
-      "lat": 59.156995,
-      "lng": 10.351988,
-      "date": "2026-01-24",
+      "scientificName": "Craterellus undulatus",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.149191,
+      "lng": 10.361815,
+      "date": "2019-09-13",
       "obsCount": 3,
-      "gbifKey": 2482515
+      "gbifKey": 11567415
     },
     {
-      "scientificName": "Erithacus rubecula",
-      "popularName": "Rødstrupe",
-      "photoUrl": "https://static.inaturalist.org/photos/331946615/medium.jpeg",
-      "photoAttribution": "(c) Jakob W., all rights reserved, uploaded by Jakob W.",
-      "group": "Fugler",
-      "lat": 59.156995,
-      "lng": 10.351988,
-      "date": "2026-01-24",
+      "scientificName": "Exidia glandulosa",
+      "popularName": "eikebevre",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/160018244/medium.jpeg",
+      "photoAttribution": "(c) Denis Ivanov, some rights reserved (CC BY-NC), uploaded by Denis Ivanov",
+      "group": "Sopper",
+      "lat": 59.162935,
+      "lng": 10.347766,
+      "date": "2010-11-04",
       "obsCount": 3,
-      "gbifKey": 2492462
+      "gbifKey": 2553607
     },
     {
-      "scientificName": "Felis catus",
-      "popularName": "Katt",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/129658776/medium.jpg",
-      "photoAttribution": "(c) Von.grzanka, some rights reserved (CC BY-SA)",
-      "group": "Pattedyr",
-      "lat": 59.150335,
-      "lng": 10.339477,
-      "date": "2020-01-25",
-      "obsCount": 3,
-      "gbifKey": 2435035
-    },
-    {
-      "scientificName": "Fraxinus excelsior",
-      "popularName": "ask",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/218128525/medium.jpeg",
-      "photoAttribution": "(c) nicky-by-nature, some rights reserved (CC BY-NC)",
+      "scientificName": "Filipendula ulmaria",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Karplanter",
-      "lat": 59.159412,
-      "lng": 10.353084,
-      "date": "2023-06-25",
+      "lat": 59.144778,
+      "lng": 10.34764,
+      "date": "2024-07-25",
       "obsCount": 3,
-      "gbifKey": 3172358
-    },
-    {
-      "scientificName": "Gallinago gallinago",
-      "popularName": "Bekkasiner",
-      "photoUrl": "https://static.inaturalist.org/photos/42802182/medium.jpg",
-      "photoAttribution": "(c) Kyle Blaney, all rights reserved, uploaded by Kyle Blaney",
-      "group": "Fugler",
-      "lat": 59.158984,
-      "lng": 10.352437,
-      "date": "2024-05-03",
-      "obsCount": 3,
-      "gbifKey": 2481819
+      "gbifKey": 2987999
     },
     {
       "scientificName": "Garrulus glandarius",
@@ -662,28 +674,16 @@
       "gbifKey": 2530983
     },
     {
-      "scientificName": "Laetiporus sulphureus",
-      "popularName": "svovelkjuke",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/42106925/medium.jpg",
-      "photoAttribution": "(c) Stephen John Davies, some rights reserved (CC BY-NC), uploaded by Stephen John Davies",
-      "group": "Sopper",
-      "lat": 59.163199,
-      "lng": 10.345296,
-      "date": "2011-12-15",
+      "scientificName": "Leymus arenarius",
+      "popularName": "strandrug",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/49571789/medium.jpg",
+      "photoAttribution": "(c) c michael hogan, some rights reserved (CC BY-NC-SA), uploaded by c michael hogan",
+      "group": "Karplanter",
+      "lat": 59.165739,
+      "lng": 10.356246,
+      "date": "2023-06-25",
       "obsCount": 3,
-      "gbifKey": 9072021
-    },
-    {
-      "scientificName": "Larus canus",
-      "popularName": "Fiskemåke",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/11219295/medium.jpeg",
-      "photoAttribution": "Estormiz, no known copyright restrictions (public domain)",
-      "group": "Fugler",
-      "lat": 59.155866,
-      "lng": 10.352633,
-      "date": "2024-06-03",
-      "obsCount": 3,
-      "gbifKey": 7982160
+      "gbifKey": 2706368
     },
     {
       "scientificName": "Lythrum salicaria",
@@ -727,23 +727,11 @@
       "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/232289336/medium.jpg",
       "photoAttribution": "(c) Mikhail Ezdakov, some rights reserved (CC BY-NC), uploaded by Mikhail Ezdakov",
       "group": "Fugler",
-      "lat": 59.158984,
-      "lng": 10.352437,
-      "date": "2024-05-03",
+      "lat": 59.149567,
+      "lng": 10.362629,
+      "date": "2025-07-19T16:40:35.409Z",
       "obsCount": 3,
       "gbifKey": 2493091
-    },
-    {
-      "scientificName": "Polypodium vulgare",
-      "popularName": "",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/19678/medium.jpg",
-      "photoAttribution": "(c) dogtooth77, some rights reserved (CC BY-NC-SA)",
-      "group": "Karplanter",
-      "lat": 59.152043,
-      "lng": 10.3373,
-      "date": "2025-05-30",
-      "obsCount": 3,
-      "gbifKey": 5274951
     },
     {
       "scientificName": "Rallus aquaticus",
@@ -758,28 +746,52 @@
       "gbifKey": 2474831
     },
     {
-      "scientificName": "Rumex longifolius",
-      "popularName": "høymol",
-      "photoUrl": "https://static.inaturalist.org/photos/259115/medium.jpg",
-      "photoAttribution": "(c) Tig, all rights reserved",
-      "group": "Karplanter",
-      "lat": 59.15301,
-      "lng": 10.344451,
-      "date": "2023-06-25",
+      "scientificName": "Scytinostroma portentosum",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.141175,
+      "lng": 10.360773,
+      "date": "2021-09-29",
       "obsCount": 3,
-      "gbifKey": 2888946
+      "gbifKey": 2552673
+    },
+    {
+      "scientificName": "Sedum acre",
+      "popularName": "Bitterbergknapp",
+      "photoUrl": "https://static.inaturalist.org/photos/80435797/medium.jpeg",
+      "photoAttribution": "(c) Roman Yumshanov, all rights reserved, uploaded by Roman Yumshanov",
+      "group": "Karplanter",
+      "lat": 59.151917,
+      "lng": 10.366869,
+      "date": "2025-06-20T16:08:20",
+      "obsCount": 3,
+      "gbifKey": 5362007
     },
     {
       "scientificName": "Sedum album",
       "popularName": "",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/39057705/medium.jpg",
-      "photoAttribution": "(c) mobbini, some rights reserved (CC BY-NC), uploaded by mobbini",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Karplanter",
       "lat": 59.164896,
       "lng": 10.343651,
       "date": "2025-07-07",
       "obsCount": 3,
       "gbifKey": 5362008
+    },
+    {
+      "scientificName": "Silene uniflora",
+      "popularName": "strandsmelle",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/346884/medium.jpg",
+      "photoAttribution": "(c) _foxg, some rights reserved (CC BY-NC)",
+      "group": "Karplanter",
+      "lat": 59.152069,
+      "lng": 10.365722,
+      "date": "2025-06-20T16:06:34",
+      "obsCount": 3,
+      "gbifKey": 8406661
     },
     {
       "scientificName": "Strix aluco",
@@ -794,16 +806,28 @@
       "gbifKey": 9282206
     },
     {
-      "scientificName": "Sylvia curruca",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.158984,
-      "lng": 10.352437,
-      "date": "2024-05-03",
+      "scientificName": "Tilia cordata",
+      "popularName": "lind",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/12491246/medium.jpg",
+      "photoAttribution": "AnRo0002, no known copyright restrictions (public domain)",
+      "group": "Karplanter",
+      "lat": 59.147524,
+      "lng": 10.366379,
+      "date": "2022-10-01",
       "obsCount": 3,
-      "gbifKey": 2492960
+      "gbifKey": 3152047
+    },
+    {
+      "scientificName": "Tremella mesenterica",
+      "popularName": "gul gelésopp",
+      "photoUrl": "https://static.inaturalist.org/photos/56108682/medium.jpeg",
+      "photoAttribution": "(c) wojtest, all rights reserved, uploaded by wojtest",
+      "group": "Sopper",
+      "lat": 59.1641,
+      "lng": 10.349257,
+      "date": "2012-03-11",
+      "obsCount": 3,
+      "gbifKey": 7577590
     },
     {
       "scientificName": "Tricholoma sulphureum",
@@ -816,6 +840,42 @@
       "date": "2010-11-04",
       "obsCount": 3,
       "gbifKey": 8897119
+    },
+    {
+      "scientificName": "Tringa glareola",
+      "popularName": "Grønnstilk",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/323621890/medium.jpg",
+      "photoAttribution": "(c) Erik Eckstein, some rights reserved (CC BY-NC), uploaded by Erik Eckstein",
+      "group": "Fugler",
+      "lat": 59.158984,
+      "lng": 10.352437,
+      "date": "2026-05-09",
+      "obsCount": 3,
+      "gbifKey": 2481713
+    },
+    {
+      "scientificName": "Tringa nebularia",
+      "popularName": "Gluttsnipe",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/52660452/medium.jpg",
+      "photoAttribution": "(c) Ximo Galarza, some rights reserved (CC BY-NC-SA)",
+      "group": "Fugler",
+      "lat": 59.158984,
+      "lng": 10.352437,
+      "date": "2026-05-09",
+      "obsCount": 3,
+      "gbifKey": 2481726
+    },
+    {
+      "scientificName": "Vaccinium myrtillus",
+      "popularName": "Blåbær",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/191246192/medium.jpeg",
+      "photoAttribution": "(c) Дмитрий Власов, some rights reserved (CC BY-NC), uploaded by Дмитрий Власов",
+      "group": "Karplanter",
+      "lat": 59.153945,
+      "lng": 10.341846,
+      "date": "2023-06-25",
+      "obsCount": 3,
+      "gbifKey": 2882833
     },
     {
       "scientificName": "Vanellus vanellus",
@@ -842,30 +902,6 @@
       "gbifKey": 3171945
     },
     {
-      "scientificName": "Viscaria vulgaris",
-      "popularName": "engtjæreblom",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/78106404/medium.jpg",
-      "photoAttribution": "(c) Sergey Mayorov, some rights reserved (CC BY-NC), uploaded by Sergey Mayorov",
-      "group": "Karplanter",
-      "lat": 59.152153,
-      "lng": 10.3373,
-      "date": "2025-05-30",
-      "obsCount": 3,
-      "gbifKey": 3085884
-    },
-    {
-      "scientificName": "Acer platanoides",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.153715,
-      "lng": 10.343202,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 3189846
-    },
-    {
       "scientificName": "Achillea millefolium",
       "popularName": "",
       "photoUrl": "https://static.inaturalist.org/photos/19971995/medium.jpeg",
@@ -890,16 +926,64 @@
       "gbifKey": 3120333
     },
     {
-      "scientificName": "Amanita citrina",
+      "scientificName": "Aglais urticae",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1523252,
-      "lng": 10.3535506,
-      "date": "1977-10-09",
+      "group": "Sommerfugler",
+      "lat": 59.155866,
+      "lng": 10.352633,
+      "date": "2024-06-03",
       "obsCount": 2,
-      "gbifKey": 3328320
+      "gbifKey": 1894840
+    },
+    {
+      "scientificName": "Apus apus",
+      "popularName": "Typiske seilere",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/26163/medium.jpg",
+      "photoAttribution": "(c) Mark Kilner, some rights reserved (CC BY-NC-SA)",
+      "group": "Fugler",
+      "lat": 59.150024,
+      "lng": 10.357097,
+      "date": "2025-07-20T08:18:43.844Z",
+      "obsCount": 2,
+      "gbifKey": 5228676
+    },
+    {
+      "scientificName": "Argentina anserina",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.154263,
+      "lng": 10.352428,
+      "date": "2025-05-31",
+      "obsCount": 2,
+      "gbifKey": 5367246
+    },
+    {
+      "scientificName": "Armeria maritima",
+      "popularName": "fjærekoll",
+      "photoUrl": "https://static.inaturalist.org/photos/176790677/medium.jpeg",
+      "photoAttribution": "(c) Katie G, all rights reserved, uploaded by Katie G",
+      "group": "Karplanter",
+      "lat": 59.165739,
+      "lng": 10.356246,
+      "date": "2023-06-25",
+      "obsCount": 2,
+      "gbifKey": 8930531
+    },
+    {
+      "scientificName": "Artomyces pyxidatus",
+      "popularName": "begerfingersopp",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/24343731/medium.jpeg",
+      "photoAttribution": "(c) Adam Bryant, some rights reserved (CC BY-NC), uploaded by Adam Bryant",
+      "group": "Sopper",
+      "lat": 59.14921,
+      "lng": 10.36469,
+      "date": "2021-09-28",
+      "obsCount": 2,
+      "gbifKey": 2550493
     },
     {
       "scientificName": "Bjerkandera adusta",
@@ -926,6 +1010,18 @@
       "gbifKey": 5232464
     },
     {
+      "scientificName": "Calocera cornea",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.143009,
+      "lng": 10.337713,
+      "date": "2010-08-11",
+      "obsCount": 2,
+      "gbifKey": 2512969
+    },
+    {
       "scientificName": "Calocera viscosa",
       "popularName": "",
       "photoUrl": "",
@@ -940,8 +1036,8 @@
     {
       "scientificName": "Calycina citrina",
       "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/34594282/medium.jpg",
+      "photoAttribution": "(c) Alison Pollack, some rights reserved (CC BY-NC), uploaded by Alison Pollack",
       "group": "Sopper",
       "lat": 59.161843,
       "lng": 10.348421,
@@ -950,34 +1046,22 @@
       "gbifKey": 5256859
     },
     {
-      "scientificName": "Campanula rotundifolia",
+      "scientificName": "Cantharellus cibarius",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.154033,
-      "lng": 10.352293,
-      "date": "2023-06-25",
+      "group": "Sopper",
+      "lat": 59.159909,
+      "lng": 10.361995,
+      "date": "2010-11-04",
       "obsCount": 2,
-      "gbifKey": 5410907
-    },
-    {
-      "scientificName": "Capreolus capreolus",
-      "popularName": "Rådyr",
-      "photoUrl": "https://static.inaturalist.org/photos/14019330/medium.jpg",
-      "photoAttribution": "(c) johsan65, all rights reserved, uploaded by johsan65",
-      "group": "Pattedyr",
-      "lat": 59.15055,
-      "lng": 10.339627,
-      "date": "2004-07-25",
-      "obsCount": 2,
-      "gbifKey": 5220126
+      "gbifKey": 5249504
     },
     {
       "scientificName": "Carex spicata",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "tettstarr",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/136255504/medium.jpeg",
+      "photoAttribution": "(c) KAnatoliy, some rights reserved (CC BY), uploaded by KAnatoliy",
       "group": "Karplanter",
       "lat": 59.154033,
       "lng": 10.352293,
@@ -986,22 +1070,22 @@
       "gbifKey": 2722210
     },
     {
-      "scientificName": "Cenangium acuum",
+      "scientificName": "Centaurium pulchellum",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1975-06-26",
+      "group": "Karplanter",
+      "lat": 59.150325,
+      "lng": 10.3661,
+      "date": "2021-09-28",
       "obsCount": 2,
-      "gbifKey": 2582752
+      "gbifKey": 7439391
     },
     {
       "scientificName": "Ceriporia viridans",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "kameleonkjuke",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/129740010/medium.jpeg",
+      "photoAttribution": "(c) maricel patino, niektoré práva vyhradené (CC BY-NC), uploaded by maricel patino",
       "group": "Sopper",
       "lat": 59.1633,
       "lng": 10.3489,
@@ -1022,58 +1106,10 @@
       "gbifKey": 2532986
     },
     {
-      "scientificName": "Chelidonium majus",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.153439,
-      "lng": 10.34879,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 5334186
-    },
-    {
-      "scientificName": "Chenopodium album",
-      "popularName": "meldestokk",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/234299048/medium.jpeg",
-      "photoAttribution": "no rights reserved, uploaded by Kristi Zoebelein",
-      "group": "Karplanter",
-      "lat": 59.160655,
-      "lng": 10.352886,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 3083838
-    },
-    {
-      "scientificName": "Chondrostereum purpureum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1982-10-15",
-      "obsCount": 2,
-      "gbifKey": 2532944
-    },
-    {
-      "scientificName": "Cirsium vulgare",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.15301,
-      "lng": 10.344451,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 3112801
-    },
-    {
       "scientificName": "Clavulina coralloides",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "Kamfingersopp",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/109776289/medium.jpg",
+      "photoAttribution": "(c) Drew T Henderson, some rights reserved (CC BY-NC), uploaded by Drew T Henderson",
       "group": "Sopper",
       "lat": 59.160669,
       "lng": 10.349068,
@@ -1082,22 +1118,22 @@
       "gbifKey": 5249883
     },
     {
-      "scientificName": "Convallaria majalis",
-      "popularName": "Liljekonvall",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/129833718/medium.jpeg",
-      "photoAttribution": "(c) prellinchen, some rights reserved (CC BY-NC)",
-      "group": "Karplanter",
-      "lat": 59.153908,
-      "lng": 10.339941,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 7459480
-    },
-    {
-      "scientificName": "Convolvulus arvensis",
+      "scientificName": "Climacocystis borealis",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.157409,
+      "lng": 10.360585,
+      "date": "2017-09-23",
+      "obsCount": 2,
+      "gbifKey": 2542720
+    },
+    {
+      "scientificName": "Convolvulus arvensis",
+      "popularName": "åkervindel",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/209325684/medium.jpg",
+      "photoAttribution": "(c) vivienratcliffe, some rights reserved (CC BY-NC)",
       "group": "Karplanter",
       "lat": 59.152844,
       "lng": 10.345547,
@@ -1130,16 +1166,52 @@
       "gbifKey": 8028942
     },
     {
+      "scientificName": "Cortinarius rubellus",
+      "popularName": "Spiss giftslørsopp",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/106833656/medium.jpg",
+      "photoAttribution": "(c) Federico Calledda, some rights reserved (CC BY-NC), uploaded by Federico Calledda",
+      "group": "Sopper",
+      "lat": 59.147825,
+      "lng": 10.3534508,
+      "date": "1995-08-05",
+      "obsCount": 2,
+      "gbifKey": 2528663
+    },
+    {
       "scientificName": "Cortinarius uliginosus",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "rød sumpslørsopp",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/337242817/medium.jpeg",
+      "photoAttribution": "(c) Mandy Hackney, some rights reserved (CC BY), uploaded by Mandy Hackney",
       "group": "Sopper",
       "lat": 59.1545,
       "lng": 10.3514,
       "date": "1987-09-26",
       "obsCount": 2,
       "gbifKey": 2528790
+    },
+    {
+      "scientificName": "Craterellus cornucopioides",
+      "popularName": "svart trompetsopp",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/33343395/medium.jpeg",
+      "photoAttribution": "(c) Paul George, some rights reserved (CC BY-NC-SA), uploaded by Paul George",
+      "group": "Sopper",
+      "lat": 59.153581,
+      "lng": 10.35356,
+      "date": "2011-10-01",
+      "obsCount": 2,
+      "gbifKey": 2554662
+    },
+    {
+      "scientificName": "Craterellus tubaeformis",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.150518,
+      "lng": 10.357944,
+      "date": "2010-11-04",
+      "obsCount": 2,
+      "gbifKey": 2554536
     },
     {
       "scientificName": "Cuscuta europaea",
@@ -1154,18 +1226,6 @@
       "gbifKey": 2927493
     },
     {
-      "scientificName": "Dactylis glomerata",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.153715,
-      "lng": 10.343202,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 2705308
-    },
-    {
       "scientificName": "Epilobium ciliatum",
       "popularName": "amerikamjølke",
       "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/296254377/medium.jpg",
@@ -1176,18 +1236,6 @@
       "date": "2023-06-25",
       "obsCount": 2,
       "gbifKey": 9188840
-    },
-    {
-      "scientificName": "Erysimum virgatum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-05",
-      "obsCount": 2,
-      "gbifKey": 3048674
     },
     {
       "scientificName": "Exidia pithya",
@@ -1214,28 +1262,16 @@
       "gbifKey": 2492606
     },
     {
-      "scientificName": "Filipendula ulmaria",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "scientificName": "Fraxinus excelsior",
+      "popularName": "ask",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/218128525/medium.jpeg",
+      "photoAttribution": "(c) nicky-by-nature, some rights reserved (CC BY-NC)",
       "group": "Karplanter",
-      "lat": 59.152588,
-      "lng": 10.352098,
-      "date": "2021-07-16T19:29:19.099Z",
-      "obsCount": 2,
-      "gbifKey": 2987999
-    },
-    {
-      "scientificName": "Galium boreale",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.15371,
-      "lng": 10.338549,
+      "lat": 59.159412,
+      "lng": 10.353084,
       "date": "2023-06-25",
       "obsCount": 2,
-      "gbifKey": 2914338
+      "gbifKey": 3172358
     },
     {
       "scientificName": "Galium verum",
@@ -1250,52 +1286,100 @@
       "gbifKey": 9063248
     },
     {
-      "scientificName": "Gliophorus laetus",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1987-09-26",
+      "scientificName": "Gallinago gallinago",
+      "popularName": "Bekkasiner",
+      "photoUrl": "https://static.inaturalist.org/photos/42802182/medium.jpg",
+      "photoAttribution": "(c) Kyle Blaney, all rights reserved, uploaded by Kyle Blaney",
+      "group": "Fugler",
+      "lat": 59.158984,
+      "lng": 10.352437,
+      "date": "2024-05-03",
       "obsCount": 2,
-      "gbifKey": 3304469
+      "gbifKey": 2481819
     },
     {
-      "scientificName": "Hydnoporia tabacina",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.161203,
-      "lng": 10.351242,
-      "date": "2012-03-11",
-      "obsCount": 2,
-      "gbifKey": 10700730
-    },
-    {
-      "scientificName": "Hylotelephium maximum",
+      "scientificName": "Geranium pusillum",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
-      "lat": 59.165739,
-      "lng": 10.356246,
-      "date": "2023-06-25",
+      "lat": 59.138705,
+      "lng": 10.357351,
+      "date": "2019-08-05",
       "obsCount": 2,
-      "gbifKey": 7334631
+      "gbifKey": 2890212
     },
     {
-      "scientificName": "Hypericum maculatum",
+      "scientificName": "Geranium robertianum",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
-      "lat": 59.15371,
-      "lng": 10.338549,
+      "lat": 59.144732,
+      "lng": 10.365265,
+      "date": "2025-07-07",
+      "obsCount": 2,
+      "gbifKey": 2890668
+    },
+    {
+      "scientificName": "Geranium sanguineum",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.165117,
+      "lng": 10.343579,
       "date": "2023-06-25",
       "obsCount": 2,
-      "gbifKey": 6437017
+      "gbifKey": 2890920
+    },
+    {
+      "scientificName": "Gymnopus dryophilus",
+      "popularName": "blek flathatt",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/11990816/medium.jpg",
+      "photoAttribution": "(c) Christian Schwarz, some rights reserved (CC BY-NC), uploaded by Christian Schwarz",
+      "group": "Sopper",
+      "lat": 59.147653,
+      "lng": 10.340004,
+      "date": "2010-08-11",
+      "obsCount": 2,
+      "gbifKey": 5243756
+    },
+    {
+      "scientificName": "Honckenya peploides",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.140602,
+      "lng": 10.361334,
+      "date": "2021-06-12T14:08:22.400Z",
+      "obsCount": 2,
+      "gbifKey": 3085776
+    },
+    {
+      "scientificName": "Hygrocybe punicea",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.168027,
+      "lng": 10.347056,
+      "date": "2011-11-09",
+      "obsCount": 2,
+      "gbifKey": 2538552
+    },
+    {
+      "scientificName": "Hygrophorus hypothejus",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.150256,
+      "lng": 10.357405,
+      "date": "2010-11-04",
+      "obsCount": 2,
+      "gbifKey": 2538748
     },
     {
       "scientificName": "Iris pseudacorus",
@@ -1310,22 +1394,10 @@
       "gbifKey": 5298231
     },
     {
-      "scientificName": "Juncus conglomeratus",
+      "scientificName": "Juncus effusus",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.153664,
-      "lng": 10.347029,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 2701418
-    },
-    {
-      "scientificName": "Juncus effusus",
-      "popularName": "",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/338671231/medium.jpeg",
-      "photoAttribution": "(c) Markus Ackermann, some rights reserved (CC BY-NC), uploaded by Markus Ackermann",
       "group": "Karplanter",
       "lat": 59.153977,
       "lng": 10.340381,
@@ -1346,26 +1418,14 @@
       "gbifKey": 8012314
     },
     {
-      "scientificName": "Knautia arvensis",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.15301,
-      "lng": 10.344451,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 2888808
-    },
-    {
       "scientificName": "Lactarius quietus",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.1523252,
-      "lng": 10.3535506,
-      "date": "1987-09-26",
+      "lat": 59.141769,
+      "lng": 10.335567,
+      "date": "2010-08-11",
       "obsCount": 2,
       "gbifKey": 5248616
     },
@@ -1382,40 +1442,16 @@
       "gbifKey": 3134857
     },
     {
-      "scientificName": "Larus argentatus",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.16002,
-      "lng": 10.34693,
-      "date": "2023-07-01",
-      "obsCount": 2,
-      "gbifKey": 2481139
-    },
-    {
-      "scientificName": "Lepista nuda",
+      "scientificName": "Leccinum albostipitatum",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.150725,
-      "lng": 10.3555,
-      "date": "2010-11-04",
+      "lat": 59.141576,
+      "lng": 10.336438,
+      "date": "2010-08-11",
       "obsCount": 2,
-      "gbifKey": 5242048
-    },
-    {
-      "scientificName": "Leymus arenarius",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.165739,
-      "lng": 10.356246,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 2706368
+      "gbifKey": 7869532
     },
     {
       "scientificName": "Lonicera periclymenum",
@@ -1428,18 +1464,6 @@
       "date": "2023-06-25",
       "obsCount": 2,
       "gbifKey": 5334277
-    },
-    {
-      "scientificName": "Lupinus polyphyllus",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.16387,
-      "lng": 10.343373,
-      "date": "2023-05-29",
-      "obsCount": 2,
-      "gbifKey": 2964355
     },
     {
       "scientificName": "Lysimachia nummularia",
@@ -1466,18 +1490,6 @@
       "gbifKey": 1959735
     },
     {
-      "scientificName": "Maianthemum bifolium",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.153945,
-      "lng": 10.341846,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 2769317
-    },
-    {
       "scientificName": "Melampyrum pratense",
       "popularName": "",
       "photoUrl": "",
@@ -1488,6 +1500,18 @@
       "date": "2023-06-25",
       "obsCount": 2,
       "gbifKey": 7693914
+    },
+    {
+      "scientificName": "Meles meles",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Pattedyr",
+      "lat": 59.148963,
+      "lng": 10.347063,
+      "date": "2017-07-08",
+      "obsCount": 2,
+      "gbifKey": 2433875
     },
     {
       "scientificName": "Melica nutans",
@@ -1502,18 +1526,6 @@
       "gbifKey": 4118973
     },
     {
-      "scientificName": "Motacilla alba",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.158436,
-      "lng": 10.350461,
-      "date": "2023-07-01",
-      "obsCount": 2,
-      "gbifKey": 9687165
-    },
-    {
       "scientificName": "Mycelis muralis",
       "popularName": "",
       "photoUrl": "",
@@ -1526,16 +1538,16 @@
       "gbifKey": 3139040
     },
     {
-      "scientificName": "Mycena polygramma",
-      "popularName": "sølvhette",
-      "photoUrl": "https://static.inaturalist.org/photos/402814500/medium.jpeg",
-      "photoAttribution": "(c) Yakup Karaduman, all rights reserved, uploaded by Yakup Karaduman",
+      "scientificName": "Mycena metata",
+      "popularName": "frosthette",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/236585064/medium.jpg",
+      "photoAttribution": "(c) Иван Матершев, some rights reserved (CC BY-NC), uploaded by Иван Матершев",
       "group": "Sopper",
-      "lat": 59.158749,
-      "lng": 10.352679,
+      "lat": 59.150518,
+      "lng": 10.357944,
       "date": "2010-11-04",
       "obsCount": 2,
-      "gbifKey": 4911745
+      "gbifKey": 2527099
     },
     {
       "scientificName": "Myxomphalia maura",
@@ -1550,28 +1562,28 @@
       "gbifKey": 2531793
     },
     {
-      "scientificName": "Oxalis acetosella",
-      "popularName": "gjøkesyre",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/392547631/medium.jpg",
-      "photoAttribution": "(c) Татьяна Химера, some rights reserved (CC BY-NC), uploaded by Татьяна Химера",
-      "group": "Karplanter",
-      "lat": 59.153945,
-      "lng": 10.341846,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 8211958
-    },
-    {
-      "scientificName": "Paxillus rubicundulus",
+      "scientificName": "Oxyporus populinus",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.1657257,
-      "lng": 10.3541501,
-      "date": "1982-10-15",
+      "lat": 59.147897,
+      "lng": 10.36336,
+      "date": "2021-09-29",
       "obsCount": 2,
-      "gbifKey": 5239994
+      "gbifKey": 5239325
+    },
+    {
+      "scientificName": "Panellus stipticus",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.161203,
+      "lng": 10.351242,
+      "date": "2012-03-11",
+      "obsCount": 2,
+      "gbifKey": 9118025
     },
     {
       "scientificName": "Periparus ater",
@@ -1587,9 +1599,9 @@
     },
     {
       "scientificName": "Peziza varia",
-      "popularName": "stubbebegersopp",
-      "photoUrl": "https://static.inaturalist.org/photos/251114834/medium.jpeg",
-      "photoAttribution": "(c) Antonio Ezquerro Antoñana, all rights reserved, uploaded by Antonio Ezquerro Antoñana",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Sopper",
       "lat": 59.1545,
       "lng": 10.3514,
@@ -1611,39 +1623,27 @@
     },
     {
       "scientificName": "Phragmites australis",
-      "popularName": "takrør",
-      "photoUrl": "https://static.inaturalist.org/photos/32409466/medium.jpg",
-      "photoAttribution": "(c) Larry Halverson, all rights reserved, uploaded by Larry Halverson",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Karplanter",
-      "lat": 59.164565,
-      "lng": 10.354476,
-      "date": "2023-06-25",
+      "lat": 59.14569,
+      "lng": 10.347568,
+      "date": "2024-07-25",
       "obsCount": 2,
       "gbifKey": 5290149
     },
     {
-      "scientificName": "Phylloscopus trochilus",
+      "scientificName": "Polypodium vulgare",
       "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.158984,
-      "lng": 10.352437,
-      "date": "2024-05-03",
-      "obsCount": 2,
-      "gbifKey": 2493052
-    },
-    {
-      "scientificName": "Plantago lanceolata",
-      "popularName": "smalkjempe",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/384758481/medium.jpg",
-      "photoAttribution": "(c) Miroslav Marić, some rights reserved (CC BY-NC), uploaded by Miroslav Marić",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/19678/medium.jpg",
+      "photoAttribution": "(c) dogtooth77, some rights reserved (CC BY-NC-SA)",
       "group": "Karplanter",
-      "lat": 59.154033,
-      "lng": 10.352293,
-      "date": "2023-06-25",
+      "lat": 59.152043,
+      "lng": 10.3373,
+      "date": "2025-05-30",
       "obsCount": 2,
-      "gbifKey": 8208358
+      "gbifKey": 5274951
     },
     {
       "scientificName": "Populus tremula",
@@ -1651,65 +1651,17 @@
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
-      "lat": 59.153411,
-      "lng": 10.343822,
-      "date": "2023-06-25",
+      "lat": 59.148275,
+      "lng": 10.344738,
+      "date": "2024-07-25",
       "obsCount": 2,
       "gbifKey": 3040249
     },
     {
-      "scientificName": "Pteridium aquilinum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.153945,
-      "lng": 10.341846,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 5275012
-    },
-    {
-      "scientificName": "Quercus robur",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.153867,
-      "lng": 10.352194,
-      "date": "2024-07-25",
-      "obsCount": 2,
-      "gbifKey": 2878688
-    },
-    {
-      "scientificName": "Rhodocollybia asema",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1977-10-09",
-      "obsCount": 2,
-      "gbifKey": 11378863
-    },
-    {
-      "scientificName": "Rubus saxatilis",
-      "popularName": "tågebær",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/167833617/medium.jpeg",
-      "photoAttribution": "(c) Gian-Andrea Catrina, some rights reserved (CC BY-NC), uploaded by Gian-Andrea Catrina",
-      "group": "Karplanter",
-      "lat": 59.159412,
-      "lng": 10.353084,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 2992808
-    },
-    {
       "scientificName": "Russula fragilis",
-      "popularName": "skjørkremle",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/29240304/medium.jpeg",
-      "photoAttribution": "(c) Davide Puddu, some rights reserved (CC BY), uploaded by Davide Puddu",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Sopper",
       "lat": 59.160655,
       "lng": 10.350649,
@@ -1719,13 +1671,13 @@
     },
     {
       "scientificName": "Russula ochroleuca",
-      "popularName": "skarp gulkremle",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/174540168/medium.jpg",
-      "photoAttribution": "(c) Federico Calledda, some rights reserved (CC BY-NC), uploaded by Federico Calledda",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1982-10-15",
+      "lat": 59.159675,
+      "lng": 10.358492,
+      "date": "2010-11-04",
       "obsCount": 2,
       "gbifKey": 8410526
     },
@@ -1754,46 +1706,10 @@
       "gbifKey": 2720080
     },
     {
-      "scientificName": "Scytinostroma portentosum",
-      "popularName": "naftalinlærsopp",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/120397531/medium.jpeg",
-      "photoAttribution": "(c) Juha Tuomola, niektoré práva vyhradené (CC BY-NC), uploaded by Juha Tuomola",
-      "group": "Sopper",
-      "lat": 59.162843,
-      "lng": 10.349194,
-      "date": "2012-03-11",
-      "obsCount": 2,
-      "gbifKey": 2552673
-    },
-    {
-      "scientificName": "Sedum acre",
-      "popularName": "Bitterbergknapp",
-      "photoUrl": "https://static.inaturalist.org/photos/80435797/medium.jpeg",
-      "photoAttribution": "(c) Roman Yumshanov, all rights reserved, uploaded by Roman Yumshanov",
-      "group": "Karplanter",
-      "lat": 59.153439,
-      "lng": 10.34879,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 5362007
-    },
-    {
-      "scientificName": "Silene uniflora",
+      "scientificName": "Skeletocutis nivea",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.152651,
-      "lng": 10.337552,
-      "date": "2025-06-01",
-      "obsCount": 2,
-      "gbifKey": 8406661
-    },
-    {
-      "scientificName": "Skeletocutis nivea",
-      "popularName": "",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/398143699/medium.jpg",
-      "photoAttribution": "(c) Ulrich Loock, some rights reserved (CC BY-NC), uploaded by Ulrich Loock",
       "group": "Sopper",
       "lat": 59.163377,
       "lng": 10.349401,
@@ -1802,28 +1718,16 @@
       "gbifKey": 2547852
     },
     {
-      "scientificName": "Solanum dulcamara",
-      "popularName": "slyngsøtvier",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/70860715/medium.jpeg",
-      "photoAttribution": "(c) Alexander Baransky, some rights reserved (CC BY-NC), uploaded by Alexander Baransky",
-      "group": "Karplanter",
-      "lat": 59.153908,
-      "lng": 10.339941,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 2932737
-    },
-    {
-      "scientificName": "Solidago virgaurea",
+      "scientificName": "Somateria mollissima",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.165739,
-      "lng": 10.356246,
-      "date": "2023-06-25",
+      "group": "Fugler",
+      "lat": 59.138411,
+      "lng": 10.351647,
+      "date": "2025-07-19T14:39:47.784Z",
       "obsCount": 2,
-      "gbifKey": 6446462
+      "gbifKey": 2498352
     },
     {
       "scientificName": "Stellaria graminea",
@@ -1838,46 +1742,22 @@
       "gbifKey": 5384616
     },
     {
-      "scientificName": "Stereum hirsutum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.162935,
-      "lng": 10.347766,
-      "date": "2010-11-04",
-      "obsCount": 2,
-      "gbifKey": 2553128
-    },
-    {
-      "scientificName": "Sturnus vulgaris",
-      "popularName": "Stær",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/32152001/medium.jpg",
-      "photoAttribution": "(c) Fran Wiesner, some rights reserved (CC BY-NC-ND), uploaded by Fran Wiesner",
-      "group": "Fugler",
-      "lat": 59.155866,
-      "lng": 10.352633,
-      "date": "2024-06-03",
-      "obsCount": 2,
-      "gbifKey": 9809229
-    },
-    {
-      "scientificName": "Sylvia communis",
+      "scientificName": "Sylvia curruca",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
-      "lat": 59.158436,
-      "lng": 10.350461,
-      "date": "2023-07-01",
+      "lat": 59.158984,
+      "lng": 10.352437,
+      "date": "2024-05-03",
       "obsCount": 2,
-      "gbifKey": 2492943
+      "gbifKey": 2492960
     },
     {
       "scientificName": "Szczepkamyces campestris",
-      "popularName": "hasselkjuke",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/122927349/medium.jpg",
-      "photoAttribution": "(c) clocktowerpower, some rights reserved (CC BY-NC), uploaded by clocktowerpower",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Sopper",
       "lat": 59.161203,
       "lng": 10.351242,
@@ -1887,27 +1767,15 @@
     },
     {
       "scientificName": "Tanacetum vulgare",
-      "popularName": "reinfann",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/45581182/medium.jpg",
-      "photoAttribution": "(c) Robert D Stevenson, some rights reserved (CC BY-NC), uploaded by Robert D Stevenson",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Karplanter",
       "lat": 59.165117,
       "lng": 10.343579,
       "date": "2023-06-25",
       "obsCount": 2,
       "gbifKey": 3118274
-    },
-    {
-      "scientificName": "Thelephora terrestris",
-      "popularName": "frynsesopp",
-      "photoUrl": "https://static.inaturalist.org/photos/47027958/medium.jpeg",
-      "photoAttribution": "(c) Martin Black, all rights reserved, uploaded by Martin Black",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1982-10-15",
-      "obsCount": 2,
-      "gbifKey": 11260649
     },
     {
       "scientificName": "Trametes versicolor",
@@ -1922,112 +1790,16 @@
       "gbifKey": 2548311
     },
     {
-      "scientificName": "Tremella mesenterica",
-      "popularName": "gul gelésopp",
-      "photoUrl": "https://static.inaturalist.org/photos/56108682/medium.jpeg",
-      "photoAttribution": "(c) wojtest, all rights reserved, uploaded by wojtest",
-      "group": "Sopper",
-      "lat": 59.1641,
-      "lng": 10.349257,
-      "date": "2012-03-11",
-      "obsCount": 2,
-      "gbifKey": 7577590
-    },
-    {
-      "scientificName": "Tricholoma fulvum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1523252,
-      "lng": 10.3535506,
-      "date": "1977-10-01",
-      "obsCount": 2,
-      "gbifKey": 5241793
-    },
-    {
-      "scientificName": "Tricholoma pessundatum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1523252,
-      "lng": 10.3535506,
-      "date": "1977-10-09",
-      "obsCount": 2,
-      "gbifKey": 5241789
-    },
-    {
-      "scientificName": "Trifolium hybridum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.15301,
-      "lng": 10.344451,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 6109535
-    },
-    {
       "scientificName": "Tringa ochropus",
-      "popularName": "Skogsnipe",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/262067607/medium.jpg",
-      "photoAttribution": "(c) Gabi Rusu, some rights reserved (CC BY-NC), uploaded by Gabi Rusu",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
       "group": "Fugler",
       "lat": 59.158984,
       "lng": 10.352437,
       "date": "2025-04-17",
       "obsCount": 2,
       "gbifKey": 2481728
-    },
-    {
-      "scientificName": "Tripleurospermum inodorum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.164519,
-      "lng": 10.352563,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 3104179
-    },
-    {
-      "scientificName": "Tripleurospermum maritimum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.165233,
-      "lng": 10.343409,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 3104173
-    },
-    {
-      "scientificName": "Turdus pilaris",
-      "popularName": "Gråtrost",
-      "photoUrl": "https://static.inaturalist.org/photos/6651903/medium.jpg",
-      "photoAttribution": "(c) František Bednár, all rights reserved, uploaded by František Bednár",
-      "group": "Fugler",
-      "lat": 59.16002,
-      "lng": 10.34693,
-      "date": "2023-07-01",
-      "obsCount": 2,
-      "gbifKey": 2490737
-    },
-    {
-      "scientificName": "Typha latifolia",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.16439,
-      "lng": 10.351961,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 5289423
     },
     {
       "scientificName": "Ulmus glabra",
@@ -2054,40 +1826,40 @@
       "gbifKey": 7960979
     },
     {
-      "scientificName": "Veronica chamaedrys",
-      "popularName": "tveskjeggveronika",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/291786073/medium.jpg",
-      "photoAttribution": "(c) Joseph Hubbard, some rights reserved (CC BY), uploaded by Joseph Hubbard",
-      "group": "Karplanter",
-      "lat": 59.151665,
-      "lng": 10.33925,
-      "date": "2025-05-31",
-      "obsCount": 2,
-      "gbifKey": 7874883
-    },
-    {
-      "scientificName": "Vicia sepium",
-      "popularName": "gjerdevikke",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/18515325/medium.jpg",
-      "photoAttribution": "(c) Nasser Halaweh, some rights reserved (CC BY), uploaded by Nasser Halaweh",
-      "group": "Karplanter",
-      "lat": 59.153439,
-      "lng": 10.34879,
-      "date": "2023-06-25",
-      "obsCount": 2,
-      "gbifKey": 2974786
-    },
-    {
-      "scientificName": "Acanthis flammea",
+      "scientificName": "Viscaria vulgaris",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.16002,
-      "lng": 10.34693,
-      "date": "2023-07-01",
-      "obsCount": 1,
-      "gbifKey": 5231630
+      "group": "Karplanter",
+      "lat": 59.152153,
+      "lng": 10.3373,
+      "date": "2025-05-30",
+      "obsCount": 2,
+      "gbifKey": 3085884
+    },
+    {
+      "scientificName": "Vulpes vulpes",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Pattedyr",
+      "lat": 59.15441,
+      "lng": 10.354494,
+      "date": "2021-08-18",
+      "obsCount": 2,
+      "gbifKey": 5219243
+    },
+    {
+      "scientificName": "Xylaria hypoxylon",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.14921,
+      "lng": 10.36469,
+      "date": "2021-09-28",
+      "obsCount": 2,
+      "gbifKey": 5255147
     },
     {
       "scientificName": "Accipiter gentilis",
@@ -2102,6 +1874,18 @@
       "gbifKey": 2480589
     },
     {
+      "scientificName": "Acer platanoides",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.153715,
+      "lng": 10.343202,
+      "date": "2023-06-25",
+      "obsCount": 1,
+      "gbifKey": 3189846
+    },
+    {
       "scientificName": "Acrocephalus palustris",
       "popularName": "",
       "photoUrl": "",
@@ -2114,30 +1898,6 @@
       "gbifKey": 2493136
     },
     {
-      "scientificName": "Agaricus sylvaticus",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1974-09-22",
-      "obsCount": 1,
-      "gbifKey": 8108291
-    },
-    {
-      "scientificName": "Aglais urticae",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sommerfugler",
-      "lat": 59.155866,
-      "lng": 10.352633,
-      "date": "2024-06-03",
-      "obsCount": 1,
-      "gbifKey": 1894840
-    },
-    {
       "scientificName": "Agrostis gigantea",
       "popularName": "",
       "photoUrl": "",
@@ -2148,30 +1908,6 @@
       "date": "2023-06-25",
       "obsCount": 1,
       "gbifKey": 2706541
-    },
-    {
-      "scientificName": "Aleuria aurantia",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1974-09-22",
-      "obsCount": 1,
-      "gbifKey": 5258678
-    },
-    {
-      "scientificName": "Alisma plantago-aquatica",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.158942,
-      "lng": 10.350838,
-      "date": "2018-10-04",
-      "obsCount": 1,
-      "gbifKey": 2865100
     },
     {
       "scientificName": "Alliaria petiolata",
@@ -2203,9 +1939,9 @@
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
+      "lat": 59.146976,
+      "lng": 10.351637,
+      "date": "2024-07-25",
       "obsCount": 1,
       "gbifKey": 2876213
     },
@@ -2220,6 +1956,42 @@
       "date": "2023-06-25",
       "obsCount": 1,
       "gbifKey": 5290081
+    },
+    {
+      "scientificName": "Amanita citrina",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.151817,
+      "lng": 10.363055,
+      "date": "2010-11-04",
+      "obsCount": 1,
+      "gbifKey": 3328320
+    },
+    {
+      "scientificName": "Amanita fulva",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.141769,
+      "lng": 10.335567,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 7765582
+    },
+    {
+      "scientificName": "Amanita rubescens",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.142387,
+      "lng": 10.337166,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 7496350
     },
     {
       "scientificName": "Amanita submembranacea",
@@ -2283,9 +2055,9 @@
     },
     {
       "scientificName": "Angelica sylvestris",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "sløkje",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/561388632/medium.jpg",
+      "photoAttribution": "(c) judithlee, some rights reserved (CC BY-NC), uploaded by judithlee",
       "group": "Karplanter",
       "lat": 59.159375,
       "lng": 10.347469,
@@ -2307,9 +2079,9 @@
     },
     {
       "scientificName": "Anthocharis cardamines",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "aurorasommerfugl",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/118125338/medium.jpg",
+      "photoAttribution": "(c) Felipe Hidalgo, some rights reserved (CC BY-NC), uploaded by Felipe Hidalgo",
       "group": "Sommerfugler",
       "lat": 59.155866,
       "lng": 10.352633,
@@ -2354,30 +2126,6 @@
       "gbifKey": 1896841
     },
     {
-      "scientificName": "Aquilegia vulgaris",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
-      "obsCount": 1,
-      "gbifKey": 3033191
-    },
-    {
-      "scientificName": "Arctium lappa",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
-      "obsCount": 1,
-      "gbifKey": 7353729
-    },
-    {
       "scientificName": "Arctium minus",
       "popularName": "",
       "photoUrl": "",
@@ -2390,22 +2138,10 @@
       "gbifKey": 5393103
     },
     {
-      "scientificName": "Armeria maritima",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.165739,
-      "lng": 10.356246,
-      "date": "2023-06-25",
-      "obsCount": 1,
-      "gbifKey": 8930531
-    },
-    {
       "scientificName": "Armillaria borealis",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "skoghonningsopp",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/28528884/medium.jpg",
+      "photoAttribution": "(c) Иван Матершев, some rights reserved (CC BY-NC), uploaded by Иван Матершев",
       "group": "Sopper",
       "lat": 59.162111,
       "lng": 10.34896,
@@ -2424,18 +2160,6 @@
       "date": "2023-06-25",
       "obsCount": 1,
       "gbifKey": 3120946
-    },
-    {
-      "scientificName": "Artomyces pyxidatus",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.153567,
-      "lng": 10.343732,
-      "date": "2021-09-28",
-      "obsCount": 1,
-      "gbifKey": 2550493
     },
     {
       "scientificName": "Arvicola amphibius",
@@ -2486,18 +2210,6 @@
       "gbifKey": 3083786
     },
     {
-      "scientificName": "Auriscalpium vulgare",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1977-10-09",
-      "obsCount": 1,
-      "gbifKey": 5248458
-    },
-    {
       "scientificName": "Autographa gamma",
       "popularName": "",
       "photoUrl": "",
@@ -2511,9 +2223,9 @@
     },
     {
       "scientificName": "Avenella flexuosa",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "smyle",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/150447888/medium.jpeg",
+      "photoAttribution": "(c) Giovanni Perico, some rights reserved (CC BY-NC), uploaded by Giovanni Perico",
       "group": "Karplanter",
       "lat": 59.153227,
       "lng": 10.346212,
@@ -2522,28 +2234,16 @@
       "gbifKey": 4149465
     },
     {
-      "scientificName": "Berberis thunbergii",
+      "scientificName": "Baeospora myosura",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-05",
+      "group": "Sopper",
+      "lat": 59.150518,
+      "lng": 10.357944,
+      "date": "2010-11-04",
       "obsCount": 1,
-      "gbifKey": 3033896
-    },
-    {
-      "scientificName": "Berteroa incana",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
-      "obsCount": 1,
-      "gbifKey": 3053522
+      "gbifKey": 2537958
     },
     {
       "scientificName": "Betula pendula",
@@ -2558,18 +2258,6 @@
       "gbifKey": 5331916
     },
     {
-      "scientificName": "Bidens tripartita",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.158942,
-      "lng": 10.350838,
-      "date": "2018-10-04",
-      "obsCount": 1,
-      "gbifKey": 5391862
-    },
-    {
       "scientificName": "Biscogniauxia repanda",
       "popularName": "",
       "photoUrl": "",
@@ -2582,6 +2270,30 @@
       "gbifKey": 9086274
     },
     {
+      "scientificName": "Boletus edulis",
+      "popularName": "Steinsopp",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/328303120/medium.jpg",
+      "photoAttribution": "(c) wp-polzin, some rights reserved (CC BY-NC)",
+      "group": "Sopper",
+      "lat": 59.141313,
+      "lng": 10.3366,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 5954958
+    },
+    {
+      "scientificName": "Boletus reticulatus",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.14774,
+      "lng": 10.340013,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 5954691
+    },
+    {
       "scientificName": "Branta canadensis",
       "popularName": "",
       "photoUrl": "",
@@ -2592,6 +2304,18 @@
       "date": "2025-04-21",
       "obsCount": 1,
       "gbifKey": 5232437
+    },
+    {
+      "scientificName": "Briza media",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.163741,
+      "lng": 10.358815,
+      "date": "2021-08-18",
+      "obsCount": 1,
+      "gbifKey": 2702789
     },
     {
       "scientificName": "Bromus hordeaceus",
@@ -2654,30 +2378,6 @@
       "gbifKey": 9212934
     },
     {
-      "scientificName": "Calluna vulgaris",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
-      "obsCount": 1,
-      "gbifKey": 2882482
-    },
-    {
-      "scientificName": "Calocera cornea",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1987-08-09",
-      "obsCount": 1,
-      "gbifKey": 2512969
-    },
-    {
       "scientificName": "Calystegia sepium",
       "popularName": "",
       "photoUrl": "",
@@ -2702,6 +2402,18 @@
       "gbifKey": 5411475
     },
     {
+      "scientificName": "Candolleomyces candolleanus",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.146257,
+      "lng": 10.346032,
+      "date": "2023-07-27",
+      "obsCount": 1,
+      "gbifKey": 12008655
+    },
+    {
       "scientificName": "Caprimulgus europaeus",
       "popularName": "",
       "photoUrl": "",
@@ -2712,30 +2424,6 @@
       "date": "2026-06-03",
       "obsCount": 1,
       "gbifKey": 8109681
-    },
-    {
-      "scientificName": "Capsella bursa-pastoris",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
-      "obsCount": 1,
-      "gbifKey": 5375388
-    },
-    {
-      "scientificName": "Cardamine flexuosa",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-05",
-      "obsCount": 1,
-      "gbifKey": 3046076
     },
     {
       "scientificName": "Cardamine impatiens",
@@ -2787,9 +2475,9 @@
     },
     {
       "scientificName": "Carpodacus erythrinus",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
+      "popularName": "Rosenfink",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/28920664/medium.jpg",
+      "photoAttribution": "(c) Геннадий, some rights reserved (CC BY-NC), uploaded by Геннадий",
       "group": "Fugler",
       "lat": 59.158984,
       "lng": 10.352437,
@@ -2798,16 +2486,16 @@
       "gbifKey": 2494459
     },
     {
-      "scientificName": "Centaurea jacea",
+      "scientificName": "Cerioporus leptocephalus",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
+      "group": "Sopper",
+      "lat": 59.143009,
+      "lng": 10.337713,
+      "date": "2010-08-11",
       "obsCount": 1,
-      "gbifKey": 3128547
+      "gbifKey": 9284704
     },
     {
       "scientificName": "Ceriporia purpurea",
@@ -2858,6 +2546,18 @@
       "gbifKey": 1825156
     },
     {
+      "scientificName": "Chalciporus piperatus",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.14194,
+      "lng": 10.336806,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 9156243
+    },
+    {
       "scientificName": "Chamaenerion angustifolium",
       "popularName": "",
       "photoUrl": "",
@@ -2880,6 +2580,30 @@
       "date": "1982-10-15",
       "obsCount": 1,
       "gbifKey": 8978710
+    },
+    {
+      "scientificName": "Chelidonium majus",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.153439,
+      "lng": 10.34879,
+      "date": "2023-06-25",
+      "obsCount": 1,
+      "gbifKey": 5334186
+    },
+    {
+      "scientificName": "Chenopodium album",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.160655,
+      "lng": 10.352886,
+      "date": "2023-06-25",
+      "obsCount": 1,
+      "gbifKey": 3083838
     },
     {
       "scientificName": "Chlorociboria aeruginascens",
@@ -2906,16 +2630,16 @@
       "gbifKey": 8618255
     },
     {
-      "scientificName": "Chloroscypha sabinae",
+      "scientificName": "Chondrostereum purpureum",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
       "lat": 59.1545,
       "lng": 10.3514,
-      "date": "1976-06-19",
+      "date": "1982-10-15",
       "obsCount": 1,
-      "gbifKey": 2584868
+      "gbifKey": 2532944
     },
     {
       "scientificName": "Chroicocephalus ridibundus",
@@ -2930,10 +2654,22 @@
       "gbifKey": 6065824
     },
     {
-      "scientificName": "Circus cyaneus",
+      "scientificName": "Chroogomphus rutilus",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.143009,
+      "lng": 10.337713,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 2524996
+    },
+    {
+      "scientificName": "Circus cyaneus",
+      "popularName": "Mørkmyrhauk",
+      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/114355770/medium.jpg",
+      "photoAttribution": "(c) Cin-Ty Lee, some rights reserved (CC BY-NC), uploaded by Cin-Ty Lee",
       "group": "Fugler",
       "lat": 59.158984,
       "lng": 10.352437,
@@ -2966,16 +2702,28 @@
       "gbifKey": 3113239
     },
     {
-      "scientificName": "Climacocystis borealis",
+      "scientificName": "Cirsium vulgare",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.15301,
+      "lng": 10.344451,
+      "date": "2023-06-25",
+      "obsCount": 1,
+      "gbifKey": 3112801
+    },
+    {
+      "scientificName": "Clitocybe metachroa",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.152886,
-      "lng": 10.35524,
+      "lat": 59.159675,
+      "lng": 10.358492,
       "date": "2010-11-04",
       "obsCount": 1,
-      "gbifKey": 2542720
+      "gbifKey": 2531167
     },
     {
       "scientificName": "Clitocybe nebularis",
@@ -2995,9 +2743,9 @@
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.1523252,
-      "lng": 10.3535506,
-      "date": "1977-10-08",
+      "lat": 59.148012,
+      "lng": 10.340004,
+      "date": "2010-08-11",
       "obsCount": 1,
       "gbifKey": 2539197
     },
@@ -3014,10 +2762,22 @@
       "gbifKey": 1911461
     },
     {
-      "scientificName": "Collybiopsis ramealis",
+      "scientificName": "Collybiopsis peronata",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.159909,
+      "lng": 10.361995,
+      "date": "2010-11-04",
+      "obsCount": 1,
+      "gbifKey": 12092733
+    },
+    {
+      "scientificName": "Collybiopsis ramealis",
+      "popularName": "",
+      "photoUrl": "https://static.inaturalist.org/photos/29608938/medium.jpg",
+      "photoAttribution": "(c) Alexis Robiolle, all rights reserved, uploaded by Alexis Robiolle",
       "group": "Sopper",
       "lat": 59.1545,
       "lng": 10.3514,
@@ -3060,6 +2820,18 @@
       "date": "2010-11-04",
       "obsCount": 1,
       "gbifKey": 5240101
+    },
+    {
+      "scientificName": "Convallaria majalis",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.153908,
+      "lng": 10.339941,
+      "date": "2023-06-25",
+      "obsCount": 1,
+      "gbifKey": 7459480
     },
     {
       "scientificName": "Coprinellus micaceus",
@@ -3158,18 +2930,6 @@
       "gbifKey": 2528727
     },
     {
-      "scientificName": "Cortinarius rubellus",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1523252,
-      "lng": 10.3535506,
-      "date": "1987-09-26",
-      "obsCount": 1,
-      "gbifKey": 2528663
-    },
-    {
       "scientificName": "Cortinarius sanguineus",
       "popularName": "",
       "photoUrl": "",
@@ -3240,18 +3000,6 @@
       "date": "2021-09-28",
       "obsCount": 1,
       "gbifKey": 3025617
-    },
-    {
-      "scientificName": "Craterellus cornucopioides",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.153581,
-      "lng": 10.35356,
-      "date": "2011-10-01",
-      "obsCount": 1,
-      "gbifKey": 2554662
     },
     {
       "scientificName": "Crepidotus mollis",
@@ -3338,28 +3086,40 @@
       "gbifKey": 5243525
     },
     {
-      "scientificName": "Cystoderma carcharias",
+      "scientificName": "Dacrymyces lacrymalis",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1974-09-22",
-      "obsCount": 1,
-      "gbifKey": 5243533
-    },
-    {
-      "scientificName": "Dacrymyces lacrymalis",
-      "popularName": "rynketåre",
-      "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/28406147/medium.jpg",
-      "photoAttribution": "(c) Иван Матершев, some rights reserved (CC BY-NC), uploaded by Иван Матершев",
       "group": "Sopper",
       "lat": 59.161203,
       "lng": 10.351242,
       "date": "2012-03-11",
       "obsCount": 1,
       "gbifKey": 7934480
+    },
+    {
+      "scientificName": "Dacrymyces stillatus",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.141313,
+      "lng": 10.3366,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 2512925
+    },
+    {
+      "scientificName": "Dactylis glomerata",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.153715,
+      "lng": 10.343202,
+      "date": "2023-06-25",
+      "obsCount": 1,
+      "gbifKey": 2705308
     },
     {
       "scientificName": "Daedaleopsis confragosa",
@@ -3384,6 +3144,18 @@
       "date": "2012-03-11",
       "obsCount": 1,
       "gbifKey": 2575284
+    },
+    {
+      "scientificName": "Digitalis purpurea",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.145276,
+      "lng": 10.364519,
+      "date": "2025-07-07",
+      "obsCount": 1,
+      "gbifKey": 5414995
     },
     {
       "scientificName": "Dryobates minor",
@@ -3458,18 +3230,6 @@
       "gbifKey": 5290299
     },
     {
-      "scientificName": "Empetrum nigrum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
-      "obsCount": 1,
-      "gbifKey": 8925249
-    },
-    {
       "scientificName": "Encoelia furfuracea",
       "popularName": "",
       "photoUrl": "",
@@ -3506,6 +3266,18 @@
       "gbifKey": 10814921
     },
     {
+      "scientificName": "Epilobium hirsutum",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.138705,
+      "lng": 10.357351,
+      "date": "2019-08-05",
+      "obsCount": 1,
+      "gbifKey": 3189172
+    },
+    {
       "scientificName": "Epilobium montanum",
       "popularName": "",
       "photoUrl": "",
@@ -3530,16 +3302,16 @@
       "gbifKey": 7924597
     },
     {
-      "scientificName": "Erysimum cheiranthoides",
+      "scientificName": "Erinaceus europaeus",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-05",
+      "group": "Pattedyr",
+      "lat": 59.168023,
+      "lng": 10.356488,
+      "date": "1998-05-08",
       "obsCount": 1,
-      "gbifKey": 3048266
+      "gbifKey": 5219616
     },
     {
       "scientificName": "Euphorbia palustris",
@@ -3578,18 +3350,6 @@
       "gbifKey": 2481047
     },
     {
-      "scientificName": "Fallopia dumetorum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-05",
-      "obsCount": 1,
-      "gbifKey": 6391446
-    },
-    {
       "scientificName": "Festuca rubra",
       "popularName": "",
       "photoUrl": "",
@@ -3602,6 +3362,18 @@
       "gbifKey": 2704922
     },
     {
+      "scientificName": "Fomes fomentarius",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.142649,
+      "lng": 10.337534,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 8068867
+    },
+    {
       "scientificName": "Fomitiporia punctata",
       "popularName": "",
       "photoUrl": "",
@@ -3612,6 +3384,30 @@
       "date": "2012-03-11",
       "obsCount": 1,
       "gbifKey": 8669905
+    },
+    {
+      "scientificName": "Fomitopsis betulina",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.142649,
+      "lng": 10.337534,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 9819973
+    },
+    {
+      "scientificName": "Fomitopsis pinicola",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.141313,
+      "lng": 10.3366,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 2542395
     },
     {
       "scientificName": "Fragaria vesca",
@@ -3636,18 +3432,6 @@
       "date": "2023-06-25",
       "obsCount": 1,
       "gbifKey": 3039454
-    },
-    {
-      "scientificName": "Fringilla coelebs",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.16002,
-      "lng": 10.34693,
-      "date": "2023-07-01",
-      "obsCount": 1,
-      "gbifKey": 2494422
     },
     {
       "scientificName": "Galerina calyptrata",
@@ -3710,6 +3494,18 @@
       "gbifKey": 2913548
     },
     {
+      "scientificName": "Galium boreale",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.15371,
+      "lng": 10.338549,
+      "date": "2023-06-25",
+      "obsCount": 1,
+      "gbifKey": 2914338
+    },
+    {
       "scientificName": "Galium palustre",
       "popularName": "",
       "photoUrl": "",
@@ -3744,42 +3540,6 @@
       "date": "2023-06-25",
       "obsCount": 1,
       "gbifKey": 2891079
-    },
-    {
-      "scientificName": "Geranium pusillum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
-      "obsCount": 1,
-      "gbifKey": 2890212
-    },
-    {
-      "scientificName": "Geranium robertianum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.15371,
-      "lng": 10.338549,
-      "date": "2023-06-25",
-      "obsCount": 1,
-      "gbifKey": 2890668
-    },
-    {
-      "scientificName": "Geranium sanguineum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.165117,
-      "lng": 10.343579,
-      "date": "2023-06-25",
-      "obsCount": 1,
-      "gbifKey": 2890920
     },
     {
       "scientificName": "Geum rivale",
@@ -3818,16 +3578,40 @@
       "gbifKey": 2926557
     },
     {
-      "scientificName": "Gnaphalium uliginosum",
+      "scientificName": "Gliophorus laetus",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.158942,
-      "lng": 10.350838,
-      "date": "2018-10-04",
+      "group": "Sopper",
+      "lat": 59.1545,
+      "lng": 10.3514,
+      "date": "1987-09-26",
       "obsCount": 1,
-      "gbifKey": 5390848
+      "gbifKey": 3304469
+    },
+    {
+      "scientificName": "Gloeophyllum sepiarium",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.14558,
+      "lng": 10.364519,
+      "date": "2021-09-28",
+      "obsCount": 1,
+      "gbifKey": 5249253
+    },
+    {
+      "scientificName": "Gomphidius glutinosus",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.141829,
+      "lng": 10.338208,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 2525027
     },
     {
       "scientificName": "Gymnopilus penetrans",
@@ -3840,18 +3624,6 @@
       "date": "2010-11-04",
       "obsCount": 1,
       "gbifKey": 2533692
-    },
-    {
-      "scientificName": "Gymnopilus sapineus",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1977-10-09",
-      "obsCount": 1,
-      "gbifKey": 2533669
     },
     {
       "scientificName": "Gymnopus putillus",
@@ -3902,6 +3674,54 @@
       "gbifKey": 2533062
     },
     {
+      "scientificName": "Helvella crispa",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.152043,
+      "lng": 10.360441,
+      "date": "2017-09-24",
+      "obsCount": 1,
+      "gbifKey": 8050877
+    },
+    {
+      "scientificName": "Hemaris fuciformis",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sommerfugler",
+      "lat": 59.153871,
+      "lng": 10.362525,
+      "date": "2018-06-02",
+      "obsCount": 1,
+      "gbifKey": 1861797
+    },
+    {
+      "scientificName": "Hericium cirrhatum",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.1473,
+      "lng": 10.3445,
+      "date": "1995-08-05",
+      "obsCount": 1,
+      "gbifKey": 5248548
+    },
+    {
+      "scientificName": "Hipparchia semele",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sommerfugler",
+      "lat": 59.145575,
+      "lng": 10.351323,
+      "date": "2022-08-14",
+      "obsCount": 1,
+      "gbifKey": 8176911
+    },
+    {
       "scientificName": "Hippolais icterina",
       "popularName": "",
       "photoUrl": "",
@@ -3926,16 +3746,16 @@
       "gbifKey": 2706164
     },
     {
-      "scientificName": "Honckenya peploides",
+      "scientificName": "Hydnoporia tabacina",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
+      "group": "Sopper",
+      "lat": 59.161203,
+      "lng": 10.351242,
+      "date": "2012-03-11",
       "obsCount": 1,
-      "gbifKey": 3085776
+      "gbifKey": 10700730
     },
     {
       "scientificName": "Hygrocybe chlorophana",
@@ -3962,40 +3782,16 @@
       "gbifKey": 2538664
     },
     {
-      "scientificName": "Hygrocybe punicea",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.161931,
-      "lng": 10.348951,
-      "date": "2010-11-04",
-      "obsCount": 1,
-      "gbifKey": 2538552
-    },
-    {
       "scientificName": "Hygrophoropsis aurantiaca",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1977-10-08",
+      "lat": 59.140581,
+      "lng": 10.337453,
+      "date": "2010-08-11",
       "obsCount": 1,
       "gbifKey": 2525710
-    },
-    {
-      "scientificName": "Hygrophorus hypothejus",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1982-10-15",
-      "obsCount": 1,
-      "gbifKey": 2538748
     },
     {
       "scientificName": "Hygrophorus olivaceoalbus",
@@ -4034,6 +3830,30 @@
       "gbifKey": 7747956
     },
     {
+      "scientificName": "Hylotelephium maximum",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.165739,
+      "lng": 10.356246,
+      "date": "2023-06-25",
+      "obsCount": 1,
+      "gbifKey": 7334631
+    },
+    {
+      "scientificName": "Hypericum maculatum",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.15371,
+      "lng": 10.338549,
+      "date": "2023-06-25",
+      "obsCount": 1,
+      "gbifKey": 6437017
+    },
+    {
       "scientificName": "Hypericum perforatum",
       "popularName": "",
       "photoUrl": "",
@@ -4046,18 +3866,6 @@
       "gbifKey": 3189486
     },
     {
-      "scientificName": "Hypholoma capnoides",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1977-10-09",
-      "obsCount": 1,
-      "gbifKey": 2533439
-    },
-    {
       "scientificName": "Hypholoma lateritium",
       "popularName": "",
       "photoUrl": "",
@@ -4068,6 +3876,18 @@
       "date": "1986-10-01",
       "obsCount": 1,
       "gbifKey": 2533424
+    },
+    {
+      "scientificName": "Hypomyces chrysospermus",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.141576,
+      "lng": 10.336438,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 2561867
     },
     {
       "scientificName": "Hypoxylon fuscum",
@@ -4106,6 +3926,18 @@
       "gbifKey": 5261981
     },
     {
+      "scientificName": "Infundibulicybe gibba",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.141392,
+      "lng": 10.33748,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 2531146
+    },
+    {
       "scientificName": "Inocutis rheades",
       "popularName": "",
       "photoUrl": "",
@@ -4116,30 +3948,6 @@
       "date": "1994-07-21",
       "obsCount": 1,
       "gbifKey": 2520997
-    },
-    {
-      "scientificName": "Inocybe lanuginosa",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1974-09-29",
-      "obsCount": 1,
-      "gbifKey": 7244052
-    },
-    {
-      "scientificName": "Ischnoderma resinosum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1974-09-29",
-      "obsCount": 1,
-      "gbifKey": 2543487
     },
     {
       "scientificName": "Jackrogersella multiformis",
@@ -4164,6 +3972,18 @@
       "date": "2023-06-25",
       "obsCount": 1,
       "gbifKey": 2701930
+    },
+    {
+      "scientificName": "Juncus conglomeratus",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.153664,
+      "lng": 10.347029,
+      "date": "2023-06-25",
+      "obsCount": 1,
+      "gbifKey": 2701418
     },
     {
       "scientificName": "Juncus gerardi",
@@ -4202,52 +4022,76 @@
       "gbifKey": 9099973
     },
     {
-      "scientificName": "Juniperus communis",
+      "scientificName": "Knautia arvensis",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
+      "lat": 59.15301,
+      "lng": 10.344451,
+      "date": "2023-06-25",
       "obsCount": 1,
-      "gbifKey": 2684709
+      "gbifKey": 2888808
     },
     {
-      "scientificName": "Laccaria proxima",
+      "scientificName": "Kuehneromyces mutabilis",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.1523252,
-      "lng": 10.3535506,
-      "date": "1977-10-09",
+      "lat": 59.141313,
+      "lng": 10.3366,
+      "date": "2010-08-11",
       "obsCount": 1,
-      "gbifKey": 2530966
+      "gbifKey": 2533962
     },
     {
-      "scientificName": "Lactarius aurantiacus",
+      "scientificName": "Laccaria laccata",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.1523252,
-      "lng": 10.3535506,
-      "date": "1977-10-09",
+      "lat": 59.168027,
+      "lng": 10.347056,
+      "date": "2011-11-09",
       "obsCount": 1,
-      "gbifKey": 9016531
+      "gbifKey": 2530926
     },
     {
-      "scientificName": "Lactarius glyciosmus",
+      "scientificName": "Lactarius deterrimus",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.1523252,
-      "lng": 10.3535506,
-      "date": "1977-10-09",
+      "lat": 59.143009,
+      "lng": 10.337713,
+      "date": "2010-08-11",
       "obsCount": 1,
-      "gbifKey": 5248706
+      "gbifKey": 7925734
+    },
+    {
+      "scientificName": "Lactarius flexuosus",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.141585,
+      "lng": 10.336609,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 9052760
+    },
+    {
+      "scientificName": "Lactarius lignyotus",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.156916,
+      "lng": 10.360594,
+      "date": "2017-09-23",
+      "obsCount": 1,
+      "gbifKey": 7240050
     },
     {
       "scientificName": "Lactarius mammosus",
@@ -4262,30 +4106,6 @@
       "gbifKey": 5248764
     },
     {
-      "scientificName": "Lactarius rufus",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1977-10-08",
-      "obsCount": 1,
-      "gbifKey": 5248684
-    },
-    {
-      "scientificName": "Lactarius vietus",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1977-10-09",
-      "obsCount": 1,
-      "gbifKey": 9171835
-    },
-    {
       "scientificName": "Lactifluus piperatus",
       "popularName": "",
       "photoUrl": "",
@@ -4298,16 +4118,16 @@
       "gbifKey": 7719797
     },
     {
-      "scientificName": "Larus fuscus",
+      "scientificName": "Larus canus",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Fugler",
-      "lat": 59.158436,
-      "lng": 10.350461,
-      "date": "2023-07-01",
+      "lat": 59.155866,
+      "lng": 10.352633,
+      "date": "2024-06-03",
       "obsCount": 1,
-      "gbifKey": 2481174
+      "gbifKey": 7982160
     },
     {
       "scientificName": "Lasallia pustulata",
@@ -4370,28 +4190,52 @@
       "gbifKey": 5356701
     },
     {
-      "scientificName": "Leccinum aurantiacum",
+      "scientificName": "Leccinum scabrum",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.1523252,
-      "lng": 10.3535506,
-      "date": "1976-06-19",
+      "lat": 59.147561,
+      "lng": 10.339995,
+      "date": "2010-08-11",
       "obsCount": 1,
-      "gbifKey": 2524513
+      "gbifKey": 9141390
     },
     {
-      "scientificName": "Lemna minor",
+      "scientificName": "Leccinum versipelle",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.158942,
-      "lng": 10.350838,
-      "date": "2018-10-04",
+      "group": "Sopper",
+      "lat": 59.141585,
+      "lng": 10.336609,
+      "date": "2010-08-11",
       "obsCount": 1,
-      "gbifKey": 2867589
+      "gbifKey": 2524490
+    },
+    {
+      "scientificName": "Leccinum vulpinum",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.14194,
+      "lng": 10.336806,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 2524528
+    },
+    {
+      "scientificName": "Lentinus substrictus",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.140935,
+      "lng": 10.337821,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 9445944
     },
     {
       "scientificName": "Leotia lubrica",
@@ -4404,6 +4248,18 @@
       "date": "1987-09-26",
       "obsCount": 1,
       "gbifKey": 2577646
+    },
+    {
+      "scientificName": "Lepista nuda",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.150725,
+      "lng": 10.3555,
+      "date": "2010-11-04",
+      "obsCount": 1,
+      "gbifKey": 5242048
     },
     {
       "scientificName": "Lepus timidus",
@@ -4430,28 +4286,28 @@
       "gbifKey": 8848598
     },
     {
+      "scientificName": "Leucocybe candicans",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.159675,
+      "lng": 10.358492,
+      "date": "2010-11-04",
+      "obsCount": 1,
+      "gbifKey": 7530876
+    },
+    {
       "scientificName": "Limonium humile",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
+      "lat": 59.142014,
+      "lng": 10.370143,
+      "date": "2021-09-28",
       "obsCount": 1,
       "gbifKey": 4088825
-    },
-    {
-      "scientificName": "Linaria cannabina",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.16002,
-      "lng": 10.34693,
-      "date": "2023-07-01",
-      "obsCount": 1,
-      "gbifKey": 8104397
     },
     {
       "scientificName": "Linaria vulgaris",
@@ -4478,16 +4334,16 @@
       "gbifKey": 2706237
     },
     {
-      "scientificName": "Lophodermium juniperinum",
+      "scientificName": "Lomaspilis marginata",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1976-06-19",
+      "group": "Sommerfugler",
+      "lat": 59.168457,
+      "lng": 10.347253,
+      "date": "2025-06-20T11:50:24",
       "obsCount": 1,
-      "gbifKey": 2579827
+      "gbifKey": 5149438
     },
     {
       "scientificName": "Lophodermium pinastri",
@@ -4502,16 +4358,16 @@
       "gbifKey": 2579744
     },
     {
-      "scientificName": "Lycoperdon excipuliforme",
+      "scientificName": "Lupinus polyphyllus",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1974-09-29",
+      "group": "Karplanter",
+      "lat": 59.16387,
+      "lng": 10.343373,
+      "date": "2023-05-29",
       "obsCount": 1,
-      "gbifKey": 5243279
+      "gbifKey": 2964355
     },
     {
       "scientificName": "Lycoperdon nigrescens",
@@ -4526,18 +4382,6 @@
       "gbifKey": 5243210
     },
     {
-      "scientificName": "Lycopus europaeus",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
-      "obsCount": 1,
-      "gbifKey": 5341478
-    },
-    {
       "scientificName": "Lyophyllum decastes",
       "popularName": "",
       "photoUrl": "",
@@ -4550,6 +4394,30 @@
       "gbifKey": 9173236
     },
     {
+      "scientificName": "Lysimachia arvensis",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.138705,
+      "lng": 10.357351,
+      "date": "2019-08-05",
+      "obsCount": 1,
+      "gbifKey": 8184903
+    },
+    {
+      "scientificName": "Lysimachia punctata",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.145538,
+      "lng": 10.347595,
+      "date": "2024-07-25",
+      "obsCount": 1,
+      "gbifKey": 3169340
+    },
+    {
       "scientificName": "Macrolepiota procera",
       "popularName": "",
       "photoUrl": "",
@@ -4560,6 +4428,18 @@
       "date": "1995-09-24",
       "obsCount": 1,
       "gbifKey": 8914748
+    },
+    {
+      "scientificName": "Maianthemum bifolium",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.153945,
+      "lng": 10.341846,
+      "date": "2023-06-25",
+      "obsCount": 1,
+      "gbifKey": 2769317
     },
     {
       "scientificName": "Maniola jurtina",
@@ -4622,6 +4502,18 @@
       "gbifKey": 2965201
     },
     {
+      "scientificName": "Megacollybia platyphylla",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.140935,
+      "lng": 10.337821,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 2537689
+    },
+    {
       "scientificName": "Melampyrum sylvaticum",
       "popularName": "",
       "photoUrl": "",
@@ -4658,40 +4550,16 @@
       "gbifKey": 5242194
     },
     {
-      "scientificName": "Microbotryum violaceum",
+      "scientificName": "Mycena cinerella",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.1548,
-      "lng": 10.3527,
-      "date": "1881-06-29",
+      "lat": 59.159675,
+      "lng": 10.358492,
+      "date": "2010-11-04",
       "obsCount": 1,
-      "gbifKey": 2556337
-    },
-    {
-      "scientificName": "Muscicapa striata",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.16002,
-      "lng": 10.34693,
-      "date": "2023-07-01",
-      "obsCount": 1,
-      "gbifKey": 2492576
-    },
-    {
-      "scientificName": "Mycena epipterygia",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1977-10-09",
-      "obsCount": 1,
-      "gbifKey": 4911751
+      "gbifKey": 2527077
     },
     {
       "scientificName": "Mycena galericulata",
@@ -4718,28 +4586,28 @@
       "gbifKey": 4911809
     },
     {
-      "scientificName": "Mycena metata",
+      "scientificName": "Mycena polygramma",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1982-10-15",
+      "lat": 59.158749,
+      "lng": 10.352679,
+      "date": "2010-11-04",
       "obsCount": 1,
-      "gbifKey": 2527099
+      "gbifKey": 4911745
     },
     {
-      "scientificName": "Mycena zephirus",
+      "scientificName": "Mycetinis querceus",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1977-10-09",
+      "lat": 59.159923,
+      "lng": 10.360594,
+      "date": "2010-11-04",
       "obsCount": 1,
-      "gbifKey": 4911725
+      "gbifKey": 3306393
     },
     {
       "scientificName": "Nectriopsis violacea",
@@ -4814,40 +4682,52 @@
       "gbifKey": 7927567
     },
     {
-      "scientificName": "Oxyporus populinus",
+      "scientificName": "Oxalis acetosella",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.153429,
-      "lng": 10.348305,
-      "date": "2012-03-11",
+      "group": "Karplanter",
+      "lat": 59.153945,
+      "lng": 10.341846,
+      "date": "2023-06-25",
       "obsCount": 1,
-      "gbifKey": 5239325
+      "gbifKey": 8211958
     },
     {
-      "scientificName": "Panellus stipticus",
+      "scientificName": "Panellus mitis",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.161203,
-      "lng": 10.351242,
-      "date": "2012-03-11",
+      "lat": 59.1466,
+      "lng": 10.3453,
+      "date": "1982-10-30",
       "obsCount": 1,
-      "gbifKey": 9118025
+      "gbifKey": 8931746
     },
     {
-      "scientificName": "Panus conchatus",
+      "scientificName": "Papilio machaon",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sommerfugler",
+      "lat": 59.155184,
+      "lng": 10.362525,
+      "date": "2024-07-23",
+      "obsCount": 1,
+      "gbifKey": 8225376
+    },
+    {
+      "scientificName": "Paragymnopus perforans",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.1535,
-      "lng": 10.3529,
-      "date": "1974-09-29",
+      "lat": 59.140318,
+      "lng": 10.336734,
+      "date": "2010-08-11",
       "obsCount": 1,
-      "gbifKey": 8689071
+      "gbifKey": 10770347
     },
     {
       "scientificName": "Parthenocissus inserta",
@@ -4860,6 +4740,18 @@
       "date": "2023-06-25",
       "obsCount": 1,
       "gbifKey": 3039203
+    },
+    {
+      "scientificName": "Paxillus rubicundulus",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.1657257,
+      "lng": 10.3541501,
+      "date": "1982-10-15",
+      "obsCount": 1,
+      "gbifKey": 5239994
     },
     {
       "scientificName": "Peniophora limitata",
@@ -4898,18 +4790,6 @@
       "gbifKey": 2542126
     },
     {
-      "scientificName": "Phalacrocorax carbo",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.16002,
-      "lng": 10.34693,
-      "date": "2023-07-01",
-      "obsCount": 1,
-      "gbifKey": 2481890
-    },
-    {
       "scientificName": "Phalaris arundinacea",
       "popularName": "",
       "photoUrl": "",
@@ -4920,6 +4800,18 @@
       "date": "2023-06-25",
       "obsCount": 1,
       "gbifKey": 5289756
+    },
+    {
+      "scientificName": "Phedimus spurius",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.151886,
+      "lng": 10.367061,
+      "date": "2025-06-20T16:09:10",
+      "obsCount": 1,
+      "gbifKey": 4201607
     },
     {
       "scientificName": "Phellinus laevigatus",
@@ -5006,28 +4898,16 @@
       "gbifKey": 8018583
     },
     {
-      "scientificName": "Phoenicurus phoenicurus",
+      "scientificName": "Phoca vitulina",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.16002,
-      "lng": 10.34693,
-      "date": "2023-07-01",
+      "group": "Pattedyr",
+      "lat": 59.143202,
+      "lng": 10.369945,
+      "date": "2009-10-04",
       "obsCount": 1,
-      "gbifKey": 5739317
-    },
-    {
-      "scientificName": "Pholiota mixta",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1977-10-09",
-      "obsCount": 1,
-      "gbifKey": 2534224
+      "gbifKey": 2434793
     },
     {
       "scientificName": "Pholiota squarrosa",
@@ -5040,6 +4920,18 @@
       "date": "2010-11-04",
       "obsCount": 1,
       "gbifKey": 2534205
+    },
+    {
+      "scientificName": "Phylloscopus trochilus",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Fugler",
+      "lat": 59.158984,
+      "lng": 10.352437,
+      "date": "2024-05-03",
+      "obsCount": 1,
+      "gbifKey": 2493052
     },
     {
       "scientificName": "Picea abies",
@@ -5066,18 +4958,6 @@
       "gbifKey": 7258428
     },
     {
-      "scientificName": "Pilosella officinarum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
-      "obsCount": 1,
-      "gbifKey": 7874303
-    },
-    {
       "scientificName": "Pipistrellus pygmaeus",
       "popularName": "",
       "photoUrl": "",
@@ -5088,6 +4968,18 @@
       "date": "2004-07-25",
       "obsCount": 1,
       "gbifKey": 5707150
+    },
+    {
+      "scientificName": "Plantago lanceolata",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.154033,
+      "lng": 10.352293,
+      "date": "2023-06-25",
+      "obsCount": 1,
+      "gbifKey": 8208358
     },
     {
       "scientificName": "Plantago major",
@@ -5114,6 +5006,18 @@
       "gbifKey": 3189755
     },
     {
+      "scientificName": "Platanthera bifolia",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.15646,
+      "lng": 10.361483,
+      "date": "2018-06-02",
+      "obsCount": 1,
+      "gbifKey": 9213153
+    },
+    {
       "scientificName": "Plicatura nivea",
       "popularName": "",
       "photoUrl": "",
@@ -5136,18 +5040,6 @@
       "date": "1981-08-02",
       "obsCount": 1,
       "gbifKey": 5241259
-    },
-    {
-      "scientificName": "Poecile palustris",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.16002,
-      "lng": 10.34693,
-      "date": "2023-07-01",
-      "obsCount": 1,
-      "gbifKey": 2487843
     },
     {
       "scientificName": "Polygonum aviculare",
@@ -5174,16 +5066,16 @@
       "gbifKey": 5140214
     },
     {
-      "scientificName": "Porzana porzana",
+      "scientificName": "Porodaedalea pini",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.158984,
-      "lng": 10.352437,
-      "date": "2023-06-19",
+      "group": "Sopper",
+      "lat": 59.145953,
+      "lng": 10.364375,
+      "date": "2021-09-29",
       "obsCount": 1,
-      "gbifKey": 2474621
+      "gbifKey": 9035469
     },
     {
       "scientificName": "Potentilla argentea",
@@ -5246,18 +5138,6 @@
       "gbifKey": 3021037
     },
     {
-      "scientificName": "Prunus spinosa",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
-      "obsCount": 1,
-      "gbifKey": 3023221
-    },
-    {
       "scientificName": "Psathyrella fibrillosa",
       "popularName": "",
       "photoUrl": "",
@@ -5282,16 +5162,16 @@
       "gbifKey": 9095397
     },
     {
-      "scientificName": "Pseudohydnum gelatinosum",
+      "scientificName": "Pteridium aquilinum",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1586,
-      "lng": 10.3552,
-      "date": "1974-09",
+      "group": "Karplanter",
+      "lat": 59.153945,
+      "lng": 10.341846,
+      "date": "2023-06-25",
       "obsCount": 1,
-      "gbifKey": 5249353
+      "gbifKey": 5275012
     },
     {
       "scientificName": "Ranunculus acris",
@@ -5306,16 +5186,16 @@
       "gbifKey": 3033363
     },
     {
-      "scientificName": "Ranunculus sceleratus",
+      "scientificName": "Rhodocollybia asema",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.158942,
-      "lng": 10.350838,
-      "date": "2018-10-04",
+      "group": "Sopper",
+      "lat": 59.150256,
+      "lng": 10.357405,
+      "date": "2010-11-04",
       "obsCount": 1,
-      "gbifKey": 3033374
+      "gbifKey": 11378863
     },
     {
       "scientificName": "Rhodocollybia maculata",
@@ -5342,40 +5222,16 @@
       "gbifKey": 2489160
     },
     {
-      "scientificName": "Rorippa palustris",
+      "scientificName": "Rubus saxatilis",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-05",
+      "lat": 59.159412,
+      "lng": 10.353084,
+      "date": "2023-06-25",
       "obsCount": 1,
-      "gbifKey": 3053168
-    },
-    {
-      "scientificName": "Rosa majalis",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
-      "obsCount": 1,
-      "gbifKey": 3002263
-    },
-    {
-      "scientificName": "Rosa rugosa",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.164445,
-      "lng": 10.343831,
-      "date": "2021-10-01",
-      "obsCount": 1,
-      "gbifKey": 3003979
+      "gbifKey": 2992808
     },
     {
       "scientificName": "Rumex acetosa",
@@ -5400,6 +5256,30 @@
       "date": "2023-06-25",
       "obsCount": 1,
       "gbifKey": 8195144
+    },
+    {
+      "scientificName": "Rumex longifolius",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.15301,
+      "lng": 10.344451,
+      "date": "2023-06-25",
+      "obsCount": 1,
+      "gbifKey": 2888946
+    },
+    {
+      "scientificName": "Russula aeruginea",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.141673,
+      "lng": 10.336267,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 7423728
     },
     {
       "scientificName": "Russula aurora",
@@ -5438,40 +5318,16 @@
       "gbifKey": 2551562
     },
     {
-      "scientificName": "Russula queletii",
+      "scientificName": "Russula vinosa",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1974-09-29",
+      "lat": 59.140581,
+      "lng": 10.337453,
+      "date": "2010-08-11",
       "obsCount": 1,
-      "gbifKey": 2551558
-    },
-    {
-      "scientificName": "Russula rosea",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1973-08-26",
-      "obsCount": 1,
-      "gbifKey": 2551240
-    },
-    {
-      "scientificName": "Russula sanguinea",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1974-09-29",
-      "obsCount": 1,
-      "gbifKey": 3359736
+      "gbifKey": 2551182
     },
     {
       "scientificName": "Russula xerampelina",
@@ -5484,6 +5340,18 @@
       "date": "1977-10-09",
       "obsCount": 1,
       "gbifKey": 2551356
+    },
+    {
+      "scientificName": "Salix alba",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.153812,
+      "lng": 10.358222,
+      "date": "2023-04-05",
+      "obsCount": 1,
+      "gbifKey": 5372513
     },
     {
       "scientificName": "Sarcomyxa serotina",
@@ -5508,18 +5376,6 @@
       "date": "2025-05-11",
       "obsCount": 1,
       "gbifKey": 2492521
-    },
-    {
-      "scientificName": "Scleranthus perennis",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.158942,
-      "lng": 10.350838,
-      "date": "2018-10-04",
-      "obsCount": 1,
-      "gbifKey": 3085895
     },
     {
       "scientificName": "Scolopax rusticola",
@@ -5558,6 +5414,42 @@
       "gbifKey": 3170886
     },
     {
+      "scientificName": "Scutellaria galericulata",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.151978,
+      "lng": 10.364573,
+      "date": "2020-07-04",
+      "obsCount": 1,
+      "gbifKey": 2926759
+    },
+    {
+      "scientificName": "Senecio viscosus",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.151333,
+      "lng": 10.364923,
+      "date": "2021-09-28",
+      "obsCount": 1,
+      "gbifKey": 3107855
+    },
+    {
+      "scientificName": "Sesia apiformis",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sommerfugler",
+      "lat": 59.146791,
+      "lng": 10.351979,
+      "date": "2023-07-01",
+      "obsCount": 1,
+      "gbifKey": 5141493
+    },
+    {
       "scientificName": "Silene dioica",
       "popularName": "",
       "photoUrl": "",
@@ -5582,6 +5474,42 @@
       "gbifKey": 5384738
     },
     {
+      "scientificName": "Silene nutans",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.152015,
+      "lng": 10.364645,
+      "date": "2021-08-18",
+      "obsCount": 1,
+      "gbifKey": 5384781
+    },
+    {
+      "scientificName": "Solanum dulcamara",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.153908,
+      "lng": 10.339941,
+      "date": "2023-06-25",
+      "obsCount": 1,
+      "gbifKey": 2932737
+    },
+    {
+      "scientificName": "Solidago virgaurea",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.165739,
+      "lng": 10.356246,
+      "date": "2023-06-25",
+      "obsCount": 1,
+      "gbifKey": 6446462
+    },
+    {
       "scientificName": "Sonchus asper",
       "popularName": "",
       "photoUrl": "",
@@ -5594,18 +5522,6 @@
       "gbifKey": 3105782
     },
     {
-      "scientificName": "Sonchus oleraceus",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-05",
-      "obsCount": 1,
-      "gbifKey": 8228544
-    },
-    {
       "scientificName": "Sorbus aucuparia",
       "popularName": "",
       "photoUrl": "",
@@ -5616,6 +5532,18 @@
       "date": "2023-06-25",
       "obsCount": 1,
       "gbifKey": 3012167
+    },
+    {
+      "scientificName": "Spergularia marina",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.15295,
+      "lng": 10.363567,
+      "date": "2018-10-05",
+      "obsCount": 1,
+      "gbifKey": 7736551
     },
     {
       "scientificName": "Steccherinum fimbriatum",
@@ -5642,28 +5570,52 @@
       "gbifKey": 5384604
     },
     {
-      "scientificName": "Sterna hirundo",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.158436,
-      "lng": 10.350461,
-      "date": "2023-07-01",
-      "obsCount": 1,
-      "gbifKey": 9367409
-    },
-    {
-      "scientificName": "Strobilurus stephanocystis",
+      "scientificName": "Stereum gausapatum",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.1523252,
-      "lng": 10.3535506,
-      "date": "1976-06-19",
+      "lat": 59.147284,
+      "lng": 10.340337,
+      "date": "2010-08-11",
       "obsCount": 1,
-      "gbifKey": 5243617
+      "gbifKey": 9181593
+    },
+    {
+      "scientificName": "Stereum hirsutum",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.162935,
+      "lng": 10.347766,
+      "date": "2010-11-04",
+      "obsCount": 1,
+      "gbifKey": 2553128
+    },
+    {
+      "scientificName": "Stereum sanguinolentum",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.14041,
+      "lng": 10.336734,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 2553068
+    },
+    {
+      "scientificName": "Sturnus vulgaris",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Fugler",
+      "lat": 59.155866,
+      "lng": 10.352633,
+      "date": "2024-06-03",
+      "obsCount": 1,
+      "gbifKey": 9809229
     },
     {
       "scientificName": "Suillus luteus",
@@ -5671,47 +5623,11 @@
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1977-10-08",
+      "lat": 59.141585,
+      "lng": 10.336609,
+      "date": "2010-08-11",
       "obsCount": 1,
       "gbifKey": 7777157
-    },
-    {
-      "scientificName": "Sylvia atricapilla",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.16002,
-      "lng": 10.34693,
-      "date": "2023-07-01",
-      "obsCount": 1,
-      "gbifKey": 2492956
-    },
-    {
-      "scientificName": "Syringa vulgaris",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
-      "obsCount": 1,
-      "gbifKey": 5415039
-    },
-    {
-      "scientificName": "Taxus baccata",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
-      "obsCount": 1,
-      "gbifKey": 5284517
     },
     {
       "scientificName": "Telekia speciosa",
@@ -5726,28 +5642,52 @@
       "gbifKey": 5389173
     },
     {
-      "scientificName": "Tephrocybe rancida",
+      "scientificName": "Thelephora terrestris",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Sopper",
-      "lat": 59.1523252,
-      "lng": 10.3535506,
-      "date": "1977-10-09",
+      "lat": 59.1545,
+      "lng": 10.3514,
+      "date": "1982-10-15",
       "obsCount": 1,
-      "gbifKey": 8993443
+      "gbifKey": 11260649
     },
     {
-      "scientificName": "Tilia cordata",
+      "scientificName": "Thlaspi arvense",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
+      "lat": 59.15295,
+      "lng": 10.363567,
+      "date": "2018-10-05",
       "obsCount": 1,
-      "gbifKey": 3152047
+      "gbifKey": 3052680
+    },
+    {
+      "scientificName": "Trametes cinnabarina",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.146842,
+      "lng": 10.34048,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 9227816
+    },
+    {
+      "scientificName": "Trametes hirsuta",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Sopper",
+      "lat": 59.146842,
+      "lng": 10.34048,
+      "date": "2010-08-11",
+      "obsCount": 1,
+      "gbifKey": 8032257
     },
     {
       "scientificName": "Trametes ochracea",
@@ -5786,18 +5726,6 @@
       "gbifKey": 5241749
     },
     {
-      "scientificName": "Tricholoma imbricatum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1523252,
-      "lng": 10.3535506,
-      "date": "1977-10-01",
-      "obsCount": 1,
-      "gbifKey": 5241858
-    },
-    {
       "scientificName": "Tricholoma inamoenum",
       "popularName": "",
       "photoUrl": "",
@@ -5822,18 +5750,6 @@
       "gbifKey": 3324249
     },
     {
-      "scientificName": "Tricholoma vaccinum",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1523252,
-      "lng": 10.3535506,
-      "date": "1974-09-29",
-      "obsCount": 1,
-      "gbifKey": 5241784
-    },
-    {
       "scientificName": "Tricholoma viridilutescens",
       "popularName": "",
       "photoUrl": "",
@@ -5844,6 +5760,18 @@
       "date": "1980-08-12",
       "obsCount": 1,
       "gbifKey": 5241747
+    },
+    {
+      "scientificName": "Trifolium hybridum",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.15301,
+      "lng": 10.344451,
+      "date": "2023-06-25",
+      "obsCount": 1,
+      "gbifKey": 6109535
     },
     {
       "scientificName": "Trifolium medium",
@@ -5870,28 +5798,28 @@
       "gbifKey": 5358748
     },
     {
-      "scientificName": "Triglochin maritima",
+      "scientificName": "Tripleurospermum inodorum",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
       "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-04",
+      "lat": 59.164519,
+      "lng": 10.352563,
+      "date": "2023-06-25",
       "obsCount": 1,
-      "gbifKey": 2865368
+      "gbifKey": 3104179
     },
     {
-      "scientificName": "Tringa totanus",
+      "scientificName": "Tripleurospermum maritimum",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.158436,
-      "lng": 10.350461,
-      "date": "2023-07-01",
+      "group": "Karplanter",
+      "lat": 59.165233,
+      "lng": 10.343409,
+      "date": "2023-06-25",
       "obsCount": 1,
-      "gbifKey": 2481714
+      "gbifKey": 3104173
     },
     {
       "scientificName": "Tripolium pannonicum",
@@ -5906,18 +5834,6 @@
       "gbifKey": 3098616
     },
     {
-      "scientificName": "Troglodytes troglodytes",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.16002,
-      "lng": 10.34693,
-      "date": "2023-07-01",
-      "obsCount": 1,
-      "gbifKey": 5231438
-    },
-    {
       "scientificName": "Tulasnella violea",
       "popularName": "",
       "photoUrl": "",
@@ -5928,18 +5844,6 @@
       "date": "2012-03-11",
       "obsCount": 1,
       "gbifKey": 2555492
-    },
-    {
-      "scientificName": "Turdus philomelos",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Fugler",
-      "lat": 59.16002,
-      "lng": 10.34693,
-      "date": "2023-07-01",
-      "obsCount": 1,
-      "gbifKey": 7901064
     },
     {
       "scientificName": "Turritis glabra",
@@ -5966,16 +5870,16 @@
       "gbifKey": 2524910
     },
     {
-      "scientificName": "Uromyces dactylidis",
+      "scientificName": "Typha latifolia",
       "popularName": "",
       "photoUrl": "",
       "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1659256,
-      "lng": 10.3366496,
-      "date": "1976-05-29",
+      "group": "Karplanter",
+      "lat": 59.16439,
+      "lng": 10.351961,
+      "date": "2023-06-25",
       "obsCount": 1,
-      "gbifKey": 8208889
+      "gbifKey": 5289423
     },
     {
       "scientificName": "Valeriana excelsa",
@@ -5988,6 +5892,18 @@
       "date": "2023-06-25",
       "obsCount": 1,
       "gbifKey": 8188719
+    },
+    {
+      "scientificName": "Veronica chamaedrys",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.151665,
+      "lng": 10.33925,
+      "date": "2025-05-31",
+      "obsCount": 1,
+      "gbifKey": 7874883
     },
     {
       "scientificName": "Veronica officinalis",
@@ -6026,6 +5942,18 @@
       "gbifKey": 2975287
     },
     {
+      "scientificName": "Vicia sepium",
+      "popularName": "",
+      "photoUrl": "",
+      "photoAttribution": "",
+      "group": "Karplanter",
+      "lat": 59.153439,
+      "lng": 10.34879,
+      "date": "2023-06-25",
+      "obsCount": 1,
+      "gbifKey": 2974786
+    },
+    {
       "scientificName": "Vuilleminia comedens",
       "popularName": "",
       "photoUrl": "",
@@ -6036,18 +5964,6 @@
       "date": "2012-03-11",
       "obsCount": 1,
       "gbifKey": 2555667
-    },
-    {
-      "scientificName": "Vulpes vulpes",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Pattedyr",
-      "lat": 59.15441,
-      "lng": 10.354494,
-      "date": "2021-08-18",
-      "obsCount": 1,
-      "gbifKey": 5219243
     },
     {
       "scientificName": "Xanthoporia radiata",
@@ -6084,30 +6000,6 @@
       "date": "1980-08-12",
       "obsCount": 1,
       "gbifKey": 5255152
-    },
-    {
-      "scientificName": "Xylaria hypoxylon",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Sopper",
-      "lat": 59.1545,
-      "lng": 10.3514,
-      "date": "1977-10-09",
-      "obsCount": 1,
-      "gbifKey": 5255147
-    },
-    {
-      "scientificName": "Zostera marina",
-      "popularName": "",
-      "photoUrl": "",
-      "photoAttribution": "",
-      "group": "Karplanter",
-      "lat": 59.156382,
-      "lng": 10.351592,
-      "date": "2018-10-05",
-      "obsCount": 1,
-      "gbifKey": 2863967
     }
   ]
 }
