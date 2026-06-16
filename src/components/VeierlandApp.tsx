@@ -5,8 +5,8 @@ import { ALL_POIS } from '../data/veierland';
 import turkartRaw from '../data/turkart.geojson?raw';
 import 'leaflet.markercluster';
 const turkartData = JSON.parse(turkartRaw);
-import { POI, SNLData, LokalhistorieData, MuseumPhoto } from '../lib/types';
-import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum } from '../lib/api';
+import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage } from '../lib/types';
+import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages } from '../lib/api';
 
 // ─── Layer configs ────────────────────────────────────────────────────────────
 
@@ -356,6 +356,7 @@ export function VeierlandApp() {
   const [snlData, setSnlData] = useState<SNLData | null>(null);
   const [lokalData, setLokalData] = useState<LokalhistorieData | null>(null);
   const [dimuData, setDimuData] = useState<MuseumPhoto[]>([]);
+  const [wikimediaImages, setWikimediaImages] = useState<WikimediaImage[]>([]);
 
   const [mapZoom, setMapZoom] = useState<number>(MAP_ZOOM);
 
@@ -390,7 +391,7 @@ export function VeierlandApp() {
   // Fetch API data for selected POI
   useEffect(() => {
     if (!selectedPOI) return;
-    setSnlData(null); setLokalData(null); setDimuData([]);
+    setSnlData(null); setLokalData(null); setDimuData([]); setWikimediaImages([]);
     let alive = true;
     setApiLoading(true);
     const tasks: Promise<void>[] = [];
@@ -403,6 +404,9 @@ export function VeierlandApp() {
     if (selectedPOI.dimu_søk) {
       tasks.push(fetchDigitalMuseum(selectedPOI.dimu_søk, selectedPOI.dimu_eier).then(r => { if (alive) setDimuData(r); }));
     }
+    tasks.push(
+      fetchWikimediaImages(selectedPOI.coordinates[0], selectedPOI.coordinates[1]).then(r => { if (alive) setWikimediaImages(r); })
+    );
     Promise.all(tasks).then(() => { if (alive) setApiLoading(false); });
     return () => { alive = false; };
   }, [selectedPOI]);
@@ -766,10 +770,25 @@ export function VeierlandApp() {
           </span>
         </div>
         <div className="vl-h2">{poi.navn}</div>
-        {!lokalData?.bilde && dimuData.length === 0 && (
+        {!lokalData?.bilde && dimuData.length === 0 && wikimediaImages.length === 0 && (
           <div className="vl-hero" dangerouslySetInnerHTML={{ __html: heroArt(cat.color) }} />
         )}
         <p className="vl-desc">{poi.beskrivelse}</p>
+
+        {wikimediaImages.length > 0 && (
+          <div className="vl-photo-strip-wrap">
+            <div className="vl-photo-strip">
+              {wikimediaImages.map((img, i) => (
+                <a key={i} href={img.pageUrl} target="_blank" rel="noreferrer" className="vl-photo-thumb">
+                  <img src={img.thumbUrl} alt={img.title} />
+                  {img.author && (
+                    <span className="vl-photo-credit">{img.license} · {img.author}</span>
+                  )}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {poi.datering && (
           <p className="vl-extra-meta"><strong>Datering:</strong> {poi.datering}</p>

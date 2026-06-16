@@ -1,4 +1,4 @@
-import { WeatherData, ArtskartObservation, SNLData, LokalhistorieData, MuseumPhoto, TideWater } from "./types";
+import { WeatherData, ArtskartObservation, SNLData, LokalhistorieData, MuseumPhoto, TideWater, WikimediaImage } from "./types";
 import { VEIERLAND_POLYGON_UTM33 } from "../data/veierland";
 
 // 1. Weather (Via our local proxy to MET)
@@ -127,7 +127,45 @@ export async function fetchLokalhistorie(title: string): Promise<LokalhistorieDa
   }
 }
 
-// 5. DigitaltMuseum
+// 5. Wikimedia Commons (geo-tagged images near coordinates)
+export async function fetchWikimediaImages(lat: number, lng: number, radius = 300): Promise<WikimediaImage[]> {
+  try {
+    const params = new URLSearchParams({
+      action: 'query',
+      generator: 'geosearch',
+      ggsnamespace: '6',
+      ggscoord: `${lat}|${lng}`,
+      ggsradius: String(radius),
+      ggslimit: '8',
+      prop: 'imageinfo',
+      iiprop: 'url|extmetadata',
+      iiurlwidth: '800',
+      format: 'json',
+      origin: '*',
+    });
+    const res = await fetch(`https://commons.wikimedia.org/w/api.php?${params}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    const pages = Object.values(data.query?.pages ?? {}) as any[];
+    return pages
+      .filter(p => p.imageinfo?.[0]?.thumburl)
+      .map(p => {
+        const info = p.imageinfo[0];
+        const meta = info.extmetadata ?? {};
+        return {
+          title: p.title.replace(/^File:/, '').replace(/\.[^.]+$/, ''),
+          thumbUrl: info.thumburl,
+          author: meta.Artist?.value?.replace(/<[^>]+>/g, '').trim() ?? '',
+          license: meta.LicenseShortName?.value ?? '',
+          pageUrl: `https://commons.wikimedia.org/wiki/${encodeURIComponent(p.title)}`,
+        };
+      });
+  } catch {
+    return [];
+  }
+}
+
+// 6. DigitaltMuseum
 const DIMU_API_KEY = 'demo'; 
 export async function fetchDigitalMuseum(query: string, ownerCode?: string): Promise<MuseumPhoto[]> {
   try {

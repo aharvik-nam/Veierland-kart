@@ -397,6 +397,33 @@ body { display: grid; place-items: center; }
 }
 .vl-tm .v { font-size: 17px; font-weight: 800; margin-top: 3px; }
 
+/* Wikimedia photo strip */
+.vl-photo-strip-wrap {
+  margin: 0 -20px 14px;
+}
+.vl-photo-strip {
+  display: flex; gap: 8px;
+  overflow-x: auto; scroll-snap-type: x mandatory;
+  padding: 0 20px 6px;
+  scrollbar-width: none;
+}
+.vl-photo-strip::-webkit-scrollbar { display: none; }
+.vl-photo-thumb {
+  flex: 0 0 auto; scroll-snap-align: start;
+  width: 200px; border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--line);
+  text-decoration: none; display: block; position: relative;
+}
+.vl-photo-thumb img {
+  width: 200px; height: 140px; object-fit: cover; display: block;
+}
+.vl-photo-credit {
+  display: block; padding: 4px 6px;
+  font-size: 10px; color: var(--muted); line-height: 1.3;
+  background: var(--card2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
 /* API data sections */
 .vl-api-section {
   background: var(--card2);

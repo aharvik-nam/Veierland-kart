@@ -65,6 +65,14 @@ export interface MuseumPhoto {
   objektUrl: string;
 }
 
+export interface WikimediaImage {
+  title: string;
+  thumbUrl: string;
+  author: string;
+  license: string;
+  pageUrl: string;
+}
+
 export interface RouteCache {
   id: number;
   name: string;
