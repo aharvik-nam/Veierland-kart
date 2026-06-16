@@ -232,6 +232,20 @@ body { display: grid; place-items: center; }
 .vl-opt .chk { color: var(--accent); opacity: 0; flex: 0 0 auto; }
 .vl-opt.on .chk { opacity: 1; }
 
+/* Cluster markers */
+.vl-cluster {
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--onaccent);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  border: 2.5px solid #fff;
+  box-shadow: 0 2px 8px rgba(40,55,35,.30);
+  cursor: pointer;
+  transition: transform .15s;
+}
+.vl-cluster:hover { transform: scale(1.1); }
+
 /* Nature markers (diamond shape) */
 .vl-nat {
   border-radius: 3px;

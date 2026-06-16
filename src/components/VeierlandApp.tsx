@@ -3,6 +3,7 @@ import { MapContainer, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { ALL_POIS } from '../data/veierland';
 import turkartRaw from '../data/turkart.geojson?raw';
+import 'leaflet.markercluster';
 const turkartData = JSON.parse(turkartRaw);
 import { POI, SNLData, LokalhistorieData, MuseumPhoto } from '../lib/types';
 import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum } from '../lib/api';
@@ -411,9 +412,53 @@ export function VeierlandApp() {
     return () => { alive = false; };
   }, [selectedPOI]);
 
-  const onMapReady = useCallback((m: L.Map) => { mapRef.current = m; }, []);
+  const [mapReady, setMapReady] = useState(false);
+  const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
+
+  const onMapReady = useCallback((m: L.Map) => { mapRef.current = m; setMapReady(true); }, []);
   const onMapClick = useCallback(() => setShowLayerPop(false), []);
   const onZoom = useCallback((z: number) => setMapZoom(z), []);
+
+  // Cluster group — rebuild whenever filtered POIs, zoom, or selection changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+
+    // Remove existing group
+    if (clusterRef.current) { map.removeLayer(clusterRef.current); clusterRef.current = null; }
+    if (mode === 'nature') return;
+
+    const cg = L.markerClusterGroup({
+      maxClusterRadius: 60,
+      disableClusteringAtZoom: 15,
+      spiderfyOnMaxZoom: true,
+      iconCreateFunction: (cluster) => {
+        const n = cluster.getChildCount();
+        const sz = n < 10 ? 32 : n < 50 ? 38 : 44;
+        return L.divIcon({
+          className: '',
+          iconSize: [sz, sz],
+          iconAnchor: [sz / 2, sz / 2],
+          html: `<div class="vl-cluster" style="width:${sz}px;height:${sz}px;font-size:${sz < 38 ? 13 : 15}px">${n}</div>`,
+        });
+      },
+    });
+
+    const sz = markerSize(mapZoom);
+    const half = Math.round(sz / 2);
+    filteredPOIs.forEach(poi => {
+      const cat = getCat(poi.kategori);
+      const sel = selectedPOI?.id === poi.id && view === 'detail';
+      const icon = L.divIcon({ className: '', iconSize: [sz, sz], iconAnchor: [half, half], html: makeIconHtml(cat.icon, cat.color, sel, sz) });
+      L.marker(poi.coordinates as [number, number], { icon }).on('click', () => selectPOI(poi)).addTo(cg);
+    });
+
+    map.addLayer(cg);
+    clusterRef.current = cg;
+
+    return () => { if (map) map.removeLayer(cg); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapReady, mode, filteredPOIs, selectedPOI?.id, view, mapZoom]);
 
   useEffect(() => {
     if (mode !== 'nature' || natureFetched) return;
@@ -857,31 +902,6 @@ export function VeierlandApp() {
     );
   }
 
-  // ── POI markers (re-created when selection changes for the `.sel` class) ────
-
-  const poiMarkers = useMemo(() => {
-    const sz = markerSize(mapZoom);
-    const half = Math.round(sz / 2);
-    return filteredPOIs.map(poi => {
-      const cat = getCat(poi.kategori);
-      const selected = selectedPOI?.id === poi.id && view === 'detail';
-      const icon = L.divIcon({
-        className: '',
-        iconSize: [sz, sz],
-        iconAnchor: [half, half],
-        html: makeIconHtml(cat.icon, cat.color, selected, sz),
-      });
-      return (
-        <Marker
-          key={`${poi.id}-${selected}`}
-          position={poi.coordinates}
-          icon={icon}
-          eventHandlers={{ click: () => selectPOI(poi) }}
-        />
-      );
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredPOIs, selectedPOI?.id, view, mapZoom]);
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -897,7 +917,6 @@ export function VeierlandApp() {
       >
         <MapSetup onReady={onMapReady} onMapClick={onMapClick} onZoom={onZoom} />
         <TileController layer={currentLayer} />
-        {mode !== 'nature' && poiMarkers}
         {mode === 'nature' && natureObs.map(obs => {
           const cfg = NATURE_GROUPS[obs.group];
           const selected = selectedNature?.gbifKey === obs.gbifKey;
