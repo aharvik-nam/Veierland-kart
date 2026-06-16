@@ -109,6 +109,8 @@ type NatureGroup = keyof typeof NATURE_GROUPS;
 interface NatureObs {
   scientificName: string;
   popularName: string;
+  photoUrl: string;
+  photoAttribution: string;
   group: NatureGroup;
   lat: number;
   lng: number;
@@ -132,24 +134,39 @@ async function fetchNatureGroup(group: NatureGroup): Promise<{ group: NatureGrou
   }
 }
 
-async function fetchNorwegianName(speciesKey: number): Promise<string> {
+interface INatResult { norwegianName: string; photoUrl: string; photoAttribution: string; }
+
+async function fetchINaturalistTaxon(scientificName: string): Promise<INatResult> {
+  const empty: INatResult = { norwegianName: '', photoUrl: '', photoAttribution: '' };
   try {
-    const res = await fetch(`https://api.gbif.org/v1/species/${speciesKey}/vernacularNames?limit=100`);
-    if (!res.ok) return '';
+    const res = await fetch(
+      `https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(scientificName)}&locale=nb&per_page=5`
+    );
+    if (!res.ok) return empty;
     const data = await res.json();
-    const hit = (data.results as { vernacularName: string; language: string }[])
-      .find(n => n.language === 'nor' || n.language === 'nob');
-    return hit?.vernacularName ?? '';
+    const genus = scientificName.split(' ')[0].toLowerCase();
+    const taxon = (data.results as any[]).find(t =>
+      t.name.toLowerCase().startsWith(genus)
+    );
+    if (!taxon) return empty;
+    return {
+      norwegianName: taxon.preferred_common_name ?? '',
+      photoUrl: taxon.default_photo?.medium_url ?? '',
+      photoAttribution: taxon.default_photo?.attribution ?? '',
+    };
   } catch {
-    return '';
+    return empty;
   }
 }
 
-async function enrichWithNorwegianNames(obs: NatureObs[]): Promise<NatureObs[]> {
-  const uniqueKeys = [...new Set(obs.map(o => o.gbifKey))];
-  const names = await Promise.all(uniqueKeys.map(k => fetchNorwegianName(k)));
-  const nameMap = new Map(uniqueKeys.map((k, i) => [k, names[i]]));
-  return obs.map(o => ({ ...o, popularName: nameMap.get(o.gbifKey) || o.popularName }));
+async function enrichWithINaturalist(obs: NatureObs[]): Promise<NatureObs[]> {
+  const uniqueNames = [...new Set(obs.map(o => o.scientificName))];
+  const results = await Promise.all(uniqueNames.map(n => fetchINaturalistTaxon(n)));
+  const map = new Map(uniqueNames.map((n, i) => [n, results[i]]));
+  return obs.map(o => {
+    const r = map.get(o.scientificName)!;
+    return { ...o, popularName: r.norwegianName || o.popularName, photoUrl: r.photoUrl, photoAttribution: r.photoAttribution };
+  });
 }
 
 function processNatureData(rawGroups: { group: NatureGroup; obs: unknown[] }[]): NatureObs[] {
@@ -171,7 +188,9 @@ function processNatureData(rawGroups: { group: NatureGroup; obs: unknown[] }[]):
   for (const [key, { raw, group, date }] of latestMap) {
     result.push({
       scientificName: String(raw.species ?? ''),
-      popularName: String(raw.vernacularName ?? ''),
+      popularName: '',
+      photoUrl: '',
+      photoAttribution: '',
       group,
       lat: raw.decimalLatitude as number,
       lng: raw.decimalLongitude as number,
@@ -491,7 +510,7 @@ export function VeierlandApp() {
     setNatureLoading(true);
     const groups = Object.keys(NATURE_GROUPS) as NatureGroup[];
     Promise.all(groups.map(fetchNatureGroup))
-      .then(rawGroups => enrichWithNorwegianNames(processNatureData(rawGroups)))
+      .then(rawGroups => enrichWithINaturalist(processNatureData(rawGroups)))
       .then(enriched => {
         setNatureObs(enriched);
         setNatureFetched(true);
@@ -629,6 +648,16 @@ export function VeierlandApp() {
               <div className="v" style={{ fontSize: 14 }}>{dateStr}</div>
             </div>
           </div>
+          {selectedNature.photoUrl && (
+            <div style={{ marginBottom: 14 }}>
+              <img src={selectedNature.photoUrl} alt={selectedNature.popularName || selectedNature.scientificName} className="vl-api-img" />
+              {selectedNature.photoAttribution && (
+                <p style={{ fontSize: 11, color: 'var(--muted)', margin: '4px 0 0' }}
+                  dangerouslySetInnerHTML={{ __html: selectedNature.photoAttribution }} />
+              )}
+            </div>
+          )}
+
           {speciesWikiLoading && (
             <p style={{ color: 'var(--muted)', fontSize: 13, margin: '8px 0' }}>
               {lang === 'no' ? 'Henter artsinformasjon…' : 'Loading species info…'}
@@ -637,7 +666,7 @@ export function VeierlandApp() {
 
           {speciesWiki && (
             <div className="vl-api-section">
-              {speciesWiki.imageUrl && (
+              {!selectedNature.photoUrl && speciesWiki.imageUrl && (
                 <img src={speciesWiki.imageUrl} alt={speciesWiki.title} className="vl-api-img" />
               )}
               <p className="vl-api-text">{speciesWiki.extract}</p>
