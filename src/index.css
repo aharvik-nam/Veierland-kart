@@ -44,8 +44,7 @@ body { display: grid; place-items: center; }
 /* ── App shell ─────────────────────────────────────────────────────────────── */
 .vl-app {
   position: relative;
-  width: 100%;
-  max-width: 440px;
+  width: min(100vw, 440px);
   height: 100dvh;
   max-height: 940px;
   overflow: hidden;
