@@ -422,6 +422,20 @@ body { display: grid; place-items: center; }
 }
 .vl-tm .v { font-size: 17px; font-weight: 800; margin-top: 3px; }
 
+/* Static POI image (from JSON bilde field) */
+.vl-poi-static-img {
+  margin: 0 -20px 14px;
+  position: relative;
+}
+.vl-poi-static-img img {
+  width: 100%; max-height: 320px; object-fit: cover; display: block;
+}
+.vl-poi-static-img .vl-photo-credit {
+  display: block; padding: 4px 8px;
+  font-size: 10px; color: var(--muted);
+  background: var(--card2);
+}
+
 /* Wikimedia photo strip */
 .vl-photo-strip-wrap {
   margin: 0 -20px 14px;

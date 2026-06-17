@@ -898,6 +898,13 @@ export function VeierlandApp() {
         <div className="vl-h2">{poi.navn}</div>
         <p className="vl-desc">{poi.beskrivelse}</p>
 
+        {poi.bilde && (
+          <div className="vl-poi-static-img">
+            <img src={poi.bilde} alt={poi.navn} />
+            {poi.bilde_lisens && <span className="vl-photo-credit">{poi.bilde_lisens}</span>}
+          </div>
+        )}
+
         {wikimediaImages.length > 0 && (
           <div className="vl-photo-strip-wrap">
             <div className="vl-photo-strip">
