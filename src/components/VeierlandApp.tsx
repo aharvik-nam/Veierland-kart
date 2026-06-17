@@ -98,6 +98,7 @@ const ICONS: Record<string, string> = {
   telt:   '<path d="M0,-7 L7.5,6 L-7.5,6 Z"/><path d="M0,-7 L0,6"/><path d="M0,6 L-2.5,6"/>',
   wc:     '<circle cx="0" cy="0" r="6.5"/><path d="M0,-2.6 v0.2"/><path d="M0,0 v3.2"/>',
   blad:   '<path d="M0,8 Q-8,-1 0,-9 Q8,-1 0,8Z"/><path d="M0,-9 Q-2,0 0,8"/>',
+  all:    '<rect x="-7" y="-7" width="5.5" height="5.5" rx="1.2"/><rect x="1.5" y="-7" width="5.5" height="5.5" rx="1.2"/><rect x="-7" y="1.5" width="5.5" height="5.5" rx="1.2"/><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2"/>',
 };
 
 // ─── Nature (Artsdatabanken) ──────────────────────────────────────────────────
@@ -363,6 +364,7 @@ export function VeierlandApp() {
   const [lang, setLang] = useState<'no' | 'en'>('no');
   const [activeCats, setActiveCats] = useState<Set<string>>(new Set());
   const [mode, setMode] = useState<'places' | 'trails' | 'nature'>('places');
+  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQ, setSearchQ] = useState('');
   const [view, setView] = useState<'browse' | 'detail'>('browse');
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
@@ -761,11 +763,6 @@ export function VeierlandApp() {
     return (
       <>
         <h2 className="vl-title">{T.explore}</h2>
-        <div className="vl-seg">
-          <button className={mode === 'places' ? 'on' : ''} onClick={() => { setMode('places'); setSelectedNature(null); }}>{T.places}</button>
-          <button className={mode === 'trails' ? 'on' : ''} onClick={() => { setMode('trails'); setSelectedNature(null); }}>{T.trails}</button>
-          <button className={mode === 'nature' ? 'on' : ''} onClick={() => { setMode('nature'); setSelectedNature(null); }}>{T.nature}</button>
-        </div>
         {mode === 'nature' ? renderNature() : mode === 'places' ? (
           <>
             <div className="vl-count">{filteredPOIs.length ? T.np(filteredPOIs.length) : T.nohit}</div>
@@ -1018,24 +1015,14 @@ export function VeierlandApp() {
         )}
       </MapContainer>
 
-      {/* Top overlay: search + lang + chips */}
-      <div className="vl-top">
-        <div className="vl-search">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
-            <circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>
-          </svg>
-          <input
-            type="text"
-            placeholder={T.search}
-            value={searchQ}
-            onChange={e => setSearchQ(e.target.value)}
-            autoComplete="off"
-          />
-          {searchQ && (
-            <button className="vl-clear" onClick={() => setSearchQ('')}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
-          )}
+      {/* Top overlay: mode pills + chips + searchbar */}
+      <div className={`vl-top${searchOpen ? ' searching' : ''}`}>
+        <div className="vl-modes">
+          <div className="vl-modepills">
+            <button className={`vl-modepill${mode === 'places' ? ' on' : ''}`} onClick={() => { setMode('places'); setSelectedNature(null); }}>{T.places}</button>
+            <button className={`vl-modepill${mode === 'trails' ? ' on' : ''}`} onClick={() => { setMode('trails'); setSelectedNature(null); }}>{T.trails}</button>
+            <button className={`vl-modepill${mode === 'nature' ? ' on' : ''}`} onClick={() => { setMode('nature'); setSelectedNature(null); }}>{T.nature}</button>
+          </div>
           <div className="vl-lang">
             <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>NO</button>
             <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
@@ -1044,7 +1031,8 @@ export function VeierlandApp() {
         {mode === 'places' && (
           <div className="vl-chips">
             <div className={`vl-chip${activeCats.size === 0 ? ' on' : ''}`} onClick={() => setActiveCats(new Set())}>
-              {T.all}
+              <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
+              <span className="cl">{T.all}</span>
             </div>
             {(() => {
               const praktiskOn = PRAKTISK_CATS.some(k => activeCats.has(k));
@@ -1052,10 +1040,12 @@ export function VeierlandApp() {
               return (
                 <>
                   <div className={`vl-chip${praktiskOn ? ' on' : ''}`} onClick={() => toggleGroup(PRAKTISK_CATS)}>
-                    {lang === 'no' ? 'Praktisk' : 'Practical'}
+                    <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('wc') }} />
+                    <span className="cl">{lang === 'no' ? 'Praktisk' : 'Practical'}</span>
                   </div>
                   <div className={`vl-chip${historiskOn ? ' on' : ''}`} onClick={() => toggleGroup(HISTORISK_CATS)}>
-                    {lang === 'no' ? 'Historisk' : 'Historic'}
+                    <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('kultur') }} />
+                    <span className="cl">{lang === 'no' ? 'Historisk' : 'Historic'}</span>
                   </div>
                 </>
               );
@@ -1065,7 +1055,8 @@ export function VeierlandApp() {
               const on = activeCats.has(k);
               return (
                 <div key={k} className={`vl-chip${on ? ' on' : ''}`} onClick={() => toggleCat(k)}>
-                  {lang === 'no' ? cat.no : cat.en}
+                  <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
+                  <span className="cl">{lang === 'no' ? cat.no : cat.en}</span>
                 </div>
               );
             })}
@@ -1074,19 +1065,37 @@ export function VeierlandApp() {
         {mode === 'nature' && (
           <div className="vl-chips">
             <div className={`vl-chip${!natureFilter ? ' on' : ''}`} onClick={() => setNatureFilter(null)}>
-              {T.all}
+              <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
+              <span className="cl">{T.all}</span>
             </div>
             {(Object.entries(NATURE_GROUPS) as [NatureGroup, typeof NATURE_GROUPS[NatureGroup]][]).map(([g, cfg]) => {
               const count = natureObs.filter(o => o.group === g).length;
               if (count === 0) return null;
               return (
                 <div key={g} className={`vl-chip${natureFilter === g ? ' on' : ''}`} onClick={() => setNatureFilter(natureFilter === g ? null : g)}>
-                  {lang === 'no' ? cfg.no : cfg.en} {count}
+                  <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('blad') }} />
+                  <span className="cl">{lang === 'no' ? cfg.no : cfg.en} {count}</span>
                 </div>
               );
             })}
           </div>
         )}
+        <div className="vl-searchbar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
+            <circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>
+          </svg>
+          <input
+            type="text"
+            placeholder={T.search}
+            value={searchQ}
+            onChange={e => setSearchQ(e.target.value)}
+            autoComplete="off"
+            autoFocus={searchOpen}
+          />
+          <button className="vl-search-close" onClick={() => { setSearchOpen(false); setSearchQ(''); }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
       </div>
 
       {/* Layer popup */}
@@ -1115,6 +1124,11 @@ export function VeierlandApp() {
 
       {/* Right rail */}
       <div className="vl-rail" style={{ bottom: railBottom }}>
+        <button className="vl-rbtn" aria-label={T.search} onClick={() => { setSearchOpen(true); setShowLayerPop(false); }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
+            <circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>
+          </svg>
+        </button>
         <button
           className="vl-rbtn layers"
           aria-label={T.layers}
