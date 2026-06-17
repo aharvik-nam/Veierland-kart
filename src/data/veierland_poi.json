@@ -103,14 +103,11 @@
         "kategori": "kultur",
         "beskrivelse": "Laftet trekirke fra 1905, en av de siste bygde i Vestfold. Alterbilde av Maria Vigeland (Kristus til sjøs). Gravlund ved siden av.",
         "verifisert": true,
-        "koordinat_kilde": "Google Places API"
+        "koordinat_kilde": "manuelt verifisert"
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [
-          10.3444613,
-          59.1604113
-        ]
+        "coordinates": [10.34618810591324, 59.16259772755725]
       }
     },
     {
