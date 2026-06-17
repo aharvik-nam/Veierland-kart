@@ -16,8 +16,11 @@ const poiEnrichment: Record<string, any> = {
     dimu_søk: "hvalskytter Nøtterøy",
     dimu_eier: "HS"
   },
-  "Alby (nordre gjestehavn)": {
+  "Albykilen – Veierland Båtforening": {
     lokalhistoriewiki: "Veierland"
+  },
+  "Alby gård": {
+    lokalhistoriewiki: "Alby_(Nøtterøy)"
   }
 };
 
