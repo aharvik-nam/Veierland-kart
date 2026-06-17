@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --ink: #33402b;
-  --muted: #7c876f;
-  --card: #fffdf5;
-  --card2: #f6f4e6;
-  --line: #e7e5d2;
-  --line2: #efedde;
-  --accent: #e08a4f;
+  --ink: #1c1f1a;
+  --muted: #8b8f86;
+  --card: #ffffff;
+  --card2: #f5f6f3;
+  --line: #e6e7e2;
+  --line2: #f0f1ed;
+  --accent: #4a7c64;
   --onaccent: #fff;
-  --sea: #cfe7e1;
-  --land: #d6e5a6;
-  --me: #3d7ce0;
+  --me: #4a7c64;
+  --page: #eceeea;
   --font: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
-  --r: 18px;
+  --r: 12px;
+  --pad: 18px;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -23,87 +23,99 @@ html, body {
   height: 100%;
   font-family: var(--font);
   color: var(--ink);
-  background: #dfe6cf;
+  background: var(--page);
 }
 
 body { display: grid; place-items: center; }
 
-/* Leaflet overrides */
-.leaflet-container {
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  font-family: var(--font);
-}
-.leaflet-tile-pane {
-  filter: saturate(1.75) hue-rotate(6deg) brightness(1.01) contrast(1.04) sepia(.10);
-}
+/* ── Leaflet ──────────────────────────────────────────────────────────────── */
+.leaflet-container { width: 100%; height: 100%; z-index: 0; font-family: var(--font); background: #eef0ec; }
+.leaflet-tile-pane { filter: none; }
 .leaflet-control-attribution {
-  background: rgba(255,253,245,.78) !important;
-  color: #8a937c !important;
+  background: rgba(255,255,255,.82) !important;
+  color: #9aa093 !important;
   font-size: 10px !important;
   padding: 2px 6px !important;
-  border-radius: 8px 0 0 0;
+  border-radius: 6px 0 0 0;
 }
-.leaflet-control-attribution a { color: #6f7a63 !important; }
+.leaflet-control-attribution a { color: #7e857a !important; }
 .leaflet-bar { display: none; }
 
-/* App shell */
+/* ── App shell ─────────────────────────────────────────────────────────────── */
 .vl-app {
   position: relative;
-  width: min(100vw, 440px);
+  width: 100%;
+  max-width: 440px;
   height: 100dvh;
   max-height: 940px;
   overflow: hidden;
-  background: var(--sea);
-  box-shadow: 0 30px 80px rgba(40,55,35,.28);
+  background: var(--card);
+  box-shadow: 0 12px 50px rgba(28,38,30,.10);
+  border: 1px solid var(--line);
 }
-@media (min-width: 520px) { .vl-app { border-radius: 30px; } }
+@media (min-width: 520px) { .vl-app { border-radius: 26px; } }
 
-/* Markers */
+/* ── Markers ───────────────────────────────────────────────────────────────── */
 .vl-pin {
-  width: 34px; height: 34px; border-radius: 50%;
-  background: var(--c);
-  border: 2.6px solid #fff;
-  box-shadow: 0 3px 9px rgba(30,45,40,.30);
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(28,38,30,.16);
   display: grid; place-items: center;
-  transition: transform .18s, box-shadow .18s;
+  transition: transform .16s, box-shadow .16s;
   cursor: pointer;
 }
-.vl-pin svg { width: 20px; height: 20px; }
+.vl-pin svg { width: 18px; height: 18px; }
 .vl-pin.sel {
-  transform: scale(1.28); z-index: 1000;
-  box-shadow: 0 6px 16px rgba(30,45,40,.34), 0 0 0 4px color-mix(in srgb, var(--c) 30%, transparent);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  transform: scale(1.18);
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(28,38,30,.22);
 }
+
 .vl-me {
-  width: 18px; height: 18px; border-radius: 50%;
+  width: 14px; height: 14px; border-radius: 50%;
   background: var(--me);
-  border: 3px solid #fff;
-  box-shadow: 0 2px 6px rgba(30,45,40,.3);
-  position: relative;
+  border: 2.5px solid #fff;
+  box-shadow: 0 1px 4px rgba(28,38,30,.3);
 }
-.vl-me::before {
-  content: '';
-  position: absolute; inset: -8px; border-radius: 50%;
-  background: var(--me);
-  opacity: .28;
-  animation: vlPulse 2.4s ease-out infinite;
+
+.vl-cluster {
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--onaccent);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  border: 2.5px solid #fff;
+  box-shadow: 0 2px 8px rgba(28,38,30,.20);
+  cursor: pointer;
+  transition: transform .15s;
 }
-@keyframes vlPulse {
-  0% { transform: scale(.5); opacity: .4; }
-  70% { transform: scale(2.6); opacity: 0; }
-  100% { opacity: 0; }
+.vl-cluster:hover { transform: scale(1.1); }
+
+.vl-nat {
+  border-radius: 3px;
+  background: var(--c);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(28,38,30,.20);
+  cursor: pointer;
+  transform: rotate(45deg);
+  transition: transform .15s;
 }
-@keyframes vlSpin {
-  to { transform: rotate(360deg); }
-}
+.vl-nat.sel { transform: rotate(45deg) scale(1.5); }
+
+/* ── Animations ────────────────────────────────────────────────────────────── */
+@keyframes vlSpin { to { transform: rotate(360deg); } }
 @keyframes vlHeart {
   0%   { transform: scale(1); }
   35%  { transform: scale(1.28); }
   65%  { transform: scale(.93); }
   100% { transform: scale(1); }
 }
-@media (prefers-reduced-motion: reduce) { .vl-me::before { animation: none; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
 .vl-spinner {
   width: 22px; height: 22px;
@@ -116,35 +128,22 @@ body { display: grid; place-items: center; }
 .vl-btn.sec { transition: background .15s, color .15s, border-color .15s, transform .15s; }
 .vl-btn.sec.heart-pop { animation: vlHeart .3s ease-out; }
 
-/* Top overlay */
+/* ── Top overlay: search + chips ───────────────────────────────────────────── */
 .vl-top {
   position: absolute; top: 0; left: 0; right: 0; z-index: 500;
-  padding: 14px 16px;
+  padding: 13px 14px;
   pointer-events: none;
 }
 .vl-top > * { pointer-events: auto; }
-.vl-top-row {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 10px;
-}
-.vl-search-btn {
-  width: 46px; height: 46px; border-radius: 50%;
-  background: var(--card); border: 1px solid var(--line);
-  box-shadow: 0 4px 16px rgba(40,55,35,.16);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: var(--accent);
-  -webkit-tap-highlight-color: transparent;
-}
-.vl-search-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 .vl-search {
-  display: flex; align-items: center; gap: 11px; padding: 13px 14px;
+  display: flex; align-items: center; gap: 11px; padding: 9px 13px;
   border-radius: var(--r);
   background: var(--card);
   border: 1px solid var(--line);
-  box-shadow: 0 10px 26px rgba(40,55,35,.14);
+  box-shadow: 0 2px 10px rgba(28,38,30,.10);
 }
-.vl-search svg { color: var(--accent); flex: 0 0 auto; }
+.vl-search svg { color: var(--muted); flex: 0 0 auto; }
 .vl-search input {
   border: none; outline: none; background: transparent; flex: 1;
   font: inherit; font-size: 16px; color: var(--ink); min-width: 0;
@@ -161,303 +160,159 @@ body { display: grid; place-items: center; }
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 3px;
-  font-size: 12px; font-weight: 700;
+  font-size: 12px; font-weight: 600;
 }
 .vl-lang button {
-  border: none; background: transparent; font: inherit; font-weight: 700;
+  border: none; background: transparent; font: inherit; font-weight: 600;
   color: var(--muted); padding: 4px 9px; border-radius: 999px; cursor: pointer;
 }
 .vl-lang button.on { background: var(--ink); color: #fff; }
 
-.vl-chips-wrap {
-  position: relative;
-  margin-top: 11px;
-}
-.vl-chips-wrap::after {
-  content: '';
-  position: absolute;
-  right: 0; top: 0; bottom: 2px;
-  width: 44px;
-  background: linear-gradient(to right, transparent, var(--sea));
-  pointer-events: none;
-  z-index: 1;
-}
 .vl-chips {
-  display: flex; gap: 8px; overflow-x: auto;
+  display: flex; gap: 7px; margin-top: 9px; overflow-x: auto;
   padding-bottom: 2px; scrollbar-width: none;
 }
 .vl-chips::-webkit-scrollbar { display: none; }
 .vl-chip {
-  display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px;
+  display: inline-flex; align-items: center; padding: 7px 13px;
   border-radius: 999px;
   background: var(--card);
   border: 1px solid var(--line);
-  box-shadow: 0 4px 12px rgba(40,55,35,.08);
-  font-size: 14px; font-weight: 600;
+  box-shadow: 0 1px 5px rgba(28,38,30,.09);
+  font-size: 13.5px; font-weight: 500;
   white-space: nowrap; flex: 0 0 auto; cursor: pointer; color: var(--ink);
   transition: background .15s, color .15s, border-color .15s;
 }
-.vl-chip .dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
 .vl-chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
-.vl-chip.all.on .dot { display: none; }
 
-/* Right rail */
+/* ── Right rail ─────────────────────────────────────────────────────────────── */
 .vl-rail {
-  position: absolute; right: 16px; z-index: 500;
+  position: absolute; right: var(--pad); z-index: 500;
   display: flex; flex-direction: column; gap: 10px;
   transition: bottom .34s cubic-bezier(.3,.8,.3,1);
 }
 .vl-rbtn {
-  width: 50px; height: 50px; border-radius: 15px;
+  width: 44px; height: 44px; border-radius: var(--r);
   border: 1px solid var(--line);
   background: var(--card);
-  display: grid; place-items: center; cursor: pointer;
-  box-shadow: 0 8px 22px rgba(40,55,35,.18); color: var(--accent);
+  display: grid; place-items: center; cursor: pointer; color: var(--ink);
+  box-shadow: 0 2px 10px rgba(28,38,30,.12);
 }
-.vl-rbtn.layers { color: var(--ink); }
 .vl-rbtn:active { transform: scale(.94); }
 
-/* Layer popup */
+/* ── Layer popup ────────────────────────────────────────────────────────────── */
 .vl-pop {
-  position: absolute; right: 78px; z-index: 520; width: 210px;
+  position: absolute; right: calc(var(--pad) + 58px); z-index: 520; width: 208px;
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 18px;
-  box-shadow: 0 18px 46px rgba(40,55,35,.22);
-  padding: 9px;
+  border-radius: var(--r);
+  box-shadow: 0 14px 40px rgba(28,38,30,.16);
+  padding: 8px;
   transition: bottom .34s cubic-bezier(.3,.8,.3,1), opacity .16s, transform .16s;
   transform-origin: bottom right;
 }
-.vl-pop.hidden { opacity: 0; transform: scale(.94); pointer-events: none; }
+.vl-pop.hidden { opacity: 0; transform: scale(.96); pointer-events: none; }
 .vl-pop h5 {
   margin: 5px 8px 7px;
-  font-size: 11.5px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .07em; color: var(--muted);
 }
-.vl-opt {
-  display: flex; align-items: center; gap: 11px; padding: 7px 8px;
-  border-radius: 13px; cursor: pointer; transition: background .14s;
-}
+.vl-opt { display: flex; align-items: center; gap: 11px; padding: 7px 8px; border-radius: calc(var(--r) - 4px); cursor: pointer; transition: background .14s; }
 .vl-opt:hover { background: var(--card2); }
 .vl-opt.on { background: var(--card2); }
-.vl-opt .sw {
-  width: 40px; height: 40px; border-radius: 11px; flex: 0 0 auto;
-  border: 1px solid var(--line);
-}
-.vl-opt .nm { flex: 1; font-size: 15px; font-weight: 700; }
+.vl-opt .sw { width: 38px; height: 38px; border-radius: calc(var(--r) - 5px); flex: 0 0 auto; border: 1px solid var(--line); }
+.vl-opt .nm { flex: 1; font-size: 15px; font-weight: 600; }
 .vl-opt .chk { color: var(--accent); opacity: 0; flex: 0 0 auto; }
 .vl-opt.on .chk { opacity: 1; }
 
-/* Cluster markers */
-.vl-cluster {
-  border-radius: 50%;
-  background: var(--accent);
-  color: var(--onaccent);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700;
-  border: 2.5px solid #fff;
-  box-shadow: 0 2px 8px rgba(40,55,35,.30);
-  cursor: pointer;
-  transition: transform .15s;
-}
-.vl-cluster:hover { transform: scale(1.1); }
+/* ── Bottom sheet ───────────────────────────────────────────────────────────── */
+.vl-map-area { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
 
-/* Nature markers (diamond shape) */
-.vl-nat {
-  border-radius: 3px;
-  background: var(--c);
-  border: 2px solid #fff;
-  box-shadow: 0 2px 6px rgba(30,45,40,.28);
-  cursor: pointer;
-  transform: rotate(45deg);
-  transition: transform .15s, box-shadow .15s;
-}
-.vl-nat.sel {
-  transform: rotate(45deg) scale(1.5);
-  box-shadow: 0 4px 12px rgba(30,45,40,.32), 0 0 0 4px color-mix(in srgb, var(--c) 30%, transparent);
-}
-
-/* Bottom sheet */
 .vl-sheet {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 600;
   background: var(--card);
-  border-radius: 24px 24px 0 0;
+  border-radius: calc(var(--r) + 8px) calc(var(--r) + 8px) 0 0;
   border-top: 1px solid var(--line);
-  box-shadow: 0 -12px 40px rgba(40,55,35,.16);
   display: flex; flex-direction: column;
-  height: 80px;
-  overflow: hidden;
-  transition: height .3s ease;
+  transition: height .34s cubic-bezier(.3,.8,.3,1);
   will-change: height;
 }
-.vl-sheet.open {
-  height: min(55vh, 680px);
-}
 .vl-grab {
-  flex: 0 0 auto; padding: 10px 0 8px; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; gap: 5px;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
+  flex: 0 0 auto; padding: 11px 0 7px; cursor: grab; touch-action: none;
 }
 .vl-grab .bar {
-  width: 42px; height: 5px; border-radius: 99px;
-  background: var(--line);
-}
-.vl-sheet-title {
-  font-size: 14px; font-weight: 700; color: var(--ink);
-  letter-spacing: .01em; line-height: 1;
+  width: 40px; height: 4px; border-radius: 99px;
+  background: var(--line); margin: 0 auto;
 }
 .vl-body {
   flex: 1; overflow-y: auto; overscroll-behavior: contain;
-  padding: 0 20px 24px; scrollbar-width: none;
+  padding: 4px var(--pad) 26px; scrollbar-width: none;
 }
 .vl-body::-webkit-scrollbar { display: none; }
 
-/* Mode pill */
-.vl-mode-pill {
-  position: absolute;
-  bottom: 92px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 650;
-  display: flex;
-  background: var(--card);
-  border: 0.5px solid var(--line);
-  border-radius: 20px;
-  padding: 3px;
-  box-shadow: 0 2px 12px rgba(0,0,0,.12);
-  pointer-events: all;
-  white-space: nowrap;
-}
-.vl-mode-pill button {
-  border: none; background: transparent; font: inherit;
-  font-weight: 600; font-size: 13px; color: var(--muted);
-  padding: 7px 16px; border-radius: 17px; cursor: pointer;
-  transition: background .15s, color .15s;
-  white-space: nowrap;
-}
-.vl-mode-pill button.on {
-  background: var(--accent);
-  color: #fff;
-}
+/* ── Browse: title + seg control ───────────────────────────────────────────── */
+.vl-title { margin: 2px 0 10px; font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
 
-/* ── Desktop layout (≥900px) ─────────────────────────────────────────────── */
-/* Mobile: map area fills the whole app shell behind the sheet */
-.vl-map-area {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+.vl-seg {
+  display: flex; gap: 4px;
+  background: var(--card2);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--r) - 1px);
+  padding: 3px; margin: 2px 0 11px;
 }
-@media (min-width: 900px) {
-  .vl-app {
-    width: 100vw;
-    max-width: none;
-    height: 100dvh;
-    max-height: none;
-    border-radius: 0;
-    display: flex;
-    flex-direction: row;
-  }
-  .vl-map-area {
-    position: relative;
-    flex: 1;
-    min-width: 0;
-  }
-  /* Sidebar */
-  .vl-sheet {
-    position: relative !important;
-    order: -1;
-    width: 360px;
-    min-width: 360px;
-    height: 100dvh !important;
-    max-height: none !important;
-    border-radius: 0 !important;
-    border-right: 1px solid var(--line);
-    box-shadow: 2px 0 16px rgba(0,0,0,.07);
-    display: flex;
-    flex-direction: column;
-    transition: none !important;
-  }
-  .vl-grab { display: none !important; }
-  /* Pill becomes top nav of sidebar */
-  .vl-mode-pill {
-    position: absolute !important;
-    bottom: auto !important;
-    top: 0 !important;
-    left: 0 !important;
-    transform: none !important;
-    width: 360px;
-    border-radius: 0 !important;
-    border: none !important;
-    border-bottom: 1px solid var(--line) !important;
-    box-shadow: none !important;
-    padding: 10px 12px !important;
-    z-index: 700;
-  }
-  .vl-mode-pill button {
-    flex: 1;
-    text-align: center;
-  }
-  /* Push sidebar content below the pill */
-  .vl-sheet {
-    padding-top: 52px;
-  }
-  .vl-body {
-    flex: 1;
-    overflow-y: auto;
-  }
+.vl-seg button {
+  flex: 1; border: none; background: transparent; font: inherit;
+  font-weight: 600; font-size: 14px; color: var(--muted);
+  padding: 8px; border-radius: calc(var(--r) - 5px);
+  cursor: pointer; transition: background .15s, color .15s;
 }
+.vl-seg button.on { background: var(--card); color: var(--ink); }
 
-.vl-count { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 2px 10px; }
+.vl-count { font-size: 12.5px; font-weight: 500; color: var(--muted); margin: 0 2px 9px; }
 
-/* List card */
+/* ── List card ──────────────────────────────────────────────────────────────── */
 .vl-card {
-  display: flex; align-items: center; gap: 13px; padding: 11px;
-  border-radius: 16px;
+  display: flex; align-items: center; gap: 12px; padding: 9px 10px;
+  border-radius: var(--r);
   border: 1px solid var(--line2);
   background: var(--card);
-  margin-bottom: 9px; cursor: pointer;
+  margin-bottom: 6px; cursor: pointer;
   transition: background .14s, border-color .14s, transform .1s;
 }
 .vl-card:active { transform: scale(.99); }
-.vl-card:hover { background: #fbfaf1; border-color: var(--line); }
+.vl-card:hover { border-color: var(--line); background: var(--card2); }
 .vl-ic {
-  width: 42px; height: 42px; border-radius: 12px; flex: 0 0 auto;
+  width: 38px; height: 38px; border-radius: calc(var(--r) - 2px); flex: 0 0 auto;
   display: grid; place-items: center;
+  background: var(--card2); color: var(--ink);
 }
-.vl-ic svg { width: 22px; height: 22px; }
+.vl-ic svg { width: 20px; height: 20px; }
 .vl-card .tx { flex: 1; min-width: 0; }
-.vl-card .tx h4 { margin: 0; font-size: 16px; font-weight: 700; }
-.vl-card .tx p {
-  margin: 2px 0 0; font-size: 12.5px; color: var(--muted);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
+.vl-card .tx h4 { margin: 0; font-size: 16px; font-weight: 600; }
+.vl-card .tx p { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vl-card .chev { color: var(--muted); flex: 0 0 auto; }
 
-/* Detail view */
+/* ── Detail view ────────────────────────────────────────────────────────────── */
 .vl-back {
   display: inline-flex; align-items: center; gap: 6px; border: none;
-  background: var(--card2); color: var(--ink); font: inherit; font-weight: 700;
+  background: var(--card2); color: var(--ink); font: inherit; font-weight: 600;
   font-size: 13.5px; padding: 8px 14px 8px 11px; border-radius: 999px;
-  cursor: pointer; margin-bottom: 14px;
+  cursor: pointer; margin-bottom: 16px;
 }
 .vl-catpill {
-  display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px;
-  border-radius: 999px; font-size: 12.5px; font-weight: 700; white-space: nowrap;
+  display: inline-flex; align-items: center; padding: 5px 11px;
+  border-radius: 999px; font-size: 12.5px; font-weight: 600; white-space: nowrap;
+  background: var(--card2); color: var(--muted); border: 1px solid var(--line);
 }
-.vl-catpill .dot { width: 8px; height: 8px; border-radius: 50%; }
 .vl-h2 {
-  margin: 10px 0 2px; font-size: 28px; font-weight: 800;
-  letter-spacing: -.015em; line-height: 1.08;
+  margin: 11px 0 2px; font-size: 28px; font-weight: 700;
+  letter-spacing: -.02em; line-height: 1.08;
 }
-.vl-sub { font-size: 14px; color: var(--muted); font-style: italic; }
-.vl-hero {
-  height: 120px; border-radius: 18px; border: 1px solid var(--line);
-  position: relative; overflow: hidden; margin-bottom: 14px;
-}
-.vl-desc { font-size: 15.5px; line-height: 1.5; margin: 0 0 14px; }
+.vl-sub { font-size: 14px; color: var(--muted); }
+.vl-desc { font-size: 15.5px; line-height: 1.55; margin: 0 0 14px; }
 .vl-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
 .vl-tag {
-  font-size: 12.5px; font-weight: 600; color: var(--ink);
+  font-size: 12.5px; font-weight: 500; color: var(--ink);
   background: var(--card2);
   border: 1px solid var(--line);
   padding: 6px 11px; border-radius: 999px;
@@ -465,64 +320,59 @@ body { display: grid; place-items: center; }
 .vl-actions { display: flex; gap: 8px; margin-bottom: 16px; }
 .vl-btn {
   flex: 1; display: inline-flex; align-items: center; justify-content: center;
-  gap: 8px; padding: 15px; border-radius: 15px; border: none; font: inherit;
-  font-weight: 700; font-size: 16px; cursor: pointer; text-decoration: none;
+  gap: 8px; padding: 14px; border-radius: var(--r); border: none; font: inherit;
+  font-weight: 600; font-size: 16px; cursor: pointer; text-decoration: none;
 }
 .vl-btn.pri { background: var(--accent); color: var(--onaccent); }
 .vl-btn.sec {
-  flex: 0 0 auto; width: 54px;
+  flex: 0 0 auto; width: 52px;
   background: var(--card);
   border: 1px solid var(--line); color: var(--ink);
 }
-.vl-btn.sec.on { background: #fbe7d8; color: var(--accent); border-color: #f3cfb6; }
+.vl-btn.sec.on {
+  background: color-mix(in srgb, var(--accent) 12%, #fff);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 35%, #fff);
+}
 
-/* Trail metadata tiles */
-.vl-trailmeta { display: flex; gap: 10px; margin: 14px 0 16px; }
+.vl-trailmeta { display: flex; gap: 9px; margin: 16px 0 18px; }
 .vl-tm {
   flex: 1; background: var(--card2);
   border: 1px solid var(--line);
-  border-radius: 14px; padding: 12px;
+  border-radius: var(--r); padding: 12px;
 }
-.vl-tm .k {
-  font-size: 11.5px; font-weight: 700; color: var(--muted);
-  text-transform: uppercase; letter-spacing: .04em;
-}
-.vl-tm .v { font-size: 17px; font-weight: 800; margin-top: 3px; }
+.vl-tm .k { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.vl-tm .v { font-size: 17px; font-weight: 700; margin-top: 3px; }
 
-/* Static POI image (from JSON bilde field) */
-.vl-poi-static-img {
-  margin: 0 -20px 14px;
-  position: relative;
-}
+/* ── Static POI image ───────────────────────────────────────────────────────── */
+.vl-poi-static-img { margin: 0 0 14px; position: relative; }
 .vl-poi-static-img img {
   width: 100%; max-height: 320px; object-fit: cover; display: block;
+  border-radius: var(--r);
 }
 .vl-poi-static-img .vl-photo-credit {
   display: block; padding: 4px 8px;
   font-size: 10px; color: var(--muted);
   background: var(--card2);
+  border-radius: 0 0 var(--r) var(--r);
 }
 
-/* Wikimedia photo strip */
-.vl-photo-strip-wrap {
-  margin: 0 -20px 14px;
-}
+/* ── Wikimedia photo strip ──────────────────────────────────────────────────── */
+.vl-photo-strip-wrap { margin: 0 0 14px; }
 .vl-photo-strip {
   display: flex; gap: 8px;
   overflow-x: auto; scroll-snap-type: x mandatory;
-  padding: 0 20px 6px;
+  padding-bottom: 6px;
   scrollbar-width: none;
 }
 .vl-photo-strip::-webkit-scrollbar { display: none; }
 .vl-photo-thumb {
   flex: 0 0 auto; scroll-snap-align: start;
-  width: 200px; border-radius: 12px; overflow: hidden;
+  width: 200px; border-radius: var(--r); overflow: hidden;
   border: 1px solid var(--line);
-  text-decoration: none; display: block; position: relative;
+  text-decoration: none; display: block;
 }
-.vl-photo-thumb img {
-  width: 200px; height: 140px; object-fit: cover; display: block;
-}
+.vl-photo-thumb img { width: 200px; height: 140px; object-fit: cover; display: block; }
 .vl-photo-credit {
   display: block; padding: 4px 6px;
   font-size: 10px; color: var(--muted); line-height: 1.3;
@@ -530,29 +380,40 @@ body { display: grid; place-items: center; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* API data sections */
+/* ── API data sections ──────────────────────────────────────────────────────── */
 .vl-api-section {
   background: var(--card2);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--r);
   padding: 14px;
   margin-bottom: 12px;
 }
-.vl-api-label {
-  font-size: 11px; font-weight: 700; color: var(--muted);
-  text-transform: uppercase; letter-spacing: .06em; margin: 0 0 8px;
-}
+.vl-api-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 0 0 8px; }
 .vl-api-text { font-size: 14px; line-height: 1.55; color: var(--ink); margin: 0 0 8px; }
 .vl-api-link { font-size: 12px; font-weight: 600; color: var(--accent); text-decoration: none; }
 .vl-api-link:hover { text-decoration: underline; }
-.vl-api-img {
-  width: 100%; border-radius: 10px; margin-bottom: 8px;
-  object-fit: cover; border: 1px solid var(--line); display: block;
-}
+.vl-api-img { width: 100%; border-radius: calc(var(--r) - 4px); margin-bottom: 8px; object-fit: cover; border: 1px solid var(--line); display: block; }
 .vl-extra-meta { font-size: 13px; color: var(--muted); margin: 2px 0; }
-.vl-askeladden {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 12px; font-weight: 600; color: var(--accent);
-  text-decoration: none; margin-top: 6px;
-}
+.vl-askeladden { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--accent); text-decoration: none; margin-top: 6px; }
 .vl-askeladden:hover { text-decoration: underline; }
+
+/* ── Desktop layout (≥900px) ────────────────────────────────────────────────── */
+@media (min-width: 900px) {
+  .vl-app {
+    width: 100vw; max-width: none; height: 100dvh; max-height: none;
+    border-radius: 0 !important; border: none; box-shadow: none;
+    display: flex; flex-direction: row;
+  }
+  .vl-map-area { position: relative; flex: 1; min-width: 0; order: 2; }
+  .vl-sheet {
+    position: relative !important; order: 1;
+    width: 340px; min-width: 340px;
+    height: 100dvh !important;
+    border-radius: 0 !important; border-top: none;
+    border-right: 1px solid var(--line);
+    transition: none !important;
+  }
+  .vl-grab { display: none; }
+  .vl-body { padding: 22px 24px 28px; }
+  .vl-top { max-width: 560px; }
+}

@@ -24,11 +24,11 @@ interface LayerCfg {
 
 const LAYERS: Record<string, LayerCfg> = {
   soleng: {
-    label: { no: 'Kart', en: 'Map' },
-    sw: 'linear-gradient(135deg,#cfe7e1,#d6e5a6)',
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    label: { no: 'Lyst', en: 'Light' },
+    sw: 'linear-gradient(135deg,#f3f4f1,#e3e5df)',
+    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
     opts: { subdomains: 'abcd', maxZoom: 19, attribution: '© OpenStreetMap · © CARTO' },
-    filter: 'saturate(1.75) hue-rotate(6deg) brightness(1.01) contrast(1.04) sepia(.10)',
+    filter: 'none',
   },
   friluft: {
     label: { no: 'Friluft', en: 'Outdoor' },
@@ -217,11 +217,14 @@ function markerSize(zoom: number): number {
   return Math.round(Math.max(14, Math.min(34, 14 + (zoom - 11) * 5)));
 }
 
-function makeIconHtml(icon: string, color: string, selected: boolean, sz: number): string {
+function makeIconHtml(icon: string, selected: boolean, sz: number): string {
   const svgSz = Math.round(sz * 0.59);
-  const sw = Math.max(1.2, 1.7 * sz / 34).toFixed(2);
-  const svg = `<svg viewBox="-12 -12 24 24" fill="none" stroke="#fff" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" width="${svgSz}" height="${svgSz}">${ICONS[icon] ?? ICONS.wc}</svg>`;
-  return `<div class="vl-pin${selected ? ' sel' : ''}" style="--c:${color};width:${sz}px;height:${sz}px">${svg}</div>`;
+  const svg = `<svg viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="${svgSz}" height="${svgSz}">${ICONS[icon] ?? ICONS.wc}</svg>`;
+  return `<div class="vl-pin${selected ? ' sel' : ''}" style="width:${sz}px;height:${sz}px">${svg}</div>`;
+}
+
+function iconSvg(icon: string): string {
+  return `<svg viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">${ICONS[icon] ?? ICONS.wc}</svg>`;
 }
 
 function coloredSvg(icon: string, color: string): string {
@@ -343,18 +346,6 @@ function CheckSvg() {
   );
 }
 
-function heroArt(color: string) {
-  return `<svg width="100%" height="100%" viewBox="0 0 380 120" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0">
-    <rect width="380" height="120" fill="${color}18"/>
-    <defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#cfe7e1"/><stop offset="1" stop-color="#d6e5a6"/>
-    </linearGradient></defs>
-    <rect width="380" height="120" fill="url(#hg)"/>
-    <path d="M0,86 q60,-18 120,-4 t140,-6 140,2 V120 H0 Z" fill="#bfe0d8"/>
-    <path d="M0,98 q70,-12 150,2 t170,-2 V120 H0 Z" fill="#a9d6cb"/>
-    <circle cx="320" cy="34" r="16" fill="#fff" opacity="0.7"/>
-  </svg>`;
-}
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
@@ -373,7 +364,6 @@ export function VeierlandApp() {
   const [activeCats, setActiveCats] = useState<Set<string>>(new Set());
   const [mode, setMode] = useState<'places' | 'trails' | 'nature'>('places');
   const [searchQ, setSearchQ] = useState('');
-  const [searchOpen, setSearchOpen] = useState(false);
   const [view, setView] = useState<'browse' | 'detail'>('browse');
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
   const [selectedTrail, setSelectedTrail] = useState<Trail | null>(null);
@@ -505,7 +495,7 @@ export function VeierlandApp() {
     filteredPOIs.forEach(poi => {
       const cat = getCat(poi.kategori);
       const sel = selectedPOI?.id === poi.id && view === 'detail';
-      const icon = L.divIcon({ className: '', iconSize: [sz, sz], iconAnchor: [half, half], html: makeIconHtml(cat.icon, cat.color, sel, sz) });
+      const icon = L.divIcon({ className: '', iconSize: [sz, sz], iconAnchor: [half, half], html: makeIconHtml(cat.icon, sel, sz) });
       L.marker(poi.coordinates as [number, number], { icon }).on('click', () => selectPOI(poi)).addTo(cg);
     });
 
@@ -585,6 +575,7 @@ export function VeierlandApp() {
     setSelectedPOI(null);
     setSelectedTrail(null);
     setTrailPath(null);
+    setSheetOpen(false);
     const coords = ALL_POIS.map(p => p.coordinates as [number, number]);
     if (coords.length > 0 && mapRef.current) {
       mapRef.current.fitBounds(L.latLngBounds(coords).pad(0.08));
@@ -629,18 +620,10 @@ export function VeierlandApp() {
     });
   }
 
-  const SHEET_COLLAPSED_H = 80;
-  const sheetCurrentH = sheetOpen ? Math.min(window.innerHeight * 0.55, 680) : SHEET_COLLAPSED_H;
+  const SHEET_PEEK_H = 184;
+  const SHEET_OPEN_H = Math.min(window.innerHeight * 0.74, 700);
+  const sheetCurrentH = sheetOpen ? SHEET_OPEN_H : SHEET_PEEK_H;
   const railBottom = sheetCurrentH + 16;
-
-  function sheetTitle() {
-    if (view === 'detail') {
-      if (selectedPOI) return selectedPOI.navn;
-      if (selectedTrail) return lang === 'no' ? selectedTrail.name : selectedTrail.en;
-      if (selectedNature) return selectedNature.popularName || selectedNature.scientificName;
-    }
-    return lang === 'no' ? 'Utforsk Veierland' : 'Explore Veierland';
-  }
 
   // Text strings
   const T = lang === 'no' ? {
@@ -670,12 +653,7 @@ export function VeierlandApp() {
       return (
         <>
           <button className="vl-back" onClick={() => setSelectedNature(null)}><BackSvg />{T.back}</button>
-          <div>
-            <span className="vl-catpill" style={{ background: cfg.color + '22', color: cfg.color }}>
-              <span className="dot" style={{ background: cfg.color }} />
-              {lang === 'no' ? cfg.no : cfg.en}
-            </span>
-          </div>
+          <div><span className="vl-catpill">{lang === 'no' ? cfg.no : cfg.en}</span></div>
           <div className="vl-h2">{selectedNature.popularName || selectedNature.scientificName}</div>
           {selectedNature.popularName && (
             <div className="vl-sub" style={{ marginBottom: 14 }}><em>{selectedNature.scientificName}</em></div>
@@ -747,24 +725,6 @@ export function VeierlandApp() {
           <div className="vl-count">{T.natObs(filtered.length)}</div>
         )}
 
-        <div className="vl-chips-wrap" style={{ marginBottom: 10 }}>
-          <div className="vl-chips">
-            <div className={`vl-chip all${!natureFilter ? ' on' : ''}`} onClick={() => setNatureFilter(null)}>
-              <span className="dot" />{T.all}
-            </div>
-            {(Object.entries(NATURE_GROUPS) as [NatureGroup, typeof NATURE_GROUPS[NatureGroup]][]).map(([g, cfg]) => {
-              const count = natureObs.filter(o => o.group === g).length;
-              if (count === 0) return null;
-              return (
-                <div key={g} className={`vl-chip${natureFilter === g ? ' on' : ''}`} onClick={() => setNatureFilter(natureFilter === g ? null : g)}>
-                  <span className="dot" style={{ background: natureFilter === g ? '#fff' : cfg.color }} />
-                  {lang === 'no' ? cfg.no : cfg.en} {count}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
         {filtered.map(obs => {
           const cfg = NATURE_GROUPS[obs.group];
           return (
@@ -773,8 +733,7 @@ export function VeierlandApp() {
               setSheetOpen(true);
               flyToAboveSheet([obs.lat, obs.lng], 14);
             }}>
-              <div className="vl-ic" style={{ background: cfg.color + '22', color: cfg.color }}
-                dangerouslySetInnerHTML={{ __html: coloredSvg('blad', cfg.color) }} />
+              <div className="vl-ic" dangerouslySetInnerHTML={{ __html: iconSvg('blad') }} />
               <div className="tx">
                 <h4>{obs.popularName || obs.scientificName}</h4>
                 <p>
@@ -801,51 +760,20 @@ export function VeierlandApp() {
   function renderBrowse() {
     return (
       <>
+        <h2 className="vl-title">{T.explore}</h2>
+        <div className="vl-seg">
+          <button className={mode === 'places' ? 'on' : ''} onClick={() => { setMode('places'); setSelectedNature(null); }}>{T.places}</button>
+          <button className={mode === 'trails' ? 'on' : ''} onClick={() => { setMode('trails'); setSelectedNature(null); }}>{T.trails}</button>
+          <button className={mode === 'nature' ? 'on' : ''} onClick={() => { setMode('nature'); setSelectedNature(null); }}>{T.nature}</button>
+        </div>
         {mode === 'nature' ? renderNature() : mode === 'places' ? (
           <>
-            <div className="vl-chips-wrap" style={{ margin: '0 -20px 10px' }}>
-              <div className="vl-chips">
-                <div className={`vl-chip all${activeCats.size === 0 ? ' on' : ''}`} onClick={() => setActiveCats(new Set())}>
-                  <span className="dot" />{T.all}
-                </div>
-                {(() => {
-                  const praktiskOn = PRAKTISK_CATS.some(k => activeCats.has(k));
-                  const historiskOn = HISTORISK_CATS.some(k => activeCats.has(k));
-                  return (
-                    <>
-                      <div className={`vl-chip${praktiskOn ? ' on' : ''}`} onClick={() => toggleGroup(PRAKTISK_CATS)}>
-                        <span className="dot" style={{ background: praktiskOn ? '#fff' : '#3d6ea5' }} />
-                        {lang === 'no' ? 'Praktisk' : 'Practical'}
-                      </div>
-                      <div className={`vl-chip${historiskOn ? ' on' : ''}`} onClick={() => toggleGroup(HISTORISK_CATS)}>
-                        <span className="dot" style={{ background: historiskOn ? '#fff' : '#b5673e' }} />
-                        {lang === 'no' ? 'Historisk' : 'Historic'}
-                      </div>
-                    </>
-                  );
-                })()}
-                {allCats.filter(k => ![...PRAKTISK_CATS, ...HISTORISK_CATS].includes(k)).map(k => {
-                  const cat = getCat(k);
-                  const on = activeCats.has(k);
-                  return (
-                    <div key={k} className={`vl-chip${on ? ' on' : ''}`} onClick={() => toggleCat(k)}>
-                      <span className="dot" style={{ background: on ? '#fff' : cat.color }} />
-                      {lang === 'no' ? cat.no : cat.en}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
             <div className="vl-count">{filteredPOIs.length ? T.np(filteredPOIs.length) : T.nohit}</div>
             {filteredPOIs.map(poi => {
               const cat = getCat(poi.kategori);
               return (
                 <div key={poi.id} className="vl-card" onClick={() => selectPOI(poi)}>
-                  <div
-                    className="vl-ic"
-                    style={{ background: cat.color + '22', color: cat.color }}
-                    dangerouslySetInnerHTML={{ __html: coloredSvg(cat.icon, cat.color) }}
-                  />
+                  <div className="vl-ic" dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
                   <div className="tx">
                     <h4>{poi.navn}</h4>
                     <p>{lang === 'no' ? cat.no : cat.en}</p>
@@ -858,23 +786,16 @@ export function VeierlandApp() {
         ) : (
           <>
             <div className="vl-count">{T.nt(VL_TRAILS.length)}</div>
-            {VL_TRAILS.map(tr => {
-              const cat = getCat('friluft');
-              return (
-                <div key={tr.id} className="vl-card" onClick={() => selectTrail(tr)}>
-                  <div
-                    className="vl-ic"
-                    style={{ background: cat.color + '22', color: cat.color }}
-                    dangerouslySetInnerHTML={{ __html: coloredSvg('tur', cat.color) }}
-                  />
-                  <div className="tx">
-                    <h4>{lang === 'no' ? tr.name : tr.en}</h4>
-                    <p>{tr.km} · {tr.time} · {lang === 'no' ? tr.diff : T.easy}</p>
-                  </div>
-                  <span className="chev"><ChevSvg /></span>
+            {VL_TRAILS.map(tr => (
+              <div key={tr.id} className="vl-card" onClick={() => selectTrail(tr)}>
+                <div className="vl-ic" dangerouslySetInnerHTML={{ __html: iconSvg('tur') }} />
+                <div className="tx">
+                  <h4>{lang === 'no' ? tr.name : tr.en}</h4>
+                  <p>{tr.km} · {tr.time} · {lang === 'no' ? tr.diff : T.easy}</p>
                 </div>
-              );
-            })}
+                <span className="chev"><ChevSvg /></span>
+              </div>
+            ))}
           </>
         )}
       </>
@@ -889,12 +810,7 @@ export function VeierlandApp() {
     return (
       <>
         <button className="vl-back" onClick={goBack}><BackSvg />{T.back}</button>
-        <div>
-          <span className="vl-catpill" style={{ background: cat.color + '22', color: cat.color }}>
-            <span className="dot" style={{ background: cat.color }} />
-            {lang === 'no' ? cat.no : cat.en}
-          </span>
-        </div>
+        <div><span className="vl-catpill">{lang === 'no' ? cat.no : cat.en}</span></div>
         <div className="vl-h2">{poi.navn}</div>
         <p className="vl-desc">{poi.beskrivelse}</p>
 
@@ -1005,12 +921,7 @@ export function VeierlandApp() {
     return (
       <>
         <button className="vl-back" onClick={goBack}><BackSvg />{T.back}</button>
-        <div>
-          <span className="vl-catpill" style={{ background: cat.color + '22', color: cat.color }}>
-            <span className="dot" style={{ background: cat.color }} />
-            {lang === 'no' ? 'Tursti' : 'Trail'}
-          </span>
-        </div>
+        <div><span className="vl-catpill">{lang === 'no' ? 'Tursti' : 'Trail'}</span></div>
         <div className="vl-h2">{lang === 'no' ? trail.name : trail.en}</div>
         <div className="vl-sub">{lang === 'no' ? trail.en : trail.name}</div>
         <div className="vl-trailmeta">
@@ -1097,52 +1008,83 @@ export function VeierlandApp() {
           <>
             <Polyline
               positions={trailPath}
-              pathOptions={{ color: '#fff', weight: 8, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }}
+              pathOptions={{ color: '#fff', weight: 7, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }}
             />
             <Polyline
               positions={trailPath}
-              pathOptions={{ color: '#e08a4f', weight: 4.5, opacity: 1, dashArray: '1 10', lineCap: 'round' }}
+              pathOptions={{ color: '#4a7c64', weight: 3.6, opacity: 1, lineCap: 'round', lineJoin: 'round' }}
             />
           </>
         )}
       </MapContainer>
 
-      {/* Top overlay */}
+      {/* Top overlay: search + lang + chips */}
       <div className="vl-top">
-        <div className="vl-top-row">
-          <button
-            className={`vl-search-btn${searchQ ? ' active' : ''}`}
-            onClick={() => setSearchOpen(o => !o)}
-            aria-label="Søk"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
-              <circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>
-            </svg>
-          </button>
+        <div className="vl-search">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
+            <circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>
+          </svg>
+          <input
+            type="text"
+            placeholder={T.search}
+            value={searchQ}
+            onChange={e => setSearchQ(e.target.value)}
+            autoComplete="off"
+          />
+          {searchQ && (
+            <button className="vl-clear" onClick={() => setSearchQ('')}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          )}
           <div className="vl-lang">
             <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>NO</button>
             <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
           </div>
         </div>
-        {searchOpen && (
-          <div className="vl-search">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
-              <circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>
-            </svg>
-            <input
-              type="text"
-              placeholder={T.search}
-              value={searchQ}
-              onChange={e => setSearchQ(e.target.value)}
-              onBlur={() => setSearchOpen(false)}
-              autoFocus
-              autoComplete="off"
-            />
-            {searchQ && (
-              <button className="vl-clear" onMouseDown={() => { setSearchQ(''); setSearchOpen(false); }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              </button>
-            )}
+        {mode === 'places' && (
+          <div className="vl-chips">
+            <div className={`vl-chip${activeCats.size === 0 ? ' on' : ''}`} onClick={() => setActiveCats(new Set())}>
+              {T.all}
+            </div>
+            {(() => {
+              const praktiskOn = PRAKTISK_CATS.some(k => activeCats.has(k));
+              const historiskOn = HISTORISK_CATS.some(k => activeCats.has(k));
+              return (
+                <>
+                  <div className={`vl-chip${praktiskOn ? ' on' : ''}`} onClick={() => toggleGroup(PRAKTISK_CATS)}>
+                    {lang === 'no' ? 'Praktisk' : 'Practical'}
+                  </div>
+                  <div className={`vl-chip${historiskOn ? ' on' : ''}`} onClick={() => toggleGroup(HISTORISK_CATS)}>
+                    {lang === 'no' ? 'Historisk' : 'Historic'}
+                  </div>
+                </>
+              );
+            })()}
+            {allCats.filter(k => ![...PRAKTISK_CATS, ...HISTORISK_CATS].includes(k)).map(k => {
+              const cat = getCat(k);
+              const on = activeCats.has(k);
+              return (
+                <div key={k} className={`vl-chip${on ? ' on' : ''}`} onClick={() => toggleCat(k)}>
+                  {lang === 'no' ? cat.no : cat.en}
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {mode === 'nature' && (
+          <div className="vl-chips">
+            <div className={`vl-chip${!natureFilter ? ' on' : ''}`} onClick={() => setNatureFilter(null)}>
+              {T.all}
+            </div>
+            {(Object.entries(NATURE_GROUPS) as [NatureGroup, typeof NATURE_GROUPS[NatureGroup]][]).map(([g, cfg]) => {
+              const count = natureObs.filter(o => o.group === g).length;
+              if (count === 0) return null;
+              return (
+                <div key={g} className={`vl-chip${natureFilter === g ? ' on' : ''}`} onClick={() => setNatureFilter(natureFilter === g ? null : g)}>
+                  {lang === 'no' ? cfg.no : cfg.en} {count}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -1190,22 +1132,15 @@ export function VeierlandApp() {
       </div>
       </div>{/* end vl-map-area */}
 
-      {/* Mode pill – mobile: floats above sheet; desktop: top of sidebar (via CSS) */}
-      <div className="vl-mode-pill">
-        <button className={mode === 'places' ? 'on' : ''} onClick={() => { setMode('places'); setSelectedNature(null); setView('browse'); }}>{T.places}</button>
-        <button className={mode === 'trails' ? 'on' : ''} onClick={() => { setMode('trails'); setSelectedNature(null); setView('browse'); }}>{T.trails}</button>
-        <button className={mode === 'nature' ? 'on' : ''} onClick={() => { setMode('nature'); setSelectedNature(null); setView('browse'); }}>{T.nature}</button>
-      </div>
-
       {/* Sheet / Desktop sidebar */}
       <div
         ref={sheetRef}
-        className={`vl-sheet${sheetOpen ? ' open' : ''}`}
+        className="vl-sheet"
+        style={{ height: sheetCurrentH + 'px' }}
         onClick={() => setShowLayerPop(false)}
       >
         <div className="vl-grab" onClick={() => setSheetOpen(o => !o)}>
           <div className="bar" />
-          <span className="vl-sheet-title">{sheetTitle()}</span>
         </div>
         <div className="vl-body">
           {view === 'browse' && renderBrowse()}
