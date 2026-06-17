@@ -465,7 +465,10 @@
       "type": "Feature",
       "properties": {
         "navn": "Løkka",
-        "forklaring": "Havn, jorde opprinnelig inngjerdet for seg selv i utmarka.",
+        "forklaring": "Jorde opprinnelig inngjerdet for seg selv i utmarka. Edvard Munch malte «Blomstereng, Veierland ved Tønsberg» (1887) her – beskrevet som «et lite mesterverk, et fargemettet nattlandskap». Maleriet henger i Nasjonalmuseet.",
+        "bilde": "https://ms01.nasjonalmuseet.no/iip/?iiif=/tif/157919.tif/full/403,607/0/default.jpg",
+        "bilde_lisens": "Nasjonalmuseet – fri bruk for ikke-kommersielle formål",
+        "nettside": "https://www.nasjonalmuseet.no/samlingen/objekt/NG.M.01235b#",
         "kategori": "stedsnavn"
       },
       "geometry": {
