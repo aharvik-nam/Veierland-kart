@@ -313,13 +313,13 @@ body { display: grid; place-items: center; }
 }
 .vl-body::-webkit-scrollbar { display: none; }
 
-/* Floating mode pill */
+/* Mode pill */
 .vl-mode-pill {
   position: absolute;
   bottom: 92px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 500;
+  z-index: 650;
   display: flex;
   background: var(--card);
   border: 0.5px solid var(--line);
@@ -327,6 +327,7 @@ body { display: grid; place-items: center; }
   padding: 3px;
   box-shadow: 0 2px 12px rgba(0,0,0,.12);
   pointer-events: all;
+  white-space: nowrap;
 }
 .vl-mode-pill button {
   border: none; background: transparent; font: inherit;
@@ -338,6 +339,72 @@ body { display: grid; place-items: center; }
 .vl-mode-pill button.on {
   background: var(--accent);
   color: #fff;
+}
+
+/* ── Desktop layout (≥900px) ─────────────────────────────────────────────── */
+/* Mobile: map area fills the whole app shell behind the sheet */
+.vl-map-area {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+}
+@media (min-width: 900px) {
+  .vl-app {
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+    display: flex;
+    flex-direction: row;
+  }
+  .vl-map-area {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+  }
+  /* Sidebar */
+  .vl-sheet {
+    position: relative !important;
+    order: -1;
+    width: 360px;
+    min-width: 360px;
+    height: 100dvh !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    border-right: 1px solid var(--line);
+    box-shadow: 2px 0 16px rgba(0,0,0,.07);
+    display: flex;
+    flex-direction: column;
+    transition: none !important;
+  }
+  .vl-grab { display: none !important; }
+  /* Pill becomes top nav of sidebar */
+  .vl-mode-pill {
+    position: absolute !important;
+    bottom: auto !important;
+    top: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+    width: 360px;
+    border-radius: 0 !important;
+    border: none !important;
+    border-bottom: 1px solid var(--line) !important;
+    box-shadow: none !important;
+    padding: 10px 12px !important;
+    z-index: 700;
+  }
+  .vl-mode-pill button {
+    flex: 1;
+    text-align: center;
+  }
+  /* Push sidebar content below the pill */
+  .vl-sheet {
+    padding-top: 52px;
+  }
+  .vl-body {
+    flex: 1;
+    overflow-y: auto;
+  }
 }
 
 .vl-count { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 2px 10px; }

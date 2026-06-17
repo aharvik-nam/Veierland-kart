@@ -1056,7 +1056,8 @@ export function VeierlandApp() {
 
   return (
     <div className="vl-app">
-      {/* Map */}
+      {/* Map area */}
+      <div className="vl-map-area">
       <MapContainer
         center={MAP_CENTER}
         zoom={MAP_ZOOM}
@@ -1187,15 +1188,16 @@ export function VeierlandApp() {
           </svg>
         </button>
       </div>
+      </div>{/* end vl-map-area */}
 
-      {/* Floating mode pill above sheet */}
+      {/* Mode pill – mobile: floats above sheet; desktop: top of sidebar (via CSS) */}
       <div className="vl-mode-pill">
         <button className={mode === 'places' ? 'on' : ''} onClick={() => { setMode('places'); setSelectedNature(null); setView('browse'); }}>{T.places}</button>
         <button className={mode === 'trails' ? 'on' : ''} onClick={() => { setMode('trails'); setSelectedNature(null); setView('browse'); }}>{T.trails}</button>
         <button className={mode === 'nature' ? 'on' : ''} onClick={() => { setMode('nature'); setSelectedNature(null); setView('browse'); }}>{T.nature}</button>
       </div>
 
-      {/* Bottom sheet */}
+      {/* Sheet / Desktop sidebar */}
       <div
         ref={sheetRef}
         className={`vl-sheet${sheetOpen ? ' open' : ''}`}
