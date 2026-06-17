@@ -297,12 +297,15 @@
       "type": "Feature",
       "properties": {
         "navn": "Guttormhuset",
-        "forklaring": "Her bodde Guttorm (nå Hov).",
+        "forklaring": "Her bodde Guttorm (nå Hov). Sommeren 1887 leide familien Munch dette huset. Den 23 år gamle Edvard Munch malte «Blomstereng, Veierland ved Tønsberg» på den nærliggende Løkka – beskrevet som «et lite mesterverk, et fargemettet nattlandskap». Maleriet henger i Nasjonalmuseet.",
+        "bilde": "https://ms01.nasjonalmuseet.no/iip/?iiif=/tif/157919.tif/full/403,607/0/default.jpg",
+        "bilde_lisens": "Nasjonalmuseet – fri bruk for ikke-kommersielle formål",
+        "nettside": "https://www.nasjonalmuseet.no/samlingen/objekt/NG.M.01235b#",
         "kategori": "stedsnavn"
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [10.348622, 59.160415]
+        "coordinates": [10.34753, 59.16031]
       }
     },
     {
