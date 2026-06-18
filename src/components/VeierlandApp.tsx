@@ -325,9 +325,12 @@ const VL_TRAILS: Trail[] = (turkartData as any).features.map((f: any) => ({
 
 function MapSetup({ onReady, onMapClick, onZoom }: { onReady: (m: L.Map) => void; onMapClick: () => void; onZoom: (z: number) => void }) {
   const map = useMap();
+  const onMapClickRef = useRef(onMapClick);
+  onMapClickRef.current = onMapClick;
   useEffect(() => {
     onReady(map);
-    map.on('click', onMapClick);
+    const handleClick = () => onMapClickRef.current();
+    map.on('click', handleClick);
     const zoomHandler = () => onZoom(map.getZoom());
     map.on('zoomend', zoomHandler);
     const coords = ALL_POIS.map(p => p.coordinates as [number, number]);
@@ -335,8 +338,10 @@ function MapSetup({ onReady, onMapClick, onZoom }: { onReady: (m: L.Map) => void
       map.fitBounds(L.latLngBounds(coords).pad(0.08), { animate: false });
       onZoom(map.getZoom());
     }
-    return () => { map.off('click', onMapClick); map.off('zoomend', zoomHandler); };
-  }, [map, onReady, onMapClick, onZoom]);
+    return () => { map.off('click', handleClick); map.off('zoomend', zoomHandler); };
+  // onMapClick excluded intentionally — handled via ref to avoid re-running fitBounds
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, onReady, onZoom]);
   return null;
 }
 
@@ -688,10 +693,6 @@ export function VeierlandApp() {
     setSelectedTrail(null);
     setTrailPath(null);
     setSheetOpen(false);
-    const coords = ALL_POIS.map(p => p.coordinates as [number, number]);
-    if (coords.length > 0 && mapRef.current) {
-      mapRef.current.fitBounds(L.latLngBounds(coords).pad(0.08));
-    }
   }
 
   function locate() {
@@ -1163,9 +1164,9 @@ export function VeierlandApp() {
       <div className={`vl-top${searchOpen ? ' searching' : ''}`}>
         <div className="vl-modes">
           <div className="vl-modepills">
-            <button className={`vl-modepill${mode === 'places' ? ' on' : ''}`} onClick={() => { setMode('places'); setSelectedNature(null); }}>{T.places}</button>
-            <button className={`vl-modepill${mode === 'trails' ? ' on' : ''}`} onClick={() => { setMode('trails'); setSelectedNature(null); }}>{T.trails}</button>
-            <button className={`vl-modepill${mode === 'nature' ? ' on' : ''}`} onClick={() => { setMode('nature'); setSelectedNature(null); }}>{T.nature}</button>
+            <button className={`vl-modepill${mode === 'places' ? ' on' : ''}`} onClick={() => { setMode('places'); setCurrentLayer('soleng'); setSelectedNature(null); }}>{T.places}</button>
+            <button className={`vl-modepill${mode === 'trails' ? ' on' : ''}`} onClick={() => { setMode('trails'); setCurrentLayer('friluft'); setSelectedNature(null); }}>{T.trails}</button>
+            <button className={`vl-modepill${mode === 'nature' ? ' on' : ''}`} onClick={() => { setMode('nature'); setCurrentLayer('flyfoto'); setSelectedNature(null); }}>{T.nature}</button>
           </div>
           <div className="vl-lang">
             <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>NO</button>
