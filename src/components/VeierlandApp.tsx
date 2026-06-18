@@ -129,7 +129,7 @@ interface NatureObs {
 // WGS84 polygon tracing Veierland's coastline (from veierland_boundary.json)
 const GBIF_POLYGON = encodeURIComponent(
   'POLYGON((' +
-  (boundaryData as any).coordinates[0].map((c: number[]) => `${c[0]} ${c[1]}`).join(',') +
+  [...(boundaryData as any).coordinates[0]].reverse().map((c: number[]) => `${c[0]} ${c[1]}`).join(',') +
   '))'
 );
 
@@ -521,33 +521,33 @@ export function VeierlandApp() {
   useEffect(() => {
     if (mode !== 'nature' || natureFetched) return;
 
-    // 1. Load pre-baked static cache instantly
+    // 1. Load pre-baked static cache instantly for fast initial display
     const staticCache = natureCacheData as { generatedAt: string; obs: NatureObs[] };
     setNatureObs(staticCache.obs);
     setNatureFetched(true);
 
-    // 2. In background: fetch new observations since cache was generated
-    const since = staticCache.generatedAt.slice(0, 10);
+    // 2. Fetch ALL observations from GBIF and replace cache with full individual obs
+    const cacheMap = new Map(staticCache.obs.map(o => [o.gbifKey, o]));
     const groups = Object.keys(NATURE_GROUPS) as NatureGroup[];
-    Promise.all(groups.map(async (group) => {
-      const cfg = NATURE_GROUPS[group];
-      try {
-        const url = `https://api.gbif.org/v1/occurrence/search?geometry=${GBIF_POLYGON}&taxonKey=${cfg.taxonKey}&eventDate=${since},*&limit=300`;
-        const res = await fetch(url);
-        if (!res.ok) return { group, obs: [] };
-        const data = await res.json();
-        return { group, obs: data.results ?? [] };
-      } catch { return { group, obs: [] }; }
-    })).then(rawGroups => {
-      const newObs = processNatureData(rawGroups);
-      const existingKeys = new Set(staticCache.obs.map(o => o.gbifKey));
-      const truly_new = newObs.filter(o => !existingKeys.has(o.gbifKey));
-      if (truly_new.length === 0) return;
-      return enrichWithINaturalist(truly_new).then(enrichedNew => {
-        setNatureObs(prev => {
-          const merged = [...prev, ...enrichedNew];
-          return merged.sort((a, b) => b.obsCount - a.obsCount || a.scientificName.localeCompare(b.scientificName));
-        });
+    Promise.all(groups.map(fetchNatureGroup)).then(rawGroups => {
+      const allObs = processNatureData(rawGroups);
+      if (allObs.length === 0) return;
+
+      // Re-use cached popularName/photo for known species — avoids re-fetching iNaturalist for all
+      const preEnriched = allObs.map(obs => {
+        const cached = cacheMap.get(obs.gbifKey);
+        return cached
+          ? { ...obs, popularName: cached.popularName, photoUrl: cached.photoUrl, photoAttribution: cached.photoAttribution }
+          : obs;
+      });
+
+      // Only call iNaturalist for species not in the cache
+      const newObs = preEnriched.filter(o => !cacheMap.has(o.gbifKey));
+      if (newObs.length === 0) { setNatureObs(preEnriched); return; }
+
+      return enrichWithINaturalist(newObs).then(enrichedNew => {
+        const enrichedMap = new Map(enrichedNew.map(o => [o.gbifKey, o]));
+        setNatureObs(preEnriched.map(o => enrichedMap.get(o.gbifKey) ?? o));
       });
     });
   }, [mode, natureFetched]);
