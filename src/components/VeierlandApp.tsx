@@ -182,36 +182,38 @@ async function enrichWithINaturalist(obs: NatureObs[]): Promise<NatureObs[]> {
 
 function processNatureData(rawGroups: { group: NatureGroup; obs: unknown[] }[]): NatureObs[] {
   const countMap = new Map<number, number>();
-  const latestMap = new Map<number, { raw: Record<string, unknown>; group: NatureGroup; date: string }>();
+  const allObs: NatureObs[] = [];
 
   for (const { group, obs } of rawGroups) {
     for (const o of obs as Record<string, unknown>[]) {
       const key = o.speciesKey as number;
       if (!key || !o.decimalLatitude || !o.species) continue;
       countMap.set(key, (countMap.get(key) ?? 0) + 1);
-      const date = String(o.eventDate ?? '');
-      const existing = latestMap.get(key);
-      if (!existing || date > existing.date) latestMap.set(key, { raw: o, group, date });
+      allObs.push({
+        scientificName: String(o.species ?? ''),
+        popularName: '',
+        photoUrl: '',
+        photoAttribution: '',
+        group,
+        lat: o.decimalLatitude as number,
+        lng: o.decimalLongitude as number,
+        date: String(o.eventDate ?? ''),
+        obsCount: 0,
+        gbifKey: key,
+      });
     }
   }
 
-  const result: NatureObs[] = [];
-  for (const [key, { raw, group, date }] of latestMap) {
-    result.push({
-      scientificName: String(raw.species ?? ''),
-      popularName: '',
-      photoUrl: '',
-      photoAttribution: '',
-      group,
-      lat: raw.decimalLatitude as number,
-      lng: raw.decimalLongitude as number,
-      date,
-      obsCount: countMap.get(key) ?? 1,
-      gbifKey: key,
-    });
+  for (const obs of allObs) {
+    obs.obsCount = countMap.get(obs.gbifKey) ?? 1;
   }
 
-  return result.sort((a, b) => b.obsCount - a.obsCount || a.scientificName.localeCompare(b.scientificName));
+  // Sort: most observed species first, then by name, then newest first within species
+  return allObs.sort((a, b) =>
+    b.obsCount - a.obsCount ||
+    a.scientificName.localeCompare(b.scientificName) ||
+    b.date.localeCompare(a.date)
+  );
 }
 
 function markerSize(zoom: number): number {
@@ -232,8 +234,8 @@ function coloredSvg(icon: string, color: string): string {
   return `<svg viewBox="-12 -12 24 24" fill="none" stroke="${color}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[icon] ?? ICONS.wc}</svg>`;
 }
 
-function makeNatureIconHtml(color: string, selected: boolean, sz: number): string {
-  return `<div class="vl-nat${selected ? ' sel' : ''}" style="--c:${color};width:${sz}px;height:${sz}px"></div>`;
+function makeNatureIconHtml(color: string, selected: boolean, sz: number, dimmed = false): string {
+  return `<div class="vl-nat${selected ? ' sel' : ''}${dimmed ? ' dimmed' : ''}" style="--c:${color};width:${sz}px;height:${sz}px"></div>`;
 }
 
 // ─── Trail data ───────────────────────────────────────────────────────────────
@@ -385,6 +387,14 @@ export function VeierlandApp() {
   const [natureFetched, setNatureFetched] = useState(false);
   const [natureFilter, setNatureFilter] = useState<NatureGroup | null>(null);
   const filteredNatureObs = natureFilter ? natureObs.filter(o => o.group === natureFilter) : natureObs;
+  const natureSpecies = useMemo(() => {
+    const seen = new Set<number>();
+    return filteredNatureObs.filter(o => {
+      if (seen.has(o.gbifKey)) return false;
+      seen.add(o.gbifKey);
+      return true;
+    });
+  }, [filteredNatureObs]);
   const [selectedNature, setSelectedNature] = useState<NatureObs | null>(null);
   const [speciesWiki, setSpeciesWiki] = useState<WikipediaData | null>(null);
   const [speciesWikiLoading, setSpeciesWikiLoading] = useState(false);
@@ -712,8 +722,6 @@ export function VeierlandApp() {
       );
     }
 
-    const filtered = filteredNatureObs;
-
     return (
       <>
         {natureLoading ? (
@@ -724,10 +732,10 @@ export function VeierlandApp() {
             </p>
           </div>
         ) : (
-          <div className="vl-count">{T.natObs(filtered.length)}</div>
+          <div className="vl-count">{T.natObs(natureSpecies.length)}</div>
         )}
 
-        {filtered.map(obs => {
+        {natureSpecies.map(obs => {
           const cfg = NATURE_GROUPS[obs.group];
           return (
             <div key={obs.gbifKey} className="vl-card" onClick={() => {
@@ -975,23 +983,26 @@ export function VeierlandApp() {
       >
         <MapSetup onReady={onMapReady} onMapClick={onMapClick} onZoom={onZoom} />
         <TileController layer={currentLayer} />
-        {mode === 'nature' && filteredNatureObs.map(obs => {
+        {mode === 'nature' && filteredNatureObs.map((obs, i) => {
           const cfg = NATURE_GROUPS[obs.group];
-          const selected = selectedNature?.gbifKey === obs.gbifKey;
-          const sz = Math.max(10, Math.min(20, 10 + (mapZoom - 11) * 2.5));
+          const isSelected = selectedNature?.gbifKey === obs.gbifKey;
+          const isDimmed = selectedNature !== null && !isSelected;
+          const baseSz = Math.max(10, Math.min(20, 10 + (mapZoom - 11) * 2.5));
+          const sz = isDimmed ? 6 : isSelected ? Math.min(baseSz + 4, 24) : baseSz;
           const icon = L.divIcon({
             className: '',
             iconSize: [sz, sz],
             iconAnchor: [sz / 2, sz / 2],
-            html: makeNatureIconHtml(cfg.color, selected, sz),
+            html: makeNatureIconHtml(cfg.color, isSelected, sz, isDimmed),
           });
           return (
             <Marker
-              key={obs.gbifKey}
+              key={`${obs.gbifKey}-${i}`}
               position={[obs.lat, obs.lng]}
               icon={icon}
               eventHandlers={{ click: () => {
-                setSelectedNature(obs);
+                const speciesEntry = natureSpecies.find(s => s.gbifKey === obs.gbifKey) ?? obs;
+                setSelectedNature(speciesEntry);
                 setSheetOpen(true);
                 flyToAboveSheet([obs.lat, obs.lng], Math.max(mapZoom, 13));
               }}}
