@@ -473,7 +473,10 @@ export function VeierlandApp() {
   const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
 
   const onMapReady = useCallback((m: L.Map) => { mapRef.current = m; setMapReady(true); }, []);
-  const onMapClick = useCallback(() => setShowLayerPop(false), []);
+  const onMapClick = useCallback(() => {
+    setShowLayerPop(false);
+    if (selectedNature) { setSelectedNature(null); setSelectedNatureObs([]); }
+  }, [selectedNature]);
   const onZoom = useCallback((z: number) => setMapZoom(z), []);
 
   // Cluster group — rebuild whenever filtered POIs, zoom, or selection changes

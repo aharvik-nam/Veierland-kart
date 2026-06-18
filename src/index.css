@@ -110,7 +110,7 @@ body { display: grid; place-items: center; }
   box-shadow: 0 3px 12px rgba(28,38,30,.30);
   z-index: 1000;
 }
-.vl-nat-pin.dimmed { opacity: 0.4; }
+.vl-nat-pin.dimmed { opacity: 0.25; }
 
 /* ── Animations ────────────────────────────────────────────────────────────── */
 @keyframes vlSpin { to { transform: rotate(360deg); } }

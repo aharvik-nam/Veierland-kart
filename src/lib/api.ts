@@ -181,12 +181,12 @@ async function tryWikipedia(wiki: string, title: string): Promise<WikipediaData 
   } catch { return null; }
 }
 
-export async function fetchWikipediaSpecies(scientificName: string, popularName: string, lang: 'no' | 'en'): Promise<WikipediaData | null> {
-  // Always try scientific name first to avoid popular name ambiguity (e.g. "Bispelue" → Pope's hat)
-  const byScientific = (await tryWikipedia('en', scientificName)) ?? (await tryWikipedia('no', scientificName));
+export async function fetchWikipediaSpecies(scientificName: string, popularName: string, _lang: 'no' | 'en'): Promise<WikipediaData | null> {
+  // Try Norwegian Wikipedia first, fall back to English
+  const byScientific = (await tryWikipedia('no', scientificName)) ?? (await tryWikipedia('en', scientificName));
   if (byScientific) return byScientific;
-  // Fall back to popular name only if scientific lookup fails
-  if (lang === 'no' && popularName) return tryWikipedia('no', popularName);
+  // Fall back to popular name if scientific lookup fails
+  if (popularName) return (await tryWikipedia('no', popularName)) ?? tryWikipedia('en', popularName);
   return null;
 }
 
