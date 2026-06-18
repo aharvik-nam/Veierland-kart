@@ -1,0 +1,183 @@
+{
+  "generatedAt": "2026-06-18T09:27:55.114Z",
+  "source": {
+    "redList": "Norwegian Red List 2015 + Vascular Plants 2021 (GBIF)",
+    "alien": "GRIIS Norway (GBIF)"
+  },
+  "assessments": {
+    "Emberiza citrinella": {
+      "redListCategory": "NT"
+    },
+    "Gallinula chloropus": {
+      "redListCategory": "VU"
+    },
+    "Delichon urbicum": {
+      "redListCategory": "NT"
+    },
+    "Vanellus vanellus": {
+      "redListCategory": "EN"
+    },
+    "Branta canadensis": {
+      "alienCategory": "FREMMED"
+    },
+    "Circus cyaneus": {
+      "redListCategory": "EN"
+    },
+    "Emberiza schoeniclus": {
+      "redListCategory": "NT"
+    },
+    "Riparia riparia": {
+      "redListCategory": "NT"
+    },
+    "Somateria mollissima": {
+      "redListCategory": "NT"
+    },
+    "Accipiter gentilis": {
+      "redListCategory": "NT"
+    },
+    "Chroicocephalus ridibundus": {
+      "redListCategory": "VU"
+    },
+    "Carpodacus erythrinus": {
+      "redListCategory": "VU"
+    },
+    "Larus canus": {
+      "redListCategory": "NT"
+    },
+    "Sturnus vulgaris": {
+      "redListCategory": "NT"
+    },
+    "Vinca minor": {
+      "alienCategory": "FREMMED"
+    },
+    "Phedimus spurius": {
+      "alienCategory": "FREMMED"
+    },
+    "Impatiens parviflora": {
+      "alienCategory": "FREMMED"
+    },
+    "Lysimachia punctata": {
+      "alienCategory": "FREMMED"
+    },
+    "Salix alba": {
+      "alienCategory": "FREMMED"
+    },
+    "Lupinus polyphyllus": {
+      "alienCategory": "FREMMED"
+    },
+    "Primula veris": {
+      "redListCategory": "VU"
+    },
+    "Ranunculus acris": {
+      "alienCategory": "FREMMED"
+    },
+    "Epilobium ciliatum": {
+      "alienCategory": "FREMMED"
+    },
+    "Parthenocissus inserta": {
+      "alienCategory": "FREMMED"
+    },
+    "Chenopodium album": {
+      "alienCategory": "FREMMED"
+    },
+    "Elymus caninus": {
+      "redListCategory": "NT"
+    },
+    "Fraxinus excelsior": {
+      "redListCategory": "EN"
+    },
+    "Noccaea caerulescens": {
+      "alienCategory": "FREMMED"
+    },
+    "Festuca rubra": {
+      "alienCategory": "FREMMED"
+    },
+    "Hylotelephium maximum": {
+      "alienCategory": "FREMMED"
+    },
+    "Sambucus racemosa": {
+      "alienCategory": "FREMMED"
+    },
+    "Calystegia sepium": {
+      "alienCategory": "FREMMED"
+    },
+    "Fragaria vesca": {
+      "alienCategory": "FREMMED"
+    },
+    "Juncus tenuis": {
+      "alienCategory": "FREMMED"
+    },
+    "Lysimachia nummularia": {
+      "alienCategory": "FREMMED"
+    },
+    "Reynoutria japonica": {
+      "alienCategory": "FREMMED"
+    },
+    "Geranium macrorrhizum": {
+      "alienCategory": "FREMMED"
+    },
+    "Alopecurus pratensis": {
+      "redListCategory": "NT"
+    },
+    "Matricaria discoidea": {
+      "alienCategory": "FREMMED"
+    },
+    "Phalaris arundinacea": {
+      "alienCategory": "FREMMED"
+    },
+    "Telekia speciosa": {
+      "alienCategory": "FREMMED"
+    },
+    "Ulmus glabra": {
+      "redListCategory": "EN"
+    },
+    "Bromus inermis": {
+      "alienCategory": "FREMMED"
+    },
+    "Malus sylvestris": {
+      "redListCategory": "VU"
+    },
+    "Tilia cordata": {
+      "redListCategory": "NT"
+    },
+    "Rosa rugosa": {
+      "alienCategory": "FREMMED"
+    },
+    "Silene nutans": {
+      "redListCategory": "NT"
+    },
+    "Briza media": {
+      "redListCategory": "NT"
+    },
+    "Centaurium pulchellum": {
+      "redListCategory": "NT"
+    },
+    "Cotoneaster horizontalis": {
+      "alienCategory": "FREMMED"
+    },
+    "Odontites litoralis": {
+      "redListCategory": "NT"
+    },
+    "Senecio viscosus": {
+      "alienCategory": "FREMMED"
+    },
+    "Cotoneaster bullatus": {
+      "alienCategory": "FREMMED"
+    },
+    "Polygonum aviculare": {
+      "alienCategory": "FREMMED"
+    },
+    "Lepus timidus": {
+      "redListCategory": "NT"
+    },
+    "Vespertilio murinus": {
+      "redListCategory": "NT"
+    },
+    "Fistulina hepatica": {
+      "redListCategory": "NT"
+    },
+    "Hygrophorus russula": {
+      "redListCategory": "NT"
+    }
+  }
+}

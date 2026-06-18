@@ -5,6 +5,7 @@ import { ALL_POIS } from '../data/veierland';
 import turkartRaw from '../data/turkart.geojson?raw';
 import boundaryData from '../data/veierland_boundary.json';
 import natureCacheData from '../data/nature_cache.json';
+import assessmentCacheData from '../data/assessment_cache.json';
 import 'leaflet.markercluster';
 const turkartData = JSON.parse(turkartRaw);
 import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, WikipediaData } from '../lib/types';
@@ -203,15 +204,29 @@ async function enrichWithINaturalist(obs: NatureObs[]): Promise<NatureObs[]> {
   });
 }
 
+const _assessmentCache = (assessmentCacheData as { assessments: Record<string, { redListCategory?: string; alienCategory?: string }> }).assessments;
+
 async function enrichWithAssessments(obs: NatureObs[]): Promise<NatureObs[]> {
   const uniqueNames = [...new Set(obs.map(o => o.scientificName))];
   const amap = new Map<string, { redListCategory?: string; alienCategory?: string }>();
-  const BATCH = 20;
-  for (let i = 0; i < uniqueNames.length; i += BATCH) {
-    const batch = uniqueNames.slice(i, i + BATCH);
-    const results = await Promise.all(batch.map(n => fetchArtsdatabankenAssessment(n)));
-    batch.forEach((n, j) => amap.set(n, results[j]));
+
+  // Use pre-built cache for known species (instant)
+  const cacheMisses = uniqueNames.filter(n => {
+    const cached = _assessmentCache[n];
+    if (cached !== undefined) { amap.set(n, cached); return false; }
+    return true;
+  });
+
+  // Live API only for species not in cache (rare — new observations)
+  if (cacheMisses.length > 0) {
+    const BATCH = 20;
+    for (let i = 0; i < cacheMisses.length; i += BATCH) {
+      const batch = cacheMisses.slice(i, i + BATCH);
+      const results = await Promise.all(batch.map(n => fetchArtsdatabankenAssessment(n)));
+      batch.forEach((n, j) => amap.set(n, results[j]));
+    }
   }
+
   return obs.map(o => ({ ...o, ...(amap.get(o.scientificName) ?? {}) }));
 }
 
