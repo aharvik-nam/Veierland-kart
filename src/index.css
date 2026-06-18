@@ -95,17 +95,22 @@ body { display: grid; place-items: center; }
 }
 .vl-cluster:hover { transform: scale(1.1); }
 
-.vl-nat {
-  border-radius: 3px;
-  background: var(--c);
+.vl-nat-pin {
+  border-radius: 50%;
+  background: var(--gc, var(--accent));
+  color: #fff;
   border: 2px solid #fff;
-  box-shadow: 0 1px 4px rgba(28,38,30,.20);
+  box-shadow: 0 1px 5px rgba(28,38,30,.25);
+  display: grid; place-items: center;
   cursor: pointer;
-  transform: rotate(45deg);
-  transition: transform .15s;
+  transition: transform .15s, opacity .2s, box-shadow .15s;
 }
-.vl-nat.sel { transform: rotate(45deg) scale(1.5); }
-.vl-nat.dimmed { opacity: 0.25; }
+.vl-nat-pin.sel {
+  transform: scale(1.25);
+  box-shadow: 0 3px 12px rgba(28,38,30,.30);
+  z-index: 1000;
+}
+.vl-nat-pin.dimmed { opacity: 0.4; }
 
 /* ── Animations ────────────────────────────────────────────────────────────── */
 @keyframes vlSpin { to { transform: rotate(360deg); } }

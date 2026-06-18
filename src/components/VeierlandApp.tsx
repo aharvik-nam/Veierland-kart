@@ -99,17 +99,22 @@ const ICONS: Record<string, string> = {
   wc:     '<circle cx="0" cy="0" r="6.5"/><path d="M0,-2.6 v0.2"/><path d="M0,0 v3.2"/>',
   blad:   '<path d="M0,8 Q-8,-1 0,-9 Q8,-1 0,8Z"/><path d="M0,-9 Q-2,0 0,8"/>',
   all:    '<rect x="-7" y="-7" width="5.5" height="5.5" rx="1.2"/><rect x="1.5" y="-7" width="5.5" height="5.5" rx="1.2"/><rect x="-7" y="1.5" width="5.5" height="5.5" rx="1.2"/><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2"/>',
+  fugl:        '<path d="M-9,3 C-5,-5 5,-5 9,3 C5,0 1,0 0,-2 C-1,0 -5,0 -9,3Z"/><path d="M0,-2 L0,7"/><path d="M-2,7 L2,7"/>',
+  plante:      '<path d="M0,9 C-7,5 -7,-2 0,-9 C7,-2 7,5 0,9Z"/><path d="M0,-9 L0,9"/>',
+  pattedyr:    '<circle cx="-3.5" cy="-5.5" r="2.5"/><circle cx="3.5" cy="-5.5" r="2.5"/><path d="M-6,0 C-7,-4 -4,-6 0,-4 C4,-6 7,-4 6,0 C5,5 3,8 0,8 C-3,8 -5,5 -6,0Z"/>',
+  sopp:        '<path d="M-8,-1 Q-8,-9 0,-9 Q8,-9 8,-1 Z"/><path d="M0,-1 L0,8"/><path d="M-3,8 L3,8"/>',
+  sommerfugl:  '<path d="M0,1 C-2,-1 -9,0 -8,-5 C-7,-9 -2,-7 0,1Z"/><path d="M0,1 C2,-1 9,0 8,-5 C7,-9 2,-7 0,1Z"/><path d="M0,1 C-1,2 -5,5 -3,8 C-1,9 0,5 0,1Z"/><path d="M0,1 C1,2 5,5 3,8 C1,9 0,5 0,1Z"/>',
 };
 
 // ─── Nature (Artsdatabanken) ──────────────────────────────────────────────────
 
 // GBIF backbone taxon keys for Veierland groups
 const NATURE_GROUPS = {
-  Fugler:        { no: 'Fugler',        en: 'Birds',        color: '#3b7fc4', taxonKey: 212 },
-  Karplanter:    { no: 'Karplanter',    en: 'Plants',       color: '#4a8a2a', taxonKey: 6   },
-  Pattedyr:      { no: 'Pattedyr',      en: 'Mammals',      color: '#8b5c2a', taxonKey: 359 },
-  Sommerfugler:  { no: 'Sommerfugler',  en: 'Butterflies',  color: '#b84fa0', taxonKey: 797 },
-  Sopper:        { no: 'Sopper',        en: 'Fungi',        color: '#c07a3a', taxonKey: 5   },
+  Fugler:        { no: 'Fugler',        en: 'Birds',        color: '#3b7fc4', taxonKey: 212, icon: 'fugl'       },
+  Karplanter:    { no: 'Karplanter',    en: 'Plants',       color: '#4a8a2a', taxonKey: 6,   icon: 'plante'     },
+  Pattedyr:      { no: 'Pattedyr',      en: 'Mammals',      color: '#8b5c2a', taxonKey: 359, icon: 'pattedyr'   },
+  Sommerfugler:  { no: 'Sommerfugler',  en: 'Butterflies',  color: '#b84fa0', taxonKey: 797, icon: 'sommerfugl' },
+  Sopper:        { no: 'Sopper',        en: 'Fungi',        color: '#c07a3a', taxonKey: 5,   icon: 'sopp'       },
 } as const;
 type NatureGroup = keyof typeof NATURE_GROUPS;
 
@@ -182,38 +187,36 @@ async function enrichWithINaturalist(obs: NatureObs[]): Promise<NatureObs[]> {
 
 function processNatureData(rawGroups: { group: NatureGroup; obs: unknown[] }[]): NatureObs[] {
   const countMap = new Map<number, number>();
-  const allObs: NatureObs[] = [];
+  const latestMap = new Map<number, { raw: Record<string, unknown>; group: NatureGroup; date: string }>();
 
   for (const { group, obs } of rawGroups) {
     for (const o of obs as Record<string, unknown>[]) {
       const key = o.speciesKey as number;
       if (!key || !o.decimalLatitude || !o.species) continue;
       countMap.set(key, (countMap.get(key) ?? 0) + 1);
-      allObs.push({
-        scientificName: String(o.species ?? ''),
-        popularName: '',
-        photoUrl: '',
-        photoAttribution: '',
-        group,
-        lat: o.decimalLatitude as number,
-        lng: o.decimalLongitude as number,
-        date: String(o.eventDate ?? ''),
-        obsCount: 0,
-        gbifKey: key,
-      });
+      const date = String(o.eventDate ?? '');
+      const existing = latestMap.get(key);
+      if (!existing || date > existing.date) latestMap.set(key, { raw: o, group, date });
     }
   }
 
-  for (const obs of allObs) {
-    obs.obsCount = countMap.get(obs.gbifKey) ?? 1;
+  const result: NatureObs[] = [];
+  for (const [key, { raw, group, date }] of latestMap) {
+    result.push({
+      scientificName: String(raw.species ?? ''),
+      popularName: '',
+      photoUrl: '',
+      photoAttribution: '',
+      group,
+      lat: raw.decimalLatitude as number,
+      lng: raw.decimalLongitude as number,
+      date,
+      obsCount: countMap.get(key) ?? 1,
+      gbifKey: key,
+    });
   }
 
-  // Sort: most observed species first, then by name, then newest first within species
-  return allObs.sort((a, b) =>
-    b.obsCount - a.obsCount ||
-    a.scientificName.localeCompare(b.scientificName) ||
-    b.date.localeCompare(a.date)
-  );
+  return result.sort((a, b) => b.obsCount - a.obsCount || a.scientificName.localeCompare(b.scientificName));
 }
 
 function markerSize(zoom: number): number {
@@ -234,8 +237,10 @@ function coloredSvg(icon: string, color: string): string {
   return `<svg viewBox="-12 -12 24 24" fill="none" stroke="${color}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[icon] ?? ICONS.wc}</svg>`;
 }
 
-function makeNatureIconHtml(color: string, selected: boolean, sz: number, dimmed = false): string {
-  return `<div class="vl-nat${selected ? ' sel' : ''}${dimmed ? ' dimmed' : ''}" style="--c:${color};width:${sz}px;height:${sz}px"></div>`;
+function makeNatureIconHtml(color: string, iconKey: string, selected: boolean, sz: number, dimmed = false): string {
+  const svgSz = Math.round(sz * 0.56);
+  const svg = `<svg viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="${svgSz}" height="${svgSz}">${ICONS[iconKey] ?? ICONS.blad}</svg>`;
+  return `<div class="vl-nat-pin${selected ? ' sel' : ''}${dimmed ? ' dimmed' : ''}" style="--gc:${color};width:${sz}px;height:${sz}px">${svg}</div>`;
 }
 
 // ─── Trail data ───────────────────────────────────────────────────────────────
@@ -387,14 +392,8 @@ export function VeierlandApp() {
   const [natureFetched, setNatureFetched] = useState(false);
   const [natureFilter, setNatureFilter] = useState<NatureGroup | null>(null);
   const filteredNatureObs = natureFilter ? natureObs.filter(o => o.group === natureFilter) : natureObs;
-  const natureSpecies = useMemo(() => {
-    const seen = new Set<number>();
-    return filteredNatureObs.filter(o => {
-      if (seen.has(o.gbifKey)) return false;
-      seen.add(o.gbifKey);
-      return true;
-    });
-  }, [filteredNatureObs]);
+  const [selectedNatureObs, setSelectedNatureObs] = useState<NatureObs[]>([]);
+  const [speciesObsLoading, setSpeciesObsLoading] = useState(false);
   const [selectedNature, setSelectedNature] = useState<NatureObs | null>(null);
   const [speciesWiki, setSpeciesWiki] = useState<WikipediaData | null>(null);
   const [speciesWikiLoading, setSpeciesWikiLoading] = useState(false);
@@ -562,6 +561,26 @@ export function VeierlandApp() {
     map.flyTo(map.unproject(targetPoint, zoom), zoom, { duration: 0.7 });
   }
 
+  async function selectNatureSpecies(obs: NatureObs) {
+    setSelectedNature(obs);
+    setSelectedNatureObs([obs]);
+    setSheetOpen(true);
+    flyToAboveSheet([obs.lat, obs.lng], Math.max(mapZoom, 13));
+    setSpeciesObsLoading(true);
+    try {
+      const url = `https://api.gbif.org/v1/occurrence/search?geometry=${GBIF_POLYGON}&speciesKey=${obs.gbifKey}&limit=300`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        const fetched: NatureObs[] = (data.results as Record<string, unknown>[])
+          .filter(o => o.decimalLatitude && o.decimalLongitude)
+          .map(o => ({ ...obs, lat: o.decimalLatitude as number, lng: o.decimalLongitude as number, date: String(o.eventDate ?? '') }));
+        if (fetched.length > 0) setSelectedNatureObs(fetched);
+      }
+    } catch {}
+    setSpeciesObsLoading(false);
+  }
+
   // Actions
   function selectPOI(poi: POI) {
     setSelectedPOI(poi);
@@ -664,7 +683,7 @@ export function VeierlandApp() {
       const dateStr = selectedNature.date.slice(0, 10).replace(/-/g, '.');
       return (
         <>
-          <button className="vl-back" onClick={() => setSelectedNature(null)}><BackSvg />{T.back}</button>
+          <button className="vl-back" onClick={() => { setSelectedNature(null); setSelectedNatureObs([]); }}><BackSvg />{T.back}</button>
           <div><span className="vl-catpill">{lang === 'no' ? cfg.no : cfg.en}</span></div>
           <div className="vl-h2">{selectedNature.popularName || selectedNature.scientificName}</div>
           {selectedNature.popularName && (
@@ -732,10 +751,10 @@ export function VeierlandApp() {
             </p>
           </div>
         ) : (
-          <div className="vl-count">{T.natObs(natureSpecies.length)}</div>
+          <div className="vl-count">{T.natObs(filteredNatureObs.length)}</div>
         )}
 
-        {natureSpecies.map(obs => {
+        {filteredNatureObs.map(obs => {
           const cfg = NATURE_GROUPS[obs.group];
           return (
             <div key={obs.gbifKey} className="vl-card" onClick={() => {
@@ -983,30 +1002,46 @@ export function VeierlandApp() {
       >
         <MapSetup onReady={onMapReady} onMapClick={onMapClick} onZoom={onZoom} />
         <TileController layer={currentLayer} />
-        {mode === 'nature' && filteredNatureObs.map((obs, i) => {
+        {mode === 'nature' && !selectedNature && filteredNatureObs.map(obs => {
           const cfg = NATURE_GROUPS[obs.group];
-          const isSelected = selectedNature?.gbifKey === obs.gbifKey;
-          const isDimmed = selectedNature !== null && !isSelected;
-          const baseSz = Math.max(10, Math.min(20, 10 + (mapZoom - 11) * 2.5));
-          const sz = isDimmed ? 6 : isSelected ? Math.min(baseSz + 4, 24) : baseSz;
+          const sz = Math.max(18, Math.min(28, 18 + (mapZoom - 13) * 3));
           const icon = L.divIcon({
             className: '',
             iconSize: [sz, sz],
             iconAnchor: [sz / 2, sz / 2],
-            html: makeNatureIconHtml(cfg.color, isSelected, sz, isDimmed),
+            html: makeNatureIconHtml(cfg.color, cfg.icon, false, sz),
           });
           return (
-            <Marker
-              key={`${obs.gbifKey}-${i}`}
-              position={[obs.lat, obs.lng]}
-              icon={icon}
-              eventHandlers={{ click: () => {
-                const speciesEntry = natureSpecies.find(s => s.gbifKey === obs.gbifKey) ?? obs;
-                setSelectedNature(speciesEntry);
-                setSheetOpen(true);
-                flyToAboveSheet([obs.lat, obs.lng], Math.max(mapZoom, 13));
-              }}}
-            />
+            <Marker key={`n-${obs.gbifKey}`} position={[obs.lat, obs.lng]} icon={icon}
+              eventHandlers={{ click: () => selectNatureSpecies(obs) }} />
+          );
+        })}
+        {mode === 'nature' && selectedNature && filteredNatureObs.filter(o => o.gbifKey !== selectedNature.gbifKey).map(obs => {
+          const cfg = NATURE_GROUPS[obs.group];
+          const sz = 14;
+          const icon = L.divIcon({
+            className: '',
+            iconSize: [sz, sz],
+            iconAnchor: [sz / 2, sz / 2],
+            html: makeNatureIconHtml(cfg.color, cfg.icon, false, sz, true),
+          });
+          return (
+            <Marker key={`n-${obs.gbifKey}`} position={[obs.lat, obs.lng]} icon={icon}
+              eventHandlers={{ click: () => selectNatureSpecies(obs) }} />
+          );
+        })}
+        {mode === 'nature' && selectedNature && selectedNatureObs.map((obs, i) => {
+          const cfg = NATURE_GROUPS[obs.group];
+          const sz = Math.max(20, Math.min(30, 20 + (mapZoom - 13) * 3));
+          const icon = L.divIcon({
+            className: '',
+            iconSize: [sz, sz],
+            iconAnchor: [sz / 2, sz / 2],
+            html: makeNatureIconHtml(cfg.color, cfg.icon, true, sz),
+          });
+          return (
+            <Marker key={`sel-${i}`} position={[obs.lat, obs.lng]} icon={icon}
+              eventHandlers={{ click: () => {} }} />
           );
         })}
         {userPos && (
