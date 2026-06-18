@@ -190,7 +190,60 @@ export async function fetchWikipediaSpecies(scientificName: string, popularName:
   return null;
 }
 
-// 7. DigitaltMuseum
+// 7. Species assessment: Norwegian Red List (GBIF checklists) + GRIIS Norway (alien species)
+const _RL2015   = '4f1047ac-a19d-41a8-98eb-d968b2548b53'; // Norwegian Red List 2015
+const _RL_PLANT = '02b69283-72f8-4406-81ac-5cae93e18846'; // Red List Vascular Plants 2021
+const _GRIIS_NO = '38de3b7a-5af3-4b6f-a1c5-4c0aa6abf010'; // GRIIS Norway (alien species)
+
+const _THREAT_MAP: Record<string, string> = {
+  NEAR_THREATENED:       'NT',
+  VULNERABLE:            'VU',
+  ENDANGERED:            'EN',
+  CRITICALLY_ENDANGERED: 'CR',
+  REGIONALLY_EXTINCT:    'RE',
+  DATA_DEFICIENT:        'DD',
+};
+
+async function _checkChecklist(datasetKey: string, name: string): Promise<{ found: boolean; category?: string }> {
+  try {
+    const res = await fetch(
+      `https://api.gbif.org/v1/species/search?datasetKey=${datasetKey}&q=${encodeURIComponent(name)}&limit=1`
+    );
+    if (!res.ok) return { found: false };
+    const d = await res.json();
+    const item = d.results?.[0];
+    if (!item) return { found: false };
+    // Verify the match is actually for this species (not just a genus hit)
+    const resultName: string = (item.canonicalName ?? item.scientificName ?? '').toLowerCase();
+    const genus = name.split(' ')[0].toLowerCase();
+    const epithet = name.split(' ')[1]?.toLowerCase();
+    if (!resultName.startsWith(genus) || (epithet && !resultName.includes(epithet))) return { found: false };
+    const threat: string | undefined = item.threatStatuses?.[0];
+    return { found: true, category: threat ? (_THREAT_MAP[threat] ?? undefined) : undefined };
+  } catch {
+    return { found: false };
+  }
+}
+
+export interface SpeciesAssessment {
+  redListCategory?: string; // NT, VU, EN, CR, RE, DD
+  alienCategory?: string;   // 'FREMMED' if in GRIIS Norway
+}
+
+export async function fetchArtsdatabankenAssessment(scientificName: string): Promise<SpeciesAssessment> {
+  const [rl2015, rlPlant, alien] = await Promise.all([
+    _checkChecklist(_RL2015, scientificName),
+    _checkChecklist(_RL_PLANT, scientificName),
+    _checkChecklist(_GRIIS_NO, scientificName),
+  ]);
+  // Prefer 2021 vascular plants category if available, fall back to 2015
+  const redListCategory = (rlPlant.found && rlPlant.category) ? rlPlant.category
+    : (rl2015.found && rl2015.category) ? rl2015.category
+    : undefined;
+  return { redListCategory, alienCategory: alien.found ? 'FREMMED' : undefined };
+}
+
+// 8. DigitaltMuseum
 const DIMU_API_KEY = 'demo'; 
 export async function fetchDigitalMuseum(query: string, ownerCode?: string): Promise<MuseumPhoto[]> {
   try {

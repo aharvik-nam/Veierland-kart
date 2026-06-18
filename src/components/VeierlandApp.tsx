@@ -8,7 +8,7 @@ import natureCacheData from '../data/nature_cache.json';
 import 'leaflet.markercluster';
 const turkartData = JSON.parse(turkartRaw);
 import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, WikipediaData } from '../lib/types';
-import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages, fetchWikipediaSpecies } from '../lib/api';
+import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages, fetchWikipediaSpecies, fetchArtsdatabankenAssessment } from '../lib/api';
 
 // ─── Layer configs ────────────────────────────────────────────────────────────
 
@@ -104,6 +104,8 @@ const ICONS: Record<string, string> = {
   pattedyr:    '<circle cx="-3.5" cy="-5.5" r="2.5"/><circle cx="3.5" cy="-5.5" r="2.5"/><path d="M-6,0 C-7,-4 -4,-6 0,-4 C4,-6 7,-4 6,0 C5,5 3,8 0,8 C-3,8 -5,5 -6,0Z"/>',
   sopp:        '<path d="M-8,-1 Q-8,-9 0,-9 Q8,-9 8,-1 Z"/><path d="M0,-1 L0,8"/><path d="M-3,8 L3,8"/>',
   sommerfugl:  '<path d="M0,1 C-2,-1 -9,0 -8,-5 C-7,-9 -2,-7 0,1Z"/><path d="M0,1 C2,-1 9,0 8,-5 C7,-9 2,-7 0,1Z"/><path d="M0,1 C-1,2 -5,5 -3,8 C-1,9 0,5 0,1Z"/><path d="M0,1 C1,2 5,5 3,8 C1,9 0,5 0,1Z"/>',
+  rodliste:    '<path d="M0,-9 L8.5,7 L-8.5,7 Z"/><path d="M0,-2 L0,2"/><circle cx="0" cy="5" r="1.5" fill="currentColor" stroke="none"/>',
+  fremmed:     '<circle cx="0" cy="1" r="7"/><path d="M0,-10 L0,-6"/><path d="M-3,-8 L0,-6 L3,-8"/>',
 };
 
 // ─── Nature (Artsdatabanken) ──────────────────────────────────────────────────
@@ -117,6 +119,7 @@ const NATURE_GROUPS = {
   Sopper:        { no: 'Sopper',        en: 'Fungi',        color: '#c07a3a', taxonKey: 5,   icon: 'sopp'       },
 } as const;
 type NatureGroup = keyof typeof NATURE_GROUPS;
+const RED_LIST_CATS = /^(NT|VU|EN|CR|RE|DD)$/;
 
 interface NatureObs {
   scientificName: string;
@@ -129,6 +132,8 @@ interface NatureObs {
   date: string;
   obsCount: number;
   gbifKey: number;
+  redListCategory?: string;
+  alienCategory?: string;
 }
 
 // WGS84 polygon tracing Veierland's coastline (from veierland_boundary.json)
@@ -183,6 +188,18 @@ async function enrichWithINaturalist(obs: NatureObs[]): Promise<NatureObs[]> {
     const r = map.get(o.scientificName)!;
     return { ...o, popularName: r.norwegianName || o.popularName, photoUrl: r.photoUrl, photoAttribution: r.photoAttribution };
   });
+}
+
+async function enrichWithAssessments(obs: NatureObs[]): Promise<NatureObs[]> {
+  const uniqueNames = [...new Set(obs.map(o => o.scientificName))];
+  const amap = new Map<string, { redListCategory?: string; alienCategory?: string }>();
+  const BATCH = 20;
+  for (let i = 0; i < uniqueNames.length; i += BATCH) {
+    const batch = uniqueNames.slice(i, i + BATCH);
+    const results = await Promise.all(batch.map(n => fetchArtsdatabankenAssessment(n)));
+    batch.forEach((n, j) => amap.set(n, results[j]));
+  }
+  return obs.map(o => ({ ...o, ...(amap.get(o.scientificName) ?? {}) }));
 }
 
 function processNatureData(rawGroups: { group: NatureGroup; obs: unknown[] }[]): NatureObs[] {
@@ -391,7 +408,14 @@ export function VeierlandApp() {
   const [natureLoading, setNatureLoading] = useState(false);
   const [natureFetched, setNatureFetched] = useState(false);
   const [natureFilter, setNatureFilter] = useState<NatureGroup | null>(null);
-  const filteredNatureObs = natureFilter ? natureObs.filter(o => o.group === natureFilter) : natureObs;
+  const [redListFilter, setRedListFilter] = useState(false);
+  const [alienFilter, setAlienFilter] = useState(false);
+  const filteredNatureObs = natureObs.filter(o => {
+    if (natureFilter && o.group !== natureFilter) return false;
+    if (redListFilter && !RED_LIST_CATS.test(o.redListCategory ?? '')) return false;
+    if (alienFilter && !o.alienCategory) return false;
+    return true;
+  });
   const [selectedNatureObs, setSelectedNatureObs] = useState<NatureObs[]>([]);
   const [speciesObsLoading, setSpeciesObsLoading] = useState(false);
   const [selectedNature, setSelectedNature] = useState<NatureObs | null>(null);
@@ -543,13 +567,19 @@ export function VeierlandApp() {
           : obs;
       });
 
-      // Only call iNaturalist for species not in the cache
+      // Run iNaturalist (new species only) and assessments (all) in parallel
       const newObs = preEnriched.filter(o => !cacheMap.has(o.gbifKey));
-      if (newObs.length === 0) { setNatureObs(preEnriched); return; }
-
-      return enrichWithINaturalist(newObs).then(enrichedNew => {
-        const enrichedMap = new Map(enrichedNew.map(o => [o.gbifKey, o]));
-        setNatureObs(preEnriched.map(o => enrichedMap.get(o.gbifKey) ?? o));
+      return Promise.all([
+        newObs.length > 0 ? enrichWithINaturalist(newObs) : Promise.resolve<NatureObs[]>([]),
+        enrichWithAssessments(preEnriched),
+      ]).then(([enrichedNew, assessedAll]) => {
+        const inatMap = new Map(enrichedNew.map(o => [o.gbifKey, o]));
+        const assessMap = new Map(assessedAll.map(o => [o.gbifKey, o]));
+        setNatureObs(preEnriched.map(o => {
+          const assessed = assessMap.get(o.gbifKey) ?? o;
+          const inat = inatMap.get(o.gbifKey);
+          return inat ? { ...assessed, popularName: inat.popularName, photoUrl: inat.photoUrl, photoAttribution: inat.photoAttribution } : assessed;
+        }));
       });
     });
   }, [mode, natureFetched]);
@@ -765,12 +795,18 @@ export function VeierlandApp() {
               setSheetOpen(true);
               flyToAboveSheet([obs.lat, obs.lng], 14);
             }}>
-              <div className="vl-ic" dangerouslySetInnerHTML={{ __html: iconSvg('blad') }} />
+              <div className="vl-ic" dangerouslySetInnerHTML={{ __html: coloredSvg(cfg.icon, cfg.color) }} />
               <div className="tx">
                 <h4>{obs.popularName || obs.scientificName}</h4>
                 <p>
                   <em>{obs.popularName ? obs.scientificName : ''}</em>
                   {obs.popularName ? ' · ' : ''}{lang === 'no' ? cfg.no : cfg.en} · {obs.obsCount} obs.
+                  {obs.redListCategory && RED_LIST_CATS.test(obs.redListCategory) && (
+                    <span className="vl-rlbadge">{obs.redListCategory}</span>
+                  )}
+                  {obs.alienCategory && (
+                    <span className="vl-albadge">FA</span>
+                  )}
                 </p>
               </div>
               <span className="chev"><ChevSvg /></span>
@@ -1127,6 +1163,18 @@ export function VeierlandApp() {
                 </div>
               );
             })}
+            {natureObs.some(o => RED_LIST_CATS.test(o.redListCategory ?? '')) && (
+              <div className={`vl-chip vl-chip-rl${redListFilter ? ' on' : ''}`} onClick={() => setRedListFilter(f => !f)}>
+                <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('rodliste') }} />
+                <span className="cl">{lang === 'no' ? 'Rødlista' : 'Red list'} {natureObs.filter(o => RED_LIST_CATS.test(o.redListCategory ?? '')).length}</span>
+              </div>
+            )}
+            {natureObs.some(o => o.alienCategory) && (
+              <div className={`vl-chip vl-chip-al${alienFilter ? ' on' : ''}`} onClick={() => setAlienFilter(f => !f)}>
+                <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('fremmed') }} />
+                <span className="cl">{lang === 'no' ? 'Fremmedarter' : 'Alien species'} {natureObs.filter(o => o.alienCategory).length}</span>
+              </div>
+            )}
           </div>
         )}
         <div className="vl-searchbar">

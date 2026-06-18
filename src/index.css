@@ -112,6 +112,29 @@ body { display: grid; place-items: center; }
 }
 .vl-nat-pin.dimmed { opacity: 0.25; }
 
+/* ── Assessment badges ─────────────────────────────────────────────────────── */
+.vl-rlbadge, .vl-albadge {
+  display: inline-block;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 5px;
+  vertical-align: middle;
+  line-height: 1.5;
+  letter-spacing: .02em;
+}
+.vl-rlbadge { background: #c0392b; color: #fff; }
+.vl-albadge { background: #d4690a; color: #fff; }
+
+/* ── Assessment filter chips ───────────────────────────────────────────────── */
+.vl-chip-rl .ci svg { stroke: #c0392b; }
+.vl-chip-rl.on { background: #c0392b; color: #fff; }
+.vl-chip-rl.on .ci svg { stroke: #fff; }
+.vl-chip-al .ci svg { stroke: #d4690a; }
+.vl-chip-al.on { background: #d4690a; color: #fff; }
+.vl-chip-al.on .ci svg { stroke: #fff; }
+
 /* ── Animations ────────────────────────────────────────────────────────────── */
 @keyframes vlSpin { to { transform: rotate(360deg); } }
 @keyframes vlHeart {
