@@ -282,10 +282,16 @@ function coloredSvg(icon: string, color: string): string {
   return `<svg viewBox="-12 -12 24 24" fill="none" stroke="${color}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[icon] ?? ICONS.wc}</svg>`;
 }
 
-function makeNatureIconHtml(color: string, iconKey: string, selected: boolean, sz: number, dimmed = false): string {
+function obsRingClass(obs: NatureObs): string {
+  if (obs.redListCategory && RED_LIST_CATS.test(obs.redListCategory)) return ' ring-rl';
+  if (obs.alienCategory) return ' ring-al';
+  return '';
+}
+
+function makeNatureIconHtml(color: string, iconKey: string, selected: boolean, sz: number, dimmed = false, ring = ''): string {
   const svgSz = Math.round(sz * 0.56);
   const svg = `<svg viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="${svgSz}" height="${svgSz}">${ICONS[iconKey] ?? ICONS.blad}</svg>`;
-  return `<div class="vl-nat-pin${selected ? ' sel' : ''}${dimmed ? ' dimmed' : ''}" style="--gc:${color};width:${sz}px;height:${sz}px">${svg}</div>`;
+  return `<div class="vl-nat-pin${selected ? ' sel' : ''}${dimmed ? ' dimmed' : ''}${ring}" style="--gc:${color};width:${sz}px;height:${sz}px">${svg}</div>`;
 }
 
 // ─── Trail data ───────────────────────────────────────────────────────────────
@@ -1101,7 +1107,7 @@ export function VeierlandApp() {
             className: '',
             iconSize: [sz, sz],
             iconAnchor: [sz / 2, sz / 2],
-            html: makeNatureIconHtml(cfg.color, cfg.icon, false, sz),
+            html: makeNatureIconHtml(cfg.color, cfg.icon, false, sz, false, obsRingClass(obs)),
           });
           return (
             <Marker key={`n-${obs.gbifKey}`} position={[obs.lat, obs.lng]} icon={icon}
@@ -1129,7 +1135,7 @@ export function VeierlandApp() {
             className: '',
             iconSize: [sz, sz],
             iconAnchor: [sz / 2, sz / 2],
-            html: makeNatureIconHtml(cfg.color, cfg.icon, true, sz),
+            html: makeNatureIconHtml(cfg.color, cfg.icon, true, sz, false, obsRingClass(selectedNature)),
           });
           return (
             <Marker key={`sel-${i}`} position={[obs.lat, obs.lng]} icon={icon}

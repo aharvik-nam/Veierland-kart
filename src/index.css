@@ -111,6 +111,10 @@ body { display: grid; place-items: center; }
   z-index: 1000;
 }
 .vl-nat-pin.dimmed { opacity: 0.25; }
+.vl-nat-pin.ring-rl { box-shadow: 0 0 0 2.5px #c0392b, 0 1px 5px rgba(28,38,30,.25); }
+.vl-nat-pin.ring-al { box-shadow: 0 0 0 2.5px #d4690a, 0 1px 5px rgba(28,38,30,.25); }
+.vl-nat-pin.sel.ring-rl { box-shadow: 0 0 0 2.5px #c0392b, 0 3px 12px rgba(28,38,30,.30); }
+.vl-nat-pin.sel.ring-al { box-shadow: 0 0 0 2.5px #d4690a, 0 3px 12px rgba(28,38,30,.30); }
 
 /* ── Assessment badges ─────────────────────────────────────────────────────── */
 .vl-rlbadge, .vl-albadge {
