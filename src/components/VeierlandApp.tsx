@@ -626,7 +626,6 @@ export function VeierlandApp() {
     setSelectedNature(obs);
     setSelectedNatureObs([obs]);
     setSheetOpen(true);
-    flyToAboveSheet([obs.lat, obs.lng], Math.max(mapZoom, 13));
     setSpeciesObsLoading(true);
     try {
       const url = `https://api.gbif.org/v1/occurrence/search?geometry=${GBIF_POLYGON}&speciesKey=${obs.gbifKey}&limit=300`;
@@ -636,9 +635,24 @@ export function VeierlandApp() {
         const fetched: NatureObs[] = (data.results as Record<string, unknown>[])
           .filter(o => o.decimalLatitude && o.decimalLongitude)
           .map(o => ({ ...obs, lat: o.decimalLatitude as number, lng: o.decimalLongitude as number, date: String(o.eventDate ?? '') }));
+        const allObs = fetched.length > 0 ? fetched : [obs];
         if (fetched.length > 0) setSelectedNatureObs(fetched);
+        const map = mapRef.current;
+        if (map) {
+          if (allObs.length === 1) {
+            flyToAboveSheet([allObs[0].lat, allObs[0].lng], Math.max(map.getZoom(), 14));
+          } else {
+            const bounds = L.latLngBounds(allObs.map(o => [o.lat, o.lng] as [number, number]));
+            const sheetH = Math.min(window.innerHeight * 0.55, 680);
+            map.fitBounds(bounds.pad(0.25), { paddingBottomRight: [0, sheetH], animate: true });
+          }
+        }
+      } else {
+        flyToAboveSheet([obs.lat, obs.lng], Math.max(mapRef.current?.getZoom() ?? 13, 14));
       }
-    } catch {}
+    } catch {
+      flyToAboveSheet([obs.lat, obs.lng], Math.max(mapRef.current?.getZoom() ?? 13, 14));
+    }
     setSpeciesObsLoading(false);
   }
 
@@ -833,11 +847,7 @@ export function VeierlandApp() {
         {filteredNatureObs.map(obs => {
           const cfg = NATURE_GROUPS[obs.group];
           return (
-            <div key={obs.gbifKey} className="vl-card" onClick={() => {
-              setSelectedNature(obs);
-              setSheetOpen(true);
-              flyToAboveSheet([obs.lat, obs.lng], 14);
-            }}>
+            <div key={obs.gbifKey} className="vl-card" onClick={() => selectNatureSpecies(obs)}>
               <div className="vl-ic" dangerouslySetInnerHTML={{ __html: coloredSvg(cfg.icon, cfg.color) }} />
               <div className="tx">
                 <h4>{obs.popularName || obs.scientificName}</h4>
