@@ -469,6 +469,7 @@ const USER_ICON = L.divIcon({
 export function VeierlandApp() {
   const [lang, setLang] = useState<'no' | 'en'>('no');
   const [activeCats, setActiveCats] = useState<Set<string>>(new Set());
+  const [expandedPlaceCats, setExpandedPlaceCats] = useState<Set<string>>(new Set());
   const [mode, setMode] = useState<'places' | 'trails' | 'nature'>('places');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQ, setSearchQ] = useState('');
@@ -550,6 +551,19 @@ export function VeierlandApp() {
       return true;
     });
   }, [activeCats, searchQ]);
+
+  const groupedPOIs = useMemo(() => {
+    const catOrder = Object.keys(CAT_CFG);
+    const map = new Map<string, POI[]>();
+    for (const poi of filteredPOIs) {
+      if (!map.has(poi.kategori)) map.set(poi.kategori, []);
+      map.get(poi.kategori)!.push(poi);
+    }
+    return [...map.entries()].sort(([a], [b]) => {
+      const ai = catOrder.indexOf(a); const bi = catOrder.indexOf(b);
+      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    });
+  }, [filteredPOIs]);
 
   // Fetch Wikipedia when a nature obs is selected
   useEffect(() => {
@@ -787,6 +801,10 @@ export function VeierlandApp() {
     });
   }
 
+  function toggleExpandedPlaceCat(k: string) {
+    setExpandedPlaceCats(prev => { const n = new Set(prev); n.has(k) ? n.delete(k) : n.add(k); return n; });
+  }
+
   function toggleExpandedGroup(g: NatureGroup) {
     setExpandedGroups(prev => { const n = new Set(prev); n.has(g) ? n.delete(g) : n.add(g); return n; });
   }
@@ -1006,16 +1024,30 @@ export function VeierlandApp() {
         {mode === 'nature' ? renderNature() : mode === 'places' ? (
           <>
             <div className="vl-count">{filteredPOIs.length ? T.np(filteredPOIs.length) : T.nohit}</div>
-            {filteredPOIs.map(poi => {
-              const cat = getCat(poi.kategori);
+            {groupedPOIs.map(([catKey, pois]) => {
+              const cat = getCat(catKey);
+              const isOpen = expandedPlaceCats.has(catKey);
               return (
-                <div key={poi.id} className="vl-card" onClick={() => selectPOI(poi)}>
-                  <div className="vl-ic" dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
-                  <div className="tx">
-                    <h4>{poi.navn}</h4>
-                    <p>{lang === 'no' ? cat.no : cat.en}</p>
+                <div key={catKey} className="vl-nat-grp">
+                  <div className="vl-grp-hdr" onClick={() => toggleExpandedPlaceCat(catKey)}>
+                    <span className="vl-grp-ico" dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
+                    <span className="vl-grp-lbl">{lang === 'no' ? cat.no : cat.en}</span>
+                    <span className="vl-grp-cnt">{pois.length}</span>
+                    <span className={`vl-chev${isOpen ? ' open' : ''}`}><ChevSvg /></span>
                   </div>
-                  <span className="chev"><ChevSvg /></span>
+                  {isOpen && pois.map(poi => (
+                    <div key={poi.id} className="vl-sp-row" onClick={() => selectPOI(poi)}>
+                      <div className="vl-sp-main">
+                        <span className="vl-sp-name">{poi.navn}</span>
+                        {poi.beskrivelse && (
+                          <span className="vl-sp-sci">
+                            {poi.beskrivelse.length > 55 ? poi.beskrivelse.slice(0, 55) + '…' : poi.beskrivelse}
+                          </span>
+                        )}
+                      </div>
+                      <span className="vl-chev"><ChevSvg /></span>
+                    </div>
+                  ))}
                 </div>
               );
             })}
