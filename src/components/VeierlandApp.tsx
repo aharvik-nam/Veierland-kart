@@ -146,6 +146,7 @@ interface NatureObs {
   date: string;
   obsCount: number;
   gbifKey: number;
+  family?: string;
   redListCategory?: string;
   alienCategory?: string;
 }
@@ -258,6 +259,7 @@ function processNatureData(rawGroups: { group: NatureGroup; obs: unknown[] }[]):
       date,
       obsCount: countMap.get(key) ?? 1,
       gbifKey: key,
+      family: String(raw.family ?? ''),
     });
   }
 
@@ -449,12 +451,27 @@ export function VeierlandApp() {
   const [natureFilter, setNatureFilter] = useState<NatureGroup | null>(null);
   const [redListFilter, setRedListFilter] = useState(false);
   const [alienFilter, setAlienFilter] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<NatureGroup>>(new Set());
+  const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(new Set());
   const filteredNatureObs = natureObs.filter(o => {
     if (natureFilter && o.group !== natureFilter) return false;
     if (redListFilter && !RED_LIST_CATS.test(o.redListCategory ?? '')) return false;
     if (alienFilter && !o.alienCategory) return false;
     return true;
   });
+  const groupedNatureObs = useMemo(() => {
+    const result = new Map<NatureGroup, Map<string, NatureObs[]>>();
+    for (const g of Object.keys(NATURE_GROUPS) as NatureGroup[]) result.set(g, new Map());
+    for (const obs of filteredNatureObs) {
+      const families = result.get(obs.group)!;
+      const fam = obs.family || '—';
+      if (!families.has(fam)) families.set(fam, []);
+      families.get(fam)!.push(obs);
+    }
+    return result;
+  // filteredNatureObs identity changes on every render, so depend on the source state
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [natureObs, natureFilter, redListFilter, alienFilter]);
   const [selectedNatureObs, setSelectedNatureObs] = useState<NatureObs[]>([]);
   const [speciesObsLoading, setSpeciesObsLoading] = useState(false);
   const [selectedNature, setSelectedNature] = useState<NatureObs | null>(null);
@@ -725,6 +742,14 @@ export function VeierlandApp() {
     });
   }
 
+  function toggleExpandedGroup(g: NatureGroup) {
+    setExpandedGroups(prev => { const n = new Set(prev); n.has(g) ? n.delete(g) : n.add(g); return n; });
+  }
+
+  function toggleExpandedFam(key: string) {
+    setExpandedFamilies(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
+  }
+
   function toggleSaved(id: string) {
     setSavedIds(prev => {
       const next = new Set(prev);
@@ -851,25 +876,57 @@ export function VeierlandApp() {
           <div className="vl-count">{T.natObs(filteredNatureObs.length)}</div>
         )}
 
-        {filteredNatureObs.map(obs => {
-          const cfg = NATURE_GROUPS[obs.group];
+        {(Object.keys(NATURE_GROUPS) as NatureGroup[]).map(g => {
+          const cfg = NATURE_GROUPS[g];
+          const families = groupedNatureObs.get(g)!;
+          const total = [...families.values()].reduce((s, arr) => s + arr.length, 0);
+          if (total === 0) return null;
+          const grpOpen = expandedGroups.has(g);
           return (
-            <div key={obs.gbifKey} className="vl-card" onClick={() => selectNatureSpecies(obs)}>
-              <div className="vl-ic" dangerouslySetInnerHTML={{ __html: coloredSvg(cfg.icon, cfg.color) }} />
-              <div className="tx">
-                <h4>{obs.popularName || obs.scientificName}</h4>
-                <p>
-                  <em>{obs.popularName ? obs.scientificName : ''}</em>
-                  {obs.popularName ? ' · ' : ''}{lang === 'no' ? cfg.no : cfg.en} · {obs.obsCount} obs.
-                  {obs.redListCategory && RED_LIST_CATS.test(obs.redListCategory) && (
-                    <span className="vl-rlbadge">{obs.redListCategory}</span>
-                  )}
-                  {obs.alienCategory && (
-                    <span className="vl-albadge">FA</span>
-                  )}
-                </p>
+            <div key={g} className="vl-nat-grp">
+              <div className="vl-grp-hdr" onClick={() => toggleExpandedGroup(g)}>
+                <span className="vl-grp-ico" dangerouslySetInnerHTML={{ __html: coloredSvg(cfg.icon, cfg.color) }} />
+                <span className="vl-grp-lbl">{lang === 'no' ? cfg.no : cfg.en}</span>
+                <span className="vl-grp-cnt">{total}</span>
+                <span className={`vl-chev${grpOpen ? ' open' : ''}`}><ChevSvg /></span>
               </div>
-              <span className="chev"><ChevSvg /></span>
+              {grpOpen && [...families.entries()]
+                .sort(([a], [b]) => a === '—' ? 1 : b === '—' ? -1 : a.localeCompare(b))
+                .map(([fam, species]) => {
+                  const famKey = `${g}::${fam}`;
+                  const famOpen = expandedFamilies.has(famKey);
+                  const rlCount = species.filter(o => RED_LIST_CATS.test(o.redListCategory ?? '')).length;
+                  const alCount = species.filter(o => o.alienCategory).length;
+                  return (
+                    <div key={famKey} className="vl-nat-fam">
+                      <div className="vl-fam-hdr" onClick={() => toggleExpandedFam(famKey)}>
+                        <span className="vl-fam-lbl">{fam}</span>
+                        <div className="vl-fam-right">
+                          {rlCount > 0 && <span className="vl-rlbadge">{rlCount}</span>}
+                          {alCount > 0 && <span className="vl-albadge">{alCount}</span>}
+                          <span className="vl-fam-cnt">{species.length}</span>
+                          <span className={`vl-chev${famOpen ? ' open' : ''}`}><ChevSvg /></span>
+                        </div>
+                      </div>
+                      {famOpen && [...species].sort((a, b) => b.obsCount - a.obsCount).map(obs => (
+                        <div key={obs.gbifKey} className="vl-sp-row" onClick={() => selectNatureSpecies(obs)}>
+                          <div className="vl-sp-main">
+                            <span className="vl-sp-name">{obs.popularName || obs.scientificName}</span>
+                            {obs.popularName && <span className="vl-sp-sci">{obs.scientificName}</span>}
+                          </div>
+                          <div className="vl-sp-right">
+                            {obs.redListCategory && RED_LIST_CATS.test(obs.redListCategory) && (
+                              <span className="vl-rlbadge">{obs.redListCategory}</span>
+                            )}
+                            {obs.alienCategory && <span className="vl-albadge">FA</span>}
+                            <span className="vl-sp-cnt">{obs.obsCount}</span>
+                            <span className="vl-chev"><ChevSvg /></span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
             </div>
           );
         })}
