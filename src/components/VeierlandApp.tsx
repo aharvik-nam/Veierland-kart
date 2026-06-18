@@ -121,6 +121,19 @@ const NATURE_GROUPS = {
 type NatureGroup = keyof typeof NATURE_GROUPS;
 const RED_LIST_CATS = /^(NT|VU|EN|CR|RE|DD)$/;
 
+const RL_LABEL: Record<string, string> = {
+  NT: 'Nær truet (NT)', VU: 'Sårbar (VU)', EN: 'Sterkt truet (EN)',
+  CR: 'Kritisk truet (CR)', RE: 'Regionalt utdødd (RE)', DD: 'Datamangel (DD)',
+};
+const RL_DESC: Record<string, string> = {
+  NT: 'Arten er nær å oppfylle kriteriene for en truet kategori, og kan bli sårbar dersom negative faktorer fortsetter.',
+  VU: 'Arten har høy risiko for å dø ut fra Norge i nær fremtid dersom påvirkningsfaktorene ikke reduseres.',
+  EN: 'Arten har svært høy risiko for å dø ut fra Norge og er strengt truet av negative påvirkninger.',
+  CR: 'Arten er kritisk truet og har ekstremt høy risiko for å dø ut fra Norge i nær fremtid.',
+  RE: 'Arten er trolig utdødd som reproduserende bestand i Norge.',
+  DD: 'Det finnes ikke nok data til å vurdere artens risiko for utdøing i Norge.',
+};
+
 interface NatureObs {
   scientificName: string;
   popularName: string;
@@ -739,6 +752,21 @@ export function VeierlandApp() {
                 <p style={{ fontSize: 11, color: 'var(--muted)', margin: '4px 0 0' }}
                   dangerouslySetInnerHTML={{ __html: selectedNature.photoAttribution }} />
               )}
+            </div>
+          )}
+
+          {selectedNature.redListCategory && RED_LIST_CATS.test(selectedNature.redListCategory) && (
+            <div className="vl-assess-box vl-rl-box">
+              <div><span className="vl-rlbadge">{selectedNature.redListCategory}</span> <strong>{RL_LABEL[selectedNature.redListCategory]}</strong></div>
+              <p>{RL_DESC[selectedNature.redListCategory]}</p>
+              <a href="https://artsdatabanken.no/rodliste" target="_blank" rel="noreferrer">Norsk rødliste ↗</a>
+            </div>
+          )}
+          {selectedNature.alienCategory && (
+            <div className="vl-assess-box vl-al-box">
+              <div><span className="vl-albadge">FA</span> <strong>Fremmedart i Norge</strong></div>
+              <p>Arten er registrert som fremmed art i Norge og kan ha negativ effekt på hjemlige arter og naturmiljøer.</p>
+              <a href="https://artsdatabanken.no/fremmedartslista" target="_blank" rel="noreferrer">Fremmedartslista ↗</a>
             </div>
           )}
 
