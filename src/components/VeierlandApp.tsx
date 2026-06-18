@@ -1122,7 +1122,7 @@ export function VeierlandApp() {
               if (count === 0) return null;
               return (
                 <div key={g} className={`vl-chip${natureFilter === g ? ' on' : ''}`} onClick={() => setNatureFilter(natureFilter === g ? null : g)}>
-                  <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('blad') }} />
+                  <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg(cfg.icon) }} />
                   <span className="cl">{lang === 'no' ? cfg.no : cfg.en} {count}</span>
                 </div>
               );
