@@ -116,6 +116,11 @@ body { display: grid; place-items: center; }
 .vl-nat-pin.sel.ring-rl { box-shadow: 0 0 0 2.5px #c0392b, 0 3px 12px rgba(28,38,30,.30); }
 .vl-nat-pin.sel.ring-al { box-shadow: 0 0 0 2.5px #d4690a, 0 3px 12px rgba(28,38,30,.30); }
 
+/* ── Nature top row (count + family language toggle) ───────────────────────── */
+.vl-nat-toprow { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.vl-nat-toprow .vl-count { margin-bottom: 0; }
+.vl-fam-lang button { font-size: 12px; padding: 2px 8px; }
+
 /* ── Nature accordion ──────────────────────────────────────────────────────── */
 .vl-nat-grp { border-bottom: 1px solid var(--card); }
 .vl-grp-hdr {

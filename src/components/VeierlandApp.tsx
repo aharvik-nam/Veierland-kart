@@ -147,6 +147,7 @@ interface NatureObs {
   obsCount: number;
   gbifKey: number;
   family?: string;
+  familyKey?: number;
   redListCategory?: string;
   alienCategory?: string;
 }
@@ -231,6 +232,45 @@ async function enrichWithAssessments(obs: NatureObs[]): Promise<NatureObs[]> {
   return obs.map(o => ({ ...o, ...(amap.get(o.scientificName) ?? {}) }));
 }
 
+async function loadNorwegianFamilyNames(
+  obs: NatureObs[],
+  setMap: (m: Record<string, string>) => void
+) {
+  try {
+    const cached = localStorage.getItem('vl-family-nor');
+    if (cached) { setMap(JSON.parse(cached)); return; }
+  } catch {}
+
+  const familyMap = new Map<number, string>();
+  for (const o of obs) {
+    if (o.familyKey && o.family && !familyMap.has(o.familyKey)) {
+      familyMap.set(o.familyKey, o.family);
+    }
+  }
+  if (familyMap.size === 0) return;
+
+  const result: Record<string, string> = {};
+  const BATCH = 20;
+  const entries = [...familyMap.entries()];
+  for (let i = 0; i < entries.length; i += BATCH) {
+    const batch = entries.slice(i, i + BATCH);
+    await Promise.all(batch.map(async ([key, latin]) => {
+      try {
+        const res = await fetch(`https://api.gbif.org/v1/species/${key}/vernacularNames?limit=100`);
+        if (!res.ok) return;
+        const d = await res.json();
+        const nor = (d.results as any[]).find((v: any) =>
+          v.language === 'nob' || v.language === 'nor' || v.language === 'nno'
+        );
+        if (nor) result[latin] = nor.vernacularName;
+      } catch {}
+    }));
+  }
+
+  setMap(result);
+  try { localStorage.setItem('vl-family-nor', JSON.stringify(result)); } catch {}
+}
+
 function processNatureData(rawGroups: { group: NatureGroup; obs: unknown[] }[]): NatureObs[] {
   const countMap = new Map<number, number>();
   const latestMap = new Map<number, { raw: Record<string, unknown>; group: NatureGroup; date: string }>();
@@ -260,6 +300,7 @@ function processNatureData(rawGroups: { group: NatureGroup; obs: unknown[] }[]):
       obsCount: countMap.get(key) ?? 1,
       gbifKey: key,
       family: String(raw.family ?? ''),
+      familyKey: raw.familyKey as number | undefined,
     });
   }
 
@@ -453,6 +494,8 @@ export function VeierlandApp() {
   const [alienFilter, setAlienFilter] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<NatureGroup>>(new Set());
   const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(new Set());
+  const [showNorFamilies, setShowNorFamilies] = useState(true);
+  const [familyNorMap, setFamilyNorMap] = useState<Record<string, string>>({});
   const filteredNatureObs = natureObs.filter(o => {
     if (natureFilter && o.group !== natureFilter) return false;
     if (redListFilter && !RED_LIST_CATS.test(o.redListCategory ?? '')) return false;
@@ -631,11 +674,13 @@ export function VeierlandApp() {
       ]).then(([enrichedNew, assessedAll]) => {
         const inatMap = new Map(enrichedNew.map(o => [o.gbifKey, o]));
         const assessMap = new Map(assessedAll.map(o => [o.gbifKey, o]));
-        setNatureObs(preEnriched.map(o => {
+        const finalObs = preEnriched.map(o => {
           const assessed = assessMap.get(o.gbifKey) ?? o;
           const inat = inatMap.get(o.gbifKey);
           return inat ? { ...assessed, popularName: inat.popularName, photoUrl: inat.photoUrl, photoAttribution: inat.photoAttribution } : assessed;
-        }));
+        });
+        setNatureObs(finalObs);
+        loadNorwegianFamilyNames(finalObs, setFamilyNorMap);
       });
     });
   }, [mode, natureFetched]);
@@ -873,7 +918,17 @@ export function VeierlandApp() {
             </p>
           </div>
         ) : (
-          <div className="vl-count">{T.natObs(filteredNatureObs.length)}</div>
+          <div className="vl-nat-toprow">
+            <div className="vl-count">{T.natObs(filteredNatureObs.length)}</div>
+            <div className="vl-lang vl-fam-lang">
+              <button className={showNorFamilies ? 'on' : ''} onClick={() => setShowNorFamilies(true)}>
+                {lang === 'no' ? 'Norsk' : 'Norwegian'}
+              </button>
+              <button className={!showNorFamilies ? 'on' : ''} onClick={() => setShowNorFamilies(false)}>
+                Latin
+              </button>
+            </div>
+          </div>
         )}
 
         {(Object.keys(NATURE_GROUPS) as NatureGroup[]).map(g => {
@@ -900,7 +955,9 @@ export function VeierlandApp() {
                   return (
                     <div key={famKey} className="vl-nat-fam">
                       <div className="vl-fam-hdr" onClick={() => toggleExpandedFam(famKey)}>
-                        <span className="vl-fam-lbl">{fam}</span>
+                        <span className="vl-fam-lbl">
+                          {fam === '—' ? '—' : showNorFamilies ? (familyNorMap[fam] ?? fam) : fam}
+                        </span>
                         <div className="vl-fam-right">
                           {rlCount > 0 && <span className="vl-rlbadge">{rlCount}</span>}
                           {alCount > 0 && <span className="vl-albadge">{alCount}</span>}
