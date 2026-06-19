@@ -29,9 +29,13 @@ export async function loadAllPOIs(): Promise<POI[]> {
 
   const poisFromGeoJSON = poiData.features.map((feature: any, index: number) => {
     const enrich = poiEnrichment[feature.properties.navn] || {};
+    const kategorier: string[] = feature.properties.kategorier
+      ?? (feature.properties.kategori ? [feature.properties.kategori] : []);
     return {
       ...feature.properties,
       id: `poi-${index}`,
+      kategorier,
+      kategori: kategorier[0] ?? '',
       coordinates: [feature.geometry.coordinates[1], feature.geometry.coordinates[0]] as [number, number],
       ...enrich,
     };
@@ -39,13 +43,17 @@ export async function loadAllPOIs(): Promise<POI[]> {
 
   const stedsnavnFromGeoJSON = stedsnavnData.features
     .filter((feature: any) => feature.properties.visibility !== false)
-    .map((feature: any, index: number) => ({
-      ...feature.properties,
-      id: `sted-${index}`,
-      kategori: feature.properties.kategori || "stedsnavn",
-      beskrivelse: feature.properties.forklaring || "",
-      coordinates: [feature.geometry.coordinates[1], feature.geometry.coordinates[0]] as [number, number],
-    }));
+    .map((feature: any, index: number) => {
+      const kategori = feature.properties.kategori || 'stedsnavn';
+      return {
+        ...feature.properties,
+        id: `sted-${index}`,
+        kategori,
+        kategorier: [kategori],
+        beskrivelse: feature.properties.forklaring || "",
+        coordinates: [feature.geometry.coordinates[1], feature.geometry.coordinates[0]] as [number, number],
+      };
+    });
 
   return [...poisFromGeoJSON, ...stedsnavnFromGeoJSON];
 }

@@ -542,14 +542,14 @@ export function VeierlandApp() {
 
   // Derive category list from actual POI data
   const allCats = useMemo(
-    () => Array.from(new Set(allPOIs.map(p => p.kategori))).filter(k => CAT_CFG[k]),
+    () => Array.from(new Set(allPOIs.flatMap(p => p.kategorier ?? [p.kategori]))).filter(k => CAT_CFG[k]),
     [allPOIs]
   );
 
   // Filtered POIs
   const filteredPOIs = useMemo(() => {
     return allPOIs.filter(p => {
-      if (activeCats.size > 0 && !activeCats.has(p.kategori)) return false;
+      if (activeCats.size > 0 && !(p.kategorier ?? [p.kategori]).some(k => activeCats.has(k))) return false;
       if (searchQ) {
         const q = searchQ.toLowerCase();
         if (!(p.navn + ' ' + p.beskrivelse).toLowerCase().includes(q)) return false;
@@ -1100,7 +1100,12 @@ export function VeierlandApp() {
     return (
       <>
         <button className="vl-back" onClick={goBack}><BackSvg />{T.back}</button>
-        <div><span className="vl-catpill">{lang === 'no' ? cat.no : cat.en}</span></div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {(poi.kategorier ?? [poi.kategori]).map(k => {
+            const c = getCat(k);
+            return <span key={k} className="vl-catpill">{lang === 'no' ? c.no : c.en}</span>;
+          })}
+        </div>
         <div className="vl-h2">{poi.navn}</div>
         <p className="vl-desc">{poi.beskrivelse}</p>
 

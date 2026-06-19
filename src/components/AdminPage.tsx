@@ -306,11 +306,30 @@ function PoiEditor({ feature, onChange, onDelete, categories }: {
   return (
     <div style={S.editGrid}>
       <Field label="Navn" full><input style={S.input} value={p.navn ?? ''} onChange={e => setP('navn', e.target.value)} /></Field>
-      <Field label="Kategori">
-        <select style={S.input} value={p.kategori ?? ''} onChange={e => setP('kategori', e.target.value)}>
-          {categories.map(c => <option key={c} value={c}>{c}</option>)}
-          {p.kategori && !categories.includes(p.kategori) && <option value={p.kategori}>{p.kategori} (ukjent)</option>}
-        </select>
+      <Field label="Kategorier" full>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', padding: '6px 0' }}>
+          {categories.map(c => {
+            const current: string[] = p.kategorier ?? (p.kategori ? [p.kategori] : []);
+            const checked = current.includes(c);
+            return (
+              <label key={c} style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={e => {
+                    const next = e.target.checked ? [...current, c] : current.filter(k => k !== c);
+                    setP('kategorier', next);
+                    setP('kategori', next[0] ?? '');
+                  }}
+                />
+                {c}
+              </label>
+            );
+          })}
+        </div>
+        {(p.kategorier ?? [p.kategori]).filter(Boolean).length === 0 && (
+          <div style={{ fontSize: 11, color: '#e53e3e', marginTop: 2 }}>Velg minst én kategori</div>
+        )}
       </Field>
       <Field label="Verifisert">
         <select style={S.input} value={p.verifisert ? 'ja' : 'nei'} onChange={e => setP('verifisert', e.target.value === 'ja')}>
@@ -490,7 +509,8 @@ function PoiTab() {
   const filtered = indexed.filter(({ f }) => {
     const name = (f.properties.navn ?? '').toLowerCase();
     const matchQ = !searchQ || name.includes(searchQ.toLowerCase());
-    const matchCat = !filterCat || f.properties.kategori === filterCat;
+    const cats: string[] = f.properties.kategorier ?? (f.properties.kategori ? [f.properties.kategori] : []);
+    const matchCat = !filterCat || cats.includes(filterCat);
     return matchQ && matchCat;
   });
 
@@ -539,7 +559,7 @@ function PoiTab() {
             <FeatureRow
               key={i}
               label={f.properties.navn ?? `Punkt ${i + 1}`}
-              meta={f.properties.verifisert === false ? '~omtrentlig' : undefined}
+              meta={(f.properties.kategorier as string[] | undefined)?.join(', ') ?? f.properties.kategori}
               onMoveUp={hasSameCatNeighbor(i, -1) ? () => moveInCat(i, -1) : undefined}
               onMoveDown={hasSameCatNeighbor(i, 1) ? () => moveInCat(i, 1) : undefined}
             >

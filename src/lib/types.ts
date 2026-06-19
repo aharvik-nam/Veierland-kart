@@ -7,6 +7,7 @@ export interface POI {
   id: string;
   navn: string;
   kategori: "bad" | "ferge" | "kultur" | "hvalfangst" | "info" | "havn" | string;
+  kategorier: string[];
   beskrivelse: string;
   coordinates: [number, number];
   snl_søkeord?: string;
