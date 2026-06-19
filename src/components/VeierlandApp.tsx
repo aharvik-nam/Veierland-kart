@@ -1493,7 +1493,7 @@ export function VeierlandApp() {
         <TileController layer={currentLayer} />
         {mode === 'history' && allPOIs.filter(p => catCfg[p.kategori]?.showInHistory).map(poi => {
           const cat = getCat(poi.kategori);
-          const [lng, lat] = poi.koordinater ?? [0, 0];
+          const [lat, lng] = poi.coordinates ?? [0, 0];
           if (!lat || !lng) return null;
           const icon = L.divIcon({
             className: '',
