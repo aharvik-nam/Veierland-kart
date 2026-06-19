@@ -438,6 +438,7 @@ export function VeierlandApp() {
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
   const [selectedTrail, setSelectedTrail] = useState<Trail | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [autoSheetH, setAutoSheetH] = useState<number | null>(null);
   const [currentLayer, setCurrentLayer] = useState<string>(() => {
     try { return localStorage.getItem('vl-layer') || 'soleng'; } catch { return 'soleng'; }
   });
@@ -494,6 +495,7 @@ export function VeierlandApp() {
 
   const mapRef = useRef<L.Map | null>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const fitDoneRef = useRef(false);
 
   // Dynamic category config (loaded from Firestore, falls back to defaults)
@@ -819,7 +821,22 @@ export function VeierlandApp() {
   }
 
   const SHEET_PEEK_H = 184;
-  const SHEET_OPEN_H = Math.min(window.innerHeight * 0.74, 700);
+  const SHEET_MAX_H = Math.min(window.innerHeight * 0.82, 720);
+
+  // After content renders, shrink sheet to fit actual content (avoids excess white space)
+  useEffect(() => {
+    if (!sheetOpen) { setAutoSheetH(null); return; }
+    const frame = requestAnimationFrame(() => {
+      if (bodyRef.current) {
+        const grabH = 30;
+        const contentH = bodyRef.current.scrollHeight + grabH;
+        setAutoSheetH(Math.min(contentH, SHEET_MAX_H));
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [sheetOpen, view, selectedPOI, selectedTrail, selectedNature]);
+
+  const SHEET_OPEN_H = autoSheetH ?? SHEET_MAX_H;
   const sheetCurrentH = sheetOpen ? SHEET_OPEN_H : SHEET_PEEK_H;
   const railBottom = sheetCurrentH + 16;
 
@@ -1455,7 +1472,7 @@ export function VeierlandApp() {
         <div className="vl-grab" onClick={() => setSheetOpen(o => !o)}>
           <div className="bar" />
         </div>
-        <div className="vl-body">
+        <div className="vl-body" ref={bodyRef}>
           {view === 'browse' && renderBrowse()}
           {view === 'detail' && selectedPOI && renderPOIDetail(selectedPOI)}
           {view === 'detail' && selectedTrail && renderTrailDetail(selectedTrail)}
