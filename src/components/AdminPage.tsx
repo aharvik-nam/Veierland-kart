@@ -759,6 +759,9 @@ function CategoryConfigTab() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [newKey, setNewKey] = useState('');
+  const [newGroup, setNewGroup] = useState('');
+  const [editingGroup, setEditingGroup] = useState<string | null>(null);
+  const [editingGroupVal, setEditingGroupVal] = useState('');
 
   useEffect(() => {
     loadCatCfg().then(setCfg);
@@ -766,6 +769,66 @@ function CategoryConfigTab() {
 
   const set = (key: string, field: keyof CatEntry, val: any) => {
     setCfg(prev => ({ ...prev, [key]: { ...prev[key], [field]: val } }));
+    setSaved(false);
+  };
+
+  const groups = [...new Set(Object.values(cfg).map(e => e.group).filter(Boolean))];
+
+  const addGroup = () => {
+    const g = newGroup.trim();
+    if (!g || groups.includes(g)) return;
+    // Assign the first ungrouped category to anchor the new group, or just track via a placeholder
+    // We store groups by assigning at least one category; here we just add it to datalist state
+    // so user can assign categories to it — no category change needed until they assign one.
+    // We store "defined but empty" groups by adding a _groups meta field on the cfg object.
+    // Simplest: just update the datalist and let the user pick it in the Gruppe field below.
+    setCfg(prev => {
+      // Find an ungrouped cat to assign, otherwise just store the group name as metadata
+      // We'll use a special __groups__ key to track manually-added group names
+      const meta: any = prev['__groups__'] ?? { no: '', en: '', color: '', icon: 'wc', group: '', showInFilter: false };
+      const existing: string[] = meta._groupList ?? [];
+      return {
+        ...prev,
+        __groups__: { ...meta, _groupList: [...existing.filter((x: string) => x !== g), g] },
+      };
+    });
+    setNewGroup('');
+    setSaved(false);
+  };
+
+  const renameGroup = (oldName: string, newName: string) => {
+    const n = newName.trim();
+    if (!n || n === oldName) { setEditingGroup(null); return; }
+    setCfg(prev => {
+      const next = { ...prev };
+      for (const key of Object.keys(next)) {
+        if (next[key].group === oldName) next[key] = { ...next[key], group: n };
+      }
+      // update __groups__ list too
+      if (next['__groups__']) {
+        const gl: string[] = (next['__groups__'] as any)._groupList ?? [];
+        (next['__groups__'] as any)._groupList = gl.map((x: string) => x === oldName ? n : x);
+      }
+      return next;
+    });
+    setEditingGroup(null);
+    setSaved(false);
+  };
+
+  const deleteGroup = (g: string) => {
+    const count = Object.values(cfg).filter(e => e.group === g).length;
+    if (!confirm(`Slett gruppen «${g}»? ${count > 0 ? `${count} kategori(er) mister grupperingen sin.` : ''}`)) return;
+    setCfg(prev => {
+      const next = { ...prev };
+      for (const key of Object.keys(next)) {
+        if (next[key].group === g) next[key] = { ...next[key], group: '' };
+      }
+      if (next['__groups__']) {
+        const gl: string[] = (next['__groups__'] as any)._groupList ?? [];
+        (next['__groups__'] as any)._groupList = gl.filter((x: string) => x !== g);
+      }
+      return next;
+    });
     setSaved(false);
   };
 
@@ -790,19 +853,77 @@ function CategoryConfigTab() {
     setSaved(true);
   };
 
+  // Merge groups from cfg + manually-added
+  const manualGroups: string[] = (cfg['__groups__'] as any)?._groupList ?? [];
+  const allGroups = [...new Set([...groups, ...manualGroups])];
+
   const tdS: React.CSSProperties = { padding: '8px 10px', borderBottom: '1px solid var(--line)', verticalAlign: 'middle' };
   const thS: React.CSSProperties = { ...tdS, fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em', textAlign: 'left', background: 'var(--bg)' };
 
   return (
     <>
       <div style={{ ...S.infoBox, marginBottom: 16 }}>
-        Her styrer du hvilke kategorier som vises i filterpanelet på nettsiden, hva de heter på norsk/engelsk, farge og gruppering (Praktisk / Historisk). Kategorier med «Vis i filter» avhuket dukker opp som filterknapper.
+        Her styrer du kategorier og filtergrupper. <strong>Filtergrupper</strong> er knappene øverst i listen på nettsiden (f.eks. «Praktisk», «Historisk»). Legg til nye grupper nedenfor, og tilordne kategorier til dem i tabellen.
+      </div>
+
+      {/* ── Grupper (filterknapper) ── */}
+      <div style={{ marginBottom: 24, padding: '14px 16px', border: '1px solid var(--line)', borderRadius: 8, background: 'var(--card)' }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>
+          Filtergrupper på nettsiden
+        </div>
+        {allGroups.length === 0 && (
+          <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 10 }}>Ingen grupper ennå. Legg til en nedenfor.</div>
+        )}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+          {allGroups.map(g => {
+            const catCount = Object.values(cfg).filter(e => e.group === g).length;
+            return editingGroup === g ? (
+              <div key={g} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <input
+                  autoFocus
+                  style={{ ...S.input, padding: '4px 8px', fontSize: 13, width: 140 }}
+                  value={editingGroupVal}
+                  onChange={e => setEditingGroupVal(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') renameGroup(g, editingGroupVal);
+                    if (e.key === 'Escape') setEditingGroup(null);
+                  }}
+                />
+                <button onClick={() => renameGroup(g, editingGroupVal)}
+                  style={{ ...S.pill('primary'), padding: '4px 10px', fontSize: 12 }}>OK</button>
+                <button onClick={() => setEditingGroup(null)}
+                  style={{ ...S.pill('secondary'), padding: '4px 10px', fontSize: 12 }}>Avbryt</button>
+              </div>
+            ) : (
+              <div key={g} style={{
+                display: 'flex', alignItems: 'center', gap: 4,
+                padding: '5px 10px', background: 'var(--bg)', border: '1px solid var(--line)',
+                borderRadius: 20, fontSize: 13,
+              }}>
+                <span style={{ fontWeight: 600 }}>{g}</span>
+                <span style={{ fontSize: 11, color: 'var(--muted)' }}>({catCount})</span>
+                <button title="Gi nytt navn" onClick={() => { setEditingGroup(g); setEditingGroupVal(g); }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 13, padding: '0 2px', lineHeight: 1 }}>✎</button>
+                <button title="Slett gruppe" onClick={() => deleteGroup(g)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e53e3e', fontSize: 13, padding: '0 2px', lineHeight: 1 }}>✕</button>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <input
+            style={{ ...S.input, padding: '5px 10px', maxWidth: 200 }}
+            placeholder="Ny gruppe, f.eks. «Natur»"
+            value={newGroup}
+            onChange={e => setNewGroup(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addGroup()}
+          />
+          <button style={S.pill('secondary')} onClick={addGroup}>+ Legg til gruppe</button>
+        </div>
       </div>
 
       <datalist id="group-suggestions">
-        {[...new Set(Object.values(cfg).map(e => e.group).filter(Boolean))].map(g => (
-          <option key={g} value={g} />
-        ))}
+        {allGroups.map(g => <option key={g} value={g} />)}
       </datalist>
 
       <div style={{ overflowX: 'auto', marginBottom: 20 }}>
