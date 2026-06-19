@@ -922,9 +922,6 @@ function CategoryConfigTab() {
         </div>
       </div>
 
-      <datalist id="group-suggestions">
-        {allGroups.map(g => <option key={g} value={g} />)}
-      </datalist>
 
       <div style={{ overflowX: 'auto', marginBottom: 20 }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -941,7 +938,7 @@ function CategoryConfigTab() {
             </tr>
           </thead>
           <tbody>
-            {Object.entries(cfg).map(([key, entry]) => (
+            {Object.entries(cfg).filter(([key]) => key !== '__groups__').map(([key, entry]) => (
               <tr key={key} style={{ background: 'var(--card)' }}>
                 <td style={{ ...tdS, fontWeight: 600, fontFamily: 'monospace', color: 'var(--muted)' }}>{key}</td>
                 <td style={tdS}>
@@ -961,13 +958,14 @@ function CategoryConfigTab() {
                   <IconPicker value={entry.icon} color={entry.color} onChange={v => set(key, 'icon', v)} />
                 </td>
                 <td style={{ ...tdS, width: 130 }}>
-                  <input
-                    style={{ ...S.input, padding: '5px 8px' }}
-                    list="group-suggestions"
-                    placeholder="Ingen gruppe"
+                  <select
+                    style={{ ...S.input, padding: '5px 7px', fontSize: 13 }}
                     value={entry.group}
                     onChange={e => set(key, 'group', e.target.value)}
-                  />
+                  >
+                    <option value="">— Ingen gruppe —</option>
+                    {allGroups.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
                 </td>
                 <td style={{ ...tdS, width: 90, textAlign: 'center' }}>
                   <input type="checkbox" checked={entry.showInFilter} onChange={e => set(key, 'showInFilter', e.target.checked)}
