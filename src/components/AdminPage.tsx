@@ -18,7 +18,17 @@ const FALLBACK: Record<Tab, GeoCollection> = {
   turer: turkartFallback,
 };
 
-const POI_CATEGORIES = ['ferge','kultur','mat','friluft','info','havn','bad','bru','kulturminne','park','arkeologi','hvalfangst'];
+const DEFAULT_CATS = ['ferge','kultur','mat','friluft','info','havn','bad','bru','kulturminne','park','arkeologi','hvalfangst'];
+
+function groupByCat<T>(items: T[], getKey: (t: T) => string): Map<string, T[]> {
+  const m = new Map<string, T[]>();
+  for (const item of items) {
+    const k = getKey(item);
+    if (!m.has(k)) m.set(k, []);
+    m.get(k)!.push(item);
+  }
+  return m;
+}
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const S = {
@@ -29,9 +39,9 @@ const S = {
   tab: (active: boolean): React.CSSProperties => ({ padding: '10px 18px', border: 'none', background: 'none', cursor: 'pointer', fontWeight: active ? 600 : 400, fontSize: 14, color: active ? 'var(--accent)' : 'var(--muted)', borderBottom: active ? '2px solid var(--accent)' : '2px solid transparent', marginBottom: -1 }),
   body: { padding: '20px', maxWidth: 820, margin: '0 auto' },
   pill: (v: 'primary' | 'secondary' | 'danger'): React.CSSProperties => ({ padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, background: v === 'primary' ? 'var(--accent)' : v === 'danger' ? '#e53e3e' : 'var(--card)', color: v === 'secondary' ? 'var(--ink)' : '#fff', boxShadow: v === 'secondary' ? '0 0 0 1px var(--line)' : 'none' }),
-  featureRow: { background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 10, marginBottom: 8, overflow: 'hidden' },
-  featureHdr: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', userSelect: 'none' as const, background: 'none', border: 'none', width: '100%', textAlign: 'left' as const, font: 'inherit', color: 'inherit' },
-  chev: (open: boolean): React.CSSProperties => ({ marginLeft: 'auto', transition: 'transform .2s', transform: open ? 'rotate(180deg)' : 'none', color: 'var(--muted)' }),
+  featureRow: { background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 10, marginBottom: 6, overflow: 'hidden' },
+  featureHdr: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', userSelect: 'none' as const, background: 'none', border: 'none', flex: 1, textAlign: 'left' as const, font: 'inherit', color: 'inherit', minWidth: 0 },
+  chev: (open: boolean): React.CSSProperties => ({ transition: 'transform .2s', transform: open ? 'rotate(180deg)' : 'none', color: 'var(--muted)', flexShrink: 0 }),
   editGrid: { padding: '14px 16px 16px', borderTop: '1px solid var(--line)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 16px' },
   fullSpan: { gridColumn: '1 / -1' } as React.CSSProperties,
   label: { display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', marginBottom: 4, textTransform: 'uppercase' as const, letterSpacing: '.04em' },
@@ -39,9 +49,9 @@ const S = {
   textarea: { width: '100%', boxSizing: 'border-box' as const, padding: '7px 10px', borderRadius: 7, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 13, font: 'inherit', resize: 'vertical' as const, minHeight: 72 },
   imgPreview: { marginTop: 6, borderRadius: 7, maxHeight: 120, maxWidth: '100%', border: '1px solid var(--line)', objectFit: 'cover' as const },
   deleteBtn: { gridColumn: '1 / -1', padding: '7px 14px', borderRadius: 7, border: '1px solid #e53e3e', background: 'none', color: '#e53e3e', fontSize: 13, cursor: 'pointer', fontWeight: 500, justifySelf: 'end' } as React.CSSProperties,
-  addBtn: { width: '100%', padding: '10px', borderRadius: 10, border: '2px dashed var(--line)', background: 'none', color: 'var(--muted)', fontSize: 14, cursor: 'pointer', marginBottom: 8 },
-  fileActions: { display: 'flex', gap: 10, marginBottom: 20, alignItems: 'center', flexWrap: 'wrap' as const },
-  infoBox: { background: 'color-mix(in srgb, var(--accent) 8%, var(--card))', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)', borderRadius: 10, padding: '12px 14px', marginBottom: 20, fontSize: 13 },
+  addBtn: { width: '100%', padding: '10px', borderRadius: 10, border: '2px dashed var(--line)', background: 'none', color: 'var(--muted)', fontSize: 14, cursor: 'pointer', marginTop: 8 },
+  fileActions: { display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' as const },
+  infoBox: { background: 'color-mix(in srgb, var(--accent) 8%, var(--card))', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)', borderRadius: 10, padding: '12px 14px', marginBottom: 16, fontSize: 13 },
   login: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' },
   loginCard: { background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 16, padding: '36px 32px', width: 320 },
   loginTitle: { fontSize: 22, fontWeight: 700, marginBottom: 6, textAlign: 'center' as const },
@@ -50,6 +60,19 @@ const S = {
   loginBtn: { width: '100%', padding: '11px', borderRadius: 9, border: 'none', background: 'var(--accent)', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', font: 'inherit' },
   error: { color: '#e53e3e', fontSize: 13, marginTop: 8, textAlign: 'center' as const },
   notConfigured: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' },
+  // New styles
+  toolbar: { display: 'flex', gap: 10, marginBottom: 14, alignItems: 'center', flexWrap: 'wrap' as const },
+  searchInput: { flex: 1, minWidth: 160, boxSizing: 'border-box' as const, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 13, font: 'inherit' },
+  selectInput: { padding: '8px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 13, font: 'inherit', cursor: 'pointer' } as React.CSSProperties,
+  groupHeader: { fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' as const, letterSpacing: '.08em', padding: '14px 0 5px', display: 'flex', alignItems: 'center', gap: 8 } as React.CSSProperties,
+  groupBadge: { background: 'var(--line)', borderRadius: 10, padding: '1px 8px', fontSize: 11, fontWeight: 600 } as React.CSSProperties,
+  moveBtn: { background: 'none', border: '1px solid var(--line)', borderRadius: 5, color: 'var(--muted)', width: 26, height: 26, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, flexShrink: 0 } as React.CSSProperties,
+  catPanel: { background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 10, marginBottom: 16, overflow: 'hidden' } as React.CSSProperties,
+  catPanelHdr: { display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', cursor: 'pointer', background: 'none', border: 'none', width: '100%', font: 'inherit', color: 'inherit', textAlign: 'left' as const },
+  catBody: { padding: '4px 16px 16px' } as React.CSSProperties,
+  catItem: { display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 } as React.CSSProperties,
+  catInput: { flex: 1, padding: '6px 9px', borderRadius: 6, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 13, font: 'inherit' } as React.CSSProperties,
+  catDelBtn: { background: 'none', border: '1px solid #e53e3e', borderRadius: 6, color: '#e53e3e', width: 28, height: 28, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, flexShrink: 0 } as React.CSSProperties,
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -75,7 +98,7 @@ function LoginForm({ onLogin }: { onLogin: (u: User) => void }) {
     try {
       const cred = await signInWithEmailAndPassword(auth, email, pw);
       onLogin(cred.user);
-    } catch (e: any) {
+    } catch {
       setErr('Feil e-post eller passord');
     } finally { setLoading(false); }
   };
@@ -96,8 +119,119 @@ function LoginForm({ onLogin }: { onLogin: (u: User) => void }) {
   );
 }
 
+// ─── Data hooks ──────────────────────────────────────────────────────────────
+function useTabData(tab: Tab) {
+  const [data, setDataState] = useState<GeoCollection | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState('');
+  const [seeded, setSeeded] = useState(false);
+
+  useEffect(() => {
+    setDataState(null); setErr(''); setDirty(false); setSeeded(false);
+    getDoc(doc(db, COL, DOC[tab])).then(snap => {
+      if (snap.exists()) {
+        const raw = snap.data();
+        setDataState(raw.json ? JSON.parse(raw.json) : raw as GeoCollection);
+        setSeeded(true);
+      } else {
+        setDataState(FALLBACK[tab]);
+        setSeeded(false);
+      }
+    }).catch(e => { setErr(e.message); setDataState(FALLBACK[tab]); });
+  }, [tab]);
+
+  const setData = (d: GeoCollection) => { setDataState(d); setDirty(true); };
+
+  const save = async () => {
+    if (!data) return;
+    setSaving(true); setErr('');
+    try {
+      await setDoc(doc(db, COL, DOC[tab]), { json: JSON.stringify(data) });
+      setDirty(false); setSeeded(true);
+    } catch (e: any) { setErr(e.message); }
+    finally { setSaving(false); }
+  };
+
+  return { data, setData, dirty, saving, save, err, seeded };
+}
+
+function useCategories() {
+  const [cats, setCats] = useState<string[]>(DEFAULT_CATS);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    getDoc(doc(db, COL, 'categories')).then(snap => {
+      if (snap.exists()) setCats(snap.data().poi ?? DEFAULT_CATS);
+    }).catch(() => {});
+  }, []);
+
+  const save = async (newCats: string[]) => {
+    setSaving(true);
+    try {
+      await setDoc(doc(db, COL, 'categories'), { poi: newCats });
+    } finally { setSaving(false); }
+  };
+
+  return { cats, setCats, save, saving };
+}
+
+// ─── Categories panel ─────────────────────────────────────────────────────────
+function CategoriesPanel({ cats, onChange, onSave, saving }: {
+  cats: string[]; onChange: (c: string[]) => void; onSave: (c: string[]) => void; saving: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [newCat, setNewCat] = useState('');
+
+  const rename = (i: number, v: string) => { const next = [...cats]; next[i] = v; onChange(next); };
+  const remove = (i: number) => onChange(cats.filter((_, j) => j !== i));
+  const add = () => {
+    const v = newCat.trim();
+    if (!v || cats.map(c => c.toLowerCase()).includes(v.toLowerCase())) return;
+    onChange([...cats, v]);
+    setNewCat('');
+  };
+
+  return (
+    <div style={S.catPanel}>
+      <button style={S.catPanelHdr} onClick={() => setOpen(o => !o)}>
+        <span style={{ fontWeight: 600, fontSize: 14 }}>Administrer kategorier</span>
+        <span style={{ fontSize: 12, color: 'var(--muted)' }}>{cats.length} kategorier</span>
+        <span style={{ marginLeft: 'auto', color: 'var(--muted)' }}>{open ? '▴' : '▾'}</span>
+      </button>
+      {open && (
+        <div style={S.catBody}>
+          {cats.map((c, i) => (
+            <div key={i} style={S.catItem}>
+              <input style={S.catInput} value={c} onChange={e => rename(i, e.target.value)} />
+              <button style={S.catDelBtn} onClick={() => remove(i)} title="Slett kategori">✕</button>
+            </div>
+          ))}
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <input
+              style={{ ...S.catInput, flex: 1 }}
+              placeholder="Ny kategori…"
+              value={newCat}
+              onChange={e => setNewCat(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && add()}
+            />
+            <button style={{ ...S.pill('secondary'), padding: '6px 14px' }} onClick={add}>+ Legg til</button>
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <button style={S.pill('primary')} onClick={() => onSave(cats)} disabled={saving}>
+              {saving ? 'Lagrer…' : '💾 Lagre kategorier til Firebase'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── POI editor ──────────────────────────────────────────────────────────────
-function PoiEditor({ feature, onChange, onDelete }: { feature: any; onChange: (f: any) => void; onDelete: () => void }) {
+function PoiEditor({ feature, onChange, onDelete, categories }: {
+  feature: any; onChange: (f: any) => void; onDelete: () => void; categories: string[];
+}) {
   const p = feature.properties;
   const [lon, lat] = feature.geometry.coordinates as [number, number];
   const setP = (k: string, v: any) => onChange({ ...feature, properties: { ...p, [k]: v } });
@@ -112,8 +246,8 @@ function PoiEditor({ feature, onChange, onDelete }: { feature: any; onChange: (f
       <Field label="Navn" full><input style={S.input} value={p.navn ?? ''} onChange={e => setP('navn', e.target.value)} /></Field>
       <Field label="Kategori">
         <select style={S.input} value={p.kategori ?? ''} onChange={e => setP('kategori', e.target.value)}>
-          {POI_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-          {!POI_CATEGORIES.includes(p.kategori) && p.kategori && <option value={p.kategori}>{p.kategori}</option>}
+          {categories.map(c => <option key={c} value={c}>{c}</option>)}
+          {p.kategori && !categories.includes(p.kategori) && <option value={p.kategori}>{p.kategori} (ukjent)</option>}
         </select>
       </Field>
       <Field label="Verifisert">
@@ -165,15 +299,37 @@ function StedsnavnEditor({ feature, onChange, onDelete }: { feature: any; onChan
 }
 
 // ─── Collapsible feature row ──────────────────────────────────────────────────
-function FeatureRow({ label, meta, children }: { label: string; meta?: string; children: React.ReactNode }) {
+function FeatureRow({ label, meta, children, onMoveUp, onMoveDown }: {
+  label: string; meta?: string; children: React.ReactNode;
+  onMoveUp?: () => void; onMoveDown?: () => void;
+}) {
   const [open, setOpen] = useState(false);
+  const showArrows = onMoveUp !== undefined || onMoveDown !== undefined;
   return (
     <div style={S.featureRow}>
-      <button style={S.featureHdr} onClick={() => setOpen(o => !o)}>
-        <span style={{ fontWeight: 600, fontSize: 14, flex: 1 }}>{label}</span>
-        {meta && <span style={{ fontSize: 12, color: 'var(--muted)' }}>{meta}</span>}
-        <span style={S.chev(open)}>▾</span>
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <button style={S.featureHdr} onClick={() => setOpen(o => !o)}>
+          <span style={{ fontWeight: 600, fontSize: 14, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+          {meta && <span style={{ fontSize: 12, color: 'var(--muted)', flexShrink: 0 }}>{meta}</span>}
+          <span style={S.chev(open)}>▾</span>
+        </button>
+        {showArrows && (
+          <div style={{ display: 'flex', gap: 3, paddingRight: 10, flexShrink: 0 }}>
+            <button
+              style={{ ...S.moveBtn, opacity: onMoveUp ? 1 : 0.25 }}
+              onClick={onMoveUp}
+              disabled={!onMoveUp}
+              title="Flytt opp"
+            >↑</button>
+            <button
+              style={{ ...S.moveBtn, opacity: onMoveDown ? 1 : 0.25 }}
+              onClick={onMoveDown}
+              disabled={!onMoveDown}
+              title="Flytt ned"
+            >↓</button>
+          </div>
+        )}
+      </div>
       {open && children}
     </div>
   );
@@ -203,46 +359,22 @@ function FileActions({ tab, data, onUpload, dirty, onSave, saving, seeded }: {
       <button style={S.pill('secondary')} onClick={download}>⬇ Last ned JSON</button>
       <button style={S.pill('secondary')} onClick={() => uploadRef.current?.click()}>⬆ Last opp JSON</button>
       <input ref={uploadRef} type="file" accept=".json,.geojson" style={{ display: 'none' }} onChange={handleUpload} />
-      {(dirty || !seeded) && <button style={S.pill('primary')} onClick={onSave} disabled={saving}>{saving ? 'Lagrer…' : !seeded ? '⬆ Last opp til Firebase' : '💾 Lagre til Firebase'}</button>}
+      {(dirty || !seeded) && (
+        <button style={S.pill('primary')} onClick={onSave} disabled={saving}>
+          {saving ? 'Lagrer…' : !seeded ? '⬆ Last opp til Firebase' : '💾 Lagre til Firebase'}
+        </button>
+      )}
       {dirty && seeded && <span style={{ fontSize: 12, color: 'var(--muted)' }}>Ulagrede endringer</span>}
     </div>
   );
 }
 
-// ─── Generic tab with Firestore data ─────────────────────────────────────────
-function useTabData(tab: Tab) {
-  const [data, setDataState] = useState<GeoCollection | null>(null);
-  const [dirty, setDirty] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [err, setErr] = useState('');
-  const [seeded, setSeeded] = useState(false);
-
-  useEffect(() => {
-    setDataState(null); setErr(''); setDirty(false); setSeeded(false);
-    getDoc(doc(db, COL, DOC[tab])).then(snap => {
-      setDataState(snap.exists() ? (snap.data() as GeoCollection) : FALLBACK[tab]);
-      setSeeded(snap.exists());
-    }).catch(e => { setErr(e.message); setDataState(FALLBACK[tab]); });
-  }, [tab]);
-
-  const setData = (d: GeoCollection) => { setDataState(d); setDirty(true); };
-
-  const save = async () => {
-    if (!data) return;
-    setSaving(true); setErr('');
-    try {
-      await setDoc(doc(db, COL, DOC[tab]), data);
-      setDirty(false); setSeeded(true);
-    } catch (e: any) { setErr(e.message); }
-    finally { setSaving(false); }
-  };
-
-  return { data, setData, dirty, saving, save, err, seeded };
-}
-
 // ─── Steder tab ───────────────────────────────────────────────────────────────
 function PoiTab() {
   const { data, setData, dirty, saving, save, err, seeded } = useTabData('poi');
+  const { cats, setCats, save: saveCats, saving: savingCats } = useCategories();
+  const [searchQ, setSearchQ] = useState('');
+  const [filterCat, setFilterCat] = useState('');
 
   const update = (i: number, f: any) => {
     if (!data) return;
@@ -255,21 +387,105 @@ function PoiTab() {
   };
   const addNew = () => {
     if (!data) return;
-    setData({ ...data, features: [...data.features, { type: 'Feature', properties: { navn: 'Nytt punkt', kategori: 'info', beskrivelse: '', verifisert: false, koordinat_kilde: 'manuelt' }, geometry: { type: 'Point', coordinates: [10.350, 59.160] } }] });
+    setData({ ...data, features: [...data.features, {
+      type: 'Feature',
+      properties: { navn: 'Nytt punkt', kategori: cats[0] ?? 'info', beskrivelse: '', verifisert: false, koordinat_kilde: 'manuelt' },
+      geometry: { type: 'Point', coordinates: [10.350, 59.160] },
+    }]});
+  };
+
+  const moveInCat = (i: number, dir: -1 | 1) => {
+    if (!data) return;
+    const features = [...data.features];
+    const cat = features[i].properties.kategori;
+    let j = i + dir;
+    while (j >= 0 && j < features.length) {
+      if (features[j].properties.kategori === cat) break;
+      j += dir;
+    }
+    if (j < 0 || j >= features.length || features[j].properties.kategori !== cat) return;
+    [features[i], features[j]] = [features[j], features[i]];
+    setData({ ...data, features });
+  };
+
+  const hasSameCatNeighbor = (i: number, dir: -1 | 1): boolean => {
+    if (!data) return false;
+    const cat = data.features[i].properties.kategori;
+    for (let j = i + dir; j >= 0 && j < data.features.length; j += dir) {
+      if (data.features[j].properties.kategori === cat) return true;
+    }
+    return false;
   };
 
   if (!data) return <p style={{ color: 'var(--muted)' }}>{err || 'Laster…'}</p>;
+
+  const indexed = data.features.map((f, i) => ({ f, i }));
+  const filtered = indexed.filter(({ f }) => {
+    const name = (f.properties.navn ?? '').toLowerCase();
+    const matchQ = !searchQ || name.includes(searchQ.toLowerCase());
+    const matchCat = !filterCat || f.properties.kategori === filterCat;
+    return matchQ && matchCat;
+  });
+
+  const groups = groupByCat(filtered, ({ f }) => f.properties.kategori ?? 'ukjent');
+  const presentCats = [...new Set(data.features.map(f => f.properties.kategori).filter(Boolean) as string[])].sort();
+
   return (
     <>
       <FileActions tab="poi" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} seeded={seeded} />
       {err && <p style={{ color: '#e53e3e', marginBottom: 12 }}>{err}</p>}
-      {!seeded && <div style={{ ...S.infoBox, marginBottom: 16 }}>⚠️ Ingen data i Firebase ennå — viser lokal JSON. Trykk «Lagre til Firebase» for å laste opp.</div>}
-      <div style={S.infoBox}>{data.features.length} steder</div>
-      {data.features.map((f, i) => (
-        <FeatureRow key={i} label={f.properties.navn ?? `Punkt ${i + 1}`} meta={f.properties.kategori}>
-          <PoiEditor feature={f} onChange={nf => update(i, nf)} onDelete={() => del(i)} />
-        </FeatureRow>
+      {!seeded && (
+        <div style={{ ...S.infoBox, marginBottom: 16 }}>
+          ⚠️ Ingen data i Firebase ennå — viser lokal JSON. Trykk «Last opp til Firebase» for å laste opp.
+        </div>
+      )}
+
+      <CategoriesPanel cats={cats} onChange={setCats} onSave={saveCats} saving={savingCats} />
+
+      <div style={S.toolbar}>
+        <input
+          style={S.searchInput}
+          placeholder="Søk etter steder…"
+          value={searchQ}
+          onChange={e => setSearchQ(e.target.value)}
+        />
+        <select style={S.selectInput} value={filterCat} onChange={e => setFilterCat(e.target.value)}>
+          <option value="">Alle kategorier</option>
+          {presentCats.map(c => (
+            <option key={c} value={c}>
+              {c} ({data.features.filter(f => f.properties.kategori === c).length})
+            </option>
+          ))}
+        </select>
+        <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+          {filtered.length} / {data.features.length} steder
+        </span>
+      </div>
+
+      {[...groups.entries()].map(([cat, items]) => (
+        <div key={cat}>
+          <div style={S.groupHeader}>
+            <span>{cat}</span>
+            <span style={S.groupBadge}>{items.length}</span>
+          </div>
+          {items.map(({ f, i }) => (
+            <FeatureRow
+              key={i}
+              label={f.properties.navn ?? `Punkt ${i + 1}`}
+              meta={f.properties.verifisert === false ? '~omtrentlig' : undefined}
+              onMoveUp={hasSameCatNeighbor(i, -1) ? () => moveInCat(i, -1) : undefined}
+              onMoveDown={hasSameCatNeighbor(i, 1) ? () => moveInCat(i, 1) : undefined}
+            >
+              <PoiEditor feature={f} onChange={nf => update(i, nf)} onDelete={() => del(i)} categories={cats} />
+            </FeatureRow>
+          ))}
+        </div>
       ))}
+
+      {filtered.length === 0 && (
+        <p style={{ color: 'var(--muted)', textAlign: 'center', padding: '24px 0' }}>Ingen resultater for søket.</p>
+      )}
+
       <button style={S.addBtn} onClick={addNew}>+ Legg til nytt punkt</button>
     </>
   );
@@ -278,6 +494,7 @@ function PoiTab() {
 // ─── Stedsnavn tab ────────────────────────────────────────────────────────────
 function StedsnavnTab() {
   const { data, setData, dirty, saving, save, err, seeded } = useTabData('stedsnavn');
+  const [searchQ, setSearchQ] = useState('');
 
   const update = (i: number, f: any) => {
     if (!data) return;
@@ -290,21 +507,55 @@ function StedsnavnTab() {
   };
   const addNew = () => {
     if (!data) return;
-    setData({ ...data, features: [...data.features, { type: 'Feature', properties: { navn: 'Nytt stedsnavn', forklaring: '', kategori: 'stedsnavn', visibility: true }, geometry: { type: 'Point', coordinates: [10.350, 59.160] } }] });
+    setData({ ...data, features: [...data.features, {
+      type: 'Feature',
+      properties: { navn: 'Nytt stedsnavn', forklaring: '', kategori: 'stedsnavn', visibility: true },
+      geometry: { type: 'Point', coordinates: [10.350, 59.160] },
+    }]});
   };
 
   if (!data) return <p style={{ color: 'var(--muted)' }}>{err || 'Laster…'}</p>;
+
+  const filtered = data.features
+    .map((f, i) => ({ f, i }))
+    .filter(({ f }) => !searchQ || (f.properties.navn ?? '').toLowerCase().includes(searchQ.toLowerCase()));
+
   return (
     <>
       <FileActions tab="stedsnavn" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} seeded={seeded} />
       {err && <p style={{ color: '#e53e3e', marginBottom: 12 }}>{err}</p>}
-      {!seeded && <div style={{ ...S.infoBox, marginBottom: 16 }}>⚠️ Ingen data i Firebase ennå — viser lokal JSON. Trykk «Lagre til Firebase» for å laste opp.</div>}
-      <div style={S.infoBox}>{data.features.length} stedsnavn</div>
-      {data.features.map((f, i) => (
-        <FeatureRow key={i} label={f.properties.navn ?? `Stedsnavn ${i + 1}`} meta={f.properties.visibility === false ? 'skjult' : undefined}>
+      {!seeded && (
+        <div style={{ ...S.infoBox, marginBottom: 16 }}>
+          ⚠️ Ingen data i Firebase ennå — viser lokal JSON. Trykk «Last opp til Firebase» for å laste opp.
+        </div>
+      )}
+
+      <div style={S.toolbar}>
+        <input
+          style={S.searchInput}
+          placeholder="Søk etter stedsnavn…"
+          value={searchQ}
+          onChange={e => setSearchQ(e.target.value)}
+        />
+        <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+          {filtered.length} / {data.features.length} stedsnavn
+        </span>
+      </div>
+
+      {filtered.map(({ f, i }) => (
+        <FeatureRow
+          key={i}
+          label={f.properties.navn ?? `Stedsnavn ${i + 1}`}
+          meta={f.properties.visibility === false ? 'skjult' : undefined}
+        >
           <StedsnavnEditor feature={f} onChange={nf => update(i, nf)} onDelete={() => del(i)} />
         </FeatureRow>
       ))}
+
+      {filtered.length === 0 && (
+        <p style={{ color: 'var(--muted)', textAlign: 'center', padding: '24px 0' }}>Ingen resultater for søket.</p>
+      )}
+
       <button style={S.addBtn} onClick={addNew}>+ Legg til nytt stedsnavn</button>
     </>
   );
@@ -319,13 +570,23 @@ function TurerTab() {
     <>
       <FileActions tab="turer" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} seeded={seeded} />
       {err && <p style={{ color: '#e53e3e', marginBottom: 12 }}>{err}</p>}
-      {!seeded && <div style={{ ...S.infoBox, marginBottom: 16 }}>⚠️ Ingen data i Firebase ennå — viser lokal JSON. Trykk «Lagre til Firebase» for å laste opp.</div>}
-      <div style={S.infoBox}>{data.features.length} turrute(r) · GPS-ruter redigeres best i QGIS, GPSBabel eller Google My Maps og lastes opp som ny GeoJSON.</div>
+      {!seeded && (
+        <div style={{ ...S.infoBox, marginBottom: 16 }}>
+          ⚠️ Ingen data i Firebase ennå — viser lokal JSON. Trykk «Last opp til Firebase» for å laste opp.
+        </div>
+      )}
+      <div style={S.infoBox}>
+        {data.features.length} turrute(r) · GPS-ruter redigeres best i QGIS, GPSBabel eller Google My Maps og lastes opp som ny GeoJSON.
+      </div>
       {data.features.map((f, i) => (
         <div key={i} style={S.featureRow}>
           <div style={{ padding: '12px 14px' }}>
             <div style={{ fontWeight: 600, marginBottom: 4 }}>{f.properties.navn ?? f.properties.id ?? `Rute ${i + 1}`}</div>
-            <div style={{ fontSize: 12, color: 'var(--muted)' }}>{f.properties.km && `${f.properties.km} · `}{f.properties.tid && `${f.properties.tid} · `}{f.properties.vanskelighet}</div>
+            <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+              {f.properties.km && `${f.properties.km} · `}
+              {f.properties.tid && `${f.properties.tid} · `}
+              {f.properties.vanskelighet}
+            </div>
           </div>
         </div>
       ))}
@@ -361,7 +622,7 @@ export function AdminPage() {
     );
   }
 
-  if (user === undefined) return null; // loading
+  if (user === undefined) return null;
   if (!user) return <LoginForm onLogin={setUser} />;
 
   return (

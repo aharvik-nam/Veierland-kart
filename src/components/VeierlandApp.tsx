@@ -771,7 +771,7 @@ export function VeierlandApp() {
     setTrailPath(null);
     setView('detail');
     setSheetOpen(true);
-    flyToAboveSheet(poi.coordinates, 15);
+    flyToAboveSheet(poi.coordinates, Math.max(mapRef.current?.getZoom() ?? 15, 15));
   }
 
   function selectTrail(trail: Trail) {
