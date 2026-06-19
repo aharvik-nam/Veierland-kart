@@ -229,6 +229,65 @@ function CategoriesPanel({ cats, onChange, onSave, saving }: {
 }
 
 // ─── POI editor ──────────────────────────────────────────────────────────────
+function parseLatLon(text: string): [number, number] | null {
+  const parts = text.trim().split(/[\s,;]+/).filter(Boolean);
+  if (parts.length < 2) return null;
+  const a = parseFloat(parts[0]);
+  const b = parseFloat(parts[1]);
+  if (isNaN(a) || isNaN(b)) return null;
+  // Heuristic: lat is typically 55–72 for Norway, lon 4–32
+  if (Math.abs(a) <= 90 && Math.abs(b) <= 180 && Math.abs(a) > Math.abs(b)) return [a, b];
+  if (Math.abs(b) <= 90 && Math.abs(a) <= 180 && Math.abs(b) > Math.abs(a)) return [b, a];
+  return [a, b];
+}
+
+function CoordPasteField({ onParse }: { onParse: (lat: number, lon: number) => void }) {
+  const [val, setVal] = useState('');
+  const [ok, setOk] = useState<boolean | null>(null);
+
+  const tryParse = (text: string) => {
+    const result = parseLatLon(text);
+    if (result) {
+      onParse(result[0], result[1]);
+      setVal('');
+      setOk(true);
+      setTimeout(() => setOk(null), 1500);
+    } else if (text.trim()) {
+      setOk(false);
+    } else {
+      setOk(null);
+    }
+  };
+
+  return (
+    <Field label="Lim inn koordinater (lat, lon)" full>
+      <div style={{ display: 'flex', gap: 6 }}>
+        <input
+          style={{ ...S.input, borderColor: ok === false ? '#e53e3e' : ok === true ? '#38a169' : undefined }}
+          placeholder="59.157523, 10.353481"
+          value={val}
+          onChange={e => { setVal(e.target.value); setOk(null); }}
+          onPaste={e => {
+            const text = e.clipboardData.getData('text');
+            e.preventDefault();
+            setVal(text);
+            tryParse(text);
+          }}
+          onKeyDown={e => e.key === 'Enter' && tryParse(val)}
+        />
+        <button
+          style={{ ...S.pill('secondary'), padding: '6px 12px', flexShrink: 0 }}
+          onClick={() => tryParse(val)}
+          type="button"
+        >
+          {ok === true ? '✓' : 'Sett'}
+        </button>
+      </div>
+      {ok === false && <div style={{ fontSize: 11, color: '#e53e3e', marginTop: 3 }}>Ugyldig format — prøv «59.157, 10.353»</div>}
+    </Field>
+  );
+}
+
 function PoiEditor({ feature, onChange, onDelete, categories }: {
   feature: any; onChange: (f: any) => void; onDelete: () => void; categories: string[];
 }) {
@@ -240,6 +299,9 @@ function PoiEditor({ feature, onChange, onDelete, categories }: {
     const c = [...feature.geometry.coordinates] as [number, number];
     if (which === 'lon') c[0] = n; else c[1] = n;
     onChange({ ...feature, geometry: { ...feature.geometry, coordinates: c } });
+  };
+  const setLatLon = (newLat: number, newLon: number) => {
+    onChange({ ...feature, geometry: { ...feature.geometry, coordinates: [newLon, newLat] } });
   };
   return (
     <div style={S.editGrid}>
@@ -262,6 +324,7 @@ function PoiEditor({ feature, onChange, onDelete, categories }: {
         {p.bilde && <img src={p.bilde} alt="" style={S.imgPreview} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
       </Field>
       <Field label="Bildekilde / lisens" full><input style={S.input} value={p.bilde_lisens ?? ''} onChange={e => setP('bilde_lisens', e.target.value)} placeholder="CC BY 2.0 – Navn Navnesen" /></Field>
+      <CoordPasteField onParse={setLatLon} />
       <Field label="Breddegrad (lat)"><input style={S.input} type="number" step="0.000001" value={lat} onChange={e => setCoord('lat', e.target.value)} /></Field>
       <Field label="Lengdegrad (lon)"><input style={S.input} type="number" step="0.000001" value={lon} onChange={e => setCoord('lon', e.target.value)} /></Field>
       <Field label="Koordinatkilde"><input style={S.input} value={p.koordinat_kilde ?? ''} onChange={e => setP('koordinat_kilde', e.target.value)} /></Field>
@@ -281,6 +344,9 @@ function StedsnavnEditor({ feature, onChange, onDelete }: { feature: any; onChan
     if (which === 'lon') c[0] = n; else c[1] = n;
     onChange({ ...feature, geometry: { ...feature.geometry, coordinates: c } });
   };
+  const setLatLon = (newLat: number, newLon: number) => {
+    onChange({ ...feature, geometry: { ...feature.geometry, coordinates: [newLon, newLat] } });
+  };
   return (
     <div style={S.editGrid}>
       <Field label="Navn" full><input style={S.input} value={p.navn ?? ''} onChange={e => setP('navn', e.target.value)} /></Field>
@@ -291,6 +357,7 @@ function StedsnavnEditor({ feature, onChange, onDelete }: { feature: any; onChan
       </Field>
       <Field label="Kategori"><input style={S.input} value={p.kategori ?? ''} onChange={e => setP('kategori', e.target.value)} /></Field>
       <Field label="Forklaring" full><textarea style={S.textarea} value={p.forklaring ?? ''} onChange={e => setP('forklaring', e.target.value)} rows={4} /></Field>
+      <CoordPasteField onParse={setLatLon} />
       <Field label="Breddegrad (lat)"><input style={S.input} type="number" step="0.000001" value={lat} onChange={e => setCoord('lat', e.target.value)} /></Field>
       <Field label="Lengdegrad (lon)"><input style={S.input} type="number" step="0.000001" value={lon} onChange={e => setCoord('lon', e.target.value)} /></Field>
       <button style={S.deleteBtn} onClick={onDelete}>Slett dette stedsnavnet</button>
