@@ -161,11 +161,20 @@ const GBIF_POLYGON = encodeURIComponent(
 
 async function fetchNatureGroup(group: NatureGroup): Promise<{ group: NatureGroup; obs: unknown[] }> {
   try {
-    const url = `https://api.gbif.org/v1/occurrence/search?geometry=${GBIF_POLYGON}&taxonKey=${NATURE_GROUPS[group].taxonKey}&limit=300`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return { group, obs: data.results ?? [] };
+    const allResults: unknown[] = [];
+    const limit = 300;
+    let offset = 0;
+    while (true) {
+      const url = `https://api.gbif.org/v1/occurrence/search?geometry=${GBIF_POLYGON}&taxonKey=${NATURE_GROUPS[group].taxonKey}&limit=${limit}&offset=${offset}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      allResults.push(...(data.results ?? []));
+      if (data.endOfRecords) break;
+      offset += limit;
+      if (offset > 9000) break; // safety cap: 30 pages per group
+    }
+    return { group, obs: allResults };
   } catch {
     return { group, obs: [] };
   }
