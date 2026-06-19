@@ -14,18 +14,22 @@ export interface GeoCollection {
 const turkartFallback: GeoCollection = JSON.parse(turkartRaw);
 const COL = 'geodata';
 
+// Firestore doesn't support nested arrays (e.g. LineString coordinates),
+// so we serialize the entire GeoJSON as a JSON string in a { json: "..." } document.
 async function fromFirestore(docId: string): Promise<GeoCollection | null> {
   if (!isFirebaseConfigured) return null;
   try {
     const snap = await getDoc(doc(db, COL, docId));
-    return snap.exists() ? (snap.data() as GeoCollection) : null;
+    if (!snap.exists()) return null;
+    const d = snap.data();
+    return d.json ? JSON.parse(d.json) : (d as GeoCollection);
   } catch {
     return null;
   }
 }
 
 export async function saveGeoJSON(docId: string, data: GeoCollection): Promise<void> {
-  await setDoc(doc(db, COL, docId), data);
+  await setDoc(doc(db, COL, docId), { json: JSON.stringify(data) });
 }
 
 export async function hasFirestoreData(docId: string): Promise<boolean> {
