@@ -10,6 +10,7 @@ import 'leaflet.markercluster';
 import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, WikipediaData } from '../lib/types';
 import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages, fetchWikipediaSpecies, fetchArtsdatabankenAssessment } from '../lib/api';
 import { loadCatCfg, DEFAULT_CAT_CFG, CatCfgMap } from '../lib/catcfg';
+import { loadFarmCoords, DEFAULT_FARM_COORDS, FarmCoordsMap } from '../lib/farmcoords';
 import { ICONS } from '../lib/icons';
 import historyData from '../data/veierland_history.json';
 import floodData from '../data/sea_level_flood.geojson';
@@ -126,6 +127,7 @@ interface HistoryFarm {
   meaning: string;
   gnr: number;
   location: string;
+  coordinates: [number, number];
   history: string;
   archaeology: string;
   key_people: { name: string; role: string; period: string; note: string }[];
@@ -135,15 +137,8 @@ interface HistoryFarm {
 }
 
 const HISTORY_SECTIONS = historyData.sections as HistorySection[];
-const HISTORY_FARMS = historyData.farms as HistoryFarm[];
+const HISTORY_FARMS = historyData.farms as unknown as HistoryFarm[];
 
-const FARM_COORDS: Record<string, [number, number]> = {
-  Alby:      [59.1656, 10.3564],
-  Vestgården:[59.1650, 10.3435],
-  Tangen:    [59.1535, 10.3380],
-  Krika:     [59.1564, 10.3546],
-  Oslebakke: [59.1644, 10.3481],
-};
 
 // Discrete sea level steps: index → metres above today (null = no overlay)
 const SEA_LEVEL_STEPS: (number | null)[] = [null, 2, 6, 10, 15];
@@ -560,6 +555,9 @@ export function VeierlandApp() {
   // Dynamic category config (loaded from Firestore, falls back to defaults)
   const [catCfg, setCatCfg] = useState<CatCfgMap>(DEFAULT_CAT_CFG);
 
+  // Farm coordinates (loaded from Firestore, falls back to veierland_history.json values)
+  const [farmCoords, setFarmCoords] = useState<FarmCoordsMap>(DEFAULT_FARM_COORDS);
+
   const getCat = useCallback((k: string) =>
     catCfg[k] ?? { no: k, en: k, color: '#7c876f', icon: 'wc', group: '' as const, showInFilter: false },
   [catCfg]);
@@ -656,6 +654,7 @@ export function VeierlandApp() {
     loadAllPOIs().then(setAllPOIs);
     loadTurkartGeoJSON().then(geo => setTrails(trailsFromGeoJSON(geo)));
     loadCatCfg().then(setCatCfg);
+    loadFarmCoords().then(setFarmCoords);
   }, []);
 
   // Fit map bounds once both map and POIs are ready (runs once)
@@ -1241,7 +1240,7 @@ export function VeierlandApp() {
           <div key={i} className="vl-sp-row" onClick={() => {
             setSelectedFarm(farm);
             setSheetOpen(true);
-            const coords = FARM_COORDS[farm.name];
+            const coords = farmCoords[farm.name];
             if (coords) mapRef.current?.setView(coords, Math.max(mapZoom, 14));
           }}>
             <div className="vl-sp-main">
@@ -1562,7 +1561,7 @@ export function VeierlandApp() {
           );
         })()}
         {mode === 'history' && historyView === 'garder' && HISTORY_FARMS.map(farm => {
-          const coords = FARM_COORDS[farm.name];
+          const coords = farmCoords[farm.name];
           if (!coords) return null;
           const isSelected = selectedFarm?.name === farm.name;
           const icon = L.divIcon({

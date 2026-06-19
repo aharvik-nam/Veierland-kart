@@ -200,6 +200,7 @@
       "bruk_1886": 6,
       "bruk_1950": 35,
       "location": "Nordøst på øya, ved Albykilen",
+      "coordinates": [59.1656, 10.3564],
       "history": "Alby var den opprinnelige gården som en gang eide hele øya. Navnet betyr hovedgården på norrønt. Gården ligger 10-12 meter over dagens havnivå med full oversikt over den beskyttede vika.",
       "archaeology": "To gravhauger fra jernalderen med status som fredete kulturminner. Gravhaugene er fra vikingtid og eldre jernalder.",
       "key_people": [
@@ -236,6 +237,7 @@
       "bruk_1886": 9,
       "bruk_1950": 42,
       "location": "Vest på øya, fra Krika-kilen i sør til Vestgårdskilen i nord",
+      "coordinates": [59.1650, 10.3435],
       "history": "Navnet har holdt seg nesten uendret i over tusen år. Gravfunnene her gjør at vi kan datere den første gårdsoppdelingen på Veierland til omkring år 800. Gården ble skilt ut fra Alby.",
       "archaeology": "Gravfunn fra flere graver, inkludert et godt utstyrt mannsgrav for en smed, og eiendommelig kvinnegrav med spenne fra Hedeby (elefant-ornamenter), hesteskjelett, spyd og mulig ringbrynje.",
       "key_people": [],
@@ -260,6 +262,7 @@
       "bruk_1886": 17,
       "bruk_1950": 75,
       "location": "Sydlig del av øya, med tre tanger: Hvervodden, Salteriodden og Kjelodden",
+      "coordinates": [59.1535, 10.3380],
       "history": "Skilt ut fra Vestgården ved at man trakk en grense østover fra Bausen (Båsløkka) til Krikakilen. Eldste skriftlige dokument fra 1315: ridder Bjarne Audunsson ga eierparter til tre kirker i Tønsberg. Gården var trolig kongens eiendom før den kom i private hender.",
       "archaeology": "Ingen gravrøyser funnet, noe som tyder på at gården ble etablert i kristen tid (tidligst 1000-tallet).",
       "key_people": [
@@ -348,6 +351,7 @@
       "bruk_1886": 15,
       "bruk_1950": 39,
       "location": "Øst på øya, ved Krikakilen",
+      "coordinates": [59.1564, 10.3546],
       "history": "En av de fem matrikkelgårdene. Brukeren i Krika hadde eid småskuter, bl.a. en ved navn Indebitoria. Jacob Nilsen drev som reder og kaptein på sluppen Haabet (5 kl.) på 1840-50-tallet. Lars Krigen er dokumentert som skipstømmermann.",
       "archaeology": "",
       "key_people": [
@@ -391,6 +395,7 @@
       "bruk_1886": 14,
       "bruk_1950": 50,
       "location": "Ved Oslebakke havn, øst på øya",
+      "coordinates": [59.1644, 10.3481],
       "history": "Het tidligere Hamna (Höfn/Höfnin). På 1500-1600-tallet var dette en gård med aktiv skipsfart. Anders Andersen fra Ugland i Fjære sogn kom hit i 1790-årene, ble gift med Maren (datter av enken) i 1800, og overtok gjestgiveriet og skipsverven. Anders ble skipsbyggmester og reder. Hans Andersen og Rasmus Andersen (yngre brødre) kom også hit.",
       "archaeology": "",
       "key_people": [

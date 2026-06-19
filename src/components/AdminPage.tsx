@@ -4,17 +4,20 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../lib/firebase';
 import { poiFallback, stedsnavnFallback, turkartFallback, GeoCollection } from '../lib/geodata';
 import { DEFAULT_CAT_CFG, CatCfgMap, CatEntry, loadCatCfg, saveCatCfg } from '../lib/catcfg';
+import { loadFarmCoords, saveFarmCoords, DEFAULT_FARM_COORDS, FarmCoordsMap } from '../lib/farmcoords';
 import { ICONS, ICON_LABELS } from '../lib/icons';
+import historyData from '../data/veierland_history.json';
 
-type Tab = 'poi' | 'stedsnavn' | 'turer' | 'kategorier';
+type Tab = 'poi' | 'stedsnavn' | 'turer' | 'kategorier' | 'garder';
+type GeoTab = 'poi' | 'stedsnavn' | 'turer';
 
 const COL = 'geodata';
-const DOC: Record<Tab, string> = {
+const DOC: Record<GeoTab, string> = {
   poi: 'veierland_poi',
   stedsnavn: 'veierland_stedsnavn',
   turer: 'turkart',
 };
-const FALLBACK: Record<Tab, GeoCollection> = {
+const FALLBACK: Record<GeoTab, GeoCollection> = {
   poi: poiFallback as unknown as GeoCollection,
   stedsnavn: stedsnavnFallback as unknown as GeoCollection,
   turer: turkartFallback,
@@ -121,7 +124,7 @@ function LoginForm({ onLogin }: { onLogin: (u: User) => void }) {
 }
 
 // ─── Data hooks ──────────────────────────────────────────────────────────────
-function useTabData(tab: Tab) {
+function useTabData(tab: GeoTab) {
   const [data, setDataState] = useState<GeoCollection | null>(null);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -459,7 +462,7 @@ function FeatureRow({ label, meta, children, onMoveUp, onMoveDown }: {
 
 // ─── File actions ─────────────────────────────────────────────────────────────
 function FileActions({ tab, data, onUpload, dirty, onSave, saving, seeded }: {
-  tab: Tab; data: GeoCollection | null; onUpload: (d: GeoCollection) => void;
+  tab: GeoTab; data: GeoCollection | null; onUpload: (d: GeoCollection) => void;
   dirty: boolean; onSave: () => void; saving: boolean; seeded: boolean;
 }) {
   const uploadRef = useRef<HTMLInputElement>(null);
@@ -1086,6 +1089,86 @@ function CategoryConfigTab() {
   );
 }
 
+// ─── Gårder tab ──────────────────────────────────────────────────────────────
+const HISTORY_FARMS = historyData.farms as unknown as Array<{ name: string; coordinates: [number, number] }>;
+
+function GarderTab() {
+  const [coords, setCoords] = useState<FarmCoordsMap>(DEFAULT_FARM_COORDS);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    loadFarmCoords().then(setCoords);
+  }, []);
+
+  const set = (name: string, idx: 0 | 1, val: string) => {
+    const n = parseFloat(val);
+    if (isNaN(n)) return;
+    setCoords(prev => {
+      const cur = prev[name] ?? [0, 0];
+      const next: [number, number] = [...cur] as [number, number];
+      next[idx] = n;
+      return { ...prev, [name]: next };
+    });
+    setSaved(false);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await saveFarmCoords(coords);
+      setSaved(true);
+    } catch (e: any) { alert(e.message); }
+    finally { setSaving(false); }
+  };
+
+  const inputStyle = {
+    width: 130, padding: '6px 10px', border: '1px solid var(--line)', borderRadius: 8,
+    background: 'var(--surface)', color: 'var(--text)', fontSize: 13,
+  } as const;
+
+  return (
+    <div style={{ maxWidth: 600 }}>
+      <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>
+        Koordinater for gårdsmarkørene i Historie-fanen. Breddegrad (lat) og lengdegrad (lng).
+      </p>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <thead>
+          <tr>
+            {['Gård', 'Breddegrad (lat)', 'Lengdegrad (lng)'].map(h => (
+              <th key={h} style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid var(--line)', color: 'var(--muted)', fontWeight: 600 }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {HISTORY_FARMS.map(farm => {
+            const c = coords[farm.name] ?? farm.coordinates;
+            return (
+              <tr key={farm.name}>
+                <td style={{ padding: '8px 8px', fontWeight: 600 }}>{farm.name}</td>
+                <td style={{ padding: '8px 8px' }}>
+                  <input style={inputStyle} type="number" step="0.0001"
+                    value={c[0]} onChange={e => set(farm.name, 0, e.target.value)} />
+                </td>
+                <td style={{ padding: '8px 8px' }}>
+                  <input style={inputStyle} type="number" step="0.0001"
+                    value={c[1]} onChange={e => set(farm.name, 1, e.target.value)} />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <div style={{ marginTop: 20, display: 'flex', gap: 12, alignItems: 'center' }}>
+        <button style={S.pill('primary')} onClick={save} disabled={saving}>
+          {saving ? 'Lagrer…' : '💾 Lagre til Firebase'}
+        </button>
+        {saved && <span style={{ fontSize: 12, color: '#38a169' }}>Lagret! Endringer vises etter neste sideoppdatering.</span>}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export function AdminPage() {
   const [user, setUser] = useState<User | null | undefined>(
@@ -1128,9 +1211,9 @@ export function AdminPage() {
         </div>
       </div>
       <div style={S.tabs}>
-        {(['poi', 'stedsnavn', 'turer', 'kategorier'] as Tab[]).map(t => (
+        {(['poi', 'stedsnavn', 'turer', 'kategorier', 'garder'] as Tab[]).map(t => (
           <button key={t} style={S.tab(tab === t)} onClick={() => setTab(t)}>
-            {t === 'poi' ? 'Steder' : t === 'stedsnavn' ? 'Stedsnavn' : t === 'turer' ? 'Turer' : 'Kategorier'}
+            {t === 'poi' ? 'Steder' : t === 'stedsnavn' ? 'Stedsnavn' : t === 'turer' ? 'Turer' : t === 'kategorier' ? 'Kategorier' : 'Gårder'}
           </button>
         ))}
       </div>
@@ -1139,6 +1222,7 @@ export function AdminPage() {
         {tab === 'stedsnavn' && <StedsnavnTab />}
         {tab === 'turer' && <TurerTab />}
         {tab === 'kategorier' && <CategoryConfigTab />}
+        {tab === 'garder' && <GarderTab />}
       </div>
     </div>
   );
