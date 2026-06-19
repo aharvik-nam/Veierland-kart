@@ -9,6 +9,7 @@ import assessmentCacheData from '../data/assessment_cache.json';
 import 'leaflet.markercluster';
 import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, WikipediaData } from '../lib/types';
 import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages, fetchWikipediaSpecies, fetchArtsdatabankenAssessment } from '../lib/api';
+import { loadCatCfg, DEFAULT_CAT_CFG, CatCfgMap } from '../lib/catcfg';
 
 // ─── Layer configs ────────────────────────────────────────────────────────────
 
@@ -58,32 +59,7 @@ const LAYER_ORDER = ['soleng', 'friluft', 'flyfoto', 'historisk'] as const;
 
 // ─── Category configs ─────────────────────────────────────────────────────────
 
-interface CatCfg {
-  no: string;
-  en: string;
-  color: string;
-  icon: string;
-}
-
-const CAT_CFG: Record<string, CatCfg> = {
-  bad:        { no: 'Badeplasser',   en: 'Beaches',      color: '#2f9e8f', icon: 'bade'   },
-  ferge:      { no: 'Brygge',        en: 'Quays',        color: '#3d6ea5', icon: 'ferge'  },
-  havn:       { no: 'Havn',          en: 'Harbour',      color: '#3d6ea5', icon: 'anker'  },
-  kultur:     { no: 'Kulturminner',  en: 'Heritage',     color: '#b5673e', icon: 'kultur' },
-  hvalfangst: { no: 'Hvalfangst',   en: 'Whaling',      color: '#7b5ea7', icon: 'utsikt' },
-  info:       { no: 'Fasiliteter',   en: 'Facilities',   color: '#6b7a86', icon: 'wc'     },
-  mat:        { no: 'Servering',     en: 'Food & drink', color: '#e0823c', icon: 'mat'    },
-  friluft:    { no: 'Friluft',       en: 'Outdoor',      color: '#5f9438', icon: 'tur'    },
-  arkeologi:  { no: 'Arkeologi',     en: 'Archaeology',  color: '#b5673e', icon: 'kultur' },
-  stedsnavn:  { no: 'Stedsnavn',     en: 'Place names',  color: '#7c876f', icon: 'wc'     },
-};
-
-const PRAKTISK_CATS = ['bad', 'ferge', 'havn', 'mat', 'friluft', 'kultur', 'info'];
-const HISTORISK_CATS = ['arkeologi'];
-
-function getCat(k: string): CatCfg {
-  return CAT_CFG[k] ?? { no: k, en: k, color: '#7c876f', icon: 'wc' };
-}
+// CatCfg types live in src/lib/catcfg.ts; CAT_CFG is loaded dynamically from Firestore
 
 // ─── Icon SVG paths ───────────────────────────────────────────────────────────
 
@@ -540,10 +516,20 @@ export function VeierlandApp() {
   const sheetRef = useRef<HTMLDivElement>(null);
   const fitDoneRef = useRef(false);
 
-  // Derive category list from actual POI data
+  // Dynamic category config (loaded from Firestore, falls back to defaults)
+  const [catCfg, setCatCfg] = useState<CatCfgMap>(DEFAULT_CAT_CFG);
+
+  const getCat = useCallback((k: string) =>
+    catCfg[k] ?? { no: k, en: k, color: '#7c876f', icon: 'wc', group: '' as const, showInFilter: false },
+  [catCfg]);
+
+  const praktiskCats = useMemo(() => Object.keys(catCfg).filter(k => catCfg[k].group === 'praktisk'), [catCfg]);
+  const historiskCats = useMemo(() => Object.keys(catCfg).filter(k => catCfg[k].group === 'historisk'), [catCfg]);
+
+  // Derive category list from actual POI data, filtered by showInFilter
   const allCats = useMemo(
-    () => Array.from(new Set(allPOIs.flatMap(p => p.kategorier ?? [p.kategori]))).filter(k => CAT_CFG[k]),
-    [allPOIs]
+    () => Array.from(new Set(allPOIs.flatMap(p => p.kategorier ?? [p.kategori]))).filter(k => catCfg[k]?.showInFilter),
+    [allPOIs, catCfg]
   );
 
   // Filtered POIs
@@ -559,7 +545,7 @@ export function VeierlandApp() {
   }, [allPOIs, activeCats, searchQ]);
 
   const groupedPOIs = useMemo(() => {
-    const catOrder = Object.keys(CAT_CFG);
+    const catOrder = Object.keys(catCfg);
     const map = new Map<string, POI[]>();
     for (const poi of filteredPOIs) {
       if (!map.has(poi.kategori)) map.set(poi.kategori, []);
@@ -619,6 +605,7 @@ export function VeierlandApp() {
   useEffect(() => {
     loadAllPOIs().then(setAllPOIs);
     loadTurkartGeoJSON().then(geo => setTrails(trailsFromGeoJSON(geo)));
+    loadCatCfg().then(setCatCfg);
   }, []);
 
   // Fit map bounds once both map and POIs are ready (runs once)
@@ -1352,22 +1339,26 @@ export function VeierlandApp() {
               <span className="cl">{T.all}</span>
             </div>
             {(() => {
-              const praktiskOn = PRAKTISK_CATS.some(k => activeCats.has(k));
-              const historiskOn = HISTORISK_CATS.some(k => activeCats.has(k));
+              const praktiskOn = praktiskCats.some(k => activeCats.has(k));
+              const historiskOn = historiskCats.some(k => activeCats.has(k));
               return (
                 <>
-                  <div className={`vl-chip${praktiskOn ? ' on' : ''}`} onClick={() => toggleGroup(PRAKTISK_CATS)}>
-                    <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('wc') }} />
-                    <span className="cl">{lang === 'no' ? 'Praktisk' : 'Practical'}</span>
-                  </div>
-                  <div className={`vl-chip${historiskOn ? ' on' : ''}`} onClick={() => toggleGroup(HISTORISK_CATS)}>
-                    <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('kultur') }} />
-                    <span className="cl">{lang === 'no' ? 'Historisk' : 'Historic'}</span>
-                  </div>
+                  {praktiskCats.length > 0 && (
+                    <div className={`vl-chip${praktiskOn ? ' on' : ''}`} onClick={() => toggleGroup(praktiskCats)}>
+                      <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('wc') }} />
+                      <span className="cl">{lang === 'no' ? 'Praktisk' : 'Practical'}</span>
+                    </div>
+                  )}
+                  {historiskCats.length > 0 && (
+                    <div className={`vl-chip${historiskOn ? ' on' : ''}`} onClick={() => toggleGroup(historiskCats)}>
+                      <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('kultur') }} />
+                      <span className="cl">{lang === 'no' ? 'Historisk' : 'Historic'}</span>
+                    </div>
+                  )}
                 </>
               );
             })()}
-            {allCats.filter(k => ![...PRAKTISK_CATS, ...HISTORISK_CATS].includes(k)).map(k => {
+            {allCats.filter(k => ![...praktiskCats, ...historiskCats].includes(k)).map(k => {
               const cat = getCat(k);
               const on = activeCats.has(k);
               return (

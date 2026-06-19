@@ -3,8 +3,9 @@ import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'f
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../lib/firebase';
 import { poiFallback, stedsnavnFallback, turkartFallback, GeoCollection } from '../lib/geodata';
+import { DEFAULT_CAT_CFG, CatCfgMap, CatEntry, loadCatCfg, saveCatCfg } from '../lib/catcfg';
 
-type Tab = 'poi' | 'stedsnavn' | 'turer';
+type Tab = 'poi' | 'stedsnavn' | 'turer' | 'kategorier';
 
 const COL = 'geodata';
 const DOC: Record<Tab, string> = {
@@ -18,7 +19,6 @@ const FALLBACK: Record<Tab, GeoCollection> = {
   turer: turkartFallback,
 };
 
-const DEFAULT_CATS = ['ferge','kultur','mat','friluft','info','havn','bad','bru','kulturminne','park','arkeologi','hvalfangst'];
 
 function groupByCat<T>(items: T[], getKey: (t: T) => string): Map<string, T[]> {
   const m = new Map<string, T[]>();
@@ -157,19 +157,25 @@ function useTabData(tab: Tab) {
 }
 
 function useCategories() {
-  const [cats, setCats] = useState<string[]>(DEFAULT_CATS);
+  const [cats, setCats] = useState<string[]>(Object.keys(DEFAULT_CAT_CFG));
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    getDoc(doc(db, COL, 'categories')).then(snap => {
-      if (snap.exists()) setCats(snap.data().poi ?? DEFAULT_CATS);
-    }).catch(() => {});
+    // Derive available categories from cat_cfg (single source of truth)
+    loadCatCfg().then(cfg => setCats(Object.keys(cfg)));
   }, []);
 
   const save = async (newCats: string[]) => {
+    // Persist reordered/renamed list back to cat_cfg, preserving existing entry config
     setSaving(true);
     try {
-      await setDoc(doc(db, COL, 'categories'), { poi: newCats });
+      const current = await loadCatCfg();
+      const next: CatCfgMap = {};
+      for (const k of newCats) {
+        next[k] = current[k] ?? { no: k, en: k, color: '#7c876f', icon: 'wc', group: '', showInFilter: true };
+      }
+      await saveCatCfg(next);
+      setCats(newCats);
     } finally { setSaving(false); }
   };
 
@@ -681,6 +687,130 @@ function TurerTab() {
   );
 }
 
+// ─── Kategorier tab ───────────────────────────────────────────────────────────
+const AVAILABLE_ICONS = ['bade','ferge','anker','kultur','utsikt','wc','mat','tur','blad','fugl','plante','pattedyr','sopp','sommerfugl'];
+
+function CategoryConfigTab() {
+  const [cfg, setCfg] = useState<CatCfgMap>(DEFAULT_CAT_CFG);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [newKey, setNewKey] = useState('');
+
+  useEffect(() => {
+    loadCatCfg().then(setCfg);
+  }, []);
+
+  const set = (key: string, field: keyof CatEntry, val: any) => {
+    setCfg(prev => ({ ...prev, [key]: { ...prev[key], [field]: val } }));
+    setSaved(false);
+  };
+
+  const addCategory = () => {
+    const k = newKey.trim().toLowerCase().replace(/\s+/g, '_');
+    if (!k || cfg[k]) return;
+    setCfg(prev => ({ ...prev, [k]: { no: k, en: k, color: '#7c876f', icon: 'wc', group: '', showInFilter: true } }));
+    setNewKey('');
+    setSaved(false);
+  };
+
+  const removeCategory = (key: string) => {
+    if (!confirm(`Slett kategorien «${key}»? POI-er som bruker den beholder verdien, men den vises ikke lenger i filteret.`)) return;
+    setCfg(prev => { const next = { ...prev }; delete next[key]; return next; });
+    setSaved(false);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    await saveCatCfg(cfg);
+    setSaving(false);
+    setSaved(true);
+  };
+
+  const tdS: React.CSSProperties = { padding: '8px 10px', borderBottom: '1px solid var(--line)', verticalAlign: 'middle' };
+  const thS: React.CSSProperties = { ...tdS, fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em', textAlign: 'left', background: 'var(--bg)' };
+
+  return (
+    <>
+      <div style={{ ...S.infoBox, marginBottom: 16 }}>
+        Her styrer du hvilke kategorier som vises i filterpanelet på nettsiden, hva de heter på norsk/engelsk, farge og gruppering (Praktisk / Historisk). Kategorier med «Vis i filter» avhuket dukker opp som filterknapper.
+      </div>
+
+      <div style={{ overflowX: 'auto', marginBottom: 20 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr>
+              <th style={thS}>Nøkkel</th>
+              <th style={thS}>Norsk navn</th>
+              <th style={thS}>Engelsk navn</th>
+              <th style={thS}>Farge</th>
+              <th style={thS}>Ikon</th>
+              <th style={thS}>Gruppe</th>
+              <th style={thS}>Vis i filter</th>
+              <th style={thS}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.entries(cfg).map(([key, entry]) => (
+              <tr key={key} style={{ background: 'var(--card)' }}>
+                <td style={{ ...tdS, fontWeight: 600, fontFamily: 'monospace', color: 'var(--muted)' }}>{key}</td>
+                <td style={tdS}>
+                  <input style={{ ...S.input, padding: '5px 8px' }} value={entry.no} onChange={e => set(key, 'no', e.target.value)} />
+                </td>
+                <td style={tdS}>
+                  <input style={{ ...S.input, padding: '5px 8px' }} value={entry.en} onChange={e => set(key, 'en', e.target.value)} />
+                </td>
+                <td style={{ ...tdS, width: 70 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <input type="color" value={entry.color} onChange={e => set(key, 'color', e.target.value)}
+                      style={{ width: 32, height: 28, border: '1px solid var(--line)', borderRadius: 5, cursor: 'pointer', padding: 2, background: 'var(--bg)' }} />
+                    <span style={{ fontSize: 10, color: 'var(--muted)', fontFamily: 'monospace' }}>{entry.color}</span>
+                  </div>
+                </td>
+                <td style={{ ...tdS, width: 110 }}>
+                  <select style={{ ...S.input, padding: '5px 7px', fontSize: 12 }} value={entry.icon} onChange={e => set(key, 'icon', e.target.value)}>
+                    {AVAILABLE_ICONS.map(i => <option key={i} value={i}>{i}</option>)}
+                  </select>
+                </td>
+                <td style={{ ...tdS, width: 120 }}>
+                  <select style={{ ...S.input, padding: '5px 7px', fontSize: 12 }} value={entry.group} onChange={e => set(key, 'group', e.target.value as any)}>
+                    <option value="">Ingen gruppe</option>
+                    <option value="praktisk">Praktisk</option>
+                    <option value="historisk">Historisk</option>
+                  </select>
+                </td>
+                <td style={{ ...tdS, width: 90, textAlign: 'center' }}>
+                  <input type="checkbox" checked={entry.showInFilter} onChange={e => set(key, 'showInFilter', e.target.checked)}
+                    style={{ width: 16, height: 16, cursor: 'pointer' }} />
+                </td>
+                <td style={{ ...tdS, width: 40 }}>
+                  <button onClick={() => removeCategory(key)}
+                    style={{ background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer', fontSize: 16, padding: '2px 6px' }}>✕</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, marginBottom: 20, alignItems: 'center' }}>
+        <input
+          style={{ ...S.input, maxWidth: 200 }}
+          placeholder="ny-kategori-nøkkel"
+          value={newKey}
+          onChange={e => setNewKey(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && addCategory()}
+        />
+        <button style={S.pill('secondary')} onClick={addCategory}>+ Legg til kategori</button>
+      </div>
+
+      <button style={S.pill('primary')} onClick={save} disabled={saving}>
+        {saving ? 'Lagrer…' : saved ? '✓ Lagret' : '💾 Lagre til Firebase'}
+      </button>
+      {saved && <span style={{ fontSize: 12, color: '#38a169', marginLeft: 10 }}>Endringene er aktive etter neste sideoppdatering.</span>}
+    </>
+  );
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export function AdminPage() {
   const [user, setUser] = useState<User | null | undefined>(
@@ -723,9 +853,9 @@ export function AdminPage() {
         </div>
       </div>
       <div style={S.tabs}>
-        {(['poi', 'stedsnavn', 'turer'] as Tab[]).map(t => (
+        {(['poi', 'stedsnavn', 'turer', 'kategorier'] as Tab[]).map(t => (
           <button key={t} style={S.tab(tab === t)} onClick={() => setTab(t)}>
-            {t === 'poi' ? 'Steder' : t === 'stedsnavn' ? 'Stedsnavn' : 'Turer'}
+            {t === 'poi' ? 'Steder' : t === 'stedsnavn' ? 'Stedsnavn' : t === 'turer' ? 'Turer' : 'Kategorier'}
           </button>
         ))}
       </div>
@@ -733,6 +863,7 @@ export function AdminPage() {
         {tab === 'poi' && <PoiTab />}
         {tab === 'stedsnavn' && <StedsnavnTab />}
         {tab === 'turer' && <TurerTab />}
+        {tab === 'kategorier' && <CategoryConfigTab />}
       </div>
     </div>
   );
