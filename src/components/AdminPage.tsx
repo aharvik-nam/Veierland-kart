@@ -335,10 +335,13 @@ function TurerTab() {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export function AdminPage() {
-  const [user, setUser] = useState<User | null | undefined>(undefined);
+  const [user, setUser] = useState<User | null | undefined>(
+    isFirebaseConfigured ? undefined : null
+  );
   const [tab, setTab] = useState<Tab>('poi');
 
   useEffect(() => {
+    if (!isFirebaseConfigured) return;
     const unsub = onAuthStateChanged(auth, u => setUser(u));
     return unsub;
   }, []);
