@@ -10,6 +10,7 @@ import 'leaflet.markercluster';
 import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, WikipediaData } from '../lib/types';
 import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages, fetchWikipediaSpecies, fetchArtsdatabankenAssessment } from '../lib/api';
 import { loadCatCfg, DEFAULT_CAT_CFG, CatCfgMap } from '../lib/catcfg';
+import { ICONS } from '../lib/icons';
 
 // ─── Layer configs ────────────────────────────────────────────────────────────
 
@@ -61,28 +62,7 @@ const LAYER_ORDER = ['soleng', 'friluft', 'flyfoto', 'historisk'] as const;
 
 // CatCfg types live in src/lib/catcfg.ts; CAT_CFG is loaded dynamically from Firestore
 
-// ─── Icon SVG paths ───────────────────────────────────────────────────────────
-
-const ICONS: Record<string, string> = {
-  bade:   '<path d="M-6,-2 q3,-3 6,0 q3,3 6,0"/><path d="M-6,3 q3,-3 6,0 q3,3 6,0"/>',
-  tur:    '<path d="M-5,6 C-8,1 -1,2 0,-2 C1,-6 7,-5 4,-9"/>',
-  utsikt: '<path d="M-7,0 C-4,-4.5 4,-4.5 7,0 C4,4.5 -4,4.5 -7,0 Z"/><circle cx="0" cy="0" r="1.7" fill="#fff" stroke="none"/>',
-  ferge:  '<path d="M-7,2 L7,2 L5,6 L-5,6 Z"/><path d="M0,2 L0,-6"/><path d="M0,-6 L5,-3 L0,-1" fill="#fff"/>',
-  anker:  '<circle cx="0" cy="-5" r="2.2" fill="none"/><path d="M0,-2.8 L0,6"/><path d="M-5,0 H5"/><path d="M-5,6 C-8,6 -8,3 -5,3"/><path d="M5,6 C8,6 8,3 5,3"/>',
-  mat:    '<path d="M-5,-3 L5,-3 L4,3 a2.4,2.4 0 0 1-2.4,2.4L-1.6,2.4a2.4,2.4 0 0 1-2.4,-2.4Z"/><path d="M5,-2 a2.6,2.6 0 0 1 0,4.4"/><path d="M-1,-7 v2.4"/>',
-  kultur: '<path d="M-7,-3 L0,-8 L7,-3"/><path d="M-5,-3 v8"/><path d="M0,-3 v8"/><path d="M5,-3 v8"/><path d="M-7,5 H7"/>',
-  telt:   '<path d="M0,-7 L7.5,6 L-7.5,6 Z"/><path d="M0,-7 L0,6"/><path d="M0,6 L-2.5,6"/>',
-  wc:     '<circle cx="0" cy="0" r="6.5"/><path d="M0,-2.6 v0.2"/><path d="M0,0 v3.2"/>',
-  blad:   '<path d="M0,8 Q-8,-1 0,-9 Q8,-1 0,8Z"/><path d="M0,-9 Q-2,0 0,8"/>',
-  all:    '<rect x="-7" y="-7" width="5.5" height="5.5" rx="1.2"/><rect x="1.5" y="-7" width="5.5" height="5.5" rx="1.2"/><rect x="-7" y="1.5" width="5.5" height="5.5" rx="1.2"/><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2"/>',
-  fugl:        '<path d="M-9,3 C-5,-5 5,-5 9,3 C5,0 1,0 0,-2 C-1,0 -5,0 -9,3Z"/><path d="M0,-2 L0,7"/><path d="M-2,7 L2,7"/>',
-  plante:      '<path d="M0,9 C-7,5 -7,-2 0,-9 C7,-2 7,5 0,9Z"/><path d="M0,-9 L0,9"/>',
-  pattedyr:    '<circle cx="-3.5" cy="-5.5" r="2.5"/><circle cx="3.5" cy="-5.5" r="2.5"/><path d="M-6,0 C-7,-4 -4,-6 0,-4 C4,-6 7,-4 6,0 C5,5 3,8 0,8 C-3,8 -5,5 -6,0Z"/>',
-  sopp:        '<path d="M-8,-1 Q-8,-9 0,-9 Q8,-9 8,-1 Z"/><path d="M0,-1 L0,8"/><path d="M-3,8 L3,8"/>',
-  sommerfugl:  '<path d="M0,1 C-2,-1 -9,0 -8,-5 C-7,-9 -2,-7 0,1Z"/><path d="M0,1 C2,-1 9,0 8,-5 C7,-9 2,-7 0,1Z"/><path d="M0,1 C-1,2 -5,5 -3,8 C-1,9 0,5 0,1Z"/><path d="M0,1 C1,2 5,5 3,8 C1,9 0,5 0,1Z"/>',
-  rodliste:    '<path d="M0,-9 L8.5,7 L-8.5,7 Z"/><path d="M0,-2 L0,2"/><circle cx="0" cy="5" r="1.5" fill="currentColor" stroke="none"/>',
-  fremmed:     '<circle cx="0" cy="1" r="7"/><path d="M0,-10 L0,-6"/><path d="M-3,-8 L0,-6 L3,-8"/>',
-};
+// ICONS are imported from src/lib/icons.ts
 
 // ─── Nature (Artsdatabanken) ──────────────────────────────────────────────────
 
@@ -523,8 +503,17 @@ export function VeierlandApp() {
     catCfg[k] ?? { no: k, en: k, color: '#7c876f', icon: 'wc', group: '' as const, showInFilter: false },
   [catCfg]);
 
-  const praktiskCats = useMemo(() => Object.keys(catCfg).filter(k => catCfg[k].group === 'praktisk'), [catCfg]);
-  const historiskCats = useMemo(() => Object.keys(catCfg).filter(k => catCfg[k].group === 'historisk'), [catCfg]);
+  // Map of groupName → [cat keys], in order of first appearance in catCfg
+  const catGroups = useMemo(() => {
+    const groups = new Map<string, string[]>();
+    for (const [key, entry] of Object.entries(catCfg)) {
+      if (entry.group) {
+        if (!groups.has(entry.group)) groups.set(entry.group, []);
+        groups.get(entry.group)!.push(key);
+      }
+    }
+    return groups;
+  }, [catCfg]);
 
   // Derive category list from actual POI data, filtered by showInFilter
   const allCats = useMemo(
@@ -1338,27 +1327,17 @@ export function VeierlandApp() {
               <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
               <span className="cl">{T.all}</span>
             </div>
-            {(() => {
-              const praktiskOn = praktiskCats.some(k => activeCats.has(k));
-              const historiskOn = historiskCats.some(k => activeCats.has(k));
+            {[...catGroups.entries()].map(([groupName, groupCats]) => {
+              const on = groupCats.some(k => activeCats.has(k));
+              const icon = catCfg[groupCats[0]]?.icon ?? 'wc';
               return (
-                <>
-                  {praktiskCats.length > 0 && (
-                    <div className={`vl-chip${praktiskOn ? ' on' : ''}`} onClick={() => toggleGroup(praktiskCats)}>
-                      <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('wc') }} />
-                      <span className="cl">{lang === 'no' ? 'Praktisk' : 'Practical'}</span>
-                    </div>
-                  )}
-                  {historiskCats.length > 0 && (
-                    <div className={`vl-chip${historiskOn ? ' on' : ''}`} onClick={() => toggleGroup(historiskCats)}>
-                      <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('kultur') }} />
-                      <span className="cl">{lang === 'no' ? 'Historisk' : 'Historic'}</span>
-                    </div>
-                  )}
-                </>
+                <div key={groupName} className={`vl-chip${on ? ' on' : ''}`} onClick={() => toggleGroup(groupCats)}>
+                  <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg(icon) }} />
+                  <span className="cl">{groupName}</span>
+                </div>
               );
-            })()}
-            {allCats.filter(k => ![...praktiskCats, ...historiskCats].includes(k)).map(k => {
+            })}
+            {allCats.filter(k => !catCfg[k]?.group).map(k => {
               const cat = getCat(k);
               const on = activeCats.has(k);
               return (

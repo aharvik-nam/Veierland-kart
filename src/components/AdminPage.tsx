@@ -4,6 +4,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../lib/firebase';
 import { poiFallback, stedsnavnFallback, turkartFallback, GeoCollection } from '../lib/geodata';
 import { DEFAULT_CAT_CFG, CatCfgMap, CatEntry, loadCatCfg, saveCatCfg } from '../lib/catcfg';
+import { ICONS, ICON_LABELS } from '../lib/icons';
 
 type Tab = 'poi' | 'stedsnavn' | 'turer' | 'kategorier';
 
@@ -687,7 +688,71 @@ function TurerTab() {
 }
 
 // ─── Kategorier tab ───────────────────────────────────────────────────────────
-const AVAILABLE_ICONS = ['bade','ferge','anker','kultur','utsikt','wc','mat','tur','blad','fugl','plante','pattedyr','sopp','sommerfugl'];
+
+const ALL_ICON_KEYS = Object.keys(ICONS).filter(k => k !== 'all');
+
+function IconPicker({ value, color, onChange }: { value: string; color: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const svgEl = (key: string, sz = 20, stroke = 'currentColor') =>
+    `<svg viewBox="-10 -10 20 20" width="${sz}" height="${sz}" fill="none" stroke="${stroke}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[key] ?? ICONS.wc}</svg>`;
+
+  return (
+    <div style={{ position: 'relative' }} ref={ref}>
+      <button
+        type="button"
+        title={ICON_LABELS[value] ?? value}
+        onClick={() => setOpen(o => !o)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '5px 10px', border: '1px solid var(--line)', borderRadius: 6,
+          background: 'var(--bg)', cursor: 'pointer', color,
+        }}
+      >
+        <span dangerouslySetInnerHTML={{ __html: svgEl(value, 22, color) }} />
+        <span style={{ fontSize: 12, color: 'var(--fg)' }}>{value}</span>
+        <span style={{ fontSize: 10, color: 'var(--muted)' }}>▾</span>
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute', top: '110%', left: 0, zIndex: 999,
+          background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 8,
+          padding: 8, boxShadow: '0 4px 18px rgba(0,0,0,.18)',
+          display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 3, width: 230,
+        }}>
+          {ALL_ICON_KEYS.map(k => (
+            <button
+              key={k}
+              type="button"
+              title={ICON_LABELS[k] ?? k}
+              onClick={() => { onChange(k); setOpen(false); }}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                gap: 2, padding: '5px 2px', border: '2px solid',
+                borderColor: k === value ? color : 'transparent',
+                borderRadius: 6, background: k === value ? color + '20' : 'transparent',
+                cursor: 'pointer', color: k === value ? color : 'var(--muted)',
+              }}
+            >
+              <span dangerouslySetInnerHTML={{ __html: svgEl(k, 20, k === value ? color : 'currentColor') }} />
+              <span style={{ fontSize: 8, lineHeight: 1, textAlign: 'center', color: 'var(--muted)', maxWidth: 34, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{k}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function CategoryConfigTab() {
   const [cfg, setCfg] = useState<CatCfgMap>(DEFAULT_CAT_CFG);
@@ -734,6 +799,12 @@ function CategoryConfigTab() {
         Her styrer du hvilke kategorier som vises i filterpanelet på nettsiden, hva de heter på norsk/engelsk, farge og gruppering (Praktisk / Historisk). Kategorier med «Vis i filter» avhuket dukker opp som filterknapper.
       </div>
 
+      <datalist id="group-suggestions">
+        {[...new Set(Object.values(cfg).map(e => e.group).filter(Boolean))].map(g => (
+          <option key={g} value={g} />
+        ))}
+      </datalist>
+
       <div style={{ overflowX: 'auto', marginBottom: 20 }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
@@ -765,17 +836,17 @@ function CategoryConfigTab() {
                     <span style={{ fontSize: 10, color: 'var(--muted)', fontFamily: 'monospace' }}>{entry.color}</span>
                   </div>
                 </td>
-                <td style={{ ...tdS, width: 110 }}>
-                  <select style={{ ...S.input, padding: '5px 7px', fontSize: 12 }} value={entry.icon} onChange={e => set(key, 'icon', e.target.value)}>
-                    {AVAILABLE_ICONS.map(i => <option key={i} value={i}>{i}</option>)}
-                  </select>
+                <td style={{ ...tdS, width: 130 }}>
+                  <IconPicker value={entry.icon} color={entry.color} onChange={v => set(key, 'icon', v)} />
                 </td>
-                <td style={{ ...tdS, width: 120 }}>
-                  <select style={{ ...S.input, padding: '5px 7px', fontSize: 12 }} value={entry.group} onChange={e => set(key, 'group', e.target.value as any)}>
-                    <option value="">Ingen gruppe</option>
-                    <option value="praktisk">Praktisk</option>
-                    <option value="historisk">Historisk</option>
-                  </select>
+                <td style={{ ...tdS, width: 130 }}>
+                  <input
+                    style={{ ...S.input, padding: '5px 8px' }}
+                    list="group-suggestions"
+                    placeholder="Ingen gruppe"
+                    value={entry.group}
+                    onChange={e => set(key, 'group', e.target.value)}
+                  />
                 </td>
                 <td style={{ ...tdS, width: 90, textAlign: 'center' }}>
                   <input type="checkbox" checked={entry.showInFilter} onChange={e => set(key, 'showInFilter', e.target.checked)}
