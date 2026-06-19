@@ -180,9 +180,9 @@ function FeatureRow({ label, meta, children }: { label: string; meta?: string; c
 }
 
 // ─── File actions ─────────────────────────────────────────────────────────────
-function FileActions({ tab, data, onUpload, dirty, onSave, saving }: {
+function FileActions({ tab, data, onUpload, dirty, onSave, saving, seeded }: {
   tab: Tab; data: GeoCollection | null; onUpload: (d: GeoCollection) => void;
-  dirty: boolean; onSave: () => void; saving: boolean;
+  dirty: boolean; onSave: () => void; saving: boolean; seeded: boolean;
 }) {
   const uploadRef = useRef<HTMLInputElement>(null);
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -203,8 +203,8 @@ function FileActions({ tab, data, onUpload, dirty, onSave, saving }: {
       <button style={S.pill('secondary')} onClick={download}>⬇ Last ned JSON</button>
       <button style={S.pill('secondary')} onClick={() => uploadRef.current?.click()}>⬆ Last opp JSON</button>
       <input ref={uploadRef} type="file" accept=".json,.geojson" style={{ display: 'none' }} onChange={handleUpload} />
-      {dirty && <button style={S.pill('primary')} onClick={onSave} disabled={saving}>{saving ? 'Lagrer…' : '💾 Lagre til Firebase'}</button>}
-      {dirty && <span style={{ fontSize: 12, color: 'var(--muted)' }}>Ulagrede endringer</span>}
+      {(dirty || !seeded) && <button style={S.pill('primary')} onClick={onSave} disabled={saving}>{saving ? 'Lagrer…' : !seeded ? '⬆ Last opp til Firebase' : '💾 Lagre til Firebase'}</button>}
+      {dirty && seeded && <span style={{ fontSize: 12, color: 'var(--muted)' }}>Ulagrede endringer</span>}
     </div>
   );
 }
@@ -261,7 +261,7 @@ function PoiTab() {
   if (!data) return <p style={{ color: 'var(--muted)' }}>{err || 'Laster…'}</p>;
   return (
     <>
-      <FileActions tab="poi" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} />
+      <FileActions tab="poi" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} seeded={seeded} />
       {err && <p style={{ color: '#e53e3e', marginBottom: 12 }}>{err}</p>}
       {!seeded && <div style={{ ...S.infoBox, marginBottom: 16 }}>⚠️ Ingen data i Firebase ennå — viser lokal JSON. Trykk «Lagre til Firebase» for å laste opp.</div>}
       <div style={S.infoBox}>{data.features.length} steder</div>
@@ -296,7 +296,7 @@ function StedsnavnTab() {
   if (!data) return <p style={{ color: 'var(--muted)' }}>{err || 'Laster…'}</p>;
   return (
     <>
-      <FileActions tab="stedsnavn" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} />
+      <FileActions tab="stedsnavn" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} seeded={seeded} />
       {err && <p style={{ color: '#e53e3e', marginBottom: 12 }}>{err}</p>}
       {!seeded && <div style={{ ...S.infoBox, marginBottom: 16 }}>⚠️ Ingen data i Firebase ennå — viser lokal JSON. Trykk «Lagre til Firebase» for å laste opp.</div>}
       <div style={S.infoBox}>{data.features.length} stedsnavn</div>
@@ -317,7 +317,7 @@ function TurerTab() {
   if (!data) return <p style={{ color: 'var(--muted)' }}>{err || 'Laster…'}</p>;
   return (
     <>
-      <FileActions tab="turer" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} />
+      <FileActions tab="turer" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} seeded={seeded} />
       {err && <p style={{ color: '#e53e3e', marginBottom: 12 }}>{err}</p>}
       {!seeded && <div style={{ ...S.infoBox, marginBottom: 16 }}>⚠️ Ingen data i Firebase ennå — viser lokal JSON. Trykk «Lagre til Firebase» for å laste opp.</div>}
       <div style={S.infoBox}>{data.features.length} turrute(r) · GPS-ruter redigeres best i QGIS, GPSBabel eller Google My Maps og lastes opp som ny GeoJSON.</div>
