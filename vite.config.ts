@@ -5,7 +5,18 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      {
+        name: 'geojson',
+        transform(code: string, id: string) {
+          if (id.endsWith('.geojson')) {
+            return { code: `export default ${code}`, map: null };
+          }
+        },
+      },
+    ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

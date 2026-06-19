@@ -517,6 +517,40 @@ body { display: grid; place-items: center; }
 .vl-askeladden { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--accent); text-decoration: none; margin-top: 6px; }
 .vl-askeladden:hover { text-decoration: underline; }
 
+/* ── Sea level slider ───────────────────────────────────────────────────────── */
+.vl-sealevel {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  z-index: 500; pointer-events: auto;
+  background: rgba(255,255,255,.93);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 16px 8px;
+  min-width: 240px;
+  box-shadow: 0 3px 14px rgba(0,0,0,.18);
+}
+.vl-sl-label {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1a6fa8;
+  margin-bottom: 6px;
+  letter-spacing: .03em;
+}
+.vl-sl-range {
+  width: 100%;
+  accent-color: #1a6fa8;
+  cursor: pointer;
+  height: 4px;
+}
+.vl-sl-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
 /* ── History / timeline ─────────────────────────────────────────────────────── */
 .vl-hist-row {
   display: flex; gap: 12px; padding: 4px 0 14px; cursor: pointer;
