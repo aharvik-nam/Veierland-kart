@@ -173,7 +173,7 @@ function useCategories() {
       const current = await loadCatCfg();
       const next: CatCfgMap = {};
       for (const k of newCats) {
-        next[k] = current[k] ?? { no: k, en: k, color: '#7c876f', icon: 'wc', group: '', showInFilter: true };
+        next[k] = current[k] ?? { no: k, en: k, color: '#7c876f', icon: 'wc', group: '', showInFilter: true, showInHistory: false };
       }
       await saveCatCfg(next);
       setCats(newCats);
@@ -785,7 +785,7 @@ function CategoryConfigTab() {
     setCfg(prev => {
       // Find an ungrouped cat to assign, otherwise just store the group name as metadata
       // We'll use a special __groups__ key to track manually-added group names
-      const meta: any = prev['__groups__'] ?? { no: '', en: '', color: '', icon: 'wc', group: '', showInFilter: false };
+      const meta: any = prev['__groups__'] ?? { no: '', en: '', color: '', icon: 'wc', group: '', showInFilter: false, showInHistory: false };
       const existing: string[] = meta._groupList ?? [];
       return {
         ...prev,
@@ -835,7 +835,7 @@ function CategoryConfigTab() {
   const addCategory = () => {
     const k = newKey.trim().toLowerCase().replace(/\s+/g, '_');
     if (!k || cfg[k]) return;
-    setCfg(prev => ({ ...prev, [k]: { no: k, en: k, color: '#7c876f', icon: 'wc', group: '', showInFilter: true } }));
+    setCfg(prev => ({ ...prev, [k]: { no: k, en: k, color: '#7c876f', icon: 'wc', group: '', showInFilter: true, showInHistory: false } }));
     setNewKey('');
     setSaved(false);
   };
@@ -934,6 +934,7 @@ function CategoryConfigTab() {
               <th style={thS}>Ikon</th>
               <th style={thS}>Gruppe</th>
               <th style={thS}>Vis i filter</th>
+              <th style={thS}>Vis i historie</th>
               <th style={thS}></th>
             </tr>
           </thead>
@@ -969,6 +970,10 @@ function CategoryConfigTab() {
                 </td>
                 <td style={{ ...tdS, width: 90, textAlign: 'center' }}>
                   <input type="checkbox" checked={entry.showInFilter} onChange={e => set(key, 'showInFilter', e.target.checked)}
+                    style={{ width: 16, height: 16, cursor: 'pointer' }} />
+                </td>
+                <td style={{ ...tdS, width: 90, textAlign: 'center' }}>
+                  <input type="checkbox" checked={!!entry.showInHistory} onChange={e => set(key, 'showInHistory', e.target.checked)}
                     style={{ width: 16, height: 16, cursor: 'pointer' }} />
                 </td>
                 <td style={{ ...tdS, width: 40 }}>

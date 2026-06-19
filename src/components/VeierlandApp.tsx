@@ -1492,6 +1492,21 @@ export function VeierlandApp() {
       >
         <MapSetup onReady={onMapReady} onMapClick={onMapClick} onZoom={onZoom} />
         <TileController layer={currentLayer} />
+        {mode === 'history' && allPOIs.filter(p => catCfg[p.kategori]?.showInHistory).map(poi => {
+          const cat = getCat(poi.kategori);
+          const [lng, lat] = poi.koordinater ?? [0, 0];
+          if (!lat || !lng) return null;
+          const icon = L.divIcon({
+            className: '',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15],
+            html: `<div style="width:30px;height:30px;border-radius:50%;background:${cat.color};border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICONS[cat.icon] ?? ''}</svg></div>`,
+          });
+          return (
+            <Marker key={poi.id} position={[lat, lng]} icon={icon}
+              eventHandlers={{ click: () => { setSelectedPOI(poi); setView('detail'); setSheetOpen(true); } }} />
+          );
+        })}
         {mode === 'nature' && !selectedNature && filteredNatureObs.map(obs => {
           const cfg = NATURE_GROUPS[obs.group];
           const sz = Math.max(18, Math.min(28, 18 + (mapZoom - 13) * 3));
@@ -1585,7 +1600,7 @@ export function VeierlandApp() {
             <button className={`vl-modepill${mode === 'places' ? ' on' : ''}`} onClick={() => { setMode('places'); setCurrentLayer('soleng'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelStep(0); }}>{T.places}</button>
             <button className={`vl-modepill${mode === 'trails' ? ' on' : ''}`} onClick={() => { setMode('trails'); setCurrentLayer('friluft'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelStep(0); }}>{T.trails}</button>
             <button className={`vl-modepill${mode === 'nature' ? ' on' : ''}`} onClick={() => { setMode('nature'); setCurrentLayer('flyfoto'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelStep(0); }}>{T.nature}</button>
-            <button className={`vl-modepill${mode === 'history' ? ' on' : ''}`} onClick={() => { setMode('history'); setCurrentLayer('historisk'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); }}>{T.history}</button>
+            <button className={`vl-modepill${mode === 'history' ? ' on' : ''}`} onClick={() => { setMode('history'); setCurrentLayer('friluft'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); }}>{T.history}</button>
           </div>
           <div className="vl-lang">
             <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>NO</button>
