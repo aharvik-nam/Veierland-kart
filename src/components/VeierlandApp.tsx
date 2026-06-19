@@ -145,6 +145,21 @@ const FARM_COORDS: Record<string, [number, number]> = {
   Oslebakke: [59.1644, 10.3481],
 };
 
+// Discrete sea level steps: index → metres above today (null = no overlay)
+const SEA_LEVEL_STEPS: (number | null)[] = [null, 2, 6, 10, 15];
+const SEA_LEVEL_LABELS: { no: string; en: string }[] = [
+  { no: 'I dag',           en: 'Today' },
+  { no: '+2 m  (~1700-t)', en: '+2 m  (~1700s)' },
+  { no: '+6 m  (Vikingtid)', en: '+6 m  (Viking Age)' },
+  { no: '+10 m  (Jernalder)', en: '+10 m  (Iron Age)' },
+  { no: '+15 m  (Steinalder)', en: '+15 m  (Stone Age)' },
+];
+
+// Pre-index flood features by threshold so lookup is O(1), not O(n) per render
+const FLOOD_BY_THRESHOLD = new Map<number, object>(
+  (floodData as any).features?.map((f: any) => [f.properties.threshold_m, f]) ?? []
+);
+
 // WGS84 polygon tracing Veierland's coastline (from veierland_boundary.json)
 const GBIF_POLYGON = encodeURIComponent(
   'POLYGON((' +
@@ -490,7 +505,7 @@ export function VeierlandApp() {
   const [historyView, setHistoryView] = useState<'tidslinje' | 'garder'>('tidslinje');
   const [selectedEra, setSelectedEra] = useState<HistorySection | null>(null);
   const [selectedFarm, setSelectedFarm] = useState<HistoryFarm | null>(null);
-  const [seaLevelM, setSeaLevelM] = useState<number | null>(null); // null = no overlay
+  const [seaLevelStep, setSeaLevelStep] = useState(0); // index into SEA_LEVEL_STEPS
 
   // Nature state
   const [natureObs, setNatureObs] = useState<NatureObs[]>([]);
@@ -1519,15 +1534,14 @@ export function VeierlandApp() {
               eventHandlers={{ click: () => {} }} />
           );
         })}
-        {mode === 'history' && seaLevelM !== null && (() => {
-          const feat = (floodData as any).features?.find(
-            (f: any) => f.properties.threshold_m === seaLevelM
-          );
+        {mode === 'history' && seaLevelStep > 0 && (() => {
+          const thresh = SEA_LEVEL_STEPS[seaLevelStep] as number;
+          const feat = FLOOD_BY_THRESHOLD.get(thresh);
           if (!feat) return null;
           return (
             <GeoJSON
-              key={`flood-${seaLevelM}`}
-              data={feat}
+              key={thresh}
+              data={feat as any}
               style={{ color: '#1a6fa8', fillColor: '#3a9de0', fillOpacity: 0.42, weight: 1.5, opacity: 0.7 }}
             />
           );
@@ -1568,9 +1582,9 @@ export function VeierlandApp() {
       <div className={`vl-top${searchOpen ? ' searching' : ''}`}>
         <div className="vl-modes">
           <div className="vl-modepills">
-            <button className={`vl-modepill${mode === 'places' ? ' on' : ''}`} onClick={() => { setMode('places'); setCurrentLayer('soleng'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelM(null); }}>{T.places}</button>
-            <button className={`vl-modepill${mode === 'trails' ? ' on' : ''}`} onClick={() => { setMode('trails'); setCurrentLayer('friluft'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelM(null); }}>{T.trails}</button>
-            <button className={`vl-modepill${mode === 'nature' ? ' on' : ''}`} onClick={() => { setMode('nature'); setCurrentLayer('flyfoto'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelM(null); }}>{T.nature}</button>
+            <button className={`vl-modepill${mode === 'places' ? ' on' : ''}`} onClick={() => { setMode('places'); setCurrentLayer('soleng'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelStep(0); }}>{T.places}</button>
+            <button className={`vl-modepill${mode === 'trails' ? ' on' : ''}`} onClick={() => { setMode('trails'); setCurrentLayer('friluft'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelStep(0); }}>{T.trails}</button>
+            <button className={`vl-modepill${mode === 'nature' ? ' on' : ''}`} onClick={() => { setMode('nature'); setCurrentLayer('flyfoto'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelStep(0); }}>{T.nature}</button>
             <button className={`vl-modepill${mode === 'history' ? ' on' : ''}`} onClick={() => { setMode('history'); setCurrentLayer('historisk'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); }}>{T.history}</button>
           </div>
           <div className="vl-lang">
@@ -1716,27 +1730,23 @@ export function VeierlandApp() {
       {mode === 'history' && (
         <div className="vl-sealevel" style={{ bottom: railBottom + 8 }}>
           <div className="vl-sl-label">
-            {seaLevelM === null
-              ? (lang === 'no' ? 'Havnivå: i dag' : 'Sea level: today')
-              : (lang === 'no' ? `Havnivå: +${seaLevelM} m` : `Sea level: +${seaLevelM} m`)}
+            {lang === 'no'
+              ? SEA_LEVEL_LABELS[seaLevelStep].no
+              : SEA_LEVEL_LABELS[seaLevelStep].en}
           </div>
           <input
             type="range"
             min={0}
-            max={15}
+            max={SEA_LEVEL_STEPS.length - 1}
             step={1}
-            value={seaLevelM ?? 0}
-            onChange={e => {
-              const v = Number(e.target.value);
-              setSeaLevelM(v === 0 ? null : v);
-            }}
+            value={seaLevelStep}
+            onChange={e => setSeaLevelStep(Number(e.target.value))}
             className="vl-sl-range"
           />
           <div className="vl-sl-ticks">
-            <span>{lang === 'no' ? 'I dag' : 'Today'}</span>
-            <span>+6 m</span>
-            <span>+10 m</span>
-            <span>+15 m</span>
+            {SEA_LEVEL_LABELS.map((l, i) => (
+              <span key={i}>{i === 0 ? (lang === 'no' ? 'I dag' : 'Today') : SEA_LEVEL_STEPS[i] + 'm'}</span>
+            ))}
           </div>
         </div>
       )}
