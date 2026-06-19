@@ -11,6 +11,7 @@ import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, Wikipedia
 import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages, fetchWikipediaSpecies, fetchArtsdatabankenAssessment } from '../lib/api';
 import { loadCatCfg, DEFAULT_CAT_CFG, CatCfgMap } from '../lib/catcfg';
 import { ICONS } from '../lib/icons';
+import historyData from '../data/veierland_history.json';
 
 // ─── Layer configs ────────────────────────────────────────────────────────────
 
@@ -106,6 +107,42 @@ interface NatureObs {
   redListCategory?: string;
   alienCategory?: string;
 }
+
+// ─── History types ────────────────────────────────────────────────────────────
+
+interface HistorySection {
+  era: string;
+  period: string;
+  title: { no: string; en: string };
+  body: { no: string; en: string };
+  anekdoter: string[];
+  kontekst_norge: string;
+}
+
+interface HistoryFarm {
+  name: string;
+  norron_name: string;
+  meaning: string;
+  gnr: number;
+  location: string;
+  history: string;
+  archaeology: string;
+  key_people: { name: string; role: string; period: string; note: string }[];
+  ships_built: { name: string; type: string; year: string; details: string }[];
+  anekdoter: string[];
+  sources: string[];
+}
+
+const HISTORY_SECTIONS = historyData.sections as HistorySection[];
+const HISTORY_FARMS = historyData.farms as HistoryFarm[];
+
+const FARM_COORDS: Record<string, [number, number]> = {
+  Alby:      [59.1656, 10.3564],
+  Vestgården:[59.1650, 10.3435],
+  Tangen:    [59.1535, 10.3380],
+  Krika:     [59.1564, 10.3546],
+  Oslebakke: [59.1644, 10.3481],
+};
 
 // WGS84 polygon tracing Veierland's coastline (from veierland_boundary.json)
 const GBIF_POLYGON = encodeURIComponent(
@@ -431,7 +468,7 @@ export function VeierlandApp() {
   const [trails, setTrails] = useState<Trail[]>([]);
   const [activeCats, setActiveCats] = useState<Set<string>>(new Set());
   const [expandedPlaceCats, setExpandedPlaceCats] = useState<Set<string>>(new Set());
-  const [mode, setMode] = useState<'places' | 'trails' | 'nature'>('places');
+  const [mode, setMode] = useState<'places' | 'trails' | 'nature' | 'history'>('places');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQ, setSearchQ] = useState('');
   const [view, setView] = useState<'browse' | 'detail'>('browse');
@@ -447,6 +484,11 @@ export function VeierlandApp() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [trailPath, setTrailPath] = useState<[number, number][] | null>(null);
   const [heartAnim, setHeartAnim] = useState(false);
+
+  // History state
+  const [historyView, setHistoryView] = useState<'tidslinje' | 'garder'>('tidslinje');
+  const [selectedEra, setSelectedEra] = useState<HistorySection | null>(null);
+  const [selectedFarm, setSelectedFarm] = useState<HistoryFarm | null>(null);
 
   // Nature state
   const [natureObs, setNatureObs] = useState<NatureObs[]>([]);
@@ -834,7 +876,7 @@ export function VeierlandApp() {
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [sheetOpen, view, selectedPOI, selectedTrail, selectedNature]);
+  }, [sheetOpen, view, selectedPOI, selectedTrail, selectedNature, selectedEra, selectedFarm, historyView]);
 
   const SHEET_OPEN_H = autoSheetH ?? SHEET_MAX_H;
   const sheetCurrentH = sheetOpen ? SHEET_OPEN_H : SHEET_PEEK_H;
@@ -843,20 +885,24 @@ export function VeierlandApp() {
   // Text strings
   const T = lang === 'no' ? {
     search: 'Søk på Veierland', all: 'Alle', explore: 'Utforsk Veierland',
-    places: 'Steder', trails: 'Turer', nature: 'Natur', back: 'Tilbake',
+    places: 'Steder', trails: 'Turer', nature: 'Natur', history: 'Historie', back: 'Tilbake',
     directions: 'Veibeskrivelse', length: 'Lengde', duration: 'Tid', diff: 'Vanskelighet',
     layers: 'Kartlag', nohit: 'Ingen treff', easy: 'Lett', showRoute: 'Vis rute',
     natObs: (n: number) => `${n} ${n === 1 ? 'art' : 'arter'} observert`,
     np: (n: number) => `${n} ${n === 1 ? 'sted' : 'steder'}`,
     nt: (n: number) => `${n} ${n === 1 ? 'tur' : 'turer'}`,
+    tidslinje: 'Tidslinje', garder: 'Gårder',
+    kontekst: 'Norsk kontekst', anekdoter: 'Historier',
   } : {
     search: 'Search Veierland', all: 'All', explore: 'Explore Veierland',
-    places: 'Places', trails: 'Trails', nature: 'Nature', back: 'Back',
+    places: 'Places', trails: 'Trails', nature: 'Nature', history: 'History', back: 'Back',
     directions: 'Directions', length: 'Length', duration: 'Time', diff: 'Difficulty',
     layers: 'Map layer', nohit: 'No matches', easy: 'Easy', showRoute: 'Show route',
     natObs: (n: number) => `${n} ${n === 1 ? 'species' : 'species'} observed`,
     np: (n: number) => `${n} ${n === 1 ? 'place' : 'places'}`,
     nt: (n: number) => `${n} ${n === 1 ? 'trail' : 'trails'}`,
+    tidslinje: 'Timeline', garder: 'Farms',
+    kontekst: 'Norwegian context', anekdoter: 'Stories',
   };
 
   // ── Render: nature ──────────────────────────────────────────────────────────
@@ -1029,13 +1075,176 @@ export function VeierlandApp() {
     );
   }
 
+  // ── Render: history ─────────────────────────────────────────────────────────
+
+  function renderHistory() {
+    if (selectedEra) {
+      return (
+        <>
+          <button className="vl-back" onClick={() => setSelectedEra(null)}><BackSvg />{T.back}</button>
+          <div><span className="vl-catpill">{selectedEra.period}</span></div>
+          <div className="vl-h2">{lang === 'no' ? selectedEra.title.no : selectedEra.title.en}</div>
+          <div className="vl-sub" style={{ marginBottom: 12 }}>{selectedEra.era}</div>
+          <p className="vl-desc" style={{ whiteSpace: 'pre-line' }}>
+            {lang === 'no' ? selectedEra.body.no : selectedEra.body.en}
+          </p>
+          {selectedEra.anekdoter.length > 0 && (
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--muted)', marginBottom: 6 }}>{T.anekdoter}</div>
+              {selectedEra.anekdoter.map((a, i) => (
+                <div key={i} style={{
+                  borderLeft: '3px solid var(--accent)',
+                  paddingLeft: 12,
+                  marginBottom: 10,
+                  fontSize: 13,
+                  color: 'var(--fg)',
+                  fontStyle: 'italic',
+                }}>
+                  {a}
+                </div>
+              ))}
+            </div>
+          )}
+          {selectedEra.kontekst_norge && (
+            <div style={{
+              background: 'var(--surface2,#f3f4f1)',
+              borderRadius: 10,
+              padding: '10px 14px',
+              marginTop: 14,
+              fontSize: 13,
+            }}>
+              <div style={{ fontWeight: 600, marginBottom: 4, fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em' }}>{T.kontekst}</div>
+              <p style={{ margin: 0, color: 'var(--fg)' }}>{selectedEra.kontekst_norge}</p>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (selectedFarm) {
+      return (
+        <>
+          <button className="vl-back" onClick={() => setSelectedFarm(null)}><BackSvg />{T.back}</button>
+          <div><span className="vl-catpill">Gnr. {selectedFarm.gnr}</span></div>
+          <div className="vl-h2">{selectedFarm.name}</div>
+          {selectedFarm.norron_name && (
+            <div className="vl-sub" style={{ marginBottom: 4 }}>
+              <em>{selectedFarm.norron_name}</em> — {selectedFarm.meaning}
+            </div>
+          )}
+          <div className="vl-sub" style={{ marginBottom: 12, fontSize: 12 }}>{selectedFarm.location}</div>
+          <p className="vl-desc">{selectedFarm.history}</p>
+          {selectedFarm.archaeology && (
+            <div style={{ marginTop: 12, marginBottom: 12 }}>
+              <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+                {lang === 'no' ? 'Arkeologi' : 'Archaeology'}
+              </div>
+              <p style={{ margin: 0, fontSize: 13 }}>{selectedFarm.archaeology}</p>
+            </div>
+          )}
+          {selectedFarm.key_people.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+                {lang === 'no' ? 'Kjente personer' : 'Notable people'}
+              </div>
+              {selectedFarm.key_people.map((p, i) => (
+                <div key={i} style={{ marginBottom: 8, fontSize: 13 }}>
+                  <strong>{p.name}</strong> <span style={{ color: 'var(--muted)' }}>· {p.role} · {p.period}</span>
+                  {p.note && <div style={{ color: 'var(--fg)', marginTop: 2 }}>{p.note}</div>}
+                </div>
+              ))}
+            </div>
+          )}
+          {selectedFarm.ships_built.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--muted)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+                {lang === 'no' ? 'Skuter bygget' : 'Ships built'}
+              </div>
+              {selectedFarm.ships_built.map((s, i) => (
+                <div key={i} style={{ marginBottom: 6, fontSize: 13 }}>
+                  <strong>{s.name}</strong> <span style={{ color: 'var(--muted)' }}>({s.type}, {s.year})</span>
+                  {s.details && <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 1 }}>{s.details}</div>}
+                </div>
+              ))}
+            </div>
+          )}
+          {selectedFarm.anekdoter.length > 0 && (
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--muted)', marginBottom: 6 }}>{T.anekdoter}</div>
+              {selectedFarm.anekdoter.map((a, i) => (
+                <div key={i} style={{
+                  borderLeft: '3px solid var(--accent)',
+                  paddingLeft: 12,
+                  marginBottom: 10,
+                  fontSize: 13,
+                  color: 'var(--fg)',
+                  fontStyle: 'italic',
+                }}>
+                  {a}
+                </div>
+              ))}
+            </div>
+          )}
+          {selectedFarm.sources.length > 0 && (
+            <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 12 }}>
+              {lang === 'no' ? 'Kilder' : 'Sources'}: {selectedFarm.sources.join(' · ')}
+            </p>
+          )}
+        </>
+      );
+    }
+
+    if (historyView === 'tidslinje') {
+      return (
+        <>
+          {HISTORY_SECTIONS.map((sec, i) => (
+            <div key={i} className="vl-hist-row" onClick={() => { setSelectedEra(sec); setSheetOpen(true); }}>
+              <div className="vl-hist-era">
+                <div className="vl-hist-dot" />
+                <div className="vl-hist-line" />
+              </div>
+              <div className="vl-hist-content">
+                <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 1 }}>{sec.period}</div>
+                <div style={{ fontWeight: 600, fontSize: 15 }}>{sec.era}</div>
+                <div style={{ fontSize: 13, color: 'var(--muted)' }}>{lang === 'no' ? sec.title.no : sec.title.en}</div>
+              </div>
+            </div>
+          ))}
+          <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
+            {lang === 'no' ? 'Kilde: Veierland Velforening, Nøtterøy Historielag m.fl.' : 'Source: Veierland Velforening, Nøtterøy Historielag et al.'}
+          </p>
+        </>
+      );
+    }
+
+    // Gårder view
+    return (
+      <>
+        {HISTORY_FARMS.map((farm, i) => (
+          <div key={i} className="vl-sp-row" onClick={() => {
+            setSelectedFarm(farm);
+            setSheetOpen(true);
+            const coords = FARM_COORDS[farm.name];
+            if (coords) mapRef.current?.setView(coords, Math.max(mapZoom, 14));
+          }}>
+            <div className="vl-sp-main">
+              <span className="vl-sp-name">{farm.name}</span>
+              <span className="vl-sp-sci">{farm.norron_name ? `${farm.norron_name} · ` : ''}{farm.location}</span>
+            </div>
+            <span className="vl-chev"><ChevSvg /></span>
+          </div>
+        ))}
+      </>
+    );
+  }
+
   // ── Render: browse ──────────────────────────────────────────────────────────
 
   function renderBrowse() {
     return (
       <>
         <h2 className="vl-title">{T.explore}</h2>
-        {mode === 'nature' ? renderNature() : mode === 'places' ? (
+        {mode === 'history' ? renderHistory() : mode === 'nature' ? renderNature() : mode === 'places' ? (
           <>
             <div className="vl-count">{filteredPOIs.length ? T.np(filteredPOIs.length) : T.nohit}</div>
             {groupedPOIs.map(([catKey, pois]) => {
@@ -1308,6 +1517,21 @@ export function VeierlandApp() {
               eventHandlers={{ click: () => {} }} />
           );
         })}
+        {mode === 'history' && historyView === 'garder' && HISTORY_FARMS.map(farm => {
+          const coords = FARM_COORDS[farm.name];
+          if (!coords) return null;
+          const isSelected = selectedFarm?.name === farm.name;
+          const icon = L.divIcon({
+            className: '',
+            iconSize: [34, 34],
+            iconAnchor: [17, 17],
+            html: `<div style="width:34px;height:34px;border-radius:50%;background:${isSelected ? '#7c4a1e' : '#c07a3a'};border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;cursor:pointer;">${ICONS['hus'] ? `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS['hus']}</svg>` : ''}</div>`,
+          });
+          return (
+            <Marker key={farm.name} position={coords} icon={icon}
+              eventHandlers={{ click: () => { setSelectedFarm(farm); setSheetOpen(true); } }} />
+          );
+        })}
         {userPos && (
           <Marker position={userPos} icon={USER_ICON} interactive={false} />
         )}
@@ -1329,9 +1553,10 @@ export function VeierlandApp() {
       <div className={`vl-top${searchOpen ? ' searching' : ''}`}>
         <div className="vl-modes">
           <div className="vl-modepills">
-            <button className={`vl-modepill${mode === 'places' ? ' on' : ''}`} onClick={() => { setMode('places'); setCurrentLayer('soleng'); setSelectedNature(null); }}>{T.places}</button>
-            <button className={`vl-modepill${mode === 'trails' ? ' on' : ''}`} onClick={() => { setMode('trails'); setCurrentLayer('friluft'); setSelectedNature(null); }}>{T.trails}</button>
-            <button className={`vl-modepill${mode === 'nature' ? ' on' : ''}`} onClick={() => { setMode('nature'); setCurrentLayer('flyfoto'); setSelectedNature(null); }}>{T.nature}</button>
+            <button className={`vl-modepill${mode === 'places' ? ' on' : ''}`} onClick={() => { setMode('places'); setCurrentLayer('soleng'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); }}>{T.places}</button>
+            <button className={`vl-modepill${mode === 'trails' ? ' on' : ''}`} onClick={() => { setMode('trails'); setCurrentLayer('friluft'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); }}>{T.trails}</button>
+            <button className={`vl-modepill${mode === 'nature' ? ' on' : ''}`} onClick={() => { setMode('nature'); setCurrentLayer('flyfoto'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); }}>{T.nature}</button>
+            <button className={`vl-modepill${mode === 'history' ? ' on' : ''}`} onClick={() => { setMode('history'); setCurrentLayer('historisk'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); }}>{T.history}</button>
           </div>
           <div className="vl-lang">
             <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>NO</button>
@@ -1364,6 +1589,18 @@ export function VeierlandApp() {
                 </div>
               );
             })}
+          </div>
+        )}
+        {mode === 'history' && (
+          <div className="vl-chips">
+            <div className={`vl-chip${historyView === 'tidslinje' ? ' on' : ''}`} onClick={() => { setHistoryView('tidslinje'); setSelectedEra(null); setSelectedFarm(null); }}>
+              <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('kart') }} />
+              <span className="cl">{T.tidslinje}</span>
+            </div>
+            <div className={`vl-chip${historyView === 'garder' ? ' on' : ''}`} onClick={() => { setHistoryView('garder'); setSelectedEra(null); setSelectedFarm(null); }}>
+              <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('hus') }} />
+              <span className="cl">{T.garder}</span>
+            </div>
           </div>
         )}
         {mode === 'nature' && (

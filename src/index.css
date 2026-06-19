@@ -517,6 +517,29 @@ body { display: grid; place-items: center; }
 .vl-askeladden { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--accent); text-decoration: none; margin-top: 6px; }
 .vl-askeladden:hover { text-decoration: underline; }
 
+/* ── History / timeline ─────────────────────────────────────────────────────── */
+.vl-hist-row {
+  display: flex; gap: 12px; padding: 4px 0 14px; cursor: pointer;
+  transition: opacity .14s;
+}
+.vl-hist-row:hover { opacity: .78; }
+.vl-hist-era {
+  display: flex; flex-direction: column; align-items: center;
+  flex: 0 0 20px; padding-top: 5px;
+}
+.vl-hist-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--accent); flex: 0 0 auto;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.vl-hist-line {
+  width: 2px; background: var(--line); flex: 1; min-height: 20px; margin-top: 6px;
+}
+.vl-hist-content {
+  flex: 1; padding-bottom: 4px;
+}
+
 /* ── Desktop layout (≥900px) ────────────────────────────────────────────────── */
 @media (min-width: 900px) {
   .vl-app {
