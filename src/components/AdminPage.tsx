@@ -359,9 +359,14 @@ function PoiEditor({ feature, onChange, onDelete, categories }: {
 }
 
 // ─── Stedsnavn editor ─────────────────────────────────────────────────────────
-function StedsnavnEditor({ feature, onChange, onDelete }: { feature: any; onChange: (f: any) => void; onDelete: () => void }) {
+function StedsnavnEditor({ feature, onChange, onDelete, onMoveToPoi, categories }: {
+  feature: any; onChange: (f: any) => void; onDelete: () => void;
+  onMoveToPoi: (category: string) => Promise<void>; categories: string[];
+}) {
   const p = feature.properties;
   const [lon, lat] = feature.geometry.coordinates as [number, number];
+  const [moveCategory, setMoveCategory] = useState('arkeologi');
+  const [moving, setMoving] = useState(false);
   const setP = (k: string, v: any) => onChange({ ...feature, properties: { ...p, [k]: v } });
   const setCoord = (which: 'lat' | 'lon', v: string) => {
     const n = parseFloat(v); if (isNaN(n)) return;
@@ -371,6 +376,10 @@ function StedsnavnEditor({ feature, onChange, onDelete }: { feature: any; onChan
   };
   const setLatLon = (newLat: number, newLon: number) => {
     onChange({ ...feature, geometry: { ...feature.geometry, coordinates: [newLon, newLat] } });
+  };
+  const handleMove = async () => {
+    setMoving(true);
+    try { await onMoveToPoi(moveCategory); } finally { setMoving(false); }
   };
   return (
     <div style={S.editGrid}>
@@ -385,6 +394,27 @@ function StedsnavnEditor({ feature, onChange, onDelete }: { feature: any; onChan
       <CoordPasteField onParse={setLatLon} />
       <Field label="Breddegrad (lat)"><input style={S.input} type="number" step="0.000001" value={lat} onChange={e => setCoord('lat', e.target.value)} /></Field>
       <Field label="Lengdegrad (lon)"><input style={S.input} type="number" step="0.000001" value={lon} onChange={e => setCoord('lon', e.target.value)} /></Field>
+
+      {/* Move to Steder */}
+      <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--line)', paddingTop: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' as const }}>
+        <span style={{ fontSize: 13, color: 'var(--muted)', flexShrink: 0 }}>Flytt til Steder som:</span>
+        <select
+          style={{ ...S.input, flex: 1, minWidth: 120, padding: '6px 8px', fontSize: 13 }}
+          value={moveCategory}
+          onChange={e => setMoveCategory(e.target.value)}
+        >
+          {categories.filter(c => c !== '__groups__').map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <button
+          style={{ ...S.pill('primary'), flexShrink: 0 }}
+          onClick={handleMove}
+          disabled={moving}
+          type="button"
+        >
+          {moving ? 'Flytter…' : 'Flytt til Steder →'}
+        </button>
+      </div>
+
       <button style={S.deleteBtn} onClick={onDelete}>Slett dette stedsnavnet</button>
     </div>
   );
@@ -588,6 +618,12 @@ function PoiTab() {
 function StedsnavnTab() {
   const { data, setData, dirty, saving, save, err, seeded } = useTabData('stedsnavn');
   const [searchQ, setSearchQ] = useState('');
+  const [categories, setCategories] = useState<string[]>([]);
+  const [moveMsg, setMoveMsg] = useState('');
+
+  useEffect(() => {
+    loadCatCfg().then(cfg => setCategories(Object.keys(cfg).filter(k => k !== '__groups__')));
+  }, []);
 
   const update = (i: number, f: any) => {
     if (!data) return;
@@ -607,6 +643,44 @@ function StedsnavnTab() {
     }]});
   };
 
+  const moveToPoi = async (i: number, category: string) => {
+    if (!data) return;
+    const feature = data.features[i];
+    const navn = feature.properties.navn ?? 'Ukjent';
+
+    // Fetch current POI collection
+    const snap = await getDoc(doc(db, COL, DOC['poi']));
+    const poiData: any = snap.exists()
+      ? (snap.data().json ? JSON.parse(snap.data().json) : snap.data())
+      : { type: 'FeatureCollection', features: [] };
+
+    // Build new POI feature from stedsnavn fields
+    const newPoi = {
+      type: 'Feature',
+      properties: {
+        navn,
+        kategori: category,
+        kategorier: [category],
+        beskrivelse: feature.properties.forklaring ?? '',
+        verifisert: false,
+        koordinat_kilde: 'Flyttet fra stedsnavn',
+      },
+      geometry: { ...feature.geometry },
+    };
+
+    // Save updated POI collection
+    await setDoc(doc(db, COL, DOC['poi']), {
+      json: JSON.stringify({ ...poiData, features: [...poiData.features, newPoi] }),
+    });
+
+    // Remove from stedsnavn and save immediately
+    const nextData = { ...data, features: data.features.filter((_, j) => j !== i) };
+    await setDoc(doc(db, COL, DOC['stedsnavn']), { json: JSON.stringify(nextData) });
+    setData(nextData);
+    setMoveMsg(`«${navn}» ble flyttet til Steder som kategori «${category}».`);
+    setTimeout(() => setMoveMsg(''), 4000);
+  };
+
   if (!data) return <p style={{ color: 'var(--muted)' }}>{err || 'Laster…'}</p>;
 
   const filtered = data.features
@@ -617,6 +691,7 @@ function StedsnavnTab() {
     <>
       <FileActions tab="stedsnavn" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} seeded={seeded} />
       {err && <p style={{ color: '#e53e3e', marginBottom: 12 }}>{err}</p>}
+      {moveMsg && <div style={{ ...S.infoBox, marginBottom: 12, color: '#276749' }}>✓ {moveMsg}</div>}
       {!seeded && (
         <div style={{ ...S.infoBox, marginBottom: 16 }}>
           ⚠️ Ingen data i Firebase ennå — viser lokal JSON. Trykk «Last opp til Firebase» for å laste opp.
@@ -641,7 +716,13 @@ function StedsnavnTab() {
           label={f.properties.navn ?? `Stedsnavn ${i + 1}`}
           meta={f.properties.visibility === false ? 'skjult' : undefined}
         >
-          <StedsnavnEditor feature={f} onChange={nf => update(i, nf)} onDelete={() => del(i)} />
+          <StedsnavnEditor
+            feature={f}
+            onChange={nf => update(i, nf)}
+            onDelete={() => del(i)}
+            onMoveToPoi={category => moveToPoi(i, category)}
+            categories={categories}
+          />
         </FeatureRow>
       ))}
 
