@@ -681,7 +681,7 @@ export function VeierlandApp() {
 
     // Remove existing group
     if (clusterRef.current) { map.removeLayer(clusterRef.current); clusterRef.current = null; }
-    if (mode === 'nature') return;
+    if (mode === 'nature' || mode === 'history') return;
 
     const cg = L.markerClusterGroup({
       maxClusterRadius: 60,
@@ -1743,7 +1743,10 @@ export function VeierlandApp() {
       </div>
       {/* Sea level slider – visible in history mode */}
       {mode === 'history' && (
-        <div className="vl-sealevel" style={{ bottom: railBottom + 8 }}>
+        <div className="vl-sealevel">
+          <div className="vl-sl-title">
+            {lang === 'no' ? 'Historisk havnivå' : 'Historical sea level'}
+          </div>
           <div className="vl-sl-label">
             {lang === 'no'
               ? SEA_LEVEL_LABELS[seaLevelStep].no
@@ -1760,9 +1763,16 @@ export function VeierlandApp() {
           />
           <div className="vl-sl-ticks">
             {SEA_LEVEL_LABELS.map((l, i) => (
-              <span key={i}>{i === 0 ? (lang === 'no' ? 'I dag' : 'Today') : SEA_LEVEL_STEPS[i] + 'm'}</span>
+              <span key={i}>{i === 0 ? (lang === 'no' ? 'I dag' : 'Today') : '+' + SEA_LEVEL_STEPS[i] + 'm'}</span>
             ))}
           </div>
+          {seaLevelStep > 0 && (
+            <div className="vl-sl-desc">
+              {lang === 'no'
+                ? 'Blå overlay viser hva som var under vann i denne perioden.'
+                : 'Blue overlay shows what was underwater in this period.'}
+            </div>
+          )}
         </div>
       )}
       </div>{/* end vl-map-area */}
