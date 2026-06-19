@@ -324,8 +324,7 @@ function PoiEditor({ feature, onChange, onDelete, categories }: {
                   checked={checked}
                   onChange={e => {
                     const next = e.target.checked ? [...current, c] : current.filter(k => k !== c);
-                    setP('kategorier', next);
-                    setP('kategori', next[0] ?? '');
+                    onChange({ ...feature, properties: { ...p, kategorier: next, kategori: next[0] ?? '' } });
                   }}
                 />
                 {c}
