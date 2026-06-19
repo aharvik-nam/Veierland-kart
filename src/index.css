@@ -436,10 +436,14 @@ body { display: grid; place-items: center; }
 .vl-actions { display: flex; gap: 8px; margin-bottom: 16px; }
 .vl-btn {
   flex: 1; display: inline-flex; align-items: center; justify-content: center;
-  gap: 8px; padding: 14px; border-radius: var(--r); border: none; font: inherit;
-  font-weight: 600; font-size: 16px; cursor: pointer; text-decoration: none;
+  gap: 6px; padding: 8px 14px; border-radius: var(--r); border: 1px solid transparent; font: inherit;
+  font-weight: 500; font-size: 13px; cursor: pointer; text-decoration: none;
 }
-.vl-btn.pri { background: var(--accent); color: var(--onaccent); }
+.vl-btn.pri {
+  background: color-mix(in srgb, var(--accent) 10%, var(--card));
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 22%, transparent);
+}
 .vl-btn.sec {
   flex: 0 0 auto; width: 52px;
   background: var(--card);
