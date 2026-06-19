@@ -1,11 +1,8 @@
 import { POI } from "../lib/types";
-import poiData from "./veierland_poi.json";
-import stedsnavnData from "./veierland_stedsnavn.json";
+import { loadPoiGeoJSON, loadStedsnavnGeoJSON } from "../lib/geodata";
 
-// Veierland bounding polygon for Artsdatabanken in UTM33
 export const VEIERLAND_POLYGON_UTM33 = 'POLYGON((233837.25 6568293.26,233098.62 6565865.34,233105.46 6565024.12,233632.08 6564271.81,234767.38 6564093.99,235574.41 6564935.21,235423.95 6565899.54,235150.38 6567527.27,234999.92 6568279.58,234445.94 6568204.35,233837.25 6568293.26))';
 
-// Map manual SNL/Lokalhistorie clues
 const poiEnrichment: Record<string, any> = {
   "Veierland kirke": {
     lokalhistoriewiki: "Veierland_kirke",
@@ -24,32 +21,31 @@ const poiEnrichment: Record<string, any> = {
   }
 };
 
-const poisFromGeoJSON = poiData.features.map((feature: any, index: number) => {
-  const enrich = poiEnrichment[feature.properties.navn] || {};
-  return {
-    ...feature.properties,
-    id: `poi-${index}`,
-    navn: feature.properties.navn,
-    kategori: feature.properties.kategori,
-    beskrivelse: feature.properties.beskrivelse,
-    coordinates: [feature.geometry.coordinates[1], feature.geometry.coordinates[0]] as [number, number],
-    ...enrich
-  };
-});
+export async function loadAllPOIs(): Promise<POI[]> {
+  const [poiData, stedsnavnData] = await Promise.all([
+    loadPoiGeoJSON(),
+    loadStedsnavnGeoJSON(),
+  ]);
 
-const stedsnavnFromGeoJSON = stedsnavnData.features
-  .filter((feature: any) => feature.properties.visibility !== false)
-  .map((feature: any, index: number) => {
+  const poisFromGeoJSON = poiData.features.map((feature: any, index: number) => {
+    const enrich = poiEnrichment[feature.properties.navn] || {};
     return {
       ...feature.properties,
-      id: `sted-${index}`,
-      navn: feature.properties.navn,
-      kategori: feature.properties.kategori || "stedsnavn",
-      beskrivelse: feature.properties.forklaring || "",
+      id: `poi-${index}`,
       coordinates: [feature.geometry.coordinates[1], feature.geometry.coordinates[0]] as [number, number],
+      ...enrich,
     };
   });
 
-// Combines POIs and Stedsnavn
-export const ALL_POIS: POI[] = [...poisFromGeoJSON, ...stedsnavnFromGeoJSON];
+  const stedsnavnFromGeoJSON = stedsnavnData.features
+    .filter((feature: any) => feature.properties.visibility !== false)
+    .map((feature: any, index: number) => ({
+      ...feature.properties,
+      id: `sted-${index}`,
+      kategori: feature.properties.kategori || "stedsnavn",
+      beskrivelse: feature.properties.forklaring || "",
+      coordinates: [feature.geometry.coordinates[1], feature.geometry.coordinates[0]] as [number, number],
+    }));
 
+  return [...poisFromGeoJSON, ...stedsnavnFromGeoJSON];
+}

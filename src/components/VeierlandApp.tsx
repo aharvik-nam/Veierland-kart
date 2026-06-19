@@ -1,13 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { MapContainer, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { ALL_POIS } from '../data/veierland';
-import turkartRaw from '../data/turkart.geojson?raw';
+import { loadAllPOIs } from '../data/veierland';
+import { loadTurkartGeoJSON } from '../lib/geodata';
 import boundaryData from '../data/veierland_boundary.json';
 import natureCacheData from '../data/nature_cache.json';
 import assessmentCacheData from '../data/assessment_cache.json';
 import 'leaflet.markercluster';
-const turkartData = JSON.parse(turkartRaw);
 import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, WikipediaData } from '../lib/types';
 import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages, fetchWikipediaSpecies, fetchArtsdatabankenAssessment } from '../lib/api';
 
@@ -360,18 +359,19 @@ interface Trail {
   path: [number, number][];
 }
 
-const VL_TRAILS: Trail[] = (turkartData as any).features.map((f: any) => ({
-  id: f.properties.id,
-  name: f.properties.navn,
-  en: f.properties.en,
-  km: f.properties.km,
-  time: f.properties.tid,
-  diff: f.properties.vanskelighet,
-  no: f.properties.no,
-  enT: f.properties.enT,
-  // GeoJSON is [lng, lat]; Leaflet needs [lat, lng]
-  path: f.geometry.coordinates.map((c: number[]) => [c[1], c[0]] as [number, number]),
-}));
+function trailsFromGeoJSON(geo: any): Trail[] {
+  return (geo as any).features.map((f: any) => ({
+    id: f.properties.id,
+    name: f.properties.navn,
+    en: f.properties.en,
+    km: f.properties.km,
+    time: f.properties.tid,
+    diff: f.properties.vanskelighet,
+    no: f.properties.no,
+    enT: f.properties.enT,
+    path: f.geometry.coordinates.map((c: number[]) => [c[1], c[0]] as [number, number]),
+  }));
+}
 
 // ─── Map sub-components ───────────────────────────────────────────────────────
 
@@ -385,13 +385,7 @@ function MapSetup({ onReady, onMapClick, onZoom }: { onReady: (m: L.Map) => void
     map.on('click', handleClick);
     const zoomHandler = () => onZoom(map.getZoom());
     map.on('zoomend', zoomHandler);
-    const coords = ALL_POIS.map(p => p.coordinates as [number, number]);
-    if (coords.length > 0) {
-      map.fitBounds(L.latLngBounds(coords).pad(0.08), { animate: false });
-      onZoom(map.getZoom());
-    }
     return () => { map.off('click', handleClick); map.off('zoomend', zoomHandler); };
-  // onMapClick excluded intentionally — handled via ref to avoid re-running fitBounds
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, onReady, onZoom]);
   return null;
@@ -477,6 +471,8 @@ const USER_ICON = L.divIcon({
 
 export function VeierlandApp() {
   const [lang, setLang] = useState<'no' | 'en'>('no');
+  const [allPOIs, setAllPOIs] = useState<POI[]>([]);
+  const [trails, setTrails] = useState<Trail[]>([]);
   const [activeCats, setActiveCats] = useState<Set<string>>(new Set());
   const [expandedPlaceCats, setExpandedPlaceCats] = useState<Set<string>>(new Set());
   const [mode, setMode] = useState<'places' | 'trails' | 'nature'>('places');
@@ -542,16 +538,17 @@ export function VeierlandApp() {
 
   const mapRef = useRef<L.Map | null>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const fitDoneRef = useRef(false);
 
   // Derive category list from actual POI data
   const allCats = useMemo(
-    () => Array.from(new Set(ALL_POIS.map(p => p.kategori))).filter(k => CAT_CFG[k]),
-    []
+    () => Array.from(new Set(allPOIs.map(p => p.kategori))).filter(k => CAT_CFG[k]),
+    [allPOIs]
   );
 
   // Filtered POIs
   const filteredPOIs = useMemo(() => {
-    return ALL_POIS.filter(p => {
+    return allPOIs.filter(p => {
       if (activeCats.size > 0 && !activeCats.has(p.kategori)) return false;
       if (searchQ) {
         const q = searchQ.toLowerCase();
@@ -559,7 +556,7 @@ export function VeierlandApp() {
       }
       return true;
     });
-  }, [activeCats, searchQ]);
+  }, [allPOIs, activeCats, searchQ]);
 
   const groupedPOIs = useMemo(() => {
     const catOrder = Object.keys(CAT_CFG);
@@ -617,6 +614,21 @@ export function VeierlandApp() {
 
   const [mapReady, setMapReady] = useState(false);
   const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
+
+  // Load POIs and trails from Firestore (or local JSON fallback)
+  useEffect(() => {
+    loadAllPOIs().then(setAllPOIs);
+    loadTurkartGeoJSON().then(geo => setTrails(trailsFromGeoJSON(geo)));
+  }, []);
+
+  // Fit map bounds once both map and POIs are ready (runs once)
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || allPOIs.length === 0 || fitDoneRef.current) return;
+    fitDoneRef.current = true;
+    const coords = allPOIs.map(p => p.coordinates as [number, number]);
+    mapRef.current.fitBounds(L.latLngBounds(coords).pad(0.08), { animate: false });
+    setMapZoom(mapRef.current.getZoom());
+  }, [mapReady, allPOIs]);
 
   const onMapReady = useCallback((m: L.Map) => { mapRef.current = m; setMapReady(true); }, []);
   const onMapClick = useCallback(() => {
@@ -1063,8 +1075,8 @@ export function VeierlandApp() {
           </>
         ) : (
           <>
-            <div className="vl-count">{T.nt(VL_TRAILS.length)}</div>
-            {VL_TRAILS.map(tr => (
+            <div className="vl-count">{T.nt(trails.length)}</div>
+            {trails.map(tr => (
               <div key={tr.id} className="vl-card" onClick={() => selectTrail(tr)}>
                 <div className="vl-ic" dangerouslySetInnerHTML={{ __html: iconSvg('tur') }} />
                 <div className="tx">
