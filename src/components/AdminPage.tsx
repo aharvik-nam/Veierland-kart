@@ -1400,6 +1400,15 @@ function TidslinjeTab() {
                   <label style={labelStyle}>Kontekst Norge</label>
                   <textarea style={{ ...fieldStyle, minHeight: 60, resize: 'vertical' }} value={sec.kontekst_norge} onChange={e => update(idx, { kontekst_norge: e.target.value })} />
                 </div>
+                <div style={rowStyle}>
+                  <label style={labelStyle}>Havnivå (meter over i dag, 0–15)</label>
+                  <input
+                    style={{ ...fieldStyle, width: 100 }}
+                    type="number" min={0} max={15} step={1}
+                    value={sec.sea_level_m}
+                    onChange={e => update(idx, { sea_level_m: Math.max(0, Math.min(15, Number(e.target.value) || 0)) })}
+                  />
+                </div>
 
                 {/* Image */}
                 <div style={{ borderTop: '1px solid var(--line)', paddingTop: 12, marginTop: 4 }}>

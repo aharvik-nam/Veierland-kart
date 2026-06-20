@@ -116,20 +116,6 @@ interface NatureObs {
 
 
 // Pre-index flood features by threshold so lookup is O(1), not O(n) per render
-const ERA_SEA_LEVEL: Record<string, number> = {
-  'Steinalder': 15,
-  'Bronsealder': 12,
-  'Jernalder': 10,
-  'Folkevandringstid': 7,
-  'Vikingtid': 5,
-  'Middelalder': 3,
-  'Napoleonskrigene': 1,
-  'Gårder og kulturlandskap': 2,
-  'Skipsbygging og handel': 2,
-  'Hvalfangst': 1,
-  'Veierland kirke': 0,
-};
-
 // Pre-index flood features by threshold so lookup is O(1), not O(n) per render
 const FLOOD_BY_THRESHOLD = new Map<number, object>(
   (floodData as any).features?.map((f: any) => [f.properties.threshold_m, f]) ?? []
@@ -1270,8 +1256,8 @@ export function VeierlandApp() {
           {seaSlider}
           {timelineSections.map((sec, i) => (
             <div key={i} className="vl-hist-row" tabIndex={0} role="button"
-              onClick={() => { setSelectedEra(sec); setSheetOpen(true); setSeaLevelM(ERA_SEA_LEVEL[sec.era] ?? 0); setSeaLevelLabel(sec.era); }}
-              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedEra(sec); setSheetOpen(true); setSeaLevelM(ERA_SEA_LEVEL[sec.era] ?? 0); setSeaLevelLabel(sec.era); } }}>
+              onClick={() => { setSelectedEra(sec); setSheetOpen(true); setSeaLevelM(sec.sea_level_m); setSeaLevelLabel(sec.era); }}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedEra(sec); setSheetOpen(true); setSeaLevelM(sec.sea_level_m); setSeaLevelLabel(sec.era); } }}>
               <div className="vl-hist-era">
                 <div className="vl-hist-dot" />
                 <div className="vl-hist-line" />

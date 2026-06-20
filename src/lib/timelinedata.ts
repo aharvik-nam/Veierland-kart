@@ -9,9 +9,26 @@ export interface TimelineSection {
   body: { no: string; en: string };
   anekdoter: string[];
   kontekst_norge: string;
+  sea_level_m: number;
   image?: string;
   image_caption?: string;
 }
+
+// Default sea levels per era — moved here so they travel with the data,
+// not as a hardcoded lookup table keyed by a string that can change.
+const DEFAULT_SEA_LEVEL: Record<string, number> = {
+  'Steinalder': 15,
+  'Bronsealder': 12,
+  'Jernalder': 10,
+  'Folkevandringstid': 7,
+  'Vikingtid': 5,
+  'Middelalder': 3,
+  'Napoleonskrigene': 1,
+  'Gårder og kulturlandskap': 2,
+  'Skipsbygging og handel': 2,
+  'Hvalfangst': 1,
+  'Veierland kirke': 0,
+};
 
 const COL = 'geodata';
 const DOC_ID = 'timeline_sections';
@@ -25,6 +42,7 @@ function defaultSections(): TimelineSection[] {
     body: { no: s.body?.no ?? '', en: s.body?.en ?? '' },
     anekdoter: s.anekdoter ?? [],
     kontekst_norge: s.kontekst_norge ?? '',
+    sea_level_m: s.sea_level_m ?? DEFAULT_SEA_LEVEL[s.era as string] ?? 0,
     image: s.image ?? '',
     image_caption: s.image_caption ?? '',
   }));
