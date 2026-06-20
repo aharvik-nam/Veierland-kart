@@ -23,9 +23,14 @@ import requests
 import geopandas as gpd
 from shapely.geometry import box, mapping
 
-# ─── Veierland bbox (WGS84) ──────────────────────────────────────────────────
+# ─── Veierland clip-polygon (laster fra veierland_boundary.json) ─────────────
 
-CLIP_BOX = box(10.370, 59.105, 10.450, 59.165)  # (lon_min, lat_min, lon_max, lat_max)
+def load_clip_polygon() -> 'Polygon':
+    boundary_path = os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'veierland_boundary.json')
+    with open(boundary_path, encoding='utf-8') as f:
+        geojson = json.load(f)
+    from shapely.geometry import shape
+    return shape(geojson)
 
 # ─── NGU nedlasting-URLer (Vestfold, EPSG:4258 Shapefile) ────────────────────
 # Berggrunn N250 brukes istedenfor N50 siden N50 ikke dekker småøyer som Veierland
@@ -101,7 +106,7 @@ def download(name: str, url: str) -> bytes:
     return data
 
 
-def load_clip(zip_bytes: bytes) -> gpd.GeoDataFrame:
+def load_clip(zip_bytes: bytes, clip_poly) -> gpd.GeoDataFrame:
     with tempfile.TemporaryDirectory() as tmp:
         with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
             zf.extractall(tmp)
@@ -121,8 +126,8 @@ def load_clip(zip_bytes: bytes) -> gpd.GeoDataFrame:
     print(f'  {len(gdf)} features totalt i Vestfold')
 
     gdf = gdf.to_crs('EPSG:4326')
-    gdf = gdf[gdf.geometry.intersects(CLIP_BOX)].copy()
-    gdf['geometry'] = gdf.geometry.intersection(CLIP_BOX)
+    gdf = gdf[gdf.geometry.intersects(clip_poly)].copy()
+    gdf['geometry'] = gdf.geometry.intersection(clip_poly)
     gdf = gdf[gdf.geometry.notna() & ~gdf.geometry.is_empty].copy()
     gdf['geometry'] = gdf.geometry.simplify(0.00005, preserve_topology=True)
     gdf = gdf[~gdf.geometry.is_empty].copy()
@@ -224,10 +229,13 @@ def main() -> None:
     out_dir = os.path.join(os.path.dirname(__file__), '..', 'src', 'data')
     os.makedirs(out_dir, exist_ok=True)
 
+    clip_poly = load_clip_polygon()
+    print(f'Klipper mot øygrense: bbox {clip_poly.bounds}')
+
     for name, url in DATASETS.items():
         try:
             zip_bytes = download(name, url)
-            gdf = load_clip(zip_bytes)
+            gdf = load_clip(zip_bytes, clip_poly)
             if gdf.empty:
                 print(f'  Ingen data for {name} i Veierland-bbox — sjekk koordinater')
                 continue
