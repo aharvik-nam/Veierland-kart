@@ -95,5 +95,6 @@ export async function loadFarmData(): Promise<Farm[]> {
 }
 
 export async function saveFarmData(farms: Farm[]): Promise<void> {
+  if (!isFirebaseConfigured) throw new Error('Firebase ikke konfigurert');
   await setDoc(doc(db, COL, DOC_ID), { json: JSON.stringify(farms) });
 }

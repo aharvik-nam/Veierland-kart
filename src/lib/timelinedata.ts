@@ -71,5 +71,6 @@ export async function loadTimelineSections(): Promise<TimelineSection[]> {
 }
 
 export async function saveTimelineSections(sections: TimelineSection[]): Promise<void> {
+  if (!isFirebaseConfigured) throw new Error('Firebase ikke konfigurert');
   await setDoc(doc(db, COL, DOC_ID), { json: JSON.stringify(sections) });
 }

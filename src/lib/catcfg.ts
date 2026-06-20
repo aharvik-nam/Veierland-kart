@@ -42,5 +42,6 @@ export async function loadCatCfg(): Promise<CatCfgMap> {
 }
 
 export async function saveCatCfg(cfg: CatCfgMap): Promise<void> {
+  if (!isFirebaseConfigured) throw new Error('Firebase ikke konfigurert');
   await setDoc(doc(db, COL, DOC_ID), { json: JSON.stringify(cfg) });
 }
