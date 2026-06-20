@@ -39,9 +39,14 @@ SHAPEFILES = {
     'marin_grense': 'https://nedlasting.ngu.no/api/fileproxy/cf8ccec7-9505-4d84-94a9-eac9c69971d3/0b6a13b2-c79e-49ea-8c95-28d087a36292',
 }
 
-GEOJSON_ZIPS = {
-    'naturtyper': 'https://nedlasting.miljodirektoratet.no/miljodata/Naturtyper_nin/GEOJSON/4326/Naturtyper_nin_39_vestfold_4326_GEOJSON.zip',
-}
+GEOJSON_ZIPS = {}  # naturtyper lastes separat under (prøver flere URL-er)
+
+# Mulige URL-er for Vestfold naturtyper (fylkesnummer endret etter kommunereform)
+NATURTYPER_URLS = [
+    'https://nedlasting.miljodirektoratet.no/miljodata/Naturtyper_nin/GEOJSON/4326/Naturtyper_nin_39_vestfold_4326_GEOJSON.zip',
+    'https://nedlasting.miljodirektoratet.no/miljodata/Naturtyper_nin/GEOJSON/4326/Naturtyper_nin_38_vestfold_og_telemark_4326_GEOJSON.zip',
+    'https://nedlasting.miljodirektoratet.no/miljodata/Naturtyper_nin/GEOJSON/4326/Naturtyper_nin_07_vestfold_4326_GEOJSON.zip',
+]
 
 # ─── Fargetabeller (substring-match på norsk navn, første treff vinner) ──────
 
@@ -160,6 +165,8 @@ def load_shp(zip_bytes: bytes, clip_poly, simplify=0.00005) -> gpd.GeoDataFrame:
 def load_geojson_zip(zip_bytes: bytes, clip_poly, simplify=0.00005) -> gpd.GeoDataFrame:
     with tempfile.TemporaryDirectory() as tmp:
         with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
+            names = zf.namelist()
+            print(f'  Filer i zip: {names[:10]}')
             zf.extractall(tmp)
         geojson_file = next(
             (os.path.join(r, f) for r, _, files in os.walk(tmp) for f in files if f.endswith('.geojson') or f.endswith('.json')),
@@ -167,10 +174,11 @@ def load_geojson_zip(zip_bytes: bytes, clip_poly, simplify=0.00005) -> gpd.GeoDa
         )
         if not geojson_file:
             raise ValueError('Ingen .geojson funnet i zip')
+        print(f'  Leser: {os.path.basename(geojson_file)}')
         gdf = gpd.read_file(geojson_file)
 
     print(f'  CRS: {gdf.crs}  kolonner: {[c for c in gdf.columns if c != "geometry"]}')
-    print(f'  {len(gdf)} features i Vestfold')
+    print(f'  {len(gdf)} features totalt i fylket')
 
     if gdf.crs and gdf.crs.to_epsg() != 4326:
         gdf = gdf.to_crs('EPSG:4326')
@@ -325,16 +333,24 @@ def main() -> None:
             print(f'  FEIL {name}: {e}', file=sys.stderr)
             import traceback; traceback.print_exc()
 
-    for name, url in GEOJSON_ZIPS.items():
+    # Naturtyper — prøv flere URL-er til én fungerer
+    print('\nLaster naturtyper (NiN)...')
+    naturtyper_done = False
+    for url in NATURTYPER_URLS:
         try:
-            gdf = load_geojson_zip(download(name, url), clip)
+            print(f'  Prøver: {url}')
+            data = download('naturtyper', url)
+            gdf = load_geojson_zip(data, clip)
             if gdf.empty:
-                print(f'  ⚠ Ingen data for {name}')
+                print('  ⚠ Ingen features på Veierland med denne URL-en, prøver neste')
                 continue
-            save(to_naturtyper(gdf), os.path.join(out_dir, f'{name}.geojson'))
+            save(to_naturtyper(gdf), os.path.join(out_dir, 'naturtyper.geojson'))
+            naturtyper_done = True
+            break
         except Exception as e:
-            print(f'  FEIL {name}: {e}', file=sys.stderr)
-            import traceback; traceback.print_exc()
+            print(f'  FEIL: {e} — prøver neste URL')
+    if not naturtyper_done:
+        print('  ⚠ Klarte ikke laste naturtyper fra noen URL')
 
 
 if __name__ == '__main__':
