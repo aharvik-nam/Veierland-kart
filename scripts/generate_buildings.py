@@ -104,63 +104,113 @@ def best_field(gdf, candidates):
     return next((lower[c.lower()] for c in candidates if c.lower() in lower), None)
 
 
+def get_capabilities():
+    """Hent tilgjengelige feature types fra WFS."""
+    r = requests.get(WFS_URL, params={
+        'SERVICE': 'WFS', 'VERSION': '2.0.0', 'REQUEST': 'GetCapabilities',
+    }, timeout=30)
+    import re
+    types = re.findall(r'<Name>([^<]+)</Name>', r.text)
+    return [t for t in types if t and ':' not in t or 'yg' in t.lower() or 'byg' in t.lower()]
+
+
+def bbox_utm33(clip_poly):
+    """Konverter øygrense-bbox til UTM33N (EPSG:25833) — norsk WFS-standard."""
+    from pyproj import Transformer
+    t = Transformer.from_crs('EPSG:4326', 'EPSG:25833', always_xy=True)
+    b = clip_poly.bounds  # minx(lon), miny(lat), maxx(lon), maxy(lat)
+    x1, y1 = t.transform(b[0], b[1])
+    x2, y2 = t.transform(b[2], b[3])
+    return x1, y1, x2, y2
+
+
 def fetch_via_wfs(clip_poly):
-    b = clip_poly.bounds  # (minx, miny, maxx, maxy) i WGS84
+    # Finn feature types
+    print('  GetCapabilities...')
+    try:
+        types = get_capabilities()
+        print(f'  Tilgjengelige types: {types[:15]}')
+    except Exception as e:
+        print(f'  GetCapabilities feilet: {e}')
+        types = []
 
-    # WFS 2.0 med JSON-output
-    params = {
-        'SERVICE': 'WFS',
-        'VERSION': '2.0.0',
-        'REQUEST': 'GetFeature',
-        'TYPENAMES': 'app:Bygning',
-        'BBOX': f'{b[0]},{b[1]},{b[2]},{b[3]},EPSG:4326',
-        'SRSNAME': 'EPSG:4326',
-        'outputFormat': 'application/json',
-        'COUNT': '5000',
-    }
+    # UTM33N bbox
+    x1, y1, x2, y2 = bbox_utm33(clip_poly)
+    print(f'  UTM33N bbox: {x1:.0f},{y1:.0f},{x2:.0f},{y2:.0f}')
 
-    print(f'  URL: {WFS_URL}')
-    r = requests.get(WFS_URL, params=params, timeout=60)
-    print(f'  HTTP {r.status_code}  Content-Type: {r.headers.get("Content-Type","?")}')
+    # Kandidat-typenavn å prøve
+    candidates = [t for t in types if 'yg' in t.lower()] or [
+        'app:Bygning', 'Bygning', 'app:BygningPunkt', 'BygningPunkt',
+        'app:Bygningsflate', 'Bygningsflate',
+    ]
 
-    if r.status_code != 200:
-        raise ValueError(f'HTTP {r.status_code}: {r.text[:300]}')
+    for typename in candidates:
+        for epsg, bx in [
+            ('EPSG:25833', f'{x1},{y1},{x2},{y2},EPSG:25833'),
+            ('EPSG:4326',  f'{clip_poly.bounds[0]},{clip_poly.bounds[1]},{clip_poly.bounds[2]},{clip_poly.bounds[3]},EPSG:4326'),
+        ]:
+            params = {
+                'SERVICE': 'WFS', 'VERSION': '2.0.0', 'REQUEST': 'GetFeature',
+                'TYPENAMES': typename, 'BBOX': bx, 'SRSNAME': epsg, 'COUNT': '5000',
+            }
+            try:
+                r = requests.get(WFS_URL, params=params, timeout=60)
+                ct = r.headers.get('Content-Type', '')
+                print(f'  {typename} / {epsg}: HTTP {r.status_code} {ct[:50]}')
 
-    ct = r.headers.get('Content-Type', '')
-    if 'json' in ct:
-        fc = r.json()
-        features = fc.get('features', [])
-        if not features:
-            raise ValueError(f'Tom GeoJSON respons. Keys: {list(fc.keys())}')
-        gdf = gpd.GeoDataFrame.from_features(features, crs='EPSG:4326')
-    else:
-        # GML-respons — la geopandas/GDAL parse det
-        import io, tempfile
-        with tempfile.NamedTemporaryFile(suffix='.gml', delete=False) as f:
-            f.write(r.content)
-            fname = f.name
-        gdf = gpd.read_file(fname)
-        os.unlink(fname)
-        if gdf.crs and gdf.crs.to_epsg() != 4326:
-            gdf = gdf.to_crs('EPSG:4326')
+                if 'exception' in ct.lower() or 'se_xml' in ct.lower():
+                    import re
+                    msg = re.search(r'<[Ee]xception[Tt]ext>([^<]+)', r.text)
+                    print(f'    OGC feil: {msg.group(1)[:120] if msg else r.text[:120]}')
+                    continue
 
-    return gdf
+                if 'json' in ct:
+                    fc = r.json()
+                    features = fc.get('features', [])
+                    if features:
+                        gdf = gpd.GeoDataFrame.from_features(features, crs=epsg)
+                        return gdf
+                    print(f'    Tom JSON-respons')
+                else:
+                    # GML
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(suffix='.gml', delete=False) as f:
+                        f.write(r.content); fname = f.name
+                    try:
+                        gdf = gpd.read_file(fname)
+                        os.unlink(fname)
+                        if len(gdf) > 0:
+                            return gdf
+                        print(f'    Tom GML-respons')
+                    except Exception as e2:
+                        os.unlink(fname)
+                        print(f'    GML-parse feilet: {e2}')
+            except Exception as e:
+                print(f'    {e}')
+
+    raise ValueError('Ingen kombinasjon av typename/CRS fungerte')
 
 
 def fetch_via_gpd_wfs(clip_poly):
-    """Alternativ: la geopandas lese WFS direkte."""
-    b = clip_poly.bounds
-    url = (
-        f'{WFS_URL}?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature'
-        f'&TYPENAMES=app:Bygning'
-        f'&BBOX={b[0]},{b[1]},{b[2]},{b[3]},EPSG:4326'
-        f'&SRSNAME=EPSG:4326&COUNT=5000'
-    )
-    print(f'  gpd.read_file: {url[:120]}...')
-    gdf = gpd.read_file(url)
-    if gdf.crs and gdf.crs.to_epsg() != 4326:
-        gdf = gdf.to_crs('EPSG:4326')
-    return gdf
+    """Alternativ via OWS-URL direkte til geopandas."""
+    x1, y1, x2, y2 = bbox_utm33(clip_poly)
+    for typename in ['app:Bygning', 'Bygning', 'app:BygningPunkt']:
+        url = (
+            f'WFS:{WFS_URL}?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature'
+            f'&TYPENAMES={typename}'
+            f'&BBOX={x1},{y1},{x2},{y2},EPSG:25833'
+            f'&SRSNAME=EPSG:25833&COUNT=5000'
+        )
+        print(f'  gpd.read_file {typename}...')
+        try:
+            gdf = gpd.read_file(url)
+            if len(gdf) > 0:
+                if gdf.crs and gdf.crs.to_epsg() != 4326:
+                    gdf = gdf.to_crs('EPSG:4326')
+                return gdf
+        except Exception as e:
+            print(f'    {e}')
+    raise ValueError('gpd WFS feilet for alle typenavn')
 
 
 # ─── Konverter til GeoJSON-features ──────────────────────────────────────────
