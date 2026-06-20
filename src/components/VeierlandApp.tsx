@@ -124,16 +124,7 @@ interface HistorySection {
 const HISTORY_SECTIONS = historyData.sections as HistorySection[];
 
 
-// Available flood overlay thresholds in the GeoJSON (2, 6, 10, 15 metres)
-const FLOOD_THRESHOLDS = [2, 6, 10, 15] as const;
-
-// Returns the largest available threshold ≤ m (or null if m < 2)
-function nearestFloodThreshold(m: number): number | null {
-  const below = FLOOD_THRESHOLDS.filter(t => t <= m);
-  return below.length > 0 ? below[below.length - 1] : null;
-}
-
-// Historical sea level (metres above today) per era, based on Vestfold land-uplift data
+// Pre-index flood features by threshold so lookup is O(1), not O(n) per render
 const ERA_SEA_LEVEL: Record<string, number> = {
   'Steinalder': 15,
   'Bronsealder': 12,
@@ -152,6 +143,17 @@ const ERA_SEA_LEVEL: Record<string, number> = {
 const FLOOD_BY_THRESHOLD = new Map<number, object>(
   (floodData as any).features?.map((f: any) => [f.properties.threshold_m, f]) ?? []
 );
+
+// Derived from the GeoJSON data — automatically picks up new thresholds when the file is regenerated
+const FLOOD_THRESHOLDS: number[] = [...FLOOD_BY_THRESHOLD.keys()].sort((a, b) => a - b);
+
+// Returns the largest available threshold ≤ m (or null if none)
+function nearestFloodThreshold(m: number): number | null {
+  const below = FLOOD_THRESHOLDS.filter(t => t <= m);
+  return below.length > 0 ? below[below.length - 1] : null;
+}
+
+// Historical sea level (metres above today) per era, based on Vestfold land-uplift data
 
 // WGS84 polygon tracing Veierland's coastline (from veierland_boundary.json)
 const GBIF_POLYGON = encodeURIComponent(
@@ -1129,10 +1131,10 @@ export function VeierlandApp() {
           value={seaLevelM} onChange={e => { setSeaLevelM(Number(e.target.value)); setSeaLevelLabel(null); }}
           className="vl-sl-range" list="sea-level-ticks" />
         <datalist id="sea-level-ticks">
-          {[0, 2, 6, 10, 15].map(v => <option key={v} value={v} />)}
+          {[0, 5, 10, 15].map(v => <option key={v} value={v} />)}
         </datalist>
         <div className="vl-sl-ticks">
-          {([{ v: 0, l: lang === 'no' ? 'I dag' : 'Today' }, { v: 2, l: '+2m' }, { v: 6, l: '+6m' }, { v: 10, l: '+10m' }, { v: 15, l: '+15m' }]).map(({ v, l }) => (
+          {([{ v: 0, l: lang === 'no' ? 'I dag' : 'Today' }, { v: 5, l: '+5m' }, { v: 10, l: '+10m' }, { v: 15, l: '+15m' }]).map(({ v, l }) => (
             <span key={v} style={{ left: `${(v / 15) * 100}%` }}>{l}</span>
           ))}
         </div>
