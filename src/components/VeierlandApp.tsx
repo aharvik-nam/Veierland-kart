@@ -16,8 +16,6 @@ import { ICONS } from '../lib/icons';
 import floodData from '../data/sea_level_flood.geojson';
 import losmassData from '../data/losmasser.geojson';
 import berggrunData from '../data/berggrunn.geojson';
-import naturtypeData from '../data/naturtyper.geojson';
-import marinGrenseData from '../data/marin_grense.geojson';
 
 // ─── Layer configs ────────────────────────────────────────────────────────────
 
@@ -81,24 +79,12 @@ const GEO_LAYERS: Record<string, GeoLayerCfg> = {
     sw: 'linear-gradient(135deg,#9a6aaa,#6a8aaa)',
     noDataMsg: { no: 'Kjør generate_geology.py', en: 'Run generate_geology.py' },
   },
-  naturtyper: {
-    label: { no: 'Naturtyper (NiN)', en: 'Nature types (NiN)' },
-    sw: 'linear-gradient(135deg,#5a9a5a,#8fbe8f)',
-    noDataMsg: { no: 'Kjør generate_geology.py', en: 'Run generate_geology.py' },
-  },
-  marin_grense: {
-    label: { no: 'Marin grense', en: 'Marine limit' },
-    sw: 'linear-gradient(135deg,#2255cc,#55aaff)',
-    noDataMsg: { no: 'Kjør generate_geology.py', en: 'Run generate_geology.py' },
-  },
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const GEO_DATA: Record<string, any> = {
   losmasse: losmassData,
   berggrunn: berggrunData,
-  naturtyper: naturtypeData,
-  marin_grense: marinGrenseData,
 };
 
 function geoStyle(feature?: { properties?: { color?: string } }): L.PathOptions {
@@ -111,15 +97,6 @@ function geoStyle(feature?: { properties?: { color?: string } }): L.PathOptions 
   };
 }
 
-function geoPointToLayer(feature: { properties?: { color?: string } }, latlng: L.LatLng): L.Layer {
-  return L.circleMarker(latlng, {
-    radius: 7,
-    fillColor: feature?.properties?.color ?? '#2255cc',
-    color: '#fff',
-    weight: 1.5,
-    fillOpacity: 0.9,
-  });
-}
 
 function geoOnEach(feature: { properties?: { type_no?: string; label?: string } }, layer: L.Layer) {
   const name = feature?.properties?.label ?? feature?.properties?.type_no;
@@ -1180,8 +1157,8 @@ export function VeierlandApp() {
               ? (lang === 'no' ? `Overlay: ${nearestThresh}m-kontur. ` : `Overlay: ${nearestThresh}m contour. `)
               : ''}
             {lang === 'no'
-              ? 'Blå overlay viser hva som var under vann. Lilla stiplet område viser marin grense — maksimalt historisk havnivå etter siste istid.'
-              : 'Blue overlay shows what was underwater. Purple dashed area shows the marine limit — maximum post-glacial sea level.'}
+              ? 'Blå overlay viser hva som var under vann.'
+              : 'Blue overlay shows what was underwater.'}
           </div>
         )}
       </div>
@@ -1714,8 +1691,6 @@ export function VeierlandApp() {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             style={geoStyle as any}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            pointToLayer={geoLayer === 'marin_grense' ? geoPointToLayer as any : undefined}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onEachFeature={geoOnEach as any}
           />
         )}
@@ -1789,13 +1764,6 @@ export function VeierlandApp() {
             />
           );
         })()}
-        {mode === 'history' && seaLevelM > 0 && (marinGrenseData as any).features?.length > 0 && (
-          <GeoJSON
-            key="marin-grense-ref"
-            data={marinGrenseData as any}
-            style={{ color: '#7a3a9a', fillColor: '#b06ad0', fillOpacity: 0.15, weight: 2, opacity: 0.7, dashArray: '6 4' }}
-          />
-        )}
         {mode === 'history' && historyView === 'garder' && visibleFarms.map(farm => {
           const coords = farmCoords[farm.name];
           if (!coords) return null;
