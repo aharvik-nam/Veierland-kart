@@ -205,7 +205,10 @@ body { display: grid; place-items: center; }
   0%, 100% { opacity: 1; }
   50% { opacity: .28; }
 }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+  .vl-loading-blink, .vl-spinner, .vl-btn.sec.heart-pop { animation: none !important; }
+}
 
 .vl-loading-blink {
   color: var(--accent);
@@ -330,7 +333,7 @@ body { display: grid; place-items: center; }
 .vl-panel-search svg { color: var(--muted); flex: 0 0 auto; }
 .vl-panel-search input {
   border: none; outline: none; background: transparent; flex: 1;
-  font: inherit; font-size: 15px; color: var(--ink); min-width: 0;
+  font: inherit; font-size: 16px; color: var(--ink); min-width: 0;
 }
 .vl-panel-search input::placeholder { color: var(--muted); }
 .vl-search-close {
