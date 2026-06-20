@@ -28,10 +28,11 @@ from shapely.geometry import box, mapping
 CLIP_BOX = box(10.370, 59.105, 10.450, 59.165)  # (lon_min, lat_min, lon_max, lat_max)
 
 # ─── NGU nedlasting-URLer (Vestfold, EPSG:4258 Shapefile) ────────────────────
+# Berggrunn N250 brukes istedenfor N50 siden N50 ikke dekker småøyer som Veierland
 
 DATASETS = {
     'losmasser': 'https://nedlasting.ngu.no/api/fileproxy/3de4ddf6-d6b8-4398-8222-f5c47791a757/1562fce0-4563-428a-8d86-7d0b7f051627',
-    'berggrunn': 'https://nedlasting.ngu.no/api/fileproxy/a5c76d05-33bd-4a1d-b28b-81575092e468/6b94a924-10a3-4b66-af19-971f4b31473c',
+    'berggrunn': 'https://nedlasting.ngu.no/api/fileproxy/7c39be66-77b6-4b74-b58d-53b6bee90067/1eafb1e6-e03f-4dc6-bd1a-062c9841bf91',
 }
 
 # ─── Farger per løsmassetype (substring-match på norsk navn) ─────────────────
@@ -139,11 +140,11 @@ def best_field(gdf: gpd.GeoDataFrame, candidates: list[str]) -> str | None:
 
 def to_features_losmasser(gdf: gpd.GeoDataFrame) -> list[dict]:
     name_field = best_field(gdf, [
-        'losmtypnvn', 'losmtypenavn', 'LOSMTYPNVN', 'LOSMTYPENAVN',
-        'typnavn', 'typenavn', 'navn', 'losmtype', 'typekode',
+        'jorda_navn', 'losmtypnvn', 'losmtypenavn',
+        'typnavn', 'typenavn', 'navn',
     ])
     code_field = best_field(gdf, [
-        'losmtype', 'LOSMTYPE', 'typekode', 'kode',
+        'jordart', 'losmtype', 'typekode', 'kode',
     ])
     print(f'  Bruker navn-felt="{name_field}", kode-felt="{code_field}"')
 
@@ -168,13 +169,24 @@ def to_features_losmasser(gdf: gpd.GeoDataFrame) -> list[dict]:
     return features
 
 
+def rgb_to_hex(rgb_str: str) -> str | None:
+    """Convert 'R,G,B' string from NGU to '#rrggbb'."""
+    try:
+        parts = [int(x.strip()) for x in rgb_str.split(',')]
+        if len(parts) == 3:
+            return '#{:02x}{:02x}{:02x}'.format(*parts)
+    except Exception:
+        pass
+    return None
+
+
 def to_features_berggrunn(gdf: gpd.GeoDataFrame) -> list[dict]:
     name_field = best_field(gdf, [
-        'gb_gruppe', 'berggruppe', 'bergenhet', 'bergart',
-        'GB_GRUPPE', 'BERGGRUPPE', 'BERGENHET', 'BERGART',
-        'navn', 'typnavn',
+        'tegnforkla', 'hovedberg_', 'gb_gruppe', 'berggruppe',
+        'bergenhet', 'bergart', 'navn', 'typnavn',
     ])
-    print(f'  Bruker navn-felt="{name_field}"')
+    rgb_field = best_field(gdf, ['rgbfargeko', 'rgb', 'rgbfarve'])
+    print(f'  Bruker navn-felt="{name_field}", rgb-felt="{rgb_field}"')
 
     features = []
     for _, row in gdf.iterrows():
@@ -183,7 +195,12 @@ def to_features_berggrunn(gdf: gpd.GeoDataFrame) -> list[dict]:
         except Exception:
             continue
         name = str(row[name_field]).strip() if name_field else ''
-        color = color_for(name, BERGGRUNN_COLORS)
+        # Use NGU's own RGB color when available
+        color = None
+        if rgb_field:
+            color = rgb_to_hex(str(row[rgb_field]))
+        if not color:
+            color = color_for(name, BERGGRUNN_COLORS)
         features.append({
             'type': 'Feature',
             'geometry': geom,
