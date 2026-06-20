@@ -39,14 +39,7 @@ SHAPEFILES = {
     'marin_grense': 'https://nedlasting.ngu.no/api/fileproxy/cf8ccec7-9505-4d84-94a9-eac9c69971d3/0b6a13b2-c79e-49ea-8c95-28d087a36292',
 }
 
-GEOJSON_ZIPS = {}  # naturtyper lastes separat under (prøver flere URL-er)
-
-# Mulige URL-er for Vestfold naturtyper (fylkesnummer endret etter kommunereform)
-NATURTYPER_URLS = [
-    'https://nedlasting.miljodirektoratet.no/miljodata/Naturtyper_nin/GEOJSON/4326/Naturtyper_nin_39_vestfold_4326_GEOJSON.zip',
-    'https://nedlasting.miljodirektoratet.no/miljodata/Naturtyper_nin/GEOJSON/4326/Naturtyper_nin_38_vestfold_og_telemark_4326_GEOJSON.zip',
-    'https://nedlasting.miljodirektoratet.no/miljodata/Naturtyper_nin/GEOJSON/4326/Naturtyper_nin_07_vestfold_4326_GEOJSON.zip',
-]
+GEOJSON_ZIPS = {}  # naturtyper lastes separat under
 
 # ─── Fargetabeller (substring-match på norsk navn, første treff vinner) ──────
 
@@ -333,24 +326,50 @@ def main() -> None:
             print(f'  FEIL {name}: {e}', file=sys.stderr)
             import traceback; traceback.print_exc()
 
-    # Naturtyper — prøv flere URL-er til én fungerer
-    print('\nLaster naturtyper (NiN)...')
-    naturtyper_done = False
-    for url in NATURTYPER_URLS:
-        try:
-            print(f'  Prøver: {url}')
-            data = download('naturtyper', url)
-            gdf = load_geojson_zip(data, clip)
-            if gdf.empty:
-                print('  ⚠ Ingen features på Veierland med denne URL-en, prøver neste')
-                continue
-            save(to_naturtyper(gdf), os.path.join(out_dir, 'naturtyper.geojson'))
-            naturtyper_done = True
-            break
-        except Exception as e:
-            print(f'  FEIL: {e} — prøver neste URL')
-    if not naturtyper_done:
-        print('  ⚠ Klarte ikke laste naturtyper fra noen URL')
+    # Naturtyper — hent via ArcGIS REST bbox-spørring mot Naturbase
+    print('\nLaster naturtyper (NiN) via Naturbase REST...')
+    try:
+        bbox = clip.bounds  # (minx, miny, maxx, maxy)
+        # Prøv NiN-naturtyper (kartleggingsprogram 2018+)
+        NATURBASE_LAYERS = [
+            ('NiN naturtyper',  'https://kart.miljodirektoratet.no/arcgis/rest/services/Natur_i_Norge/nin_naturtype_utvalgte_omrader/MapServer/0/query'),
+            ('Utvalgte naturtyper', 'https://kart.miljodirektoratet.no/arcgis/rest/services/utvalgte_naturtyper/MapServer/0/query'),
+            ('Naturtyper (eldre)', 'https://kart.miljodirektoratet.no/arcgis/rest/services/naturbase/MapServer/0/query'),
+        ]
+        naturtyper_done = False
+        for label, base_url in NATURBASE_LAYERS:
+            try:
+                print(f'  Prøver {label}...')
+                params = {
+                    'where': '1=1',
+                    'geometry': f'{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}',
+                    'geometryType': 'esriGeometryEnvelope',
+                    'inSR': '4326',
+                    'outSR': '4326',
+                    'spatialRel': 'esriSpatialRelIntersects',
+                    'outFields': '*',
+                    'f': 'geojson',
+                    'resultRecordCount': 1000,
+                }
+                r = requests.get(base_url, params=params, timeout=30)
+                r.raise_for_status()
+                fc = r.json()
+                feats = fc.get('features', [])
+                print(f'    {len(feats)} features')
+                if feats:
+                    import geopandas as gpd2
+                    gdf_nat = gpd.GeoDataFrame.from_features(feats, crs='EPSG:4326')
+                    print(f'    kolonner: {[c for c in gdf_nat.columns if c != "geometry"]}')
+                    save(to_naturtyper(gdf_nat), os.path.join(out_dir, 'naturtyper.geojson'))
+                    naturtyper_done = True
+                    break
+            except Exception as e:
+                print(f'    FEIL: {e}')
+        if not naturtyper_done:
+            print('  ⚠ Ingen NiN-naturtyper funnet på Veierland — området er trolig ikke kartlagt')
+    except Exception as e:
+        print(f'  FEIL naturtyper: {e}', file=sys.stderr)
+        import traceback; traceback.print_exc()
 
 
 if __name__ == '__main__':
