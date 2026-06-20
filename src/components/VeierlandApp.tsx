@@ -1089,14 +1089,17 @@ export function VeierlandApp() {
 
   function renderHistory() {
     const viewToggle = (
-      <div style={{ display: 'flex', gap: 1, marginBottom: 14, background: 'var(--line)', borderRadius: 10, padding: 2 }}>
-        {(['tidslinje', 'garder'] as const).map(v => (
-          <button key={v}
-            style={{ flex: 1, padding: '7px 0', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 500, background: historyView === v ? 'var(--card)' : 'transparent', color: historyView === v ? 'var(--ink)' : 'var(--muted)' }}
-            onClick={() => { setHistoryView(v); setSelectedEra(null); setSelectedFarm(null); }}>
-            {v === 'tidslinje' ? T.tidslinje : T.garder}
-          </button>
-        ))}
+      <div className="vl-chips" style={{ marginBottom: 14 }}>
+        <div className={`vl-chip${historyView === 'tidslinje' ? ' on' : ''}`}
+          onClick={() => { setHistoryView('tidslinje'); setSelectedEra(null); setSelectedFarm(null); }}>
+          <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('kart') }} />
+          <span className="cl">{T.tidslinje}</span>
+        </div>
+        <div className={`vl-chip${historyView === 'garder' ? ' on' : ''}`}
+          onClick={() => { setHistoryView('garder'); setSelectedEra(null); setSelectedFarm(null); }}>
+          <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('hus') }} />
+          <span className="cl">{T.garder}</span>
+        </div>
       </div>
     );
 
