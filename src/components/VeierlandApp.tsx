@@ -14,6 +14,8 @@ import { loadFarmData, DEFAULT_FARM_DATA, Farm } from '../lib/farmdata';
 import { loadTimelineSections, DEFAULT_TIMELINE_SECTIONS, TimelineSection } from '../lib/timelinedata';
 import { ICONS } from '../lib/icons';
 import floodData from '../data/sea_level_flood.geojson';
+import losmassData from '../data/losmasser.geojson';
+import berggrunData from '../data/berggrunn.geojson';
 
 // ─── Layer configs ────────────────────────────────────────────────────────────
 
@@ -61,30 +63,41 @@ const LAYERS: Record<string, LayerCfg> = {
 };
 const LAYER_ORDER = ['soleng', 'friluft', 'flyfoto', 'historisk'] as const;
 
-interface OverlayCfg {
+interface GeoLayerCfg {
   label: { no: string; en: string };
   sw: string;
-  url: string;
-  wmsLayers: string;
-  opacity: number;
+  noDataMsg: { no: string; en: string };
 }
-
-const GEO_OVERLAYS: Record<string, OverlayCfg> = {
+const GEO_LAYERS: Record<string, GeoLayerCfg> = {
   losmasse: {
     label: { no: 'Løsmasser', en: 'Surface deposits' },
     sw: 'linear-gradient(135deg,#c8a05a,#a8c870)',
-    url: 'https://geo.ngu.no/mapserver/LosmasserWMS3',
-    wmsLayers: 'LosmasserWMS3',
-    opacity: 0.65,
+    noDataMsg: { no: 'Kjør generate_geology.py for å laste ned data', en: 'Run generate_geology.py to fetch data' },
   },
   berggrunn: {
     label: { no: 'Berggrunn', en: 'Bedrock' },
     sw: 'linear-gradient(135deg,#9a6aaa,#6a8aaa)',
-    url: 'https://geo.ngu.no/mapserver/BerggrunnWMS3',
-    wmsLayers: 'BerggrunnWMS3',
-    opacity: 0.65,
+    noDataMsg: { no: 'Kjør generate_geology.py for å laste ned data', en: 'Run generate_geology.py to fetch data' },
   },
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const GEO_DATA: Record<string, any> = { losmasse: losmassData, berggrunn: berggrunData };
+
+function geoStyle(feature?: { properties?: { color?: string } }): L.PathOptions {
+  return {
+    fillColor: feature?.properties?.color ?? '#cccccc',
+    fillOpacity: 0.55,
+    color: '#555',
+    weight: 0.8,
+    opacity: 0.6,
+  };
+}
+
+function geoOnEach(feature: { properties?: { type_no?: string } }, layer: L.Layer) {
+  const name = feature?.properties?.type_no;
+  if (name) (layer as L.Path).bindTooltip(name, { sticky: true, className: 'vl-geo-tip' });
+}
 
 // ─── Category configs ─────────────────────────────────────────────────────────
 
@@ -420,33 +433,6 @@ function TileController({ layer }: { layer: string }) {
   return null;
 }
 
-function OverlayController({ overlay }: { overlay: string | null }) {
-  const map = useMap();
-  const layerRef = useRef<L.TileLayer.WMS | null>(null);
-
-  useEffect(() => {
-    if (layerRef.current) { map.removeLayer(layerRef.current); layerRef.current = null; }
-    if (!overlay) return;
-    const cfg = GEO_OVERLAYS[overlay];
-    if (!cfg) return;
-    const wmsLayer = L.tileLayer.wms(cfg.url, {
-      layers: cfg.wmsLayers,
-      format: 'image/png',
-      transparent: true,
-      opacity: cfg.opacity,
-      zIndex: 2,
-      attribution: '© NGU',
-    } as L.WMSOptions);
-    wmsLayer.addTo(map);
-    layerRef.current = wmsLayer;
-    return () => {
-      if (layerRef.current) { map.removeLayer(layerRef.current); layerRef.current = null; }
-    };
-  }, [overlay, map]);
-
-  return null;
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 
@@ -518,7 +504,7 @@ export function VeierlandApp() {
   const [currentLayer, setCurrentLayer] = useState<string>(() => {
     try { return localStorage.getItem('vl-layer') || 'soleng'; } catch { return 'soleng'; }
   });
-  const [geoOverlay, setGeoOverlay] = useState<string | null>(null);
+  const [geoLayer, setGeoLayer] = useState<string | null>(null);
   const [showLayerPop, setShowLayerPop] = useState(false);
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
@@ -1691,7 +1677,17 @@ export function VeierlandApp() {
       >
         <MapSetup onReady={onMapReady} onMapClick={onMapClick} onZoom={onZoom} />
         <TileController layer={currentLayer} />
-        <OverlayController overlay={geoOverlay} />
+        {geoLayer && GEO_DATA[geoLayer]?.features?.length > 0 && (
+          <GeoJSON
+            key={geoLayer}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            data={GEO_DATA[geoLayer] as any}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            style={geoStyle as any}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onEachFeature={geoOnEach as any}
+          />
+        )}
         {mode === 'history' && allPOIs.filter(p => catCfg[p.kategori]?.showInHistory).map(poi => {
           const cat = getCat(poi.kategori);
           const [lat, lng] = poi.coordinates ?? [0, 0];
@@ -1826,17 +1822,17 @@ export function VeierlandApp() {
         })}
         <div className="vl-pop-sep" />
         <p className="vl-pop-sub">{lang === 'no' ? 'Geologi (NGU)' : 'Geology (NGU)'}</p>
-        {Object.entries(GEO_OVERLAYS).map(([k, cfg]) => {
-          const on = geoOverlay === k;
+        {Object.entries(GEO_LAYERS).map(([k, cfg]) => {
+          const on = geoLayer === k;
+          const hasData = GEO_DATA[k]?.features?.length > 0;
           return (
-            <div
-              key={k}
-              className={`vl-opt${on ? ' on' : ''}`}
-              onClick={() => { setGeoOverlay(on ? null : k); setShowLayerPop(false); }}
+            <div key={k} className={`vl-opt${on ? ' on' : ''}${!hasData ? ' vl-opt-dim' : ''}`}
+              title={!hasData ? (lang === 'no' ? cfg.noDataMsg.no : cfg.noDataMsg.en) : undefined}
+              onClick={() => { if (hasData) { setGeoLayer(on ? null : k); setShowLayerPop(false); } }}
             >
               <span className="sw" style={{ background: cfg.sw }} />
               <span className="nm">{lang === 'no' ? cfg.label.no : cfg.label.en}</span>
-              <span className="chk">{on && <CheckSvg />}</span>
+              <span className="chk">{on ? <CheckSvg /> : (!hasData && <span style={{fontSize:10,color:'var(--muted)'}}>↓</span>)}</span>
             </div>
           );
         })}

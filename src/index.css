@@ -371,6 +371,8 @@ body { display: grid; place-items: center; }
 .vl-opt.on .chk { opacity: 1; }
 .vl-pop-sep { margin: 6px 8px; border: none; border-top: 1px solid var(--line); }
 .vl-pop-sub { margin: 4px 8px 3px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.vl-opt-dim { opacity: 0.5; cursor: default; }
+.vl-geo-tip { background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; font-size: 13px; font-weight: 600; padding: 4px 8px; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
 
 /* ── Bottom sheet ───────────────────────────────────────────────────────────── */
 .vl-map-area { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
