@@ -1,12 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../lib/firebase';
 import { poiFallback, stedsnavnFallback, turkartFallback, GeoCollection } from '../lib/geodata';
 import { DEFAULT_CAT_CFG, CatCfgMap, CatEntry, loadCatCfg, saveCatCfg } from '../lib/catcfg';
-import { loadFarmCoords, saveFarmCoords, DEFAULT_FARM_COORDS, FarmCoordsMap } from '../lib/farmcoords';
+import { loadFarmData, saveFarmData, DEFAULT_FARM_DATA, Farm, FarmPerson, FarmShip } from '../lib/farmdata';
 import { ICONS, ICON_LABELS } from '../lib/icons';
-import historyData from '../data/veierland_history.json';
 
 type Tab = 'poi' | 'stedsnavn' | 'turer' | 'kategorier' | 'garder';
 type GeoTab = 'poi' | 'stedsnavn' | 'turer';
@@ -1090,75 +1089,218 @@ function CategoryConfigTab() {
 }
 
 // ─── Gårder tab ──────────────────────────────────────────────────────────────
-const HISTORY_FARMS = historyData.farms as unknown as Array<{ name: string; coordinates: [number, number] }>;
+
+function FarmEditor({ farm, onChange }: {
+  farm: Farm;
+  onChange: (patch: Partial<Farm>) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const setPerson = (i: number, patch: Partial<FarmPerson>) =>
+    onChange({ key_people: farm.key_people.map((p, j) => j === i ? { ...p, ...patch } : p) });
+  const removePerson = (i: number) =>
+    onChange({ key_people: farm.key_people.filter((_, j) => j !== i) });
+  const addPerson = () =>
+    onChange({ key_people: [...farm.key_people, { name: '', role: '', period: '', note: '' }] });
+
+  const setShip = (i: number, patch: Partial<FarmShip>) =>
+    onChange({ ships_built: farm.ships_built.map((s, j) => j === i ? { ...s, ...patch } : s) });
+  const removeShip = (i: number) =>
+    onChange({ ships_built: farm.ships_built.filter((_, j) => j !== i) });
+  const addShip = () =>
+    onChange({ ships_built: [...farm.ships_built, { name: '', type: '', year: '', details: '' }] });
+
+  const setAnekdote = (i: number, val: string) =>
+    onChange({ anekdoter: farm.anekdoter.map((a, j) => j === i ? val : a) });
+  const removeAnekdote = (i: number) =>
+    onChange({ anekdoter: farm.anekdoter.filter((_, j) => j !== i) });
+  const addAnekdote = () =>
+    onChange({ anekdoter: [...farm.anekdoter, ''] });
+
+  const setSource = (i: number, val: string) =>
+    onChange({ sources: farm.sources.map((src, j) => j === i ? val : src) });
+  const removeSource = (i: number) =>
+    onChange({ sources: farm.sources.filter((_, j) => j !== i) });
+  const addSource = () =>
+    onChange({ sources: [...farm.sources, ''] });
+
+  const setCoord = (idx: 0 | 1, val: string) => {
+    const n = parseFloat(val);
+    if (!isNaN(n)) {
+      const next: [number, number] = [...farm.coordinates] as [number, number];
+      next[idx] = n;
+      onChange({ coordinates: next });
+    }
+  };
+
+  const xBtn: React.CSSProperties = {
+    background: 'none', border: '1px solid var(--line)', borderRadius: 6,
+    color: 'var(--muted)', cursor: 'pointer', padding: '2px 10px', fontSize: 14, flexShrink: 0,
+  };
+  const addBtnSt: React.CSSProperties = {
+    background: 'none', border: '1px dashed var(--line)', borderRadius: 8,
+    color: 'var(--accent)', cursor: 'pointer', padding: '6px 14px', fontSize: 13, marginTop: 6, display: 'block',
+  };
+  const secHdr: React.CSSProperties = {
+    fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase',
+    letterSpacing: '.06em', margin: '18px 0 8px',
+  };
+  const itemCard: React.CSSProperties = {
+    background: 'var(--bg)', border: '1px solid var(--line)', borderRadius: 8,
+    padding: '10px 12px', marginBottom: 8,
+  };
+
+  return (
+    <div style={{ border: '1px solid var(--line)', borderRadius: 10, marginBottom: 10, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', background: 'var(--card)' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', flex: 1 }}>
+          <input type="checkbox" checked={farm.visible}
+            onChange={e => onChange({ visible: e.target.checked })} />
+          <strong style={{ fontSize: 15 }}>{farm.name}</strong>
+          {farm.norron_name && (
+            <span style={{ fontSize: 12, color: 'var(--muted)' }}>{farm.norron_name} · {farm.meaning}</span>
+          )}
+        </label>
+        <button onClick={() => setOpen(o => !o)}
+          style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 8, cursor: 'pointer', padding: '4px 12px', fontSize: 12, color: 'var(--muted)' }}>
+          {open ? 'Lukk ▲' : 'Rediger ▼'}
+        </button>
+      </div>
+
+      {open && (
+        <div style={{ padding: '0 16px 18px' }}>
+          <div style={secHdr}>Koordinater</div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            {(['Breddegrad (lat)', 'Lengdegrad (lng)'] as const).map((lbl, idx) => (
+              <label key={idx} style={{ flex: 1 }}>
+                <span style={S.label}>{lbl}</span>
+                <input style={S.input} type="number" step="0.0001"
+                  value={farm.coordinates[idx as 0 | 1]}
+                  onChange={e => setCoord(idx as 0 | 1, e.target.value)} />
+              </label>
+            ))}
+          </div>
+
+          <div style={secHdr}>Grunninfo</div>
+          <div style={S.editGrid}>
+            <label>
+              <span style={S.label}>Norrønt navn</span>
+              <input style={S.input} value={farm.norron_name}
+                onChange={e => onChange({ norron_name: e.target.value })} />
+            </label>
+            <label>
+              <span style={S.label}>Betydning</span>
+              <input style={S.input} value={farm.meaning}
+                onChange={e => onChange({ meaning: e.target.value })} />
+            </label>
+            <label>
+              <span style={S.label}>Gårdsnummer (gnr)</span>
+              <input style={S.input} type="number" value={farm.gnr}
+                onChange={e => onChange({ gnr: parseInt(e.target.value) || 0 })} />
+            </label>
+            <label>
+              <span style={S.label}>Beliggenhet</span>
+              <input style={S.input} value={farm.location}
+                onChange={e => onChange({ location: e.target.value })} />
+            </label>
+          </div>
+
+          <div style={secHdr}>Historikk</div>
+          <textarea style={{ ...S.textarea, minHeight: 100 }} value={farm.history}
+            onChange={e => onChange({ history: e.target.value })} />
+
+          <div style={secHdr}>Arkeologi</div>
+          <textarea style={{ ...S.textarea, minHeight: 70 }} value={farm.archaeology}
+            onChange={e => onChange({ archaeology: e.target.value })} />
+
+          <div style={secHdr}>Kjente personer</div>
+          {farm.key_people.map((p, i) => (
+            <div key={i} style={itemCard}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {(['name', 'role', 'period', 'note'] as const).map(field => (
+                  <input key={field} style={S.input}
+                    placeholder={field === 'name' ? 'Navn' : field === 'role' ? 'Rolle' : field === 'period' ? 'Periode' : 'Merknad'}
+                    value={p[field]} onChange={e => setPerson(i, { [field]: e.target.value })} />
+                ))}
+              </div>
+              <div style={{ textAlign: 'right', marginTop: 8 }}>
+                <button onClick={() => removePerson(i)} style={xBtn}>Fjern</button>
+              </div>
+            </div>
+          ))}
+          <button style={addBtnSt} onClick={addPerson}>+ Legg til person</button>
+
+          <div style={secHdr}>Skuter bygget</div>
+          {farm.ships_built.map((s, i) => (
+            <div key={i} style={itemCard}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {(['name', 'type', 'year', 'details'] as const).map(field => (
+                  <input key={field} style={S.input}
+                    placeholder={field === 'name' ? 'Navn' : field === 'type' ? 'Type' : field === 'year' ? 'År' : 'Detaljer'}
+                    value={s[field]} onChange={e => setShip(i, { [field]: e.target.value })} />
+                ))}
+              </div>
+              <div style={{ textAlign: 'right', marginTop: 8 }}>
+                <button onClick={() => removeShip(i)} style={xBtn}>Fjern</button>
+              </div>
+            </div>
+          ))}
+          <button style={addBtnSt} onClick={addShip}>+ Legg til skute</button>
+
+          <div style={secHdr}>Anekdoter</div>
+          {farm.anekdoter.map((a, i) => (
+            <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+              <textarea style={{ ...S.textarea, flex: 1, minHeight: 60 }} value={a}
+                onChange={e => setAnekdote(i, e.target.value)} />
+              <button onClick={() => removeAnekdote(i)} style={xBtn}>×</button>
+            </div>
+          ))}
+          <button style={addBtnSt} onClick={addAnekdote}>+ Legg til anekdote</button>
+
+          <div style={secHdr}>Kilder</div>
+          {farm.sources.map((src, i) => (
+            <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+              <input style={{ ...S.input, flex: 1 }} value={src}
+                onChange={e => setSource(i, e.target.value)} />
+              <button onClick={() => removeSource(i)} style={xBtn}>×</button>
+            </div>
+          ))}
+          <button style={addBtnSt} onClick={addSource}>+ Legg til kilde</button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function GarderTab() {
-  const [coords, setCoords] = useState<FarmCoordsMap>(DEFAULT_FARM_COORDS);
+  const [farms, setFarms] = useState<Farm[]>(DEFAULT_FARM_DATA);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
-    loadFarmCoords().then(setCoords);
-  }, []);
+  useEffect(() => { loadFarmData().then(setFarms); }, []);
 
-  const set = (name: string, idx: 0 | 1, val: string) => {
-    const n = parseFloat(val);
-    if (isNaN(n)) return;
-    setCoords(prev => {
-      const cur = prev[name] ?? [0, 0];
-      const next: [number, number] = [...cur] as [number, number];
-      next[idx] = n;
-      return { ...prev, [name]: next };
-    });
+  const update = (name: string, patch: Partial<Farm>) => {
+    setFarms(prev => prev.map(f => f.name === name ? { ...f, ...patch } : f));
     setSaved(false);
   };
 
   const save = async () => {
     setSaving(true);
-    try {
-      await saveFarmCoords(coords);
-      setSaved(true);
-    } catch (e: any) { alert(e.message); }
+    try { await saveFarmData(farms); setSaved(true); }
+    catch (e: any) { alert(e.message); }
     finally { setSaving(false); }
   };
 
-  const inputStyle = {
-    width: 130, padding: '6px 10px', border: '1px solid var(--line)', borderRadius: 8,
-    background: 'var(--surface)', color: 'var(--text)', fontSize: 13,
-  } as const;
-
   return (
-    <div style={{ maxWidth: 600 }}>
+    <div style={{ maxWidth: 680 }}>
       <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>
-        Koordinater for gårdsmarkørene i Historie-fanen. Breddegrad (lat) og lengdegrad (lng).
+        Hak av en gård for å vise den i Historisk-fanen. Klikk «Rediger» for å endre innhold,
+        koordinater, skip, folk og anekdoter. Trykk «Lagre» når du er ferdig.
       </p>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-        <thead>
-          <tr>
-            {['Gård', 'Breddegrad (lat)', 'Lengdegrad (lng)'].map(h => (
-              <th key={h} style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid var(--line)', color: 'var(--muted)', fontWeight: 600 }}>{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {HISTORY_FARMS.map(farm => {
-            const c = coords[farm.name] ?? farm.coordinates;
-            return (
-              <tr key={farm.name}>
-                <td style={{ padding: '8px 8px', fontWeight: 600 }}>{farm.name}</td>
-                <td style={{ padding: '8px 8px' }}>
-                  <input style={inputStyle} type="number" step="0.0001"
-                    value={c[0]} onChange={e => set(farm.name, 0, e.target.value)} />
-                </td>
-                <td style={{ padding: '8px 8px' }}>
-                  <input style={inputStyle} type="number" step="0.0001"
-                    value={c[1]} onChange={e => set(farm.name, 1, e.target.value)} />
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      {farms.map(farm => (
+        <FarmEditor key={farm.name} farm={farm}
+          onChange={patch => update(farm.name, patch)} />
+      ))}
       <div style={{ marginTop: 20, display: 'flex', gap: 12, alignItems: 'center' }}>
         <button style={S.pill('primary')} onClick={save} disabled={saving}>
           {saving ? 'Lagrer…' : '💾 Lagre til Firebase'}

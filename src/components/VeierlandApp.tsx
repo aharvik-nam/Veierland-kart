@@ -10,7 +10,7 @@ import 'leaflet.markercluster';
 import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, WikipediaData } from '../lib/types';
 import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages, fetchWikipediaSpecies, fetchArtsdatabankenAssessment } from '../lib/api';
 import { loadCatCfg, DEFAULT_CAT_CFG, CatCfgMap } from '../lib/catcfg';
-import { loadFarmCoords, DEFAULT_FARM_COORDS, FarmCoordsMap } from '../lib/farmcoords';
+import { loadFarmData, DEFAULT_FARM_DATA, Farm } from '../lib/farmdata';
 import { ICONS } from '../lib/icons';
 import historyData from '../data/veierland_history.json';
 import floodData from '../data/sea_level_flood.geojson';
@@ -121,23 +121,7 @@ interface HistorySection {
   kontekst_norge: string;
 }
 
-interface HistoryFarm {
-  name: string;
-  norron_name: string;
-  meaning: string;
-  gnr: number;
-  location: string;
-  coordinates: [number, number];
-  history: string;
-  archaeology: string;
-  key_people: { name: string; role: string; period: string; note: string }[];
-  ships_built: { name: string; type: string; year: string; details: string }[];
-  anekdoter: string[];
-  sources: string[];
-}
-
 const HISTORY_SECTIONS = historyData.sections as HistorySection[];
-const HISTORY_FARMS = historyData.farms as unknown as HistoryFarm[];
 
 
 // Discrete sea level steps: index → metres above today (null = no overlay)
@@ -499,7 +483,7 @@ export function VeierlandApp() {
   // History state
   const [historyView, setHistoryView] = useState<'tidslinje' | 'garder'>('tidslinje');
   const [selectedEra, setSelectedEra] = useState<HistorySection | null>(null);
-  const [selectedFarm, setSelectedFarm] = useState<HistoryFarm | null>(null);
+  const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
   const [seaLevelStep, setSeaLevelStep] = useState(0); // index into SEA_LEVEL_STEPS
 
   // Nature state
@@ -555,8 +539,8 @@ export function VeierlandApp() {
   // Dynamic category config (loaded from Firestore, falls back to defaults)
   const [catCfg, setCatCfg] = useState<CatCfgMap>(DEFAULT_CAT_CFG);
 
-  // Farm coordinates (loaded from Firestore, falls back to veierland_history.json values)
-  const [farmCoords, setFarmCoords] = useState<FarmCoordsMap>(DEFAULT_FARM_COORDS);
+  // Farm data (loaded from Firestore, falls back to veierland_history.json values)
+  const [farmData, setFarmData] = useState<Farm[]>(DEFAULT_FARM_DATA);
 
   const getCat = useCallback((k: string) =>
     catCfg[k] ?? { no: k, en: k, color: '#7c876f', icon: 'wc', group: '' as const, showInFilter: false },
@@ -573,6 +557,13 @@ export function VeierlandApp() {
     }
     return groups;
   }, [catCfg]);
+
+  // Derive visible farms and coordinate map from Firestore-backed farmData
+  const visibleFarms = useMemo(() => farmData.filter(f => f.visible !== false), [farmData]);
+  const farmCoords = useMemo(
+    () => Object.fromEntries(farmData.map(f => [f.name, f.coordinates])) as Record<string, [number, number]>,
+    [farmData]
+  );
 
   // Derive category list from actual POI data, filtered by showInFilter
   const allCats = useMemo(
@@ -654,7 +645,7 @@ export function VeierlandApp() {
     loadAllPOIs().then(setAllPOIs);
     loadTurkartGeoJSON().then(geo => setTrails(trailsFromGeoJSON(geo)));
     loadCatCfg().then(setCatCfg);
-    loadFarmCoords().then(setFarmCoords);
+    loadFarmData().then(setFarmData);
   }, []);
 
   // Fit map bounds once both map and POIs are ready (runs once)
@@ -1241,7 +1232,7 @@ export function VeierlandApp() {
     // Gårder view
     return (
       <>
-        {HISTORY_FARMS.map((farm, i) => (
+        {visibleFarms.map((farm, i) => (
           <div key={i} className="vl-sp-row" onClick={() => {
             setSelectedFarm(farm);
             setSheetOpen(true);
@@ -1578,7 +1569,7 @@ export function VeierlandApp() {
             />
           );
         })()}
-        {mode === 'history' && historyView === 'garder' && HISTORY_FARMS.map(farm => {
+        {mode === 'history' && historyView === 'garder' && visibleFarms.map(farm => {
           const coords = farmCoords[farm.name];
           if (!coords) return null;
           const isSelected = selectedFarm?.name === farm.name;
