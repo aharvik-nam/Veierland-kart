@@ -723,6 +723,7 @@ export function VeierlandApp() {
     setNatureFetched(true);
 
     // 2. Fetch ALL observations from GBIF and replace cache with full individual obs
+    setNatureLoading(true);
     const cacheMap = new Map(staticCache.obs.map(o => [o.gbifKey, o]));
     const groups = Object.keys(NATURE_GROUPS) as NatureGroup[];
     Promise.all(groups.map(fetchNatureGroup)).then(rawGroups => {
@@ -752,8 +753,9 @@ export function VeierlandApp() {
         });
         setNatureObs(finalObs);
         loadNorwegianFamilyNames(finalObs, setFamilyNorMap);
+        setNatureLoading(false);
       });
-    });
+    }).catch(() => setNatureLoading(false));
   }, [mode, natureFetched]);
 
   // Fly to a coordinate but shift the center up so the marker is visible above the sheet
@@ -1004,28 +1006,22 @@ export function VeierlandApp() {
 
     return (
       <>
-        {natureLoading ? (
-          <div style={{ padding: '16px 0 8px' }}>
-            <p className="vl-loading-blink" style={{ fontWeight: 600, fontSize: 14, margin: '0 0 4px' }}>
-              {lang === 'no' ? 'Henter naturobservasjoner…' : 'Loading nature observations…'}
-            </p>
-            <p style={{ color: 'var(--muted)', fontSize: 12, margin: 0 }}>
-              {lang === 'no' ? 'Kobler til Artsdatabanken og GBIF' : 'Connecting to Artsdatabanken and GBIF'}
-            </p>
-          </div>
-        ) : (
-          <div className="vl-nat-toprow">
-            <div className="vl-count">{T.natObs(filteredNatureObs.length)}</div>
-            <div className="vl-lang vl-fam-lang">
-              <button className={showNorFamilies ? 'on' : ''} onClick={() => setShowNorFamilies(true)}>
-                {lang === 'no' ? 'Norsk' : 'Norwegian'}
-              </button>
-              <button className={!showNorFamilies ? 'on' : ''} onClick={() => setShowNorFamilies(false)}>
-                Latin
-              </button>
-            </div>
-          </div>
+        {natureLoading && (
+          <p className="vl-loading-blink" style={{ fontSize: 13, margin: '0 0 8px' }}>
+            {lang === 'no' ? 'Henter siste observasjoner fra Artsdatabanken…' : 'Fetching latest observations from Artsdatabanken…'}
+          </p>
         )}
+        <div className="vl-nat-toprow">
+          <div className="vl-count">{T.natObs(filteredNatureObs.length)}</div>
+          <div className="vl-lang vl-fam-lang">
+            <button className={showNorFamilies ? 'on' : ''} onClick={() => setShowNorFamilies(true)}>
+              {lang === 'no' ? 'Norsk' : 'Norwegian'}
+            </button>
+            <button className={!showNorFamilies ? 'on' : ''} onClick={() => setShowNorFamilies(false)}>
+              Latin
+            </button>
+          </div>
+        </div>
 
         {(Object.keys(NATURE_GROUPS) as NatureGroup[]).map(g => {
           const cfg = NATURE_GROUPS[g];
@@ -1084,11 +1080,9 @@ export function VeierlandApp() {
           );
         })}
 
-        {!natureLoading && (
-          <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
-            Kilde: GBIF (CC BY 4.0)
-          </p>
-        )}
+        <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
+          Kilde: GBIF (CC BY 4.0)
+        </p>
       </>
     );
   }
