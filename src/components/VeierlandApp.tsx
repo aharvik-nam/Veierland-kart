@@ -73,15 +73,15 @@ const GEO_OVERLAYS: Record<string, OverlayCfg> = {
   losmasse: {
     label: { no: 'Løsmasser', en: 'Surface deposits' },
     sw: 'linear-gradient(135deg,#c8a05a,#a8c870)',
-    url: 'https://geo.ngu.no/mapserver/LosmasserWMS',
-    wmsLayers: 'Losmasser_WMS',
+    url: 'https://geo.ngu.no/mapserver/LosmasserWMS3',
+    wmsLayers: 'LosmasserWMS3',
     opacity: 0.65,
   },
   berggrunn: {
     label: { no: 'Berggrunn', en: 'Bedrock' },
     sw: 'linear-gradient(135deg,#9a6aaa,#6a8aaa)',
-    url: 'https://geo.ngu.no/mapserver/BerggrunnWMS',
-    wmsLayers: 'BerggrunnN250',
+    url: 'https://geo.ngu.no/mapserver/BerggrunnWMS3',
+    wmsLayers: 'BerggrunnWMS3',
     opacity: 0.65,
   },
 };
@@ -1832,7 +1832,7 @@ export function VeierlandApp() {
             <div
               key={k}
               className={`vl-opt${on ? ' on' : ''}`}
-              onClick={() => setGeoOverlay(on ? null : k)}
+              onClick={() => { setGeoOverlay(on ? null : k); setShowLayerPop(false); }}
             >
               <span className="sw" style={{ background: cfg.sw }} />
               <span className="nm">{lang === 'no' ? cfg.label.no : cfg.label.en}</span>
