@@ -40,8 +40,10 @@ export async function loadTimelineSections(): Promise<TimelineSection[]> {
     if (snap.exists()) {
       const raw = snap.data();
       if (raw.json) {
-        const stored: TimelineSection[] = JSON.parse(raw.json);
-        return base.map(b => stored.find(s => s.era === b.era) ?? b);
+        // Merge by position: Firestore wins field-by-field, base fills any missing fields.
+        // Using index (not era) so renaming an era never loses its data.
+        const stored: Partial<TimelineSection>[] = JSON.parse(raw.json);
+        return base.map((b, i) => stored[i] ? { ...b, ...stored[i] } : b);
       }
     }
     return base;

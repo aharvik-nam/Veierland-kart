@@ -1328,12 +1328,12 @@ function TidslinjeTab() {
   const [sections, setSections] = useState<TimelineSection[]>(DEFAULT_TIMELINE_SECTIONS);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<number | null>(null);
 
   useEffect(() => { loadTimelineSections().then(setSections); }, []);
 
-  const update = (era: string, patch: Partial<TimelineSection>) => {
-    setSections(prev => prev.map(s => s.era === era ? { ...s, ...patch } : s));
+  const update = (idx: number, patch: Partial<TimelineSection>) => {
+    setSections(prev => prev.map((s, i) => i === idx ? { ...s, ...patch } : s));
     setSaved(false);
   };
 
@@ -1353,13 +1353,13 @@ function TidslinjeTab() {
       <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>
         Rediger tidslinjeelementene. Lim inn en bilde-URL for å vise bilde i appen.
       </p>
-      {sections.map(sec => {
-        const isOpen = open === sec.era;
+      {sections.map((sec, idx) => {
+        const isOpen = open === idx;
         return (
-          <div key={sec.era} style={{ border: '1px solid var(--line)', borderRadius: 10, marginBottom: 8, overflow: 'hidden', background: 'var(--card)' }}>
+          <div key={idx} style={{ border: '1px solid var(--line)', borderRadius: 10, marginBottom: 8, overflow: 'hidden', background: 'var(--card)' }}>
             <div
               style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', cursor: 'pointer', background: isOpen ? 'var(--card2)' : 'transparent' }}
-              onClick={() => setOpen(isOpen ? null : sec.era)}
+              onClick={() => setOpen(isOpen ? null : idx)}
             >
               <div style={{ flex: 1 }}>
                 <span style={{ fontWeight: 600, fontSize: 14 }}>{sec.era}</span>
@@ -1373,32 +1373,32 @@ function TidslinjeTab() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
                   <div style={rowStyle}>
                     <label style={labelStyle}>Epoke (era)</label>
-                    <input style={fieldStyle} value={sec.era} onChange={e => update(sec.era, { era: e.target.value })} />
+                    <input style={fieldStyle} value={sec.era} onChange={e => update(idx, { era: e.target.value })} />
                   </div>
                   <div style={rowStyle}>
                     <label style={labelStyle}>Periode</label>
-                    <input style={fieldStyle} value={sec.period} onChange={e => update(sec.era, { period: e.target.value })} />
+                    <input style={fieldStyle} value={sec.period} onChange={e => update(idx, { period: e.target.value })} />
                   </div>
                 </div>
                 <div style={rowStyle}>
                   <label style={labelStyle}>Tittel (norsk)</label>
-                  <input style={fieldStyle} value={sec.title.no} onChange={e => update(sec.era, { title: { ...sec.title, no: e.target.value } })} />
+                  <input style={fieldStyle} value={sec.title.no} onChange={e => update(idx, { title: { ...sec.title, no: e.target.value } })} />
                 </div>
                 <div style={rowStyle}>
                   <label style={labelStyle}>Tittel (engelsk)</label>
-                  <input style={fieldStyle} value={sec.title.en} onChange={e => update(sec.era, { title: { ...sec.title, en: e.target.value } })} />
+                  <input style={fieldStyle} value={sec.title.en} onChange={e => update(idx, { title: { ...sec.title, en: e.target.value } })} />
                 </div>
                 <div style={rowStyle}>
                   <label style={labelStyle}>Tekst (norsk)</label>
-                  <textarea style={{ ...fieldStyle, minHeight: 90, resize: 'vertical' }} value={sec.body.no} onChange={e => update(sec.era, { body: { ...sec.body, no: e.target.value } })} />
+                  <textarea style={{ ...fieldStyle, minHeight: 90, resize: 'vertical' }} value={sec.body.no} onChange={e => update(idx, { body: { ...sec.body, no: e.target.value } })} />
                 </div>
                 <div style={rowStyle}>
                   <label style={labelStyle}>Tekst (engelsk)</label>
-                  <textarea style={{ ...fieldStyle, minHeight: 90, resize: 'vertical' }} value={sec.body.en} onChange={e => update(sec.era, { body: { ...sec.body, en: e.target.value } })} />
+                  <textarea style={{ ...fieldStyle, minHeight: 90, resize: 'vertical' }} value={sec.body.en} onChange={e => update(idx, { body: { ...sec.body, en: e.target.value } })} />
                 </div>
                 <div style={rowStyle}>
                   <label style={labelStyle}>Kontekst Norge</label>
-                  <textarea style={{ ...fieldStyle, minHeight: 60, resize: 'vertical' }} value={sec.kontekst_norge} onChange={e => update(sec.era, { kontekst_norge: e.target.value })} />
+                  <textarea style={{ ...fieldStyle, minHeight: 60, resize: 'vertical' }} value={sec.kontekst_norge} onChange={e => update(idx, { kontekst_norge: e.target.value })} />
                 </div>
 
                 {/* Image */}
@@ -1406,7 +1406,7 @@ function TidslinjeTab() {
                   <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>Bilde</div>
                   <div style={rowStyle}>
                     <label style={labelStyle}>Bilde-URL</label>
-                    <input style={fieldStyle} type="url" placeholder="https://…" value={sec.image ?? ''} onChange={e => update(sec.era, { image: e.target.value })} />
+                    <input style={fieldStyle} type="url" placeholder="https://…" value={sec.image ?? ''} onChange={e => update(idx, { image: e.target.value })} />
                   </div>
                   {sec.image && (
                     <div style={{ marginBottom: 10, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line)' }}>
@@ -1415,7 +1415,7 @@ function TidslinjeTab() {
                   )}
                   <div style={rowStyle}>
                     <label style={labelStyle}>Bildetekst</label>
-                    <input style={fieldStyle} placeholder="Tekst under bildet…" value={sec.image_caption ?? ''} onChange={e => update(sec.era, { image_caption: e.target.value })} />
+                    <input style={fieldStyle} placeholder="Tekst under bildet…" value={sec.image_caption ?? ''} onChange={e => update(idx, { image_caption: e.target.value })} />
                   </div>
                 </div>
 
@@ -1430,13 +1430,13 @@ function TidslinjeTab() {
                         onChange={e => {
                           const next = [...sec.anekdoter];
                           next[i] = e.target.value;
-                          update(sec.era, { anekdoter: next });
+                          update(idx, { anekdoter: next });
                         }}
                       />
-                      <button style={S.pill('danger')} onClick={() => update(sec.era, { anekdoter: sec.anekdoter.filter((_, j) => j !== i) })}>✕</button>
+                      <button style={S.pill('danger')} onClick={() => update(idx, { anekdoter: sec.anekdoter.filter((_, j) => j !== i) })}>✕</button>
                     </div>
                   ))}
-                  <button style={S.pill('secondary')} onClick={() => update(sec.era, { anekdoter: [...sec.anekdoter, ''] })}>+ Legg til anekdote</button>
+                  <button style={S.pill('secondary')} onClick={() => update(idx, { anekdoter: [...sec.anekdoter, ''] })}>+ Legg til anekdote</button>
                 </div>
               </div>
             )}
