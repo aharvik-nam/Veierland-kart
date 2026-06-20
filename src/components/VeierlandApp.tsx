@@ -726,9 +726,9 @@ export function VeierlandApp() {
     setNatureLoading(true);
     const cacheMap = new Map(staticCache.obs.map(o => [o.gbifKey, o]));
     const groups = Object.keys(NATURE_GROUPS) as NatureGroup[];
-    Promise.all(groups.map(fetchNatureGroup)).then(rawGroups => {
+    Promise.all(groups.map(fetchNatureGroup)).then(async rawGroups => {
       const allObs = processNatureData(rawGroups);
-      if (allObs.length === 0) return;
+      if (allObs.length === 0) return; // setNatureLoading(false) handled by finally
 
       // Re-use cached popularName/photo for known species — avoids re-fetching iNaturalist for all
       const preEnriched = allObs.map(obs => {
@@ -740,22 +740,20 @@ export function VeierlandApp() {
 
       // Run iNaturalist (new species only) and assessments (all) in parallel
       const newObs = preEnriched.filter(o => !cacheMap.has(o.gbifKey));
-      return Promise.all([
+      const [enrichedNew, assessedAll] = await Promise.all([
         newObs.length > 0 ? enrichWithINaturalist(newObs) : Promise.resolve<NatureObs[]>([]),
         enrichWithAssessments(preEnriched),
-      ]).then(([enrichedNew, assessedAll]) => {
-        const inatMap = new Map(enrichedNew.map(o => [o.gbifKey, o]));
-        const assessMap = new Map(assessedAll.map(o => [o.gbifKey, o]));
-        const finalObs = preEnriched.map(o => {
-          const assessed = assessMap.get(o.gbifKey) ?? o;
-          const inat = inatMap.get(o.gbifKey);
-          return inat ? { ...assessed, popularName: inat.popularName, photoUrl: inat.photoUrl, photoAttribution: inat.photoAttribution } : assessed;
-        });
-        setNatureObs(finalObs);
-        loadNorwegianFamilyNames(finalObs, setFamilyNorMap);
-        setNatureLoading(false);
+      ]);
+      const inatMap = new Map(enrichedNew.map(o => [o.gbifKey, o]));
+      const assessMap = new Map(assessedAll.map(o => [o.gbifKey, o]));
+      const finalObs = preEnriched.map(o => {
+        const assessed = assessMap.get(o.gbifKey) ?? o;
+        const inat = inatMap.get(o.gbifKey);
+        return inat ? { ...assessed, popularName: inat.popularName, photoUrl: inat.photoUrl, photoAttribution: inat.photoAttribution } : assessed;
       });
-    }).catch(() => setNatureLoading(false));
+      setNatureObs(finalObs);
+      loadNorwegianFamilyNames(finalObs, setFamilyNorMap);
+    }).finally(() => setNatureLoading(false));
   }, [mode, natureFetched]);
 
   // Fly to a coordinate but shift the center up so the marker is visible above the sheet
