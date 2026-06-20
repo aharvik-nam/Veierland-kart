@@ -480,7 +480,6 @@ export function VeierlandApp() {
   const [activeCats, setActiveCats] = useState<Set<string>>(new Set());
   const [expandedPlaceCats, setExpandedPlaceCats] = useState<Set<string>>(new Set());
   const [mode, setMode] = useState<'places' | 'trails' | 'nature' | 'history'>('places');
-  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQ, setSearchQ] = useState('');
   const [view, setView] = useState<'browse' | 'detail'>('browse');
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
@@ -1327,7 +1326,95 @@ export function VeierlandApp() {
   function renderBrowse() {
     return (
       <>
-        <h2 className="vl-title">{T.explore}</h2>
+        {/* Mode pills */}
+        <div className="vl-modepills vl-panel-modes">
+          <button className={`vl-modepill${mode === 'places' ? ' on' : ''}`} onClick={() => { setMode('places'); setCurrentLayer('soleng'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelM(0); }}>{T.places}</button>
+          <button className={`vl-modepill${mode === 'trails' ? ' on' : ''}`} onClick={() => { setMode('trails'); setCurrentLayer('friluft'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelM(0); }}>{T.trails}</button>
+          <button className={`vl-modepill${mode === 'nature' ? ' on' : ''}`} onClick={() => { setMode('nature'); setCurrentLayer('flyfoto'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelM(0); }}>{T.nature}</button>
+          <button className={`vl-modepill${mode === 'history' ? ' on' : ''}`} onClick={() => { setMode('history'); setCurrentLayer('friluft'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); }}>{T.history}</button>
+        </div>
+
+        {/* Filter chips */}
+        {mode === 'places' && (
+          <div className="vl-chips vl-panel-chips">
+            <div className={`vl-chip${activeCats.size === 0 ? ' on' : ''}`} onClick={() => setActiveCats(new Set())}>
+              <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
+              <span className="cl">{T.all}</span>
+            </div>
+            {[...catGroups.entries()].map(([groupName, groupCats]) => {
+              const on = groupCats.some(k => activeCats.has(k));
+              const icon = catCfg[groupCats[0]]?.icon ?? 'wc';
+              return (
+                <div key={groupName} className={`vl-chip${on ? ' on' : ''}`} onClick={() => toggleGroup(groupCats)}>
+                  <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg(icon) }} />
+                  <span className="cl">{groupName}</span>
+                </div>
+              );
+            })}
+            {allCats.filter(k => !catCfg[k]?.group).map(k => {
+              const cat = getCat(k);
+              const on = activeCats.has(k);
+              return (
+                <div key={k} className={`vl-chip${on ? ' on' : ''}`} onClick={() => toggleCat(k)}>
+                  <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
+                  <span className="cl">{lang === 'no' ? cat.no : cat.en}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {mode === 'nature' && (
+          <div className="vl-chips vl-panel-chips">
+            <div className={`vl-chip${!natureFilter ? ' on' : ''}`} onClick={() => setNatureFilter(null)}>
+              <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
+              <span className="cl">{T.all}</span>
+            </div>
+            {(Object.entries(NATURE_GROUPS) as [NatureGroup, typeof NATURE_GROUPS[NatureGroup]][]).map(([g, cfg]) => {
+              const count = natureObs.filter(o => o.group === g).length;
+              if (count === 0) return null;
+              return (
+                <div key={g} className={`vl-chip${natureFilter === g ? ' on' : ''}`} onClick={() => setNatureFilter(natureFilter === g ? null : g)}>
+                  <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg(cfg.icon) }} />
+                  <span className="cl">{lang === 'no' ? cfg.no : cfg.en} {count}</span>
+                </div>
+              );
+            })}
+            {natureObs.some(o => RED_LIST_CATS.test(o.redListCategory ?? '')) && (
+              <div className={`vl-chip vl-chip-rl${redListFilter ? ' on' : ''}`} onClick={() => setRedListFilter(f => !f)}>
+                <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('rodliste') }} />
+                <span className="cl">{lang === 'no' ? 'Rødlista' : 'Red list'} {natureObs.filter(o => RED_LIST_CATS.test(o.redListCategory ?? '')).length}</span>
+              </div>
+            )}
+            {natureObs.some(o => o.alienCategory) && (
+              <div className={`vl-chip vl-chip-al${alienFilter ? ' on' : ''}`} onClick={() => setAlienFilter(f => !f)}>
+                <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('fremmed') }} />
+                <span className="cl">{lang === 'no' ? 'Fremmedarter' : 'Alien species'} {natureObs.filter(o => o.alienCategory).length}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Search (places mode only) */}
+        {mode === 'places' && (
+          <div className="vl-panel-search">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
+              <circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>
+            </svg>
+            <input
+              type="search"
+              placeholder={T.search}
+              value={searchQ}
+              onChange={e => setSearchQ(e.target.value)}
+              autoComplete="off"
+            />
+            {searchQ && (
+              <button className="vl-search-close" onClick={() => setSearchQ('')}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            )}
+          </div>
+        )}
+
         {mode === 'history' ? renderHistory() : mode === 'nature' ? renderNature() : mode === 'places' ? (
           <>
             <div className="vl-count">{filteredPOIs.length ? T.np(filteredPOIs.length) : T.nohit}</div>
@@ -1674,93 +1761,11 @@ export function VeierlandApp() {
         )}
       </MapContainer>
 
-      {/* Top overlay: mode pills + chips + searchbar */}
-      <div className={`vl-top${searchOpen ? ' searching' : ''}`}>
-        <div className="vl-modes">
-          <div className="vl-modepills">
-            <button className={`vl-modepill${mode === 'places' ? ' on' : ''}`} onClick={() => { setMode('places'); setCurrentLayer('soleng'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelM(0); }}>{T.places}</button>
-            <button className={`vl-modepill${mode === 'trails' ? ' on' : ''}`} onClick={() => { setMode('trails'); setCurrentLayer('friluft'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelM(0); }}>{T.trails}</button>
-            <button className={`vl-modepill${mode === 'nature' ? ' on' : ''}`} onClick={() => { setMode('nature'); setCurrentLayer('flyfoto'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelM(0); }}>{T.nature}</button>
-            <button className={`vl-modepill${mode === 'history' ? ' on' : ''}`} onClick={() => { setMode('history'); setCurrentLayer('friluft'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); }}>{T.history}</button>
-          </div>
-          <div className="vl-lang">
-            <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>NO</button>
-            <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
-          </div>
-        </div>
-        {mode === 'places' && (
-          <div className="vl-chips-outer"><div className="vl-chips">
-            <div className={`vl-chip${activeCats.size === 0 ? ' on' : ''}`} onClick={() => setActiveCats(new Set())}>
-              <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
-              <span className="cl">{T.all}</span>
-            </div>
-            {[...catGroups.entries()].map(([groupName, groupCats]) => {
-              const on = groupCats.some(k => activeCats.has(k));
-              const icon = catCfg[groupCats[0]]?.icon ?? 'wc';
-              return (
-                <div key={groupName} className={`vl-chip${on ? ' on' : ''}`} onClick={() => toggleGroup(groupCats)}>
-                  <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg(icon) }} />
-                  <span className="cl">{groupName}</span>
-                </div>
-              );
-            })}
-            {allCats.filter(k => !catCfg[k]?.group).map(k => {
-              const cat = getCat(k);
-              const on = activeCats.has(k);
-              return (
-                <div key={k} className={`vl-chip${on ? ' on' : ''}`} onClick={() => toggleCat(k)}>
-                  <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
-                  <span className="cl">{lang === 'no' ? cat.no : cat.en}</span>
-                </div>
-              );
-            })}
-          </div></div>
-        )}
-        {mode === 'nature' && (
-          <div className="vl-chips-outer"><div className="vl-chips">
-            <div className={`vl-chip${!natureFilter ? ' on' : ''}`} onClick={() => setNatureFilter(null)}>
-              <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
-              <span className="cl">{T.all}</span>
-            </div>
-            {(Object.entries(NATURE_GROUPS) as [NatureGroup, typeof NATURE_GROUPS[NatureGroup]][]).map(([g, cfg]) => {
-              const count = natureObs.filter(o => o.group === g).length;
-              if (count === 0) return null;
-              return (
-                <div key={g} className={`vl-chip${natureFilter === g ? ' on' : ''}`} onClick={() => setNatureFilter(natureFilter === g ? null : g)}>
-                  <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg(cfg.icon) }} />
-                  <span className="cl">{lang === 'no' ? cfg.no : cfg.en} {count}</span>
-                </div>
-              );
-            })}
-            {natureObs.some(o => RED_LIST_CATS.test(o.redListCategory ?? '')) && (
-              <div className={`vl-chip vl-chip-rl${redListFilter ? ' on' : ''}`} onClick={() => setRedListFilter(f => !f)}>
-                <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('rodliste') }} />
-                <span className="cl">{lang === 'no' ? 'Rødlista' : 'Red list'} {natureObs.filter(o => RED_LIST_CATS.test(o.redListCategory ?? '')).length}</span>
-              </div>
-            )}
-            {natureObs.some(o => o.alienCategory) && (
-              <div className={`vl-chip vl-chip-al${alienFilter ? ' on' : ''}`} onClick={() => setAlienFilter(f => !f)}>
-                <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('fremmed') }} />
-                <span className="cl">{lang === 'no' ? 'Fremmedarter' : 'Alien species'} {natureObs.filter(o => o.alienCategory).length}</span>
-              </div>
-            )}
-          </div></div>
-        )}
-        <div className="vl-searchbar">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
-            <circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>
-          </svg>
-          <input
-            type="search"
-            placeholder={T.search}
-            value={searchQ}
-            onChange={e => setSearchQ(e.target.value)}
-            autoComplete="off"
-            autoFocus={searchOpen}
-          />
-          <button className="vl-search-close" onClick={() => { setSearchOpen(false); setSearchQ(''); }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-          </button>
+      {/* Top overlay: lang toggle */}
+      <div className="vl-top">
+        <div className="vl-lang">
+          <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>NO</button>
+          <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
         </div>
       </div>
 
@@ -1790,11 +1795,6 @@ export function VeierlandApp() {
 
       {/* Right rail */}
       <div className="vl-rail" style={{ bottom: railBottom }}>
-        <button className="vl-rbtn" aria-label={T.search} onClick={() => { setSearchOpen(true); setShowLayerPop(false); }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
-            <circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>
-          </svg>
-        </button>
         <button
           className="vl-rbtn layers"
           aria-label={T.layers}

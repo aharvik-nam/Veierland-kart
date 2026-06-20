@@ -214,25 +214,26 @@ body { display: grid; place-items: center; }
 .vl-btn.sec { transition: background .15s, color .15s, border-color .15s, transform .15s; }
 .vl-btn.sec.heart-pop { animation: vlHeart .3s ease-out; }
 
-/* ── Top overlay: mode pills + chips + searchbar ───────────────────────────── */
+/* ── Top overlay: lang toggle ───────────────────────────────────────────────── */
 .vl-top {
-  position: absolute; top: 0; left: 0; right: 0; z-index: 500;
+  position: absolute; top: 0; left: 0; z-index: 500;
   padding: 13px 14px;
   pointer-events: none;
 }
 .vl-top > * { pointer-events: auto; }
 
-.vl-modes {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-}
+/* ── Panel: mode pills ──────────────────────────────────────────────────────── */
 .vl-modepills {
   display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; padding: 1px;
 }
 .vl-modepills::-webkit-scrollbar { display: none; }
+.vl-panel-modes {
+  margin-bottom: 10px;
+}
 .vl-modepill {
   padding: 9px 16px; border-radius: 999px; min-height: 40px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--card); border: 1px solid var(--line);
+  background: var(--card2); border: 1px solid var(--line);
   box-shadow: 0 1px 5px rgba(28,38,30,.09);
   font: inherit; font-size: 14px; font-weight: 600; color: var(--ink);
   white-space: nowrap; cursor: pointer;
@@ -291,28 +292,28 @@ body { display: grid; place-items: center; }
 .vl-chip.on .ci { width: 29px; }
 .vl-chip.on .cl { max-width: 130px; opacity: 1; }
 
-/* Searchbar – hidden by default, toggled via .searching on .vl-top */
-.vl-searchbar {
-  display: none; align-items: center; gap: 11px; padding: 9px 13px;
-  border-radius: var(--r);
-  background: var(--card);
-  border: 1px solid var(--line);
-  box-shadow: 0 2px 10px rgba(28,38,30,.10);
+/* ── Panel: chips ────────────────────────────────────────────────────────────── */
+.vl-panel-chips {
+  margin-top: 0; margin-bottom: 8px;
 }
-.vl-searchbar svg { color: var(--muted); flex: 0 0 auto; }
-.vl-searchbar input {
+
+/* ── Panel: search input ─────────────────────────────────────────────────────── */
+.vl-panel-search {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 12px; border-radius: var(--r);
+  background: var(--card2); border: 1px solid var(--line);
+  margin-bottom: 6px;
+}
+.vl-panel-search svg { color: var(--muted); flex: 0 0 auto; }
+.vl-panel-search input {
   border: none; outline: none; background: transparent; flex: 1;
-  font: inherit; font-size: 16px; color: var(--ink); min-width: 0;
+  font: inherit; font-size: 15px; color: var(--ink); min-width: 0;
 }
-.vl-searchbar input::placeholder { color: var(--muted); }
+.vl-panel-search input::placeholder { color: var(--muted); }
 .vl-search-close {
   background: none; border: none; cursor: pointer; padding: 2px;
   color: var(--muted); display: flex; align-items: center;
 }
-.vl-top.searching .vl-modes,
-.vl-top.searching .vl-chips-outer,
-.vl-top.searching .vl-chips { display: none; }
-.vl-top.searching .vl-searchbar { display: flex; }
 
 /* ── Right rail ─────────────────────────────────────────────────────────────── */
 .vl-rail {
@@ -628,7 +629,7 @@ body { display: grid; place-items: center; }
   .vl-map-area { position: relative; flex: 1; min-width: 0; order: 2; }
   .vl-sheet {
     position: relative !important; order: 1;
-    width: 340px; min-width: 340px;
+    width: 420px; min-width: 420px;
     height: 100dvh !important;
     border-radius: 0 !important; border-top: none;
     border-right: 1px solid var(--line);
@@ -636,5 +637,4 @@ body { display: grid; place-items: center; }
   }
   .vl-grab { display: none; }
   .vl-body { padding: 22px 24px 28px; }
-  .vl-top { max-width: 560px; }
 }
