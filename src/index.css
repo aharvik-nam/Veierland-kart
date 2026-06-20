@@ -230,7 +230,8 @@ body { display: grid; place-items: center; }
 }
 .vl-modepills::-webkit-scrollbar { display: none; }
 .vl-modepill {
-  padding: 9px 16px; border-radius: 999px;
+  padding: 9px 16px; border-radius: 999px; min-height: 40px;
+  display: flex; align-items: center; justify-content: center;
   background: var(--card); border: 1px solid var(--line);
   box-shadow: 0 1px 5px rgba(28,38,30,.09);
   font: inherit; font-size: 14px; font-weight: 600; color: var(--ink);
@@ -375,6 +376,8 @@ body { display: grid; place-items: center; }
 .vl-body {
   flex: 1; overflow-y: auto; overscroll-behavior: contain;
   padding: 4px var(--pad) 26px; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
 }
 .vl-body::-webkit-scrollbar { display: none; }
 
@@ -467,7 +470,8 @@ body { display: grid; place-items: center; }
   border-color: color-mix(in srgb, var(--accent) 35%, #fff);
 }
 
-.vl-trailmeta { display: flex; gap: 9px; margin: 16px 0 18px; }
+.vl-trailmeta { display: flex; gap: 9px; margin: 16px 0 18px; flex-wrap: wrap; }
+@media (max-width: 349px) { .vl-tm { flex: 0 0 calc(50% - 5px); } }
 .vl-tm {
   flex: 1; background: var(--card2);
   border: 1px solid var(--line);
@@ -542,19 +546,11 @@ body { display: grid; place-items: center; }
 
 /* ── Sea level slider ───────────────────────────────────────────────────────── */
 .vl-sealevel {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 500;
-  pointer-events: auto;
-  background: rgba(255,255,255,.95);
-  backdrop-filter: blur(8px);
+  background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 10px 16px 10px;
-  width: 260px;
-  box-shadow: 0 3px 14px rgba(0,0,0,.18);
+  border-radius: 12px;
+  padding: 10px 14px 8px;
+  margin-top: 8px;
 }
 .vl-sl-title {
   text-align: center;
@@ -592,20 +588,13 @@ body { display: grid; place-items: center; }
   margin-top: 7px;
   line-height: 1.4;
 }
-@media (min-width: 900px) {
-  .vl-sealevel {
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-}
-
 /* ── History / timeline ─────────────────────────────────────────────────────── */
 .vl-hist-row {
   display: flex; gap: 12px; padding: 4px 0 14px; cursor: pointer;
-  transition: opacity .14s;
+  transition: opacity .14s; border-radius: 8px; outline: none;
 }
 .vl-hist-row:hover { opacity: .78; }
+.vl-hist-row:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
 .vl-hist-era {
   display: flex; flex-direction: column; align-items: center;
   flex: 0 0 20px; padding-top: 5px;

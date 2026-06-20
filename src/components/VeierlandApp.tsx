@@ -1007,8 +1007,11 @@ export function VeierlandApp() {
         {natureLoading ? (
           <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
             <div className="vl-spinner" />
-            <p style={{ color: 'var(--muted)', fontSize: 13, margin: 0 }}>
-              {lang === 'no' ? 'Henter naturdata…' : 'Loading nature data…'}
+            <p style={{ color: 'var(--muted)', fontSize: 13, margin: '0 0 2px' }}>
+              {lang === 'no' ? 'Henter naturobservasjoner fra GBIF…' : 'Loading nature observations from GBIF…'}
+            </p>
+            <p style={{ color: 'var(--muted)', fontSize: 11, margin: 0, fontStyle: 'italic' }}>
+              {lang === 'no' ? 'Dette kan ta 5–15 sekunder' : 'This may take 5–15 seconds'}
             </p>
           </div>
         ) : (
@@ -1214,7 +1217,9 @@ export function VeierlandApp() {
       return (
         <>
           {HISTORY_SECTIONS.map((sec, i) => (
-            <div key={i} className="vl-hist-row" onClick={() => { setSelectedEra(sec); setSheetOpen(true); }}>
+            <div key={i} className="vl-hist-row" tabIndex={0} role="button"
+              onClick={() => { setSelectedEra(sec); setSheetOpen(true); }}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedEra(sec); setSheetOpen(true); } }}>
               <div className="vl-hist-era">
                 <div className="vl-hist-dot" />
                 <div className="vl-hist-line" />
@@ -1689,12 +1694,39 @@ export function VeierlandApp() {
             )}
           </div></div>
         )}
+        {mode === 'history' && (
+          <div className="vl-sealevel">
+            <div className="vl-sl-title">
+              {lang === 'no' ? 'Historisk havnivå' : 'Historical sea level'}
+            </div>
+            <div className="vl-sl-label">
+              {lang === 'no' ? SEA_LEVEL_LABELS[seaLevelStep].no : SEA_LEVEL_LABELS[seaLevelStep].en}
+            </div>
+            <input
+              type="range" min={0} max={SEA_LEVEL_STEPS.length - 1} step={1}
+              value={seaLevelStep} onChange={e => setSeaLevelStep(Number(e.target.value))}
+              className="vl-sl-range"
+            />
+            <div className="vl-sl-ticks">
+              {SEA_LEVEL_LABELS.map((l, i) => (
+                <span key={i}>{i === 0 ? (lang === 'no' ? 'I dag' : 'Today') : '+' + SEA_LEVEL_STEPS[i] + 'm'}</span>
+              ))}
+            </div>
+            {seaLevelStep > 0 && (
+              <div className="vl-sl-desc">
+                {lang === 'no'
+                  ? 'Blå overlay viser hva som var under vann i denne perioden.'
+                  : 'Blue overlay shows what was underwater in this period.'}
+              </div>
+            )}
+          </div>
+        )}
         <div className="vl-searchbar">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
             <circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>
           </svg>
           <input
-            type="text"
+            type="search"
             placeholder={T.search}
             value={searchQ}
             onChange={e => setSearchQ(e.target.value)}
@@ -1753,40 +1785,6 @@ export function VeierlandApp() {
           </svg>
         </button>
       </div>
-      {/* Sea level slider – visible in history mode */}
-      {mode === 'history' && (
-        <div className="vl-sealevel">
-          <div className="vl-sl-title">
-            {lang === 'no' ? 'Historisk havnivå' : 'Historical sea level'}
-          </div>
-          <div className="vl-sl-label">
-            {lang === 'no'
-              ? SEA_LEVEL_LABELS[seaLevelStep].no
-              : SEA_LEVEL_LABELS[seaLevelStep].en}
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={SEA_LEVEL_STEPS.length - 1}
-            step={1}
-            value={seaLevelStep}
-            onChange={e => setSeaLevelStep(Number(e.target.value))}
-            className="vl-sl-range"
-          />
-          <div className="vl-sl-ticks">
-            {SEA_LEVEL_LABELS.map((l, i) => (
-              <span key={i}>{i === 0 ? (lang === 'no' ? 'I dag' : 'Today') : '+' + SEA_LEVEL_STEPS[i] + 'm'}</span>
-            ))}
-          </div>
-          {seaLevelStep > 0 && (
-            <div className="vl-sl-desc">
-              {lang === 'no'
-                ? 'Blå overlay viser hva som var under vann i denne perioden.'
-                : 'Blue overlay shows what was underwater in this period.'}
-            </div>
-          )}
-        </div>
-      )}
       </div>{/* end vl-map-area */}
 
       {/* Sheet / Desktop sidebar */}
