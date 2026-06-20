@@ -20,6 +20,7 @@ export interface Farm {
   name: string;
   visible: boolean;
   coordinates: [number, number];
+  koordinat_sikkerhet: 'antatt' | 'usikker' | 'sikker';
   norron_name: string;
   meaning: string;
   gnr: number;
@@ -46,6 +47,7 @@ function defaultFarmData(): Farm[] {
     name: f.name ?? '',
     visible: true,
     coordinates: (f.coordinates ?? [0, 0]) as [number, number],
+    koordinat_sikkerhet: (f.koordinat_sikkerhet ?? 'antatt') as 'antatt' | 'usikker' | 'sikker',
     norron_name: f.norron_name ?? '',
     meaning: f.meaning ?? '',
     gnr: f.gnr ?? 0,

@@ -1180,6 +1180,16 @@ function FarmEditor({ farm, onChange }: {
               </label>
             ))}
           </div>
+          <label style={{ display: 'block', marginTop: 10 }}>
+            <span style={S.label}>Plasseringens sikkerhet</span>
+            <select style={S.input}
+              value={farm.koordinat_sikkerhet}
+              onChange={e => onChange({ koordinat_sikkerhet: e.target.value as 'antatt' | 'usikker' | 'sikker' })}>
+              <option value="antatt">Antatt</option>
+              <option value="usikker">Usikker</option>
+              <option value="sikker">Sikker</option>
+            </select>
+          </label>
 
           <div style={secHdr}>Grunninfo</div>
           <div style={S.editGrid}>

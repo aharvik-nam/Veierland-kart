@@ -1135,7 +1135,14 @@ export function VeierlandApp() {
       return (
         <>
           <button className="vl-back" onClick={() => setSelectedFarm(null)}><BackSvg />{T.back}</button>
-          <div><span className="vl-catpill">Gnr. {selectedFarm.gnr}</span></div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            <span className="vl-catpill">Gnr. {selectedFarm.gnr}</span>
+            {selectedFarm.koordinat_sikkerhet && selectedFarm.koordinat_sikkerhet !== 'sikker' && (
+              <span className="vl-catpill" style={{ background: selectedFarm.koordinat_sikkerhet === 'usikker' ? 'color-mix(in srgb, #e53e3e 12%, var(--card))' : 'color-mix(in srgb, var(--accent) 10%, var(--card))', color: selectedFarm.koordinat_sikkerhet === 'usikker' ? '#e53e3e' : 'var(--accent)', border: '1px solid currentColor' }}>
+                📍 {selectedFarm.koordinat_sikkerhet === 'usikker' ? 'Usikker plassering' : 'Antatt plassering'}
+              </span>
+            )}
+          </div>
           <div className="vl-h2">{selectedFarm.name}</div>
           {selectedFarm.norron_name && (
             <div className="vl-sub" style={{ marginBottom: 4 }}>
