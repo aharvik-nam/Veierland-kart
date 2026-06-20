@@ -280,17 +280,6 @@ body { display: grid; place-items: center; }
 }
 .vl-lang button.on { background: var(--ink); color: #fff; }
 
-.vl-chips-outer {
-  position: relative;
-}
-.vl-chips-outer::after {
-  content: '';
-  position: absolute;
-  top: 0; right: 0; bottom: 0;
-  width: 36px;
-  background: linear-gradient(to right, transparent, var(--bg));
-  pointer-events: none;
-}
 .vl-chips {
   display: flex; gap: 7px; margin-top: 9px; overflow-x: auto;
   padding-bottom: 2px; scrollbar-width: none;
@@ -380,6 +369,8 @@ body { display: grid; place-items: center; }
 .vl-opt .nm { flex: 1; font-size: 15px; font-weight: 600; }
 .vl-opt .chk { color: var(--accent); opacity: 0; flex: 0 0 auto; }
 .vl-opt.on .chk { opacity: 1; }
+.vl-pop-sep { margin: 6px 8px; border: none; border-top: 1px solid var(--line); }
+.vl-pop-sub { margin: 4px 8px 3px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
 
 /* ── Bottom sheet ───────────────────────────────────────────────────────────── */
 .vl-map-area { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }

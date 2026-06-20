@@ -61,6 +61,31 @@ const LAYERS: Record<string, LayerCfg> = {
 };
 const LAYER_ORDER = ['soleng', 'friluft', 'flyfoto', 'historisk'] as const;
 
+interface OverlayCfg {
+  label: { no: string; en: string };
+  sw: string;
+  url: string;
+  wmsLayers: string;
+  opacity: number;
+}
+
+const GEO_OVERLAYS: Record<string, OverlayCfg> = {
+  losmasse: {
+    label: { no: 'Løsmasser', en: 'Surface deposits' },
+    sw: 'linear-gradient(135deg,#c8a05a,#a8c870)',
+    url: 'https://geo.ngu.no/mapserver/LosmasserWMS',
+    wmsLayers: 'Losmasser_WMS',
+    opacity: 0.65,
+  },
+  berggrunn: {
+    label: { no: 'Berggrunn', en: 'Bedrock' },
+    sw: 'linear-gradient(135deg,#9a6aaa,#6a8aaa)',
+    url: 'https://geo.ngu.no/mapserver/BerggrunnWMS',
+    wmsLayers: 'BerggrunnN250',
+    opacity: 0.65,
+  },
+};
+
 // ─── Category configs ─────────────────────────────────────────────────────────
 
 // CatCfg types live in src/lib/catcfg.ts; CAT_CFG is loaded dynamically from Firestore
@@ -395,6 +420,33 @@ function TileController({ layer }: { layer: string }) {
   return null;
 }
 
+function OverlayController({ overlay }: { overlay: string | null }) {
+  const map = useMap();
+  const layerRef = useRef<L.TileLayer.WMS | null>(null);
+
+  useEffect(() => {
+    if (layerRef.current) { map.removeLayer(layerRef.current); layerRef.current = null; }
+    if (!overlay) return;
+    const cfg = GEO_OVERLAYS[overlay];
+    if (!cfg) return;
+    const wmsLayer = L.tileLayer.wms(cfg.url, {
+      layers: cfg.wmsLayers,
+      format: 'image/png',
+      transparent: true,
+      opacity: cfg.opacity,
+      zIndex: 2,
+      attribution: '© NGU',
+    } as L.WMSOptions);
+    wmsLayer.addTo(map);
+    layerRef.current = wmsLayer;
+    return () => {
+      if (layerRef.current) { map.removeLayer(layerRef.current); layerRef.current = null; }
+    };
+  }, [overlay, map]);
+
+  return null;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 
@@ -466,6 +518,7 @@ export function VeierlandApp() {
   const [currentLayer, setCurrentLayer] = useState<string>(() => {
     try { return localStorage.getItem('vl-layer') || 'soleng'; } catch { return 'soleng'; }
   });
+  const [geoOverlay, setGeoOverlay] = useState<string | null>(null);
   const [showLayerPop, setShowLayerPop] = useState(false);
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
@@ -597,7 +650,8 @@ export function VeierlandApp() {
     setSpeciesWiki(null);
     setSpeciesWikiLoading(true);
     fetchWikipediaSpecies(selectedNature.scientificName, selectedNature.popularName, lang)
-      .then(r => { if (alive) { setSpeciesWiki(r); setSpeciesWikiLoading(false); } });
+      .then(r => { if (alive) { setSpeciesWiki(r); setSpeciesWikiLoading(false); } })
+      .catch(() => { if (alive) setSpeciesWikiLoading(false); });
     return () => { alive = false; };
   }, [selectedNature, lang]);
 
@@ -1637,6 +1691,7 @@ export function VeierlandApp() {
       >
         <MapSetup onReady={onMapReady} onMapClick={onMapClick} onZoom={onZoom} />
         <TileController layer={currentLayer} />
+        <OverlayController overlay={geoOverlay} />
         {mode === 'history' && allPOIs.filter(p => catCfg[p.kategori]?.showInHistory).map(poi => {
           const cat = getCat(poi.kategori);
           const [lat, lng] = poi.coordinates ?? [0, 0];
@@ -1762,6 +1817,22 @@ export function VeierlandApp() {
               key={k}
               className={`vl-opt${on ? ' on' : ''}`}
               onClick={() => { setCurrentLayer(k); setShowLayerPop(false); try { localStorage.setItem('vl-layer', k); } catch {} }}
+            >
+              <span className="sw" style={{ background: cfg.sw }} />
+              <span className="nm">{lang === 'no' ? cfg.label.no : cfg.label.en}</span>
+              <span className="chk">{on && <CheckSvg />}</span>
+            </div>
+          );
+        })}
+        <div className="vl-pop-sep" />
+        <p className="vl-pop-sub">{lang === 'no' ? 'Geologi (NGU)' : 'Geology (NGU)'}</p>
+        {Object.entries(GEO_OVERLAYS).map(([k, cfg]) => {
+          const on = geoOverlay === k;
+          return (
+            <div
+              key={k}
+              className={`vl-opt${on ? ' on' : ''}`}
+              onClick={() => setGeoOverlay(on ? null : k)}
             >
               <span className="sw" style={{ background: cfg.sw }} />
               <span className="nm">{lang === 'no' ? cfg.label.no : cfg.label.en}</span>
