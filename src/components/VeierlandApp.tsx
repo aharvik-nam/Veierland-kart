@@ -1263,6 +1263,14 @@ export function VeierlandApp() {
         {mode === 'history' ? renderHistory() : mode === 'nature' ? renderNature() : mode === 'places' ? (
           <>
             <div className="vl-count">{filteredPOIs.length ? T.np(filteredPOIs.length) : T.nohit}</div>
+            {filteredPOIs.length === 0 && (searchQ || activeCats.size > 0) && (
+              <div className="vl-empty">
+                <p>{lang === 'no' ? 'Ingen steder passer søket ditt.' : 'No places match your search.'}</p>
+                <button className="vl-empty-clear" onClick={() => { setSearchQ(''); setActiveCats(new Set()); }}>
+                  {lang === 'no' ? 'Nullstill søk' : 'Clear search'}
+                </button>
+              </div>
+            )}
             {groupedPOIs.map(([catKey, pois]) => {
               const cat = getCat(catKey);
               const isOpen = expandedPlaceCats.has(catKey);
@@ -1279,9 +1287,7 @@ export function VeierlandApp() {
                       <div className="vl-sp-main">
                         <span className="vl-sp-name">{poi.navn}</span>
                         {poi.beskrivelse && (
-                          <span className="vl-sp-sci">
-                            {poi.beskrivelse.length > 55 ? poi.beskrivelse.slice(0, 55) + '…' : poi.beskrivelse}
-                          </span>
+                          <span className="vl-sp-sci">{poi.beskrivelse}</span>
                         )}
                       </div>
                       <span className="vl-chev"><ChevSvg /></span>
@@ -1421,6 +1427,13 @@ export function VeierlandApp() {
               </div>
             ))}
           </div>
+        )}
+
+        {!apiLoading && !lokalData && !snlData && dimuData.length === 0
+          && (poi.snl_søkeord || poi.lokalhistoriewiki || poi.dimu_søk) && (
+          <p className="vl-api-empty">
+            {lang === 'no' ? 'Ingen tilleggsinformasjon tilgjengelig.' : 'No additional information available.'}
+          </p>
         )}
       </>
     );
@@ -1607,7 +1620,7 @@ export function VeierlandApp() {
           </div>
         </div>
         {mode === 'places' && (
-          <div className="vl-chips">
+          <div className="vl-chips-outer"><div className="vl-chips">
             <div className={`vl-chip${activeCats.size === 0 ? ' on' : ''}`} onClick={() => setActiveCats(new Set())}>
               <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
               <span className="cl">{T.all}</span>
@@ -1632,10 +1645,10 @@ export function VeierlandApp() {
                 </div>
               );
             })}
-          </div>
+          </div></div>
         )}
         {mode === 'history' && (
-          <div className="vl-chips">
+          <div className="vl-chips-outer"><div className="vl-chips">
             <div className={`vl-chip${historyView === 'tidslinje' ? ' on' : ''}`} onClick={() => { setHistoryView('tidslinje'); setSelectedEra(null); setSelectedFarm(null); }}>
               <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('kart') }} />
               <span className="cl">{T.tidslinje}</span>
@@ -1644,10 +1657,10 @@ export function VeierlandApp() {
               <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('hus') }} />
               <span className="cl">{T.garder}</span>
             </div>
-          </div>
+          </div></div>
         )}
         {mode === 'nature' && (
-          <div className="vl-chips">
+          <div className="vl-chips-outer"><div className="vl-chips">
             <div className={`vl-chip${!natureFilter ? ' on' : ''}`} onClick={() => setNatureFilter(null)}>
               <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
               <span className="cl">{T.all}</span>
@@ -1674,7 +1687,7 @@ export function VeierlandApp() {
                 <span className="cl">{lang === 'no' ? 'Fremmedarter' : 'Alien species'} {natureObs.filter(o => o.alienCategory).length}</span>
               </div>
             )}
-          </div>
+          </div></div>
         )}
         <div className="vl-searchbar">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">

@@ -252,6 +252,17 @@ body { display: grid; place-items: center; }
 }
 .vl-lang button.on { background: var(--ink); color: #fff; }
 
+.vl-chips-outer {
+  position: relative;
+}
+.vl-chips-outer::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 36px;
+  background: linear-gradient(to right, transparent, var(--bg));
+  pointer-events: none;
+}
 .vl-chips {
   display: flex; gap: 7px; margin-top: 9px; overflow-x: auto;
   padding-bottom: 2px; scrollbar-width: none;
@@ -298,6 +309,7 @@ body { display: grid; place-items: center; }
   color: var(--muted); display: flex; align-items: center;
 }
 .vl-top.searching .vl-modes,
+.vl-top.searching .vl-chips-outer,
 .vl-top.searching .vl-chips { display: none; }
 .vl-top.searching .vl-searchbar { display: flex; }
 
@@ -500,6 +512,16 @@ body { display: grid; place-items: center; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
+/* ── Empty search state ─────────────────────────────────────────────────────── */
+.vl-empty { padding: 20px 4px 8px; text-align: center; }
+.vl-empty p { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+.vl-empty-clear {
+  display: inline-block; padding: 7px 16px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--card);
+  color: var(--ink); font-size: 13px; font-weight: 500; cursor: pointer;
+}
+.vl-empty-clear:active { opacity: .7; }
+
 /* ── API data sections ──────────────────────────────────────────────────────── */
 .vl-api-section {
   background: var(--card2);
@@ -510,6 +532,7 @@ body { display: grid; place-items: center; }
 }
 .vl-api-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 0 0 8px; }
 .vl-api-text { font-size: 14px; line-height: 1.55; color: var(--ink); margin: 0 0 8px; }
+.vl-api-empty { font-size: 13px; color: var(--muted); font-style: italic; margin: 8px 0; }
 .vl-api-link { font-size: 12px; font-weight: 600; color: var(--accent); text-decoration: none; }
 .vl-api-link:hover { text-decoration: underline; }
 .vl-api-img { width: 100%; border-radius: calc(var(--r) - 4px); margin-bottom: 8px; object-fit: cover; border: 1px solid var(--line); display: block; }
