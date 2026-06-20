@@ -550,7 +550,6 @@ body { display: grid; place-items: center; }
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 10px 14px 8px;
-  margin-top: 8px;
 }
 .vl-sl-title {
   text-align: center;
