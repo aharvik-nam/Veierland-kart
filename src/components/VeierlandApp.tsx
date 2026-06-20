@@ -16,6 +16,8 @@ import { ICONS } from '../lib/icons';
 import floodData from '../data/sea_level_flood.geojson';
 import losmassData from '../data/losmasser.geojson';
 import berggrunData from '../data/berggrunn.geojson';
+import naturtypeData from '../data/naturtyper.geojson';
+import marinGrenseData from '../data/marin_grense.geojson';
 
 // ─── Layer configs ────────────────────────────────────────────────────────────
 
@@ -72,17 +74,32 @@ const GEO_LAYERS: Record<string, GeoLayerCfg> = {
   losmasse: {
     label: { no: 'Løsmasser', en: 'Surface deposits' },
     sw: 'linear-gradient(135deg,#c8a05a,#a8c870)',
-    noDataMsg: { no: 'Kjør generate_geology.py for å laste ned data', en: 'Run generate_geology.py to fetch data' },
+    noDataMsg: { no: 'Kjør generate_geology.py', en: 'Run generate_geology.py' },
   },
   berggrunn: {
     label: { no: 'Berggrunn', en: 'Bedrock' },
     sw: 'linear-gradient(135deg,#9a6aaa,#6a8aaa)',
-    noDataMsg: { no: 'Kjør generate_geology.py for å laste ned data', en: 'Run generate_geology.py to fetch data' },
+    noDataMsg: { no: 'Kjør generate_geology.py', en: 'Run generate_geology.py' },
+  },
+  naturtyper: {
+    label: { no: 'Naturtyper (NiN)', en: 'Nature types (NiN)' },
+    sw: 'linear-gradient(135deg,#5a9a5a,#8fbe8f)',
+    noDataMsg: { no: 'Kjør generate_geology.py', en: 'Run generate_geology.py' },
+  },
+  marin_grense: {
+    label: { no: 'Marin grense', en: 'Marine limit' },
+    sw: 'linear-gradient(135deg,#2255cc,#55aaff)',
+    noDataMsg: { no: 'Kjør generate_geology.py', en: 'Run generate_geology.py' },
   },
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const GEO_DATA: Record<string, any> = { losmasse: losmassData, berggrunn: berggrunData };
+const GEO_DATA: Record<string, any> = {
+  losmasse: losmassData,
+  berggrunn: berggrunData,
+  naturtyper: naturtypeData,
+  marin_grense: marinGrenseData,
+};
 
 function geoStyle(feature?: { properties?: { color?: string } }): L.PathOptions {
   return {
@@ -94,8 +111,18 @@ function geoStyle(feature?: { properties?: { color?: string } }): L.PathOptions 
   };
 }
 
-function geoOnEach(feature: { properties?: { type_no?: string } }, layer: L.Layer) {
-  const name = feature?.properties?.type_no;
+function geoPointToLayer(feature: { properties?: { color?: string } }, latlng: L.LatLng): L.Layer {
+  return L.circleMarker(latlng, {
+    radius: 7,
+    fillColor: feature?.properties?.color ?? '#2255cc',
+    color: '#fff',
+    weight: 1.5,
+    fillOpacity: 0.9,
+  });
+}
+
+function geoOnEach(feature: { properties?: { type_no?: string; label?: string } }, layer: L.Layer) {
+  const name = feature?.properties?.label ?? feature?.properties?.type_no;
   if (name) (layer as L.Path).bindTooltip(name, { sticky: true, className: 'vl-geo-tip' });
 }
 
@@ -1684,6 +1711,8 @@ export function VeierlandApp() {
             data={GEO_DATA[geoLayer] as any}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             style={geoStyle as any}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            pointToLayer={geoLayer === 'marin_grense' ? geoPointToLayer as any : undefined}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onEachFeature={geoOnEach as any}
           />
