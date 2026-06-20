@@ -5,9 +5,10 @@ import { auth, db, isFirebaseConfigured } from '../lib/firebase';
 import { poiFallback, stedsnavnFallback, turkartFallback, GeoCollection } from '../lib/geodata';
 import { DEFAULT_CAT_CFG, CatCfgMap, CatEntry, loadCatCfg, saveCatCfg } from '../lib/catcfg';
 import { loadFarmData, saveFarmData, DEFAULT_FARM_DATA, Farm, FarmPerson, FarmShip } from '../lib/farmdata';
+import { loadTimelineSections, saveTimelineSections, DEFAULT_TIMELINE_SECTIONS, TimelineSection } from '../lib/timelinedata';
 import { ICONS, ICON_LABELS } from '../lib/icons';
 
-type Tab = 'poi' | 'stedsnavn' | 'turer' | 'kategorier' | 'garder';
+type Tab = 'poi' | 'stedsnavn' | 'turer' | 'kategorier' | 'garder' | 'tidslinje';
 type GeoTab = 'poi' | 'stedsnavn' | 'turer';
 
 const COL = 'geodata';
@@ -1321,6 +1322,137 @@ function GarderTab() {
   );
 }
 
+// ─── TidslinjeTab ─────────────────────────────────────────────────────────────
+
+function TidslinjeTab() {
+  const [sections, setSections] = useState<TimelineSection[]>(DEFAULT_TIMELINE_SECTIONS);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [open, setOpen] = useState<string | null>(null);
+
+  useEffect(() => { loadTimelineSections().then(setSections); }, []);
+
+  const update = (era: string, patch: Partial<TimelineSection>) => {
+    setSections(prev => prev.map(s => s.era === era ? { ...s, ...patch } : s));
+    setSaved(false);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try { await saveTimelineSections(sections); setSaved(true); }
+    catch (e: any) { alert(e.message); }
+    finally { setSaving(false); }
+  };
+
+  const fieldStyle: React.CSSProperties = { width: '100%', padding: '7px 10px', border: '1px solid var(--line)', borderRadius: 8, background: 'var(--bg)', color: 'var(--ink)', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' };
+  const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' as const, letterSpacing: '.05em', marginBottom: 3, display: 'block' };
+  const rowStyle: React.CSSProperties = { marginBottom: 12 };
+
+  return (
+    <div style={{ maxWidth: 680 }}>
+      <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>
+        Rediger tidslinjeelementene. Lim inn en bilde-URL for å vise bilde i appen.
+      </p>
+      {sections.map(sec => {
+        const isOpen = open === sec.era;
+        return (
+          <div key={sec.era} style={{ border: '1px solid var(--line)', borderRadius: 10, marginBottom: 8, overflow: 'hidden', background: 'var(--card)' }}>
+            <div
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', cursor: 'pointer', background: isOpen ? 'var(--card2)' : 'transparent' }}
+              onClick={() => setOpen(isOpen ? null : sec.era)}
+            >
+              <div style={{ flex: 1 }}>
+                <span style={{ fontWeight: 600, fontSize: 14 }}>{sec.era}</span>
+                <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 8 }}>{sec.period}</span>
+                {sec.image && <span style={{ fontSize: 11, color: 'var(--accent)', marginLeft: 8 }}>🖼 bilde</span>}
+              </div>
+              <span style={{ color: 'var(--muted)', fontSize: 11 }}>{isOpen ? '▲' : '▼'}</span>
+            </div>
+            {isOpen && (
+              <div style={{ padding: '14px 16px', borderTop: '1px solid var(--line)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                  <div style={rowStyle}>
+                    <label style={labelStyle}>Epoke (era)</label>
+                    <input style={fieldStyle} value={sec.era} onChange={e => update(sec.era, { era: e.target.value })} />
+                  </div>
+                  <div style={rowStyle}>
+                    <label style={labelStyle}>Periode</label>
+                    <input style={fieldStyle} value={sec.period} onChange={e => update(sec.era, { period: e.target.value })} />
+                  </div>
+                </div>
+                <div style={rowStyle}>
+                  <label style={labelStyle}>Tittel (norsk)</label>
+                  <input style={fieldStyle} value={sec.title.no} onChange={e => update(sec.era, { title: { ...sec.title, no: e.target.value } })} />
+                </div>
+                <div style={rowStyle}>
+                  <label style={labelStyle}>Tittel (engelsk)</label>
+                  <input style={fieldStyle} value={sec.title.en} onChange={e => update(sec.era, { title: { ...sec.title, en: e.target.value } })} />
+                </div>
+                <div style={rowStyle}>
+                  <label style={labelStyle}>Tekst (norsk)</label>
+                  <textarea style={{ ...fieldStyle, minHeight: 90, resize: 'vertical' }} value={sec.body.no} onChange={e => update(sec.era, { body: { ...sec.body, no: e.target.value } })} />
+                </div>
+                <div style={rowStyle}>
+                  <label style={labelStyle}>Tekst (engelsk)</label>
+                  <textarea style={{ ...fieldStyle, minHeight: 90, resize: 'vertical' }} value={sec.body.en} onChange={e => update(sec.era, { body: { ...sec.body, en: e.target.value } })} />
+                </div>
+                <div style={rowStyle}>
+                  <label style={labelStyle}>Kontekst Norge</label>
+                  <textarea style={{ ...fieldStyle, minHeight: 60, resize: 'vertical' }} value={sec.kontekst_norge} onChange={e => update(sec.era, { kontekst_norge: e.target.value })} />
+                </div>
+
+                {/* Image */}
+                <div style={{ borderTop: '1px solid var(--line)', paddingTop: 12, marginTop: 4 }}>
+                  <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 10 }}>Bilde</div>
+                  <div style={rowStyle}>
+                    <label style={labelStyle}>Bilde-URL</label>
+                    <input style={fieldStyle} type="url" placeholder="https://…" value={sec.image ?? ''} onChange={e => update(sec.era, { image: e.target.value })} />
+                  </div>
+                  {sec.image && (
+                    <div style={{ marginBottom: 10, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line)' }}>
+                      <img src={sec.image} alt="preview" style={{ display: 'block', width: '100%', maxHeight: 160, objectFit: 'cover' }} />
+                    </div>
+                  )}
+                  <div style={rowStyle}>
+                    <label style={labelStyle}>Bildetekst</label>
+                    <input style={fieldStyle} placeholder="Tekst under bildet…" value={sec.image_caption ?? ''} onChange={e => update(sec.era, { image_caption: e.target.value })} />
+                  </div>
+                </div>
+
+                {/* Anekdoter */}
+                <div style={{ borderTop: '1px solid var(--line)', paddingTop: 12, marginTop: 4 }}>
+                  <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>Anekdoter</div>
+                  {sec.anekdoter.map((a, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                      <textarea
+                        style={{ ...fieldStyle, minHeight: 50, flex: 1, resize: 'vertical' }}
+                        value={a}
+                        onChange={e => {
+                          const next = [...sec.anekdoter];
+                          next[i] = e.target.value;
+                          update(sec.era, { anekdoter: next });
+                        }}
+                      />
+                      <button style={S.pill('danger')} onClick={() => update(sec.era, { anekdoter: sec.anekdoter.filter((_, j) => j !== i) })}>✕</button>
+                    </div>
+                  ))}
+                  <button style={S.pill('secondary')} onClick={() => update(sec.era, { anekdoter: [...sec.anekdoter, ''] })}>+ Legg til anekdote</button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+      <div style={{ marginTop: 20, display: 'flex', gap: 12, alignItems: 'center' }}>
+        <button style={S.pill('primary')} onClick={save} disabled={saving}>
+          {saving ? 'Lagrer…' : '💾 Lagre til Firebase'}
+        </button>
+        {saved && <span style={{ fontSize: 12, color: '#38a169' }}>Lagret! Endringer vises etter neste sideoppdatering.</span>}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export function AdminPage() {
   const [user, setUser] = useState<User | null | undefined>(
@@ -1363,9 +1495,9 @@ export function AdminPage() {
         </div>
       </div>
       <div style={S.tabs}>
-        {(['poi', 'stedsnavn', 'turer', 'kategorier', 'garder'] as Tab[]).map(t => (
+        {(['poi', 'stedsnavn', 'turer', 'kategorier', 'garder', 'tidslinje'] as Tab[]).map(t => (
           <button key={t} style={S.tab(tab === t)} onClick={() => setTab(t)}>
-            {t === 'poi' ? 'Steder' : t === 'stedsnavn' ? 'Stedsnavn' : t === 'turer' ? 'Turer' : t === 'kategorier' ? 'Kategorier' : 'Gårder'}
+            {t === 'poi' ? 'Steder' : t === 'stedsnavn' ? 'Stedsnavn' : t === 'turer' ? 'Turer' : t === 'kategorier' ? 'Kategorier' : t === 'garder' ? 'Gårder' : 'Tidslinje'}
           </button>
         ))}
       </div>
@@ -1375,6 +1507,7 @@ export function AdminPage() {
         {tab === 'turer' && <TurerTab />}
         {tab === 'kategorier' && <CategoryConfigTab />}
         {tab === 'garder' && <GarderTab />}
+        {tab === 'tidslinje' && <TidslinjeTab />}
       </div>
     </div>
   );

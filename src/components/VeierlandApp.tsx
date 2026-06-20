@@ -11,8 +11,8 @@ import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, Wikipedia
 import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages, fetchWikipediaSpecies, fetchArtsdatabankenAssessment } from '../lib/api';
 import { loadCatCfg, DEFAULT_CAT_CFG, CatCfgMap } from '../lib/catcfg';
 import { loadFarmData, DEFAULT_FARM_DATA, Farm } from '../lib/farmdata';
+import { loadTimelineSections, DEFAULT_TIMELINE_SECTIONS, TimelineSection } from '../lib/timelinedata';
 import { ICONS } from '../lib/icons';
-import historyData from '../data/veierland_history.json';
 import floodData from '../data/sea_level_flood.geojson';
 
 // ─── Layer configs ────────────────────────────────────────────────────────────
@@ -112,16 +112,7 @@ interface NatureObs {
 
 // ─── History types ────────────────────────────────────────────────────────────
 
-interface HistorySection {
-  era: string;
-  period: string;
-  title: { no: string; en: string };
-  body: { no: string; en: string };
-  anekdoter: string[];
-  kontekst_norge: string;
-}
-
-const HISTORY_SECTIONS = historyData.sections as HistorySection[];
+// TimelineSection is imported from ../lib/timelinedata
 
 
 // Pre-index flood features by threshold so lookup is O(1), not O(n) per render
@@ -497,8 +488,9 @@ export function VeierlandApp() {
 
   // History state
   const [historyView, setHistoryView] = useState<'tidslinje' | 'garder'>('tidslinje');
-  const [selectedEra, setSelectedEra] = useState<HistorySection | null>(null);
+  const [selectedEra, setSelectedEra] = useState<TimelineSection | null>(null);
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
+  const [timelineSections, setTimelineSections] = useState<TimelineSection[]>(DEFAULT_TIMELINE_SECTIONS);
   const [seaLevelM, setSeaLevelM] = useState(0); // metres above today's sea level (0–15)
   const [seaLevelLabel, setSeaLevelLabel] = useState<string | null>(null); // era name shown as label
 
@@ -662,6 +654,7 @@ export function VeierlandApp() {
     loadTurkartGeoJSON().then(geo => setTrails(trailsFromGeoJSON(geo)));
     loadCatCfg().then(setCatCfg);
     loadFarmData().then(setFarmData);
+    loadTimelineSections().then(setTimelineSections);
   }, []);
 
   // Fit map bounds once both map and POIs are ready (runs once)
@@ -1012,13 +1005,12 @@ export function VeierlandApp() {
     return (
       <>
         {natureLoading ? (
-          <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
-            <div className="vl-spinner" />
-            <p style={{ color: 'var(--muted)', fontSize: 13, margin: '0 0 2px' }}>
-              {lang === 'no' ? 'Henter naturobservasjoner fra GBIF…' : 'Loading nature observations from GBIF…'}
+          <div style={{ padding: '16px 0 8px' }}>
+            <p className="vl-loading-blink" style={{ fontWeight: 600, fontSize: 14, margin: '0 0 4px' }}>
+              {lang === 'no' ? 'Henter naturobservasjoner…' : 'Loading nature observations…'}
             </p>
-            <p style={{ color: 'var(--muted)', fontSize: 11, margin: 0, fontStyle: 'italic' }}>
-              {lang === 'no' ? 'Dette kan ta 5–15 sekunder' : 'This may take 5–15 seconds'}
+            <p style={{ color: 'var(--muted)', fontSize: 12, margin: 0 }}>
+              {lang === 'no' ? 'Kobler til Artsdatabanken og GBIF' : 'Connecting to Artsdatabanken and GBIF'}
             </p>
           </div>
         ) : (
@@ -1155,6 +1147,14 @@ export function VeierlandApp() {
           <div><span className="vl-catpill">{selectedEra.period}</span></div>
           <div className="vl-h2">{lang === 'no' ? selectedEra.title.no : selectedEra.title.en}</div>
           <div className="vl-sub" style={{ marginBottom: 12 }}>{selectedEra.era}</div>
+          {selectedEra.image && (
+            <div className="vl-era-img">
+              <img src={selectedEra.image} alt={selectedEra.image_caption || selectedEra.era} />
+              {selectedEra.image_caption && (
+                <span className="vl-era-img-caption">{selectedEra.image_caption}</span>
+              )}
+            </div>
+          )}
           <p className="vl-desc" style={{ whiteSpace: 'pre-line' }}>
             {lang === 'no' ? selectedEra.body.no : selectedEra.body.en}
           </p>
@@ -1276,7 +1276,7 @@ export function VeierlandApp() {
         <>
           {viewToggle}
           {seaSlider}
-          {HISTORY_SECTIONS.map((sec, i) => (
+          {timelineSections.map((sec, i) => (
             <div key={i} className="vl-hist-row" tabIndex={0} role="button"
               onClick={() => { setSelectedEra(sec); setSheetOpen(true); setSeaLevelM(ERA_SEA_LEVEL[sec.era] ?? 0); setSeaLevelLabel(sec.era); }}
               onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedEra(sec); setSheetOpen(true); setSeaLevelM(ERA_SEA_LEVEL[sec.era] ?? 0); setSeaLevelLabel(sec.era); } }}>

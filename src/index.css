@@ -201,7 +201,30 @@ body { display: grid; place-items: center; }
   65%  { transform: scale(.93); }
   100% { transform: scale(1); }
 }
+@keyframes vlBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .28; }
+}
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+.vl-loading-blink {
+  color: var(--accent);
+  animation: vlBlink 1.1s ease-in-out infinite;
+}
+
+/* ── Era image ─────────────────────────────────────────────────────────────── */
+.vl-era-img {
+  position: relative; border-radius: 10px; overflow: hidden;
+  margin-bottom: 14px; background: var(--card2);
+}
+.vl-era-img img {
+  display: block; width: 100%; height: auto; max-height: 240px;
+  object-fit: cover;
+}
+.vl-era-img-caption {
+  display: block; padding: 5px 10px;
+  font-size: 11px; color: var(--muted); font-style: italic;
+}
 
 .vl-spinner {
   width: 22px; height: 22px;
