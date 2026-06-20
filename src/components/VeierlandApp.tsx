@@ -1179,7 +1179,9 @@ export function VeierlandApp() {
             {nearestThresh !== null && nearestThresh !== seaLevelM
               ? (lang === 'no' ? `Overlay: ${nearestThresh}m-kontur. ` : `Overlay: ${nearestThresh}m contour. `)
               : ''}
-            {lang === 'no' ? 'Blå overlay viser hva som var under vann.' : 'Blue overlay shows what was underwater.'}
+            {lang === 'no'
+              ? 'Blå overlay viser hva som var under vann. Lilla stiplet område viser marin grense — maksimalt historisk havnivå etter siste istid.'
+              : 'Blue overlay shows what was underwater. Purple dashed area shows the marine limit — maximum post-glacial sea level.'}
           </div>
         )}
       </div>
@@ -1787,6 +1789,13 @@ export function VeierlandApp() {
             />
           );
         })()}
+        {mode === 'history' && seaLevelM > 0 && (marinGrenseData as any).features?.length > 0 && (
+          <GeoJSON
+            key="marin-grense-ref"
+            data={marinGrenseData as any}
+            style={{ color: '#7a3a9a', fillColor: '#b06ad0', fillOpacity: 0.15, weight: 2, opacity: 0.7, dashArray: '6 4' }}
+          />
+        )}
         {mode === 'history' && historyView === 'garder' && visibleFarms.map(farm => {
           const coords = farmCoords[farm.name];
           if (!coords) return null;
