@@ -574,12 +574,19 @@ body { display: grid; place-items: center; }
   height: 4px;
 }
 .vl-sl-ticks {
-  display: flex;
-  justify-content: space-between;
+  position: relative;
+  height: 14px;
   font-size: 10px;
   color: var(--muted);
   margin-top: 4px;
 }
+.vl-sl-ticks span {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.vl-sl-ticks span:first-child { transform: none; }
+.vl-sl-ticks span:last-child { transform: translateX(-100%); }
 .vl-sl-desc {
   font-size: 11px;
   color: var(--muted);

@@ -124,15 +124,29 @@ interface HistorySection {
 const HISTORY_SECTIONS = historyData.sections as HistorySection[];
 
 
-// Discrete sea level steps: index → metres above today (null = no overlay)
-const SEA_LEVEL_STEPS: (number | null)[] = [null, 2, 6, 10, 15];
-const SEA_LEVEL_LABELS: { no: string; en: string }[] = [
-  { no: 'I dag',           en: 'Today' },
-  { no: '+2 m  (~1700-t)', en: '+2 m  (~1700s)' },
-  { no: '+6 m  (Vikingtid)', en: '+6 m  (Viking Age)' },
-  { no: '+10 m  (Jernalder)', en: '+10 m  (Iron Age)' },
-  { no: '+15 m  (Steinalder)', en: '+15 m  (Stone Age)' },
-];
+// Available flood overlay thresholds in the GeoJSON (2, 6, 10, 15 metres)
+const FLOOD_THRESHOLDS = [2, 6, 10, 15] as const;
+
+// Returns the largest available threshold ≤ m (or null if m < 2)
+function nearestFloodThreshold(m: number): number | null {
+  const below = FLOOD_THRESHOLDS.filter(t => t <= m);
+  return below.length > 0 ? below[below.length - 1] : null;
+}
+
+// Historical sea level (metres above today) per era, based on Vestfold land-uplift data
+const ERA_SEA_LEVEL: Record<string, number> = {
+  'Steinalder': 15,
+  'Bronsealder': 12,
+  'Jernalder': 10,
+  'Folkevandringstid': 7,
+  'Vikingtid': 5,
+  'Middelalder': 3,
+  'Napoleonskrigene': 1,
+  'Gårder og kulturlandskap': 2,
+  'Skipsbygging og handel': 2,
+  'Hvalfangst': 1,
+  'Veierland kirke': 0,
+};
 
 // Pre-index flood features by threshold so lookup is O(1), not O(n) per render
 const FLOOD_BY_THRESHOLD = new Map<number, object>(
@@ -484,7 +498,7 @@ export function VeierlandApp() {
   const [historyView, setHistoryView] = useState<'tidslinje' | 'garder'>('tidslinje');
   const [selectedEra, setSelectedEra] = useState<HistorySection | null>(null);
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
-  const [seaLevelStep, setSeaLevelStep] = useState(0); // index into SEA_LEVEL_STEPS
+  const [seaLevelM, setSeaLevelM] = useState(0); // metres above today's sea level (0–15)
 
   // Nature state
   const [natureObs, setNatureObs] = useState<NatureObs[]>([]);
@@ -1103,23 +1117,32 @@ export function VeierlandApp() {
       </div>
     );
 
+    const nearestThresh = nearestFloodThreshold(seaLevelM);
     const seaSlider = (
       <div className="vl-sealevel" style={{ marginBottom: 14 }}>
         <div className="vl-sl-title">{lang === 'no' ? 'Historisk havnivå' : 'Historical sea level'}</div>
-        <div className="vl-sl-label">{lang === 'no' ? SEA_LEVEL_LABELS[seaLevelStep].no : SEA_LEVEL_LABELS[seaLevelStep].en}</div>
-        <input type="range" min={0} max={SEA_LEVEL_STEPS.length - 1} step={1}
-          value={seaLevelStep} onChange={e => setSeaLevelStep(Number(e.target.value))}
-          className="vl-sl-range" />
+        <div className="vl-sl-label">
+          {seaLevelM === 0
+            ? (lang === 'no' ? 'I dag' : 'Today')
+            : `+${seaLevelM}m`}
+        </div>
+        <input type="range" min={0} max={15} step={1}
+          value={seaLevelM} onChange={e => setSeaLevelM(Number(e.target.value))}
+          className="vl-sl-range" list="sea-level-ticks" />
+        <datalist id="sea-level-ticks">
+          {[0, 2, 6, 10, 15].map(v => <option key={v} value={v} />)}
+        </datalist>
         <div className="vl-sl-ticks">
-          {SEA_LEVEL_LABELS.map((l, i) => (
-            <span key={i}>{i === 0 ? (lang === 'no' ? 'I dag' : 'Today') : '+' + SEA_LEVEL_STEPS[i] + 'm'}</span>
+          {([{ v: 0, l: lang === 'no' ? 'I dag' : 'Today' }, { v: 2, l: '+2m' }, { v: 6, l: '+6m' }, { v: 10, l: '+10m' }, { v: 15, l: '+15m' }]).map(({ v, l }) => (
+            <span key={v} style={{ left: `${(v / 15) * 100}%` }}>{l}</span>
           ))}
         </div>
-        {seaLevelStep > 0 && (
+        {seaLevelM > 0 && (
           <div className="vl-sl-desc">
-            {lang === 'no'
-              ? 'Blå overlay viser hva som var under vann i denne perioden.'
-              : 'Blue overlay shows what was underwater in this period.'}
+            {nearestThresh !== null && nearestThresh !== seaLevelM
+              ? (lang === 'no' ? `Overlay: ${nearestThresh}m-kontur. ` : `Overlay: ${nearestThresh}m contour. `)
+              : ''}
+            {lang === 'no' ? 'Blå overlay viser hva som var under vann.' : 'Blue overlay shows what was underwater.'}
           </div>
         )}
       </div>
@@ -1255,8 +1278,8 @@ export function VeierlandApp() {
           {seaSlider}
           {HISTORY_SECTIONS.map((sec, i) => (
             <div key={i} className="vl-hist-row" tabIndex={0} role="button"
-              onClick={() => { setSelectedEra(sec); setSheetOpen(true); }}
-              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedEra(sec); setSheetOpen(true); } }}>
+              onClick={() => { setSelectedEra(sec); setSheetOpen(true); setSeaLevelM(ERA_SEA_LEVEL[sec.era] ?? 0); }}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedEra(sec); setSheetOpen(true); setSeaLevelM(ERA_SEA_LEVEL[sec.era] ?? 0); } }}>
               <div className="vl-hist-era">
                 <div className="vl-hist-dot" />
                 <div className="vl-hist-line" />
@@ -1605,8 +1628,9 @@ export function VeierlandApp() {
               eventHandlers={{ click: () => {} }} />
           );
         })}
-        {mode === 'history' && seaLevelStep > 0 && (() => {
-          const thresh = SEA_LEVEL_STEPS[seaLevelStep] as number;
+        {mode === 'history' && seaLevelM > 0 && (() => {
+          const thresh = nearestFloodThreshold(seaLevelM);
+          if (thresh === null) return null;
           const feat = FLOOD_BY_THRESHOLD.get(thresh);
           if (!feat) return null;
           return (
@@ -1653,9 +1677,9 @@ export function VeierlandApp() {
       <div className={`vl-top${searchOpen ? ' searching' : ''}`}>
         <div className="vl-modes">
           <div className="vl-modepills">
-            <button className={`vl-modepill${mode === 'places' ? ' on' : ''}`} onClick={() => { setMode('places'); setCurrentLayer('soleng'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelStep(0); }}>{T.places}</button>
-            <button className={`vl-modepill${mode === 'trails' ? ' on' : ''}`} onClick={() => { setMode('trails'); setCurrentLayer('friluft'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelStep(0); }}>{T.trails}</button>
-            <button className={`vl-modepill${mode === 'nature' ? ' on' : ''}`} onClick={() => { setMode('nature'); setCurrentLayer('flyfoto'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelStep(0); }}>{T.nature}</button>
+            <button className={`vl-modepill${mode === 'places' ? ' on' : ''}`} onClick={() => { setMode('places'); setCurrentLayer('soleng'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelM(0); }}>{T.places}</button>
+            <button className={`vl-modepill${mode === 'trails' ? ' on' : ''}`} onClick={() => { setMode('trails'); setCurrentLayer('friluft'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelM(0); }}>{T.trails}</button>
+            <button className={`vl-modepill${mode === 'nature' ? ' on' : ''}`} onClick={() => { setMode('nature'); setCurrentLayer('flyfoto'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); setSeaLevelM(0); }}>{T.nature}</button>
             <button className={`vl-modepill${mode === 'history' ? ' on' : ''}`} onClick={() => { setMode('history'); setCurrentLayer('friluft'); setSelectedNature(null); setSelectedEra(null); setSelectedFarm(null); }}>{T.history}</button>
           </div>
           <div className="vl-lang">
