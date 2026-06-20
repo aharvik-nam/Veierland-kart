@@ -499,6 +499,7 @@ export function VeierlandApp() {
   const [selectedEra, setSelectedEra] = useState<HistorySection | null>(null);
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
   const [seaLevelM, setSeaLevelM] = useState(0); // metres above today's sea level (0–15)
+  const [seaLevelLabel, setSeaLevelLabel] = useState<string | null>(null); // era name shown as label
 
   // Nature state
   const [natureObs, setNatureObs] = useState<NatureObs[]>([]);
@@ -1122,12 +1123,10 @@ export function VeierlandApp() {
       <div className="vl-sealevel" style={{ marginBottom: 14 }}>
         <div className="vl-sl-title">{lang === 'no' ? 'Historisk havnivå' : 'Historical sea level'}</div>
         <div className="vl-sl-label">
-          {seaLevelM === 0
-            ? (lang === 'no' ? 'I dag' : 'Today')
-            : `+${seaLevelM}m`}
+          {seaLevelLabel ?? (seaLevelM === 0 ? (lang === 'no' ? 'I dag' : 'Today') : `+${seaLevelM}m`)}
         </div>
         <input type="range" min={0} max={15} step={1}
-          value={seaLevelM} onChange={e => setSeaLevelM(Number(e.target.value))}
+          value={seaLevelM} onChange={e => { setSeaLevelM(Number(e.target.value)); setSeaLevelLabel(null); }}
           className="vl-sl-range" list="sea-level-ticks" />
         <datalist id="sea-level-ticks">
           {[0, 2, 6, 10, 15].map(v => <option key={v} value={v} />)}
@@ -1151,7 +1150,7 @@ export function VeierlandApp() {
     if (selectedEra) {
       return (
         <>
-          <button className="vl-back" onClick={() => setSelectedEra(null)}><BackSvg />{T.back}</button>
+          <button className="vl-back" onClick={() => { setSelectedEra(null); setSeaLevelLabel(null); }}><BackSvg />{T.back}</button>
           <div><span className="vl-catpill">{selectedEra.period}</span></div>
           <div className="vl-h2">{lang === 'no' ? selectedEra.title.no : selectedEra.title.en}</div>
           <div className="vl-sub" style={{ marginBottom: 12 }}>{selectedEra.era}</div>
@@ -1278,8 +1277,8 @@ export function VeierlandApp() {
           {seaSlider}
           {HISTORY_SECTIONS.map((sec, i) => (
             <div key={i} className="vl-hist-row" tabIndex={0} role="button"
-              onClick={() => { setSelectedEra(sec); setSheetOpen(true); setSeaLevelM(ERA_SEA_LEVEL[sec.era] ?? 0); }}
-              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedEra(sec); setSheetOpen(true); setSeaLevelM(ERA_SEA_LEVEL[sec.era] ?? 0); } }}>
+              onClick={() => { setSelectedEra(sec); setSheetOpen(true); setSeaLevelM(ERA_SEA_LEVEL[sec.era] ?? 0); setSeaLevelLabel(sec.era); }}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedEra(sec); setSheetOpen(true); setSeaLevelM(ERA_SEA_LEVEL[sec.era] ?? 0); setSeaLevelLabel(sec.era); } }}>
               <div className="vl-hist-era">
                 <div className="vl-hist-dot" />
                 <div className="vl-hist-line" />
