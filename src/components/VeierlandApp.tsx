@@ -1362,15 +1362,16 @@ export function VeierlandApp() {
         {mode === 'places' && (
           <div className="vl-chips vl-panel-chips">
             <div className={`vl-chip${activeCats.size === 0 ? ' on' : ''}`} onClick={() => setActiveCats(new Set())}>
-              <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
               <span className="cl">{T.all}</span>
             </div>
             {[...catGroups.entries()].map(([groupName, groupCats]) => {
               const on = groupCats.some(k => activeCats.has(k));
-              const icon = catCfg[groupCats[0]]?.icon ?? 'wc';
+              const groupColor = catCfg[groupCats[0]]?.color ?? 'var(--muted)';
               return (
-                <div key={groupName} className={`vl-chip${on ? ' on' : ''}`} onClick={() => toggleGroup(groupCats)}>
-                  <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg(icon) }} />
+                <div key={groupName} className={`vl-chip${on ? ' on' : ''}`}
+                  style={{ '--chip-color': groupColor } as React.CSSProperties}
+                  onClick={() => toggleGroup(groupCats)}>
+                  <span className="cd" />
                   <span className="cl">{groupName}</span>
                 </div>
               );
@@ -1379,8 +1380,10 @@ export function VeierlandApp() {
               const cat = getCat(k);
               const on = activeCats.has(k);
               return (
-                <div key={k} className={`vl-chip${on ? ' on' : ''}`} onClick={() => toggleCat(k)}>
-                  <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
+                <div key={k} className={`vl-chip${on ? ' on' : ''}`}
+                  style={{ '--chip-color': cat.color } as React.CSSProperties}
+                  onClick={() => toggleCat(k)}>
+                  <span className="cd" />
                   <span className="cl">{lang === 'no' ? cat.no : cat.en}</span>
                 </div>
               );
@@ -1506,7 +1509,16 @@ export function VeierlandApp() {
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {(poi.kategorier ?? [poi.kategori]).map(k => {
             const c = getCat(k);
-            return <span key={k} className="vl-catpill">{lang === 'no' ? c.no : c.en}</span>;
+            return (
+              <span key={k} className="vl-catpill" style={{
+                background: `${c.color}1a`,
+                color: c.color,
+                borderColor: `${c.color}44`,
+              }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: c.color, display: 'inline-block', marginRight: 5, verticalAlign: 'middle', flexShrink: 0 }} />
+                {lang === 'no' ? c.no : c.en}
+              </span>
+            );
           })}
         </div>
         <div className="vl-h2">{poi.navn}</div>

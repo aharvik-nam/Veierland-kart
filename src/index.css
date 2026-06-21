@@ -1,17 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --ink: #1c1f1a;
-  --muted: #8b8f86;
-  --card: #ffffff;
-  --card2: #f5f6f3;
-  --line: #e6e7e2;
-  --line2: #f0f1ed;
+  --ink: #2c3825;
+  --muted: #7c876f;
+  --card: #fffdf8;
+  --card2: #f3f4ee;
+  --line: #e4e2d0;
+  --line2: #eceade;
   --accent: #4a7c64;
   --onaccent: #fff;
   --me: #4a7c64;
-  --page: #eceeea;
+  --page: #efece4;
   --font: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  --display: 'Bricolage Grotesque', 'Hanken Grotesk', system-ui, sans-serif;
   --r: 12px;
   --pad: 18px;
 }
@@ -286,26 +287,36 @@ body { display: grid; place-items: center; }
 }
 .vl-chips::-webkit-scrollbar { display: none; }
 .vl-chip {
-  display: inline-flex; align-items: center; height: 31px;
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 34px; padding: 0 14px;
   border-radius: 999px;
   background: var(--card);
   border: 1px solid var(--line);
-  box-shadow: 0 1px 3px rgba(28,38,30,.07);
-  overflow: hidden; flex: 0 0 auto; cursor: pointer; color: var(--ink);
-  transition: background .18s, color .18s, border-color .18s, padding .24s cubic-bezier(.3,.8,.3,1);
+  box-shadow: 0 2px 6px rgba(44,56,37,.07);
+  flex: 0 0 auto; cursor: pointer; color: var(--ink);
+  transition: background .18s, color .18s, border-color .18s, box-shadow .18s;
 }
+/* Colored dot (category chips) */
+.vl-chip .cd {
+  width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto;
+  background: var(--chip-color, var(--muted));
+  transition: background .18s;
+}
+/* Icon (history/nature chips) */
 .vl-chip .ci {
-  width: 31px; height: 31px; flex: 0 0 auto; display: grid; place-items: center;
+  flex: 0 0 auto; display: flex; align-items: center;
+  width: 16px; height: 16px;
 }
 .vl-chip .ci svg { width: 16px; height: 16px; }
+/* Label — always visible */
 .vl-chip .cl {
-  max-width: 0; opacity: 0; font-size: 12.5px; font-weight: 600;
-  transition: max-width .26s cubic-bezier(.3,.8,.3,1), opacity .18s;
-  white-space: nowrap;
+  font-size: 13px; font-weight: 600; white-space: nowrap;
 }
-.vl-chip.on { background: var(--ink); color: #fff; border-color: var(--ink); padding-right: 13px; }
-.vl-chip.on .ci { width: 29px; }
-.vl-chip.on .cl { max-width: 130px; opacity: 1; }
+.vl-chip.on {
+  background: var(--ink); color: #fff; border-color: var(--ink);
+  box-shadow: 0 3px 10px rgba(44,56,37,.18);
+}
+.vl-chip.on .cd { background: rgba(255,255,255,.85); }
 
 /* ── Panel: chips ────────────────────────────────────────────────────────────── */
 .vl-panel-chips {
@@ -380,7 +391,7 @@ body { display: grid; place-items: center; }
 .vl-sheet {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 600;
   background: var(--card);
-  border-radius: calc(var(--r) + 8px) calc(var(--r) + 8px) 0 0;
+  border-radius: 26px 26px 0 0;
   border-top: 1px solid var(--line);
   display: flex; flex-direction: column;
   transition: height .34s cubic-bezier(.3,.8,.3,1);
@@ -457,6 +468,7 @@ body { display: grid; place-items: center; }
 }
 .vl-h2 {
   margin: 11px 0 2px; font-size: 28px; font-weight: 700;
+  font-family: var(--display);
   letter-spacing: -.02em; line-height: 1.08;
 }
 .vl-sub { font-size: 14px; color: var(--muted); }
