@@ -1196,6 +1196,12 @@ export function VeierlandApp() {
         <div className="vl-sl-title">{lang === 'no' ? 'Historisk havnivå' : 'Historical sea level'}</div>
         <div className="vl-sl-label">
           {seaLevelLabel ?? (seaLevelM === 0 ? (lang === 'no' ? 'I dag' : 'Today') : `+${seaLevelM}m`)}
+          {historyView === 'garder' && seaLevelM > 0 && (() => {
+            const era = timelineSections.reduce((best, s) =>
+              Math.abs(s.sea_level_m - seaLevelM) < Math.abs(best.sea_level_m - seaLevelM) ? s : best
+            );
+            return era ? <span style={{ display: 'block', fontSize: 11, fontWeight: 400, opacity: 0.65, marginTop: 2 }}>{era.period}</span> : null;
+          })()}
         </div>
         <input type="range" min={0} max={15} step={1}
           value={seaLevelM} onChange={e => {
