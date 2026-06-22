@@ -609,6 +609,15 @@ export function VeierlandApp() {
     [farmData]
   );
 
+  // POIs highlighted on the map for the current timeline era
+  const eraHighlightPOIs = useMemo(() => {
+    if (mode !== 'history' || historyView !== 'tidslinje') return [];
+    const era = timelineSections[eraNavIdx];
+    if (!era?.poi_ids?.length) return [];
+    const idSet = new Set(era.poi_ids);
+    return allPOIs.filter(p => idSet.has(p.id) || idSet.has(p.navn));
+  }, [mode, historyView, eraNavIdx, timelineSections, allPOIs]);
+
   // Derive category list from actual POI data, filtered by showInFilter
   const allCats = useMemo(
     () => Array.from(new Set(allPOIs.flatMap(p => p.kategorier ?? [p.kategori]))).filter(k => catCfg[k]?.showInFilter),
@@ -1944,6 +1953,23 @@ export function VeierlandApp() {
           return (
             <Marker key={farm.name} position={coords} icon={icon}
               eventHandlers={{ click: () => { setSelectedFarm(farm); setSheetOpen(true); } }} />
+          );
+        })}
+        {eraHighlightPOIs.map(poi => {
+          const catIcon = catCfg[poi.kategori]?.icon ?? 'info';
+          const icon = L.divIcon({
+            className: '',
+            iconSize: [38, 38],
+            iconAnchor: [19, 19],
+            html: `<div style="width:38px;height:38px;border-radius:50%;background:#d97706;border:3px solid #fff;box-shadow:0 2px 12px rgba(217,119,6,.45),0 0 0 4px rgba(217,119,6,.18);display:flex;align-items:center;justify-content:center;"><svg viewBox="-10 -10 20 20" width="18" height="18" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[catIcon] ?? ICONS['info']}</svg></div>`,
+          });
+          return (
+            <Marker
+              key={`era-poi-${poi.id}`}
+              position={poi.coordinates}
+              icon={icon}
+              eventHandlers={{ click: () => { setSelectedPOI(poi); flyToAboveSheet(poi.coordinates, Math.max(mapRef.current?.getZoom() ?? 15, 15)); } }}
+            />
           );
         })}
         {userPos && (

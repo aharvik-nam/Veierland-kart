@@ -1368,13 +1368,111 @@ function GarderTab() {
 
 // ─── TidslinjeTab ─────────────────────────────────────────────────────────────
 
+// ─── POI multi-picker ─────────────────────────────────────────────────────────
+function PoiMultiPick({ selected, onChange, pois }: {
+  selected: string[];
+  onChange: (ids: string[]) => void;
+  pois: { id: string; navn: string; kategori: string }[];
+}) {
+  const [search, setSearch] = useState('');
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const filtered = pois.filter(p =>
+    !search ||
+    p.navn.toLowerCase().includes(search.toLowerCase()) ||
+    p.kategori.toLowerCase().includes(search.toLowerCase())
+  );
+  const toggle = (id: string) =>
+    onChange(selected.includes(id) ? selected.filter(x => x !== id) : [...selected, id]);
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative' }}>
+      {selected.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
+          {selected.map(id => {
+            const poi = pois.find(p => p.id === id);
+            return (
+              <span key={id} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'color-mix(in srgb, var(--accent) 11%, var(--card))', border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)', borderRadius: 20, padding: '3px 6px 3px 10px', fontSize: 12, fontWeight: 500 }}>
+                {poi?.navn ?? id}
+                <button type="button" onClick={() => toggle(id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', padding: '1px 3px', lineHeight: 1, fontSize: 14, borderRadius: 4 }}>×</button>
+              </span>
+            );
+          })}
+        </div>
+      )}
+      <div style={{ position: 'relative' }}>
+        <input
+          style={{ ...S.input, paddingRight: selected.length > 0 ? 44 : 11 }}
+          placeholder={pois.length ? `Søk blant ${pois.length} steder…` : 'Laster steder…'}
+          value={search}
+          onChange={e => { setSearch(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+        />
+        {selected.length > 0 && (
+          <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'var(--accent)', color: '#fff', borderRadius: 10, fontSize: 11, fontWeight: 700, padding: '2px 7px', pointerEvents: 'none' }}>
+            {selected.length}
+          </span>
+        )}
+      </div>
+      {open && filtered.length > 0 && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 999, background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 10, boxShadow: '0 8px 28px rgba(0,0,0,.13)', maxHeight: 270, overflowY: 'auto' }}>
+          {filtered.map(poi => {
+            const checked = selected.includes(poi.id);
+            return (
+              <label key={poi.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', cursor: 'pointer', background: checked ? 'color-mix(in srgb, var(--accent) 7%, var(--card))' : 'transparent', borderBottom: '1px solid var(--line2)' }}>
+                <input type="checkbox" checked={checked} onChange={() => toggle(poi.id)} style={{ width: 15, height: 15, accentColor: 'var(--accent)', flexShrink: 0 }} />
+                <span style={{ flex: 1, fontSize: 13.5, fontWeight: checked ? 600 : 400 }}>{poi.navn}</span>
+                <span style={{ fontSize: 11, color: 'var(--muted)', background: 'var(--line2)', borderRadius: 6, padding: '2px 7px', flexShrink: 0 }}>{poi.kategori}</span>
+              </label>
+            );
+          })}
+        </div>
+      )}
+      {open && filtered.length === 0 && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 999, background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 10, padding: '12px 14px', color: 'var(--muted)', fontSize: 13 }}>
+          Ingen treff for «{search}».
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── TidslinjeTab ─────────────────────────────────────────────────────────────
 function TidslinjeTab() {
   const [sections, setSections] = useState<TimelineSection[]>(DEFAULT_TIMELINE_SECTIONS);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [open, setOpen] = useState<number | null>(null);
+  const [allPois, setAllPois] = useState<{ id: string; navn: string; kategori: string }[]>([]);
 
   useEffect(() => { loadTimelineSections().then(setSections); }, []);
+
+  useEffect(() => {
+    getDoc(doc(db, COL, DOC['poi'])).then(snap => {
+      const raw = snap.exists() ? (snap.data().json ? JSON.parse(snap.data().json) : snap.data()) : poiFallback;
+      setAllPois(
+        ((raw as any).features ?? [])
+          .map((f: any) => ({ id: f.properties.id ?? f.properties.navn, navn: f.properties.navn ?? 'Ukjent', kategori: f.properties.kategori ?? '' }))
+          .sort((a: any, b: any) => a.navn.localeCompare(b.navn, 'no'))
+      );
+    }).catch(() => {
+      setAllPois(
+        (poiFallback.features ?? [])
+          .map((f: any) => ({ id: f.properties.id ?? f.properties.navn, navn: f.properties.navn ?? 'Ukjent', kategori: f.properties.kategori ?? '' }))
+          .sort((a: any, b: any) => a.navn.localeCompare(b.navn, 'no'))
+      );
+    });
+  }, []);
 
   const update = (idx: number, patch: Partial<TimelineSection>) => {
     setSections(prev => prev.map((s, i) => i === idx ? { ...s, ...patch } : s));
@@ -1451,6 +1549,17 @@ function TidslinjeTab() {
                 <div style={rowStyle}>
                   <label style={labelStyle}>Kontekst Norge</label>
                   <textarea style={{ ...fieldStyle, minHeight: 60, resize: 'vertical' }} value={sec.kontekst_norge} onChange={e => update(idx, { kontekst_norge: e.target.value })} />
+                </div>
+                <div style={rowStyle}>
+                  <label style={labelStyle}>Steder synlige på kartet for denne epoken</label>
+                  <PoiMultiPick
+                    selected={sec.poi_ids ?? []}
+                    onChange={ids => update(idx, { poi_ids: ids })}
+                    pois={allPois}
+                  />
+                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 5 }}>
+                    Disse stedene vises som markerte pinner på kartet når brukeren er på denne epoken.
+                  </div>
                 </div>
                 <div style={rowStyle}>
                   <label style={labelStyle}>Havnivå (meter over i dag, 0–15)</label>

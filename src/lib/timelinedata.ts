@@ -13,6 +13,7 @@ export interface TimelineSection {
   sea_level_m: number;
   image?: string;
   image_caption?: string;
+  poi_ids?: string[];
 }
 
 // Default sea levels per era — moved here so they travel with the data,
