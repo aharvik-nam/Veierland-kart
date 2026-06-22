@@ -36,47 +36,46 @@ function groupByCat<T>(items: T[], getKey: (t: T) => string): Map<string, T[]> {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const S = {
-  page: { minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)', fontFamily: 'inherit', fontSize: 14 } as React.CSSProperties,
-  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', background: 'var(--card)', borderBottom: '1px solid var(--line)', position: 'sticky' as const, top: 0, zIndex: 100 },
-  h1: { margin: 0, fontSize: 17, fontWeight: 700 },
-  tabs: { display: 'flex', padding: '0 20px', background: 'var(--card)', borderBottom: '1px solid var(--line)' },
-  tab: (active: boolean): React.CSSProperties => ({ padding: '10px 18px', border: 'none', background: 'none', cursor: 'pointer', fontWeight: active ? 600 : 400, fontSize: 14, color: active ? 'var(--accent)' : 'var(--muted)', borderBottom: active ? '2px solid var(--accent)' : '2px solid transparent', marginBottom: -1 }),
-  body: { padding: '20px', maxWidth: 820, margin: '0 auto' },
-  pill: (v: 'primary' | 'secondary' | 'danger'): React.CSSProperties => ({ padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, background: v === 'primary' ? 'var(--accent)' : v === 'danger' ? '#e53e3e' : 'var(--card)', color: v === 'secondary' ? 'var(--ink)' : '#fff', boxShadow: v === 'secondary' ? '0 0 0 1px var(--line)' : 'none' }),
-  featureRow: { background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 10, marginBottom: 6, overflow: 'hidden' },
-  featureHdr: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', userSelect: 'none' as const, background: 'none', border: 'none', flex: 1, textAlign: 'left' as const, font: 'inherit', color: 'inherit', minWidth: 0 },
-  chev: (open: boolean): React.CSSProperties => ({ transition: 'transform .2s', transform: open ? 'rotate(180deg)' : 'none', color: 'var(--muted)', flexShrink: 0 }),
-  editGrid: { padding: '14px 16px 16px', borderTop: '1px solid var(--line)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 16px' },
+  page: { minHeight: '100vh', background: 'var(--page)', color: 'var(--ink)', fontFamily: "'Hanken Grotesk', system-ui, sans-serif", fontSize: 14 } as React.CSSProperties,
+  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', height: 56, background: 'var(--card)', borderBottom: '1px solid var(--line)', position: 'sticky' as const, top: 0, zIndex: 100, boxShadow: '0 1px 4px rgba(0,0,0,.05)' },
+  h1: { margin: 0, fontSize: 15, fontWeight: 700, letterSpacing: '-.01em', display: 'flex', alignItems: 'center', gap: 8 },
+  tabs: { display: 'flex', padding: '0 24px', background: 'var(--card)', borderBottom: '1px solid var(--line)', gap: 2 },
+  tab: (active: boolean): React.CSSProperties => ({ padding: '13px 15px', border: 'none', background: 'none', cursor: 'pointer', fontWeight: active ? 600 : 400, fontSize: 13.5, color: active ? 'var(--accent)' : 'var(--ink2)', borderBottom: active ? '2px solid var(--accent)' : '2px solid transparent', marginBottom: -1, letterSpacing: '-.01em', whiteSpace: 'nowrap' }),
+  body: { padding: '24px', maxWidth: 860, margin: '0 auto' },
+  pill: (v: 'primary' | 'secondary' | 'danger'): React.CSSProperties => ({ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, background: v === 'primary' ? 'var(--accent)' : v === 'danger' ? '#dc2626' : 'var(--card)', color: v === 'secondary' ? 'var(--ink)' : '#fff', boxShadow: v === 'secondary' ? 'inset 0 0 0 1px var(--line)' : v === 'primary' ? '0 1px 4px rgba(74,124,100,.25)' : '0 1px 3px rgba(220,38,38,.2)', letterSpacing: '-.01em' }),
+  featureRow: { background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12, marginBottom: 7, overflow: 'hidden' },
+  featureHdr: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', cursor: 'pointer', userSelect: 'none' as const, background: 'none', border: 'none', flex: 1, textAlign: 'left' as const, font: 'inherit', color: 'inherit', minWidth: 0 },
+  chev: (open: boolean): React.CSSProperties => ({ transition: 'transform .2s', transform: open ? 'rotate(180deg)' : 'none', color: 'var(--muted)', flexShrink: 0, display: 'block' }),
+  editGrid: { padding: '18px 18px 20px', borderTop: '1px solid var(--line)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 18px', background: 'var(--card2)' },
   fullSpan: { gridColumn: '1 / -1' } as React.CSSProperties,
-  label: { display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', marginBottom: 4, textTransform: 'uppercase' as const, letterSpacing: '.04em' },
-  input: { width: '100%', boxSizing: 'border-box' as const, padding: '7px 10px', borderRadius: 7, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 13, font: 'inherit' },
-  textarea: { width: '100%', boxSizing: 'border-box' as const, padding: '7px 10px', borderRadius: 7, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 13, font: 'inherit', resize: 'vertical' as const, minHeight: 72 },
-  imgPreview: { marginTop: 6, borderRadius: 7, maxHeight: 120, maxWidth: '100%', border: '1px solid var(--line)', objectFit: 'cover' as const },
-  deleteBtn: { gridColumn: '1 / -1', padding: '7px 14px', borderRadius: 7, border: '1px solid #e53e3e', background: 'none', color: '#e53e3e', fontSize: 13, cursor: 'pointer', fontWeight: 500, justifySelf: 'end' } as React.CSSProperties,
-  addBtn: { width: '100%', padding: '10px', borderRadius: 10, border: '2px dashed var(--line)', background: 'none', color: 'var(--muted)', fontSize: 14, cursor: 'pointer', marginTop: 8 },
-  fileActions: { display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' as const },
-  infoBox: { background: 'color-mix(in srgb, var(--accent) 8%, var(--card))', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)', borderRadius: 10, padding: '12px 14px', marginBottom: 16, fontSize: 13 },
-  login: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' },
-  loginCard: { background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 16, padding: '36px 32px', width: 320 },
-  loginTitle: { fontSize: 22, fontWeight: 700, marginBottom: 6, textAlign: 'center' as const },
-  loginSub: { fontSize: 13, color: 'var(--muted)', textAlign: 'center' as const, marginBottom: 20 },
-  loginInput: { width: '100%', boxSizing: 'border-box' as const, padding: '10px 12px', borderRadius: 9, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 15, font: 'inherit', marginBottom: 10 },
-  loginBtn: { width: '100%', padding: '11px', borderRadius: 9, border: 'none', background: 'var(--accent)', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', font: 'inherit' },
-  error: { color: '#e53e3e', fontSize: 13, marginTop: 8, textAlign: 'center' as const },
-  notConfigured: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' },
-  // New styles
-  toolbar: { display: 'flex', gap: 10, marginBottom: 14, alignItems: 'center', flexWrap: 'wrap' as const },
-  searchInput: { flex: 1, minWidth: 160, boxSizing: 'border-box' as const, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 13, font: 'inherit' },
-  selectInput: { padding: '8px 10px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 13, font: 'inherit', cursor: 'pointer' } as React.CSSProperties,
-  groupHeader: { fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' as const, letterSpacing: '.08em', padding: '14px 0 5px', display: 'flex', alignItems: 'center', gap: 8 } as React.CSSProperties,
-  groupBadge: { background: 'var(--line)', borderRadius: 10, padding: '1px 8px', fontSize: 11, fontWeight: 600 } as React.CSSProperties,
-  moveBtn: { background: 'none', border: '1px solid var(--line)', borderRadius: 5, color: 'var(--muted)', width: 26, height: 26, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, flexShrink: 0 } as React.CSSProperties,
-  catPanel: { background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 10, marginBottom: 16, overflow: 'hidden' } as React.CSSProperties,
-  catPanelHdr: { display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', cursor: 'pointer', background: 'none', border: 'none', width: '100%', font: 'inherit', color: 'inherit', textAlign: 'left' as const },
-  catBody: { padding: '4px 16px 16px' } as React.CSSProperties,
-  catItem: { display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 } as React.CSSProperties,
-  catInput: { flex: 1, padding: '6px 9px', borderRadius: 6, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--ink)', fontSize: 13, font: 'inherit' } as React.CSSProperties,
-  catDelBtn: { background: 'none', border: '1px solid #e53e3e', borderRadius: 6, color: '#e53e3e', width: 28, height: 28, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, flexShrink: 0 } as React.CSSProperties,
+  label: { display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--muted)', marginBottom: 5, textTransform: 'uppercase' as const, letterSpacing: '.06em' },
+  input: { width: '100%', boxSizing: 'border-box' as const, padding: '8px 11px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', fontSize: 13.5, font: 'inherit' },
+  textarea: { width: '100%', boxSizing: 'border-box' as const, padding: '8px 11px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', fontSize: 13.5, font: 'inherit', resize: 'vertical' as const, minHeight: 80 },
+  imgPreview: { marginTop: 8, borderRadius: 10, maxHeight: 140, maxWidth: '100%', border: '1px solid var(--line)', objectFit: 'cover' as const, display: 'block' },
+  deleteBtn: { gridColumn: '1 / -1', padding: '8px 16px', borderRadius: 8, border: '1px solid #fecaca', background: '#fff5f5', color: '#dc2626', fontSize: 13, cursor: 'pointer', fontWeight: 500, justifySelf: 'end', letterSpacing: '-.01em' } as React.CSSProperties,
+  addBtn: { width: '100%', padding: '12px', borderRadius: 12, border: '2px dashed var(--line)', background: 'none', color: 'var(--accent)', fontSize: 14, cursor: 'pointer', marginTop: 10, fontWeight: 500, letterSpacing: '-.01em' },
+  fileActions: { display: 'flex', gap: 8, marginBottom: 18, alignItems: 'center', flexWrap: 'wrap' as const, padding: '12px 16px', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12 },
+  infoBox: { background: 'color-mix(in srgb, var(--accent) 8%, var(--card))', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 13, lineHeight: 1.55 },
+  login: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--page)' },
+  loginCard: { background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 20, padding: '40px 36px', width: 340, boxShadow: '0 4px 28px rgba(0,0,0,.09)' },
+  loginTitle: { fontSize: 26, fontWeight: 600, marginBottom: 4, textAlign: 'center' as const, fontFamily: "'Newsreader', Georgia, serif", letterSpacing: '-.02em' },
+  loginSub: { fontSize: 13, color: 'var(--muted)', textAlign: 'center' as const, marginBottom: 24 },
+  loginInput: { width: '100%', boxSizing: 'border-box' as const, padding: '11px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--card2)', color: 'var(--ink)', fontSize: 15, font: 'inherit', marginBottom: 10 },
+  loginBtn: { width: '100%', padding: '12px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', font: 'inherit', letterSpacing: '-.01em', boxShadow: '0 2px 10px rgba(74,124,100,.3)' },
+  error: { color: '#dc2626', fontSize: 13, marginTop: 10, textAlign: 'center' as const, fontWeight: 500 },
+  notConfigured: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--page)' },
+  toolbar: { display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' as const },
+  searchInput: { flex: 1, minWidth: 160, boxSizing: 'border-box' as const, padding: '9px 13px', borderRadius: 9, border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', fontSize: 13.5, font: 'inherit' },
+  selectInput: { padding: '9px 11px', borderRadius: 9, border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', fontSize: 13.5, font: 'inherit', cursor: 'pointer' } as React.CSSProperties,
+  groupHeader: { fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' as const, letterSpacing: '.08em', padding: '18px 0 7px', display: 'flex', alignItems: 'center', gap: 8 } as React.CSSProperties,
+  groupBadge: { background: 'var(--line2)', border: '1px solid var(--line)', borderRadius: 10, padding: '2px 8px', fontSize: 11, fontWeight: 600 } as React.CSSProperties,
+  moveBtn: { background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 7, color: 'var(--muted)', width: 28, height: 28, cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, flexShrink: 0 } as React.CSSProperties,
+  catPanel: { background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12, marginBottom: 18, overflow: 'hidden' } as React.CSSProperties,
+  catPanelHdr: { display: 'flex', alignItems: 'center', gap: 8, padding: '14px 18px', cursor: 'pointer', background: 'none', border: 'none', width: '100%', font: 'inherit', color: 'inherit', textAlign: 'left' as const },
+  catBody: { padding: '6px 18px 18px', background: 'var(--card2)', borderTop: '1px solid var(--line)' } as React.CSSProperties,
+  catItem: { display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6, marginTop: 8 } as React.CSSProperties,
+  catInput: { flex: 1, padding: '7px 11px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', fontSize: 13.5, font: 'inherit' } as React.CSSProperties,
+  catDelBtn: { background: 'none', border: '1px solid #fecaca', borderRadius: 7, color: '#dc2626', width: 30, height: 30, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, flexShrink: 0 } as React.CSSProperties,
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -110,14 +109,26 @@ function LoginForm({ onLogin }: { onLogin: (u: User) => void }) {
   return (
     <div style={S.login}>
       <div style={S.loginCard}>
-        <div style={S.loginTitle}>Admin</div>
-        <div style={S.loginSub}>Logg inn med Firebase-konto</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: 'color-mix(in srgb, var(--accent) 12%, var(--card))', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z" />
+              <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+              <path d="M9 9h.01M15 9h.01" />
+            </svg>
+          </div>
+        </div>
+        <div style={S.loginTitle}>Veierland</div>
+        <div style={S.loginSub}>Logg inn for å redigere kartdata</div>
         <form onSubmit={submit}>
           <input type="email" placeholder="E-post" autoFocus style={S.loginInput} value={email} onChange={e => setEmail(e.target.value)} />
           <input type="password" placeholder="Passord" style={S.loginInput} value={pw} onChange={e => setPw(e.target.value)} />
           <button type="submit" style={S.loginBtn} disabled={loading}>{loading ? 'Logger inn…' : 'Logg inn'}</button>
           {err && <p style={S.error}>{err}</p>}
         </form>
+        <div style={{ marginTop: 20, textAlign: 'center' }}>
+          <a href="/" style={{ fontSize: 13, color: 'var(--muted)', textDecoration: 'none' }}>← Tilbake til kartet</a>
+        </div>
       </div>
     </div>
   );
@@ -205,9 +216,12 @@ function CategoriesPanel({ cats, onChange, onSave, saving }: {
   return (
     <div style={S.catPanel}>
       <button style={S.catPanelHdr} onClick={() => setOpen(o => !o)}>
+        <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="2" width="5" height="5" rx="1.5"/><rect x="9" y="2" width="5" height="5" rx="1.5"/><rect x="2" y="9" width="5" height="5" rx="1.5"/><rect x="9" y="9" width="5" height="5" rx="1.5"/>
+        </svg>
         <span style={{ fontWeight: 600, fontSize: 14 }}>Administrer kategorier</span>
-        <span style={{ fontSize: 12, color: 'var(--muted)' }}>{cats.length} kategorier</span>
-        <span style={{ marginLeft: 'auto', color: 'var(--muted)' }}>{open ? '▴' : '▾'}</span>
+        <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 4 }}>{cats.length} stk</span>
+        <svg style={{ marginLeft: 'auto', transition: 'transform .2s', transform: open ? 'rotate(180deg)' : 'none', color: 'var(--muted)' }} viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="4,6 8,10 12,6"/></svg>
       </button>
       {open && (
         <div style={S.catBody}>
@@ -217,7 +231,7 @@ function CategoriesPanel({ cats, onChange, onSave, saving }: {
               <button style={S.catDelBtn} onClick={() => remove(i)} title="Slett kategori">✕</button>
             </div>
           ))}
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
             <input
               style={{ ...S.catInput, flex: 1 }}
               placeholder="Ny kategori…"
@@ -225,11 +239,12 @@ function CategoriesPanel({ cats, onChange, onSave, saving }: {
               onChange={e => setNewCat(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && add()}
             />
-            <button style={{ ...S.pill('secondary'), padding: '6px 14px' }} onClick={add}>+ Legg til</button>
+            <button style={{ ...S.pill('secondary'), padding: '7px 14px' }} onClick={add}>+ Legg til</button>
           </div>
-          <div style={{ marginTop: 12 }}>
+          <div style={{ marginTop: 14 }}>
             <button style={S.pill('primary')} onClick={() => onSave(cats)} disabled={saving}>
-              {saving ? 'Lagrer…' : '💾 Lagre kategorier til Firebase'}
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M13 13H3V3h7l3 3v7z"/><path d="M10 13V9H6v4"/><path d="M6 3v3h5"/></svg>
+              {saving ? 'Lagrer…' : 'Lagre kategorier til Firebase'}
             </button>
           </div>
         </div>
@@ -313,6 +328,12 @@ function PoiEditor({ feature, onChange, onDelete, categories }: {
   const setLatLon = (newLat: number, newLon: number) => {
     onChange({ ...feature, geometry: { ...feature.geometry, coordinates: [newLon, newLat] } });
   };
+  const secDivider = (title: string) => (
+    <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--line)', paddingTop: 16, marginTop: 4 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' as const, letterSpacing: '.08em', marginBottom: 12 }}>{title}</div>
+    </div>
+  );
+
   return (
     <div style={S.editGrid}>
       <Field label="Navn" full><input style={S.input} value={p.navn ?? ''} onChange={e => setP('navn', e.target.value)} /></Field>
@@ -337,7 +358,7 @@ function PoiEditor({ feature, onChange, onDelete, categories }: {
           })}
         </div>
         {(p.kategorier ?? [p.kategori]).filter(Boolean).length === 0 && (
-          <div style={{ fontSize: 11, color: '#e53e3e', marginTop: 2 }}>Velg minst én kategori</div>
+          <div style={{ fontSize: 11, color: '#dc2626', marginTop: 2 }}>Velg minst én kategori</div>
         )}
       </Field>
       <Field label="Verifisert">
@@ -345,14 +366,17 @@ function PoiEditor({ feature, onChange, onDelete, categories }: {
           <option value="ja">Ja</option><option value="nei">Nei (omtrentlig)</option>
         </select>
       </Field>
+      {secDivider('Innhold')}
       <Field label="Kortbeskrivelse" full><textarea style={S.textarea} value={p.beskrivelse ?? ''} onChange={e => setP('beskrivelse', e.target.value)} rows={3} /></Field>
-      <Field label="Les mer (utvidet tekst)" full><textarea style={S.textarea} value={p.beskrivelse_lang ?? ''} onChange={e => setP('beskrivelse_lang', e.target.value)} rows={5} placeholder="Vises kun når brukeren trykker «Les mer»…" /></Field>
+      <Field label="Les mer (utvidet tekst)" full><textarea style={{ ...S.textarea, minHeight: 100 }} value={p.beskrivelse_lang ?? ''} onChange={e => setP('beskrivelse_lang', e.target.value)} rows={5} placeholder="Vises kun når brukeren trykker «Les mer»…" /></Field>
       <Field label="Nettside (URL)" full><input style={S.input} type="url" value={p.nettside ?? ''} onChange={e => setP('nettside', e.target.value)} placeholder="https://…" /></Field>
+      {secDivider('Bilde')}
       <Field label="Bilde (URL)" full>
         <input style={S.input} type="url" value={p.bilde ?? ''} onChange={e => setP('bilde', e.target.value)} placeholder="https://…" />
         {p.bilde && <img src={p.bilde} alt="" style={S.imgPreview} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
       </Field>
       <Field label="Bildekilde / lisens" full><input style={S.input} value={p.bilde_lisens ?? ''} onChange={e => setP('bilde_lisens', e.target.value)} placeholder="CC BY 2.0 – Navn Navnesen" /></Field>
+      {secDivider('Koordinater')}
       <CoordPasteField onParse={setLatLon} />
       <Field label="Breddegrad (lat)"><input style={S.input} type="number" step="0.000001" value={lat} onChange={e => setCoord('lat', e.target.value)} /></Field>
       <Field label="Lengdegrad (lon)"><input style={S.input} type="number" step="0.000001" value={lon} onChange={e => setCoord('lon', e.target.value)} /></Field>
@@ -432,27 +456,23 @@ function FeatureRow({ label, meta, children, onMoveUp, onMoveDown }: {
   const [open, setOpen] = useState(false);
   const showArrows = onMoveUp !== undefined || onMoveDown !== undefined;
   return (
-    <div style={S.featureRow}>
+    <div style={{ ...S.featureRow, boxShadow: open ? '0 2px 10px rgba(0,0,0,.06)' : 'none' }}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <button style={S.featureHdr} onClick={() => setOpen(o => !o)}>
-          <span style={{ fontWeight: 600, fontSize: 14, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
-          {meta && <span style={{ fontSize: 12, color: 'var(--muted)', flexShrink: 0 }}>{meta}</span>}
-          <span style={S.chev(open)}>▾</span>
+          <span style={{ fontWeight: 500, fontSize: 14, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-.01em' }}>{label}</span>
+          {meta && (
+            <span style={{ fontSize: 11, color: 'var(--muted)', flexShrink: 0, background: 'var(--line2)', borderRadius: 6, padding: '2px 8px', fontWeight: 500 }}>
+              {meta}
+            </span>
+          )}
+          <svg style={S.chev(open)} viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="4,6 8,10 12,6" />
+          </svg>
         </button>
         {showArrows && (
-          <div style={{ display: 'flex', gap: 3, paddingRight: 10, flexShrink: 0 }}>
-            <button
-              style={{ ...S.moveBtn, opacity: onMoveUp ? 1 : 0.25 }}
-              onClick={onMoveUp}
-              disabled={!onMoveUp}
-              title="Flytt opp"
-            >↑</button>
-            <button
-              style={{ ...S.moveBtn, opacity: onMoveDown ? 1 : 0.25 }}
-              onClick={onMoveDown}
-              disabled={!onMoveDown}
-              title="Flytt ned"
-            >↓</button>
+          <div style={{ display: 'flex', gap: 3, paddingRight: 12, flexShrink: 0 }}>
+            <button style={{ ...S.moveBtn, opacity: onMoveUp ? 1 : 0.25 }} onClick={onMoveUp} disabled={!onMoveUp} title="Flytt opp">↑</button>
+            <button style={{ ...S.moveBtn, opacity: onMoveDown ? 1 : 0.25 }} onClick={onMoveDown} disabled={!onMoveDown} title="Flytt ned">↓</button>
           </div>
         )}
       </div>
@@ -482,15 +502,23 @@ function FileActions({ tab, data, onUpload, dirty, onSave, saving, seeded }: {
   };
   return (
     <div style={S.fileActions}>
-      <button style={S.pill('secondary')} onClick={download}>⬇ Last ned JSON</button>
-      <button style={S.pill('secondary')} onClick={() => uploadRef.current?.click()}>⬆ Last opp JSON</button>
+      <button style={S.pill('secondary')} onClick={download}>
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="8,3 8,11"/><polyline points="5,8 8,11 11,8"/><polyline points="3,13 13,13"/></svg>
+        Last ned JSON
+      </button>
+      <button style={S.pill('secondary')} onClick={() => uploadRef.current?.click()}>
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="8,11 8,3"/><polyline points="5,6 8,3 11,6"/><polyline points="3,13 13,13"/></svg>
+        Last opp JSON
+      </button>
       <input ref={uploadRef} type="file" accept=".json,.geojson" style={{ display: 'none' }} onChange={handleUpload} />
+      <div style={{ flex: 1 }} />
+      {dirty && seeded && <span style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 500 }}>Ulagrede endringer</span>}
       {(dirty || !seeded) && (
         <button style={S.pill('primary')} onClick={onSave} disabled={saving}>
-          {saving ? 'Lagrer…' : !seeded ? '⬆ Last opp til Firebase' : '💾 Lagre til Firebase'}
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M13 13H3V3h7l3 3v7z"/><path d="M10 13V9H6v4"/><path d="M6 3v3h5"/></svg>
+          {saving ? 'Lagrer…' : !seeded ? 'Last opp til Firebase' : 'Lagre til Firebase'}
         </button>
       )}
-      {dirty && seeded && <span style={{ fontSize: 12, color: 'var(--muted)' }}>Ulagrede endringer</span>}
     </div>
   );
 }
@@ -562,8 +590,9 @@ function PoiTab() {
       <FileActions tab="poi" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} seeded={seeded} />
       {err && <p style={{ color: '#e53e3e', marginBottom: 12 }}>{err}</p>}
       {!seeded && (
-        <div style={{ ...S.infoBox, marginBottom: 16 }}>
-          ⚠️ Ingen data i Firebase ennå — viser lokal JSON. Trykk «Last opp til Firebase» for å laste opp.
+        <div style={{ ...S.infoBox, marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="#b45309" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><path d="M10 2L2 17h16L10 2z"/><line x1="10" y1="9" x2="10" y2="13"/><circle cx="10" cy="16" r=".5" fill="#b45309"/></svg>
+          <span style={{ color: '#92400e' }}>Ingen data i Firebase ennå — viser lokal JSON. Trykk «Last opp til Firebase» for å laste opp.</span>
         </div>
       )}
 
@@ -1082,10 +1111,18 @@ function CategoryConfigTab() {
         <button style={S.pill('secondary')} onClick={addCategory}>+ Legg til kategori</button>
       </div>
 
-      <button style={S.pill('primary')} onClick={save} disabled={saving}>
-        {saving ? 'Lagrer…' : saved ? '✓ Lagret' : '💾 Lagre til Firebase'}
-      </button>
-      {saved && <span style={{ fontSize: 12, color: '#38a169', marginLeft: 10 }}>Endringene er aktive etter neste sideoppdatering.</span>}
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '16px 20px', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12 }}>
+        <button style={S.pill('primary')} onClick={save} disabled={saving}>
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M13 13H3V3h7l3 3v7z"/><path d="M10 13V9H6v4"/><path d="M6 3v3h5"/></svg>
+          {saving ? 'Lagrer…' : 'Lagre til Firebase'}
+        </button>
+        {saved && (
+          <span style={{ fontSize: 13, color: '#16a34a', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 500 }}>
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="2,8 6,12 14,4"/></svg>
+            Lagret! Endringer er aktive etter neste sideoppdatering.
+          </span>
+        )}
+      </div>
     </>
   );
 }
@@ -1313,11 +1350,17 @@ function GarderTab() {
         <FarmEditor key={farm.name} farm={farm}
           onChange={patch => update(farm.name, patch)} />
       ))}
-      <div style={{ marginTop: 20, display: 'flex', gap: 12, alignItems: 'center' }}>
+      <div style={{ marginTop: 24, display: 'flex', gap: 12, alignItems: 'center', padding: '16px 20px', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12 }}>
         <button style={S.pill('primary')} onClick={save} disabled={saving}>
-          {saving ? 'Lagrer…' : '💾 Lagre til Firebase'}
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M13 13H3V3h7l3 3v7z"/><path d="M10 13V9H6v4"/><path d="M6 3v3h5"/></svg>
+          {saving ? 'Lagrer…' : 'Lagre til Firebase'}
         </button>
-        {saved && <span style={{ fontSize: 12, color: '#38a169' }}>Lagret! Endringer vises etter neste sideoppdatering.</span>}
+        {saved && (
+          <span style={{ fontSize: 13, color: '#16a34a', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 500 }}>
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="2,8 6,12 14,4"/></svg>
+            Lagret! Endringer vises etter neste sideoppdatering.
+          </span>
+        )}
       </div>
     </div>
   );
@@ -1453,11 +1496,17 @@ function TidslinjeTab() {
           </div>
         );
       })}
-      <div style={{ marginTop: 20, display: 'flex', gap: 12, alignItems: 'center' }}>
+      <div style={{ marginTop: 24, display: 'flex', gap: 12, alignItems: 'center', padding: '16px 20px', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12 }}>
         <button style={S.pill('primary')} onClick={save} disabled={saving}>
-          {saving ? 'Lagrer…' : '💾 Lagre til Firebase'}
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M13 13H3V3h7l3 3v7z"/><path d="M10 13V9H6v4"/><path d="M6 3v3h5"/></svg>
+          {saving ? 'Lagrer…' : 'Lagre til Firebase'}
         </button>
-        {saved && <span style={{ fontSize: 12, color: '#38a169' }}>Lagret! Endringer vises etter neste sideoppdatering.</span>}
+        {saved && (
+          <span style={{ fontSize: 13, color: '#16a34a', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 500 }}>
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="2,8 6,12 14,4"/></svg>
+            Lagret! Endringer vises etter neste sideoppdatering.
+          </span>
+        )}
       </div>
     </div>
   );
@@ -1494,20 +1543,41 @@ export function AdminPage() {
   if (user === undefined) return null;
   if (!user) return <LoginForm onLogin={setUser} />;
 
+  const TAB_LABELS: Record<Tab, string> = {
+    poi: 'Steder', stedsnavn: 'Stedsnavn', turer: 'Turer',
+    kategorier: 'Kategorier', garder: 'Gårder', tidslinje: 'Tidslinje',
+  };
+
   return (
     <div style={S.page}>
       <div style={S.header}>
-        <h1 style={S.h1}>Admin – Veierland kart</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 12, color: 'var(--muted)' }}>{user.email}</span>
-          <a href="/" style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none' }}>← Kart</a>
-          <button style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 8, color: 'var(--muted)', fontSize: 13, padding: '5px 12px', cursor: 'pointer' }} onClick={() => signOut(auth)}>Logg ut</button>
+        <h1 style={S.h1}>
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: 'var(--accent)' }}>
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 1C5.2 1 3 3.2 3 6c0 3.8 5 9 5 9s5-5.2 5-9c0-2.8-2.2-5-5-5z"/>
+              <circle cx="8" cy="6" r="1.5"/>
+            </svg>
+          </span>
+          <span>Veierland</span>
+          <span style={{ color: 'var(--line)', fontWeight: 300 }}>·</span>
+          <span style={{ color: 'var(--muted)', fontWeight: 400 }}>Admin</span>
+        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 12, color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><circle cx="7" cy="5" r="2.5"/><path d="M2 12c0-2.8 2.2-4.5 5-4.5s5 1.7 5 4.5"/></svg>
+            {user.email}
+          </span>
+          <a href="/" style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 500 }}>
+            <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><polyline points="8,2 3,7 8,12"/></svg>
+            Kart
+          </a>
+          <button style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 8, color: 'var(--ink2)', fontSize: 13, padding: '5px 12px', cursor: 'pointer', fontWeight: 500 }} onClick={() => signOut(auth)}>Logg ut</button>
         </div>
       </div>
       <div style={S.tabs}>
         {(['poi', 'stedsnavn', 'turer', 'kategorier', 'garder', 'tidslinje'] as Tab[]).map(t => (
           <button key={t} style={S.tab(tab === t)} onClick={() => setTab(t)}>
-            {t === 'poi' ? 'Steder' : t === 'stedsnavn' ? 'Stedsnavn' : t === 'turer' ? 'Turer' : t === 'kategorier' ? 'Kategorier' : t === 'garder' ? 'Gårder' : 'Tidslinje'}
+            {TAB_LABELS[t]}
           </button>
         ))}
       </div>
