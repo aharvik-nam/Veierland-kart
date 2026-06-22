@@ -514,6 +514,7 @@ export function VeierlandApp() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [trailPath, setTrailPath] = useState<[number, number][] | null>(null);
   const [heartAnim, setHeartAnim] = useState(false);
+  const [lesmerExpanded, setLesmerExpanded] = useState(false);
 
   // History state
   const [historyView, setHistoryView] = useState<'tidslinje' | 'garder'>('tidslinje');
@@ -656,6 +657,7 @@ export function VeierlandApp() {
   // Fetch API data for selected POI
   useEffect(() => {
     if (!selectedPOI) return;
+    setLesmerExpanded(false);
     setSnlData(null); setLokalData(null); setDimuData([]); setWikimediaImages([]);
     let alive = true;
     setApiLoading(true);
@@ -1591,6 +1593,18 @@ export function VeierlandApp() {
         </div>
         <div className="vl-h2">{poi.navn}</div>
         <p className="vl-desc">{poi.beskrivelse}</p>
+        {poi.beskrivelse_lang && !lesmerExpanded && (
+          <button
+            onClick={() => setLesmerExpanded(true)}
+            style={{ background: 'none', border: 'none', padding: 0, color: 'var(--accent)', fontWeight: 600, fontSize: 14, cursor: 'pointer', marginTop: -8, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 4 }}
+          >
+            Les mer
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+        )}
+        {poi.beskrivelse_lang && lesmerExpanded && (
+          <p className="vl-desc" style={{ marginTop: -8 }}>{poi.beskrivelse_lang}</p>
+        )}
 
         {poi.bilde && (
           <div className="vl-poi-static-img">

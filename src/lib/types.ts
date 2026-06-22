@@ -9,6 +9,7 @@ export interface POI {
   kategori: "bad" | "ferge" | "kultur" | "hvalfangst" | "info" | "havn" | string;
   kategorier: string[];
   beskrivelse: string;
+  beskrivelse_lang?: string;
   coordinates: [number, number];
   snl_søkeord?: string;
   lokalhistoriewiki?: string;

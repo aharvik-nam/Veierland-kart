@@ -345,7 +345,8 @@ function PoiEditor({ feature, onChange, onDelete, categories }: {
           <option value="ja">Ja</option><option value="nei">Nei (omtrentlig)</option>
         </select>
       </Field>
-      <Field label="Beskrivelse" full><textarea style={S.textarea} value={p.beskrivelse ?? ''} onChange={e => setP('beskrivelse', e.target.value)} rows={3} /></Field>
+      <Field label="Kortbeskrivelse" full><textarea style={S.textarea} value={p.beskrivelse ?? ''} onChange={e => setP('beskrivelse', e.target.value)} rows={3} /></Field>
+      <Field label="Les mer (utvidet tekst)" full><textarea style={S.textarea} value={p.beskrivelse_lang ?? ''} onChange={e => setP('beskrivelse_lang', e.target.value)} rows={5} placeholder="Vises kun når brukeren trykker «Les mer»…" /></Field>
       <Field label="Nettside (URL)" full><input style={S.input} type="url" value={p.nettside ?? ''} onChange={e => setP('nettside', e.target.value)} placeholder="https://…" /></Field>
       <Field label="Bilde (URL)" full>
         <input style={S.input} type="url" value={p.bilde ?? ''} onChange={e => setP('bilde', e.target.value)} placeholder="https://…" />
