@@ -523,7 +523,7 @@ export function VeierlandApp() {
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
   const [eraNavIdx, setEraNavIdx] = useState(0);
   const [timelineSections, setTimelineSections] = useState<TimelineSection[]>(DEFAULT_TIMELINE_SECTIONS);
-  const [seaLevelM, setSeaLevelM] = useState(0); // metres above today's sea level (0–15)
+  const [seaLevelM, setSeaLevelM] = useState(DEFAULT_TIMELINE_SECTIONS[0]?.sea_level_m ?? 0); // metres above today's sea level (0–15)
   const [seaLevelLabel, setSeaLevelLabel] = useState<string | null>(null); // era name shown as label
 
   // Nature state
@@ -688,7 +688,10 @@ export function VeierlandApp() {
     loadTurkartGeoJSON().then(geo => setTrails(trailsFromGeoJSON(geo)));
     loadCatCfg().then(setCatCfg);
     loadFarmData().then(setFarmData);
-    loadTimelineSections().then(setTimelineSections);
+    loadTimelineSections().then(sections => {
+      setTimelineSections(sections);
+      setSeaLevelM(sections[0]?.sea_level_m ?? 0);
+    });
   }, []);
 
   // Fit map bounds once both map and POIs are ready (runs once)
