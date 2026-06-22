@@ -1466,8 +1466,7 @@ export function VeierlandApp() {
 
     // Gårder view
     const garderPoint = GARDER_TIMELINE[garderTimeIdx];
-    const garderFloodLevel = Math.min(garderPoint.sea_level_m, 15);
-    const garderAboveData = garderPoint.sea_level_m > 15;
+    const garderFloodLevel = garderPoint.sea_level_m;
 
     const garderTimeSlider = (
       <div className="vl-sealevel" style={{ marginBottom: 14 }}>
@@ -1476,7 +1475,7 @@ export function VeierlandApp() {
           {garderPoint.label}
           {garderPoint.sea_level_m > 0
             ? <span style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--accent)', marginTop: 1 }}>
-                {garderPoint.sea_level_m % 1 === 0 ? `+${garderPoint.sea_level_m}m` : `+${garderPoint.sea_level_m}m`} hav
+                +{garderPoint.sea_level_m}m hav
               </span>
             : <span style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--muted)', marginTop: 1 }}>
                 {lang === 'no' ? 'Dagens nivå' : 'Current level'}
@@ -1488,7 +1487,7 @@ export function VeierlandApp() {
           onChange={e => {
             const i = Number(e.target.value);
             setGarderTimeIdx(i);
-            const lvl = Math.min(GARDER_TIMELINE[i].sea_level_m, 15);
+            const lvl = GARDER_TIMELINE[i].sea_level_m;
             setSeaLevelM(lvl); setSeaLevelLabel(null);
             if (seaActivePaneRef.current === 'a') setSeaLevelA(lvl); else setSeaLevelB(lvl);
           }}
@@ -1500,14 +1499,7 @@ export function VeierlandApp() {
             </span>
           ))}
         </div>
-        {garderAboveData && (
-          <div className="vl-sl-desc" style={{ color: 'var(--accent)' }}>
-            {lang === 'no'
-              ? `Havet var +${garderPoint.sea_level_m}m — Veierland eksisterte ikke ennå. Kartet viser +15m (maks tilgjengelig data).`
-              : `Sea was +${garderPoint.sea_level_m}m — Veierland didn't exist yet. Map shows +15m (max available data).`}
-          </div>
-        )}
-        {!garderAboveData && garderFloodLevel > 0 && (
+        {garderFloodLevel > 0 && (
           <div className="vl-sl-desc">
             {lang === 'no' ? 'Blå overlay viser hva som var under vann.' : 'Blue overlay shows what was underwater.'}
           </div>
