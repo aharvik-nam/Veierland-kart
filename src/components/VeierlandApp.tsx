@@ -172,6 +172,26 @@ function nearestFloodThreshold(m: number): number | null {
   return below.length > 0 ? below[below.length - 1] : null;
 }
 
+// Long-range sea level curve for Gårder slider (UIB, NGU, Kartverket sources)
+const GARDER_TIMELINE = [
+  { year: -12000, label: '12 000 f.Kr.', sea_level_m: 50 },
+  { year: -11000, label: '11 000 f.Kr.', sea_level_m: 45 },
+  { year: -10000, label: '10 000 f.Kr.', sea_level_m: 40 },
+  { year:  -9000, label:  '9 000 f.Kr.', sea_level_m: 35 },
+  { year:  -8000, label:  '8 000 f.Kr.', sea_level_m: 30 },
+  { year:  -7000, label:  '7 000 f.Kr.', sea_level_m: 22 },
+  { year:  -6000, label:  '6 000 f.Kr.', sea_level_m: 15 },
+  { year:  -5000, label:  '5 000 f.Kr.', sea_level_m: 12 },
+  { year:  -4000, label:  '4 000 f.Kr.', sea_level_m: 10 },
+  { year:  -3000, label:  '3 000 f.Kr.', sea_level_m:  8 },
+  { year:  -2000, label:  '2 000 f.Kr.', sea_level_m:  5 },
+  { year:  -1000, label:  '1 000 f.Kr.', sea_level_m:  3.5 },
+  { year:      0, label:       'År 0',   sea_level_m:  3 },
+  { year:   1000, label: '1 000 e.Kr.', sea_level_m:  2 },
+  { year:   2000, label: '2 000 e.Kr.', sea_level_m:  0 },
+  { year:   2026, label:      'I dag',  sea_level_m:  0 },
+] as const;
+
 // Historical sea level (metres above today) per era, based on Vestfold land-uplift data
 
 // WGS84 polygon tracing Veierland's coastline (from veierland_boundary.json)
@@ -519,6 +539,7 @@ export function VeierlandApp() {
 
   // History state
   const [historyView, setHistoryView] = useState<'tidslinje' | 'garder'>('tidslinje');
+  const [garderTimeIdx, setGarderTimeIdx] = useState(GARDER_TIMELINE.length - 1); // start at I dag
   const [selectedEra, setSelectedEra] = useState<TimelineSection | null>(null);
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
   const [eraNavIdx, setEraNavIdx] = useState(0);
@@ -1444,10 +1465,60 @@ export function VeierlandApp() {
     }
 
     // Gårder view
+    const garderPoint = GARDER_TIMELINE[garderTimeIdx];
+    const garderFloodLevel = Math.min(garderPoint.sea_level_m, 15);
+    const garderAboveData = garderPoint.sea_level_m > 15;
+
+    const garderTimeSlider = (
+      <div className="vl-sealevel" style={{ marginBottom: 14 }}>
+        <div className="vl-sl-title">{lang === 'no' ? 'Historisk havnivå' : 'Historical sea level'}</div>
+        <div className="vl-sl-label">
+          {garderPoint.label}
+          {garderPoint.sea_level_m > 0
+            ? <span style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--accent)', marginTop: 1 }}>
+                {garderPoint.sea_level_m % 1 === 0 ? `+${garderPoint.sea_level_m}m` : `+${garderPoint.sea_level_m}m`} hav
+              </span>
+            : <span style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--muted)', marginTop: 1 }}>
+                {lang === 'no' ? 'Dagens nivå' : 'Current level'}
+              </span>
+          }
+        </div>
+        <input type="range" min={0} max={GARDER_TIMELINE.length - 1} step={1}
+          value={garderTimeIdx}
+          onChange={e => {
+            const i = Number(e.target.value);
+            setGarderTimeIdx(i);
+            const lvl = Math.min(GARDER_TIMELINE[i].sea_level_m, 15);
+            setSeaLevelM(lvl); setSeaLevelLabel(null);
+            if (seaActivePaneRef.current === 'a') setSeaLevelA(lvl); else setSeaLevelB(lvl);
+          }}
+          className="vl-sl-range" />
+        <div className="vl-sl-ticks">
+          {([0, 6, 12, 15] as const).map(i => (
+            <span key={i} style={{ left: `${(i / (GARDER_TIMELINE.length - 1)) * 100}%` }}>
+              {i === 15 ? (lang === 'no' ? 'I dag' : 'Today') : GARDER_TIMELINE[i].label}
+            </span>
+          ))}
+        </div>
+        {garderAboveData && (
+          <div className="vl-sl-desc" style={{ color: 'var(--accent)' }}>
+            {lang === 'no'
+              ? `Havet var +${garderPoint.sea_level_m}m — Veierland eksisterte ikke ennå. Kartet viser +15m (maks tilgjengelig data).`
+              : `Sea was +${garderPoint.sea_level_m}m — Veierland didn't exist yet. Map shows +15m (max available data).`}
+          </div>
+        )}
+        {!garderAboveData && garderFloodLevel > 0 && (
+          <div className="vl-sl-desc">
+            {lang === 'no' ? 'Blå overlay viser hva som var under vann.' : 'Blue overlay shows what was underwater.'}
+          </div>
+        )}
+      </div>
+    );
+
     return (
       <>
         {viewToggle}
-        {seaSlider}
+        {garderTimeSlider}
         {visibleFarms.map((farm, i) => {
           const coords = farmCoords[farm.name];
           return (
