@@ -24,8 +24,8 @@ const DEFAULT_SEA_LEVEL: Record<string, number> = {
   'Vikingtid': 5,
   'Middelalder': 3,
   'Napoleonskrigene': 1,
-  'Gårder og kulturlandskap': 2,
-  'Skipsbygging og handel': 2,
+  'Gårder og kulturlandskap': 1,
+  'Skipsbygging og handel': 1,
   'Hvalfangst': 1,
   'Veierland kirke': 0,
 };
