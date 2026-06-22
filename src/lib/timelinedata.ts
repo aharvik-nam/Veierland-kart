@@ -19,12 +19,12 @@ export interface TimelineSection {
 // Default sea levels per era — moved here so they travel with the data,
 // not as a hardcoded lookup table keyed by a string that can change.
 const DEFAULT_SEA_LEVEL: Record<string, number> = {
-  'Steinalder': 15,
-  'Bronsealder': 12,
-  'Jernalder': 10,
-  'Folkevandringstid': 7,
-  'Vikingtid': 5,
-  'Middelalder': 3,
+  'Steinalder': 15,       // ca. 6000 f.Kr. → +10-15 m (teksten sier 15 m)
+  'Bronsealder': 5,       // ca. 2000 f.Kr. → +4-6 m
+  'Jernalder': 3,         // ca. 0 e.Kr.    → +2-4 m
+  'Folkevandringstid': 2, // ca. 550 e.Kr.  → +2-3 m (interpolert)
+  'Vikingtid': 2,         // ca. 800 e.Kr.  → +1.5-3 m
+  'Middelalder': 1,       // ca. 1200 e.Kr. → +1-2 m
   'Napoleonskrigene': 1,
   'Gårder og kulturlandskap': 1,
   'Skipsbygging og handel': 1,
@@ -63,7 +63,7 @@ export async function loadTimelineSections(): Promise<TimelineSection[]> {
         // Merge by position: Firestore wins field-by-field, base fills any missing fields.
         // Using index (not era) so renaming an era never loses its data.
         const stored: Partial<TimelineSection>[] = JSON.parse(raw.json);
-        return base.map((b, i) => stored[i] ? { ...b, ...stored[i] } : b);
+        return base.map((b, i) => stored[i] ? { ...b, ...stored[i], sea_level_m: b.sea_level_m } : b);
       }
     }
     return base;
