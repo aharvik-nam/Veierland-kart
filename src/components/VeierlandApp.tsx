@@ -1124,15 +1124,17 @@ export function VeierlandApp() {
 
   function renderHistory() {
     const viewToggle = (
-      <div className="vl-modepills vl-panel-modes" style={{ marginBottom: 14 }}>
-        <button className={`vl-modepill${historyView === 'tidslinje' ? ' on' : ''}`}
+      <div className="vl-chips" style={{ marginBottom: 14 }}>
+        <div className={`vl-chip${historyView === 'tidslinje' ? ' on' : ''}`}
           onClick={() => { setHistoryView('tidslinje'); setSelectedEra(null); setSelectedFarm(null); }}>
-          {T.tidslinje}
-        </button>
-        <button className={`vl-modepill${historyView === 'garder' ? ' on' : ''}`}
+          <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('kart') }} />
+          <span className="cl">{T.tidslinje}</span>
+        </div>
+        <div className={`vl-chip${historyView === 'garder' ? ' on' : ''}`}
           onClick={() => { setHistoryView('garder'); setSelectedEra(null); setSelectedFarm(null); }}>
-          {T.garder}
-        </button>
+          <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('hus') }} />
+          <span className="cl">{T.garder}</span>
+        </div>
       </div>
     );
 
@@ -1408,28 +1410,30 @@ export function VeierlandApp() {
         {mode === 'places' && (
           <div className="vl-chips vl-panel-chips">
             <div className={`vl-chip${activeCats.size === 0 ? ' on' : ''}`} onClick={() => setActiveCats(new Set())}>
+              <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
               <span className="cl">{T.all}</span>
             </div>
             {[...catGroups.entries()].map(([groupName, groupCats]) => {
               const on = groupCats.some(k => activeCats.has(k));
-              const groupColor = catCfg[groupCats[0]]?.color ?? 'var(--muted)';
+              const groupIcon = (catCfg as Record<string, {icon?: string}>)[groupCats[0]]?.icon ?? 'pin';
+              const groupColor = (catCfg as Record<string, {color?: string}>)[groupCats[0]]?.color ?? 'var(--muted)';
               return (
                 <div key={groupName} className={`vl-chip${on ? ' on' : ''}`}
                   style={{ '--chip-color': groupColor } as React.CSSProperties}
                   onClick={() => toggleGroup(groupCats)}>
-                  <span className="cd" />
+                  <span className="ci" style={{ color: on ? undefined : groupColor }} dangerouslySetInnerHTML={{ __html: iconSvg(groupIcon) }} />
                   <span className="cl">{groupName}</span>
                 </div>
               );
             })}
-            {allCats.filter(k => !catCfg[k]?.group).map(k => {
+            {allCats.filter(k => !(catCfg as Record<string, {group?: string}>)[k]?.group).map(k => {
               const cat = getCat(k);
               const on = activeCats.has(k);
               return (
                 <div key={k} className={`vl-chip${on ? ' on' : ''}`}
                   style={{ '--chip-color': cat.color } as React.CSSProperties}
                   onClick={() => toggleCat(k)}>
-                  <span className="cd" />
+                  <span className="ci" style={{ color: on ? undefined : cat.color }} dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
                   <span className="cl">{lang === 'no' ? cat.no : cat.en}</span>
                 </div>
               );
