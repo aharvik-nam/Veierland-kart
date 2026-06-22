@@ -1,18 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --ink: #2c3825;
-  --muted: #7c876f;
-  --card: #fffdf8;
-  --card2: #f3f4ee;
-  --line: #e4e2d0;
-  --line2: #eceade;
+  --ink: #1F2420;
+  --ink2: #5C615A;
+  --muted: #8A8D82;
+  --card: #ffffff;
+  --card2: #F4F2EC;
+  --line: #E5E2D8;
+  --line2: #EFEDE6;
   --accent: #4a7c64;
   --onaccent: #fff;
   --me: #4a7c64;
-  --page: #efece4;
+  --page: #E4E1D8;
+  --sidebar: #FBF9F3;
   --font: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
-  --display: 'Bricolage Grotesque', 'Hanken Grotesk', system-ui, sans-serif;
+  --display: 'Newsreader', Georgia, 'Times New Roman', serif;
   --r: 12px;
   --pad: 18px;
 }
@@ -122,17 +124,34 @@ body { display: grid; place-items: center; }
 .vl-nat-toprow .vl-count { margin-bottom: 0; }
 .vl-fam-lang button { font-size: 12px; padding: 2px 8px; }
 
-/* ── Nature accordion ──────────────────────────────────────────────────────── */
-.vl-nat-grp { border-bottom: 1px solid var(--card); }
+/* ── Nature / Places accordion ─────────────────────────────────────────────── */
+/* Closed group = flat row */
+.vl-nat-grp { border-bottom: 1px solid var(--line2); }
+.vl-nat-grp.open {
+  border-bottom: none; margin-bottom: 8px;
+  background: #F6F4EE; border: 1px solid #E8E5DC; border-radius: 14px;
+  padding: 0 13px;
+}
 .vl-grp-hdr {
   display: flex; align-items: center; gap: 10px;
   padding: 12px 0; cursor: pointer; user-select: none;
 }
+.vl-nat-grp.open .vl-grp-hdr { padding: 13px 0; }
 .vl-grp-ico { flex: 0 0 22px; display: flex; align-items: center; }
 .vl-grp-lbl { flex: 1; font-weight: 600; font-size: 15px; }
-.vl-grp-cnt { font-size: 13px; color: var(--muted); }
+.vl-grp-cnt {
+  font-size: 12px; font-weight: 600; padding: 3px 8px;
+  border-radius: 999px; background: var(--card2); color: var(--muted);
+}
 .vl-chev { color: var(--muted); display: flex; align-items: center; transition: transform .2s; }
 .vl-chev.open { transform: rotate(90deg); }
+
+/* Open group children with left rail */
+.vl-grp-children {
+  margin: 0 2px 11px 8px;
+  border-left: 2px solid #9DBE8B;
+  padding-left: 14px;
+}
 
 .vl-nat-fam { border-top: 1px solid rgba(0,0,0,.06); }
 .vl-fam-hdr {
@@ -155,6 +174,35 @@ body { display: grid; place-items: center; }
 .vl-sp-sci { display: block; font-size: 11px; color: var(--muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vl-sp-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .vl-sp-cnt { font-size: 12px; color: var(--muted); min-width: 22px; text-align: right; }
+
+/* ── Split-click POI card (v2) ─────────────────────────────────────────────── */
+.vl-poi-card {
+  display: flex; align-items: center;
+  border-radius: 12px; border: 1px solid var(--line2);
+  background: var(--card); margin-bottom: 8px; overflow: hidden;
+}
+.vl-poi-zone {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 10px; flex: 1; min-width: 0; cursor: pointer;
+}
+.vl-poi-zone:active { background: var(--card2); }
+.vl-poi-ico {
+  width: 38px; height: 38px; border-radius: 10px; flex: 0 0 38px;
+  display: grid; place-items: center; pointer-events: none;
+}
+.vl-poi-ico svg { width: 20px; height: 20px; }
+.vl-poi-body { flex: 1; min-width: 0; }
+.vl-poi-body h4 { margin: 0; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vl-poi-body p { margin: 2px 0 0; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vl-poi-sep { width: 1px; height: 30px; background: var(--line); flex: 0 0 1px; }
+.vl-poi-arr {
+  width: 34px; height: 34px; margin-right: 10px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--card);
+  display: grid; place-items: center; color: var(--muted);
+  cursor: pointer; flex: 0 0 34px;
+}
+.vl-poi-arr:active { background: var(--card2); }
+.vl-poi-arr svg { width: 16px; height: 16px; }
 
 /* ── Assessment badges ─────────────────────────────────────────────────────── */
 .vl-rlbadge, .vl-albadge {
@@ -391,7 +439,7 @@ body { display: grid; place-items: center; }
 .vl-sheet {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 600;
   background: var(--card);
-  border-radius: 26px 26px 0 0;
+  border-radius: 20px 20px 0 0;
   border-top: 1px solid var(--line);
   display: flex; flex-direction: column;
   transition: height .34s cubic-bezier(.3,.8,.3,1);
@@ -456,9 +504,10 @@ body { display: grid; place-items: center; }
 
 /* ── Detail view ────────────────────────────────────────────────────────────── */
 .vl-back {
-  display: inline-flex; align-items: center; gap: 6px; border: none;
+  display: inline-flex; align-items: center; gap: 6px;
   background: var(--card2); color: var(--ink); font: inherit; font-weight: 600;
-  font-size: 13.5px; padding: 8px 14px 8px 11px; border-radius: 999px;
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 8px 14px 8px 11px; font-size: 13.5px;
   cursor: pointer; margin-bottom: 16px;
 }
 .vl-catpill {
@@ -467,9 +516,9 @@ body { display: grid; place-items: center; }
   background: var(--card2); color: var(--muted); border: 1px solid var(--line);
 }
 .vl-h2 {
-  margin: 11px 0 2px; font-size: 28px; font-weight: 700;
+  margin: 11px 0 2px; font-size: 30px; font-weight: 500;
   font-family: var(--display);
-  letter-spacing: -.02em; line-height: 1.08;
+  letter-spacing: -.01em; line-height: 1.1;
 }
 .vl-sub { font-size: 14px; color: var(--muted); }
 .vl-desc { font-size: 15.5px; line-height: 1.55; margin: 0 0 14px; }

@@ -519,6 +519,7 @@ export function VeierlandApp() {
   const [historyView, setHistoryView] = useState<'tidslinje' | 'garder'>('tidslinje');
   const [selectedEra, setSelectedEra] = useState<TimelineSection | null>(null);
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
+  const [eraNavIdx, setEraNavIdx] = useState(0);
   const [timelineSections, setTimelineSections] = useState<TimelineSection[]>(DEFAULT_TIMELINE_SECTIONS);
   const [seaLevelM, setSeaLevelM] = useState(0); // metres above today's sea level (0–15)
   const [seaLevelLabel, setSeaLevelLabel] = useState<string | null>(null); // era name shown as label
@@ -1058,52 +1059,56 @@ export function VeierlandApp() {
           if (total === 0) return null;
           const grpOpen = expandedGroups.has(g);
           return (
-            <div key={g} className="vl-nat-grp">
+            <div key={g} className={`vl-nat-grp${grpOpen ? ' open' : ''}`}>
               <div className="vl-grp-hdr" onClick={() => toggleExpandedGroup(g)}>
                 <span className="vl-grp-ico" dangerouslySetInnerHTML={{ __html: coloredSvg(cfg.icon, cfg.color) }} />
-                <span className="vl-grp-lbl">{lang === 'no' ? cfg.no : cfg.en}</span>
+                <span className="vl-grp-lbl" style={{ color: grpOpen ? cfg.color : undefined }}>{lang === 'no' ? cfg.no : cfg.en}</span>
                 <span className="vl-grp-cnt">{total}</span>
                 <span className={`vl-chev${grpOpen ? ' open' : ''}`}><ChevSvg /></span>
               </div>
-              {grpOpen && [...families.entries()]
-                .sort(([a], [b]) => a === '—' ? 1 : b === '—' ? -1 : a.localeCompare(b))
-                .map(([fam, species]) => {
-                  const famKey = `${g}::${fam}`;
-                  const famOpen = expandedFamilies.has(famKey);
-                  const rlCount = species.filter(o => RED_LIST_CATS.test(o.redListCategory ?? '')).length;
-                  const alCount = species.filter(o => o.alienCategory).length;
-                  return (
-                    <div key={famKey} className="vl-nat-fam">
-                      <div className="vl-fam-hdr" onClick={() => toggleExpandedFam(famKey)}>
-                        <span className="vl-fam-lbl">
-                          {fam === '—' ? '—' : showNorFamilies ? (familyNorMap[fam] ?? fam) : fam}
-                        </span>
-                        <div className="vl-fam-right">
-                          {rlCount > 0 && <span className="vl-rlbadge">{rlCount}</span>}
-                          {alCount > 0 && <span className="vl-albadge">{alCount}</span>}
-                          <span className="vl-fam-cnt">{species.length}</span>
-                          <span className={`vl-chev${famOpen ? ' open' : ''}`}><ChevSvg /></span>
-                        </div>
-                      </div>
-                      {famOpen && [...species].sort((a, b) => b.obsCount - a.obsCount).map(obs => (
-                        <div key={obs.gbifKey} className="vl-sp-row" onClick={() => selectNatureSpecies(obs)}>
-                          <div className="vl-sp-main">
-                            <span className="vl-sp-name">{obs.popularName || obs.scientificName}</span>
-                            {obs.popularName && <span className="vl-sp-sci">{obs.scientificName}</span>}
+              {grpOpen && (
+                <div className="vl-grp-children">
+                  {[...families.entries()]
+                    .sort(([a], [b]) => a === '—' ? 1 : b === '—' ? -1 : a.localeCompare(b))
+                    .map(([fam, species]) => {
+                      const famKey = `${g}::${fam}`;
+                      const famOpen = expandedFamilies.has(famKey);
+                      const rlCount = species.filter(o => RED_LIST_CATS.test(o.redListCategory ?? '')).length;
+                      const alCount = species.filter(o => o.alienCategory).length;
+                      return (
+                        <div key={famKey} className="vl-nat-fam">
+                          <div className="vl-fam-hdr" onClick={() => toggleExpandedFam(famKey)}>
+                            <span className="vl-fam-lbl">
+                              {fam === '—' ? '—' : showNorFamilies ? (familyNorMap[fam] ?? fam) : fam}
+                            </span>
+                            <div className="vl-fam-right">
+                              {rlCount > 0 && <span className="vl-rlbadge">{rlCount}</span>}
+                              {alCount > 0 && <span className="vl-albadge">{alCount}</span>}
+                              <span className="vl-fam-cnt">{species.length}</span>
+                              <span className={`vl-chev${famOpen ? ' open' : ''}`}><ChevSvg /></span>
+                            </div>
                           </div>
-                          <div className="vl-sp-right">
-                            {obs.redListCategory && RED_LIST_CATS.test(obs.redListCategory) && (
-                              <span className="vl-rlbadge">{obs.redListCategory}</span>
-                            )}
-                            {obs.alienCategory && <span className="vl-albadge">FA</span>}
-                            <span className="vl-sp-cnt">{obs.obsCount}</span>
-                            <span className="vl-chev"><ChevSvg /></span>
-                          </div>
+                          {famOpen && [...species].sort((a, b) => b.obsCount - a.obsCount).map(obs => (
+                            <div key={obs.gbifKey} className="vl-sp-row" onClick={() => selectNatureSpecies(obs)}>
+                              <div className="vl-sp-main">
+                                <span className="vl-sp-name">{obs.popularName || obs.scientificName}</span>
+                                {obs.popularName && <span className="vl-sp-sci">{obs.scientificName}</span>}
+                              </div>
+                              <div className="vl-sp-right">
+                                {obs.redListCategory && RED_LIST_CATS.test(obs.redListCategory) && (
+                                  <span className="vl-rlbadge">{obs.redListCategory}</span>
+                                )}
+                                {obs.alienCategory && <span className="vl-albadge">FA</span>}
+                                <span className="vl-sp-cnt">{obs.obsCount}</span>
+                                <span className="vl-chev"><ChevSvg /></span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  );
-                })}
+                      );
+                    })}
+                </div>
+              )}
             </div>
           );
         })}
@@ -1119,17 +1124,15 @@ export function VeierlandApp() {
 
   function renderHistory() {
     const viewToggle = (
-      <div className="vl-chips" style={{ marginBottom: 14 }}>
-        <div className={`vl-chip${historyView === 'tidslinje' ? ' on' : ''}`}
+      <div className="vl-modepills vl-panel-modes" style={{ marginBottom: 14 }}>
+        <button className={`vl-modepill${historyView === 'tidslinje' ? ' on' : ''}`}
           onClick={() => { setHistoryView('tidslinje'); setSelectedEra(null); setSelectedFarm(null); }}>
-          <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('kart') }} />
-          <span className="cl">{T.tidslinje}</span>
-        </div>
-        <div className={`vl-chip${historyView === 'garder' ? ' on' : ''}`}
+          {T.tidslinje}
+        </button>
+        <button className={`vl-modepill${historyView === 'garder' ? ' on' : ''}`}
           onClick={() => { setHistoryView('garder'); setSelectedEra(null); setSelectedFarm(null); }}>
-          <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('hus') }} />
-          <span className="cl">{T.garder}</span>
-        </div>
+          {T.garder}
+        </button>
       </div>
     );
 
@@ -1296,25 +1299,56 @@ export function VeierlandApp() {
     }
 
     if (historyView === 'tidslinje') {
+      const era = timelineSections[eraNavIdx] ?? timelineSections[0];
+      const n = timelineSections.length;
+      const goEra = (idx: number) => {
+        const i = Math.max(0, Math.min(n - 1, idx));
+        setEraNavIdx(i);
+        setSeaLevelM(timelineSections[i].sea_level_m);
+        setSeaLevelLabel(timelineSections[i].era);
+      };
       return (
         <>
           {viewToggle}
-          {seaSlider}
-          {timelineSections.map((sec, i) => (
-            <div key={i} className="vl-hist-row" tabIndex={0} role="button"
-              onClick={() => { setSelectedEra(sec); setSheetOpen(true); setSeaLevelM(sec.sea_level_m); setSeaLevelLabel(sec.era); }}
-              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedEra(sec); setSheetOpen(true); setSeaLevelM(sec.sea_level_m); setSeaLevelLabel(sec.era); } }}>
-              <div className="vl-hist-era">
-                <div className="vl-hist-dot" />
-                <div className="vl-hist-line" />
-              </div>
-              <div className="vl-hist-content">
-                <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 1 }}>{sec.period}</div>
-                <div style={{ fontWeight: 600, fontSize: 15 }}>{sec.era}</div>
-                <div style={{ fontSize: 13, color: 'var(--muted)' }}>{lang === 'no' ? sec.title.no : sec.title.en}</div>
-              </div>
+
+          {/* ← → era navigator */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <button onClick={() => goEra(eraNavIdx - 1)} disabled={eraNavIdx === 0}
+              style={{ width: 46, height: 46, borderRadius: 14, background: 'var(--accent)', color: '#fff', border: 'none', display: 'grid', placeItems: 'center', cursor: 'pointer', opacity: eraNavIdx === 0 ? 0.38 : 1, flexShrink: 0 }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+              {timelineSections.map((_, i) => (
+                <div key={i} onClick={() => goEra(i)} style={{
+                  width: i === eraNavIdx ? 18 : 8, height: 8, borderRadius: 99,
+                  background: i === eraNavIdx ? 'var(--accent)' : '#D7D3C7',
+                  cursor: 'pointer', transition: 'all .2s',
+                }} />
+              ))}
             </div>
-          ))}
+            <button onClick={() => goEra(eraNavIdx + 1)} disabled={eraNavIdx === n - 1}
+              style={{ width: 46, height: 46, borderRadius: 14, background: 'var(--accent)', color: '#fff', border: 'none', display: 'grid', placeItems: 'center', cursor: 'pointer', opacity: eraNavIdx === n - 1 ? 0.38 : 1, flexShrink: 0 }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+
+          {/* Era content card */}
+          <div style={{ background: 'color-mix(in srgb, var(--accent) 8%, var(--card))', border: '1px solid color-mix(in srgb, var(--accent) 22%, transparent)', borderRadius: 16, padding: '16px 18px', marginBottom: 14 }}>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.06em', fontWeight: 600 }}>{era.period}</div>
+            <div style={{ fontFamily: 'var(--display)', fontSize: 24, fontWeight: 500, lineHeight: 1.15, marginBottom: 6, color: 'var(--ink)' }}>{era.era}</div>
+            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 10, color: 'var(--ink2, var(--muted))' }}>{lang === 'no' ? era.title.no : era.title.en}</div>
+            <p style={{ fontSize: 14, lineHeight: 1.6, margin: 0, color: 'var(--ink)' }}>
+              {lang === 'no' ? era.body.no : era.body.en}
+            </p>
+          </div>
+
+          {era.sea_level_m > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 13, color: 'var(--accent)', fontWeight: 600 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M2 12h2a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1 2 2h2"/><path d="M2 18h2a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1 2 2h2"/></svg>
+              {lang === 'no' ? `Havnivå ca. +${era.sea_level_m}m` : `Sea level ≈ +${era.sea_level_m}m`}
+            </div>
+          )}
+
           <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
             {lang === 'no' ? 'Kilde: Veierland Velforening, Nøtterøy Historielag m.fl.' : 'Source: Veierland Velforening, Nøtterøy Historielag et al.'}
           </p>
@@ -1327,20 +1361,32 @@ export function VeierlandApp() {
       <>
         {viewToggle}
         {seaSlider}
-        {visibleFarms.map((farm, i) => (
-          <div key={i} className="vl-sp-row" onClick={() => {
-            setSelectedFarm(farm);
-            setSheetOpen(true);
-            const coords = farmCoords[farm.name];
-            if (coords) mapRef.current?.setView(coords, Math.max(mapZoom, 14));
-          }}>
-            <div className="vl-sp-main">
-              <span className="vl-sp-name">{farm.name}</span>
-              <span className="vl-sp-sci">{farm.norron_name ? `${farm.norron_name} · ` : ''}{farm.location}</span>
+        {visibleFarms.map((farm, i) => {
+          const coords = farmCoords[farm.name];
+          return (
+            <div key={i} className="vl-poi-card">
+              <div className="vl-poi-zone" onClick={() => {
+                if (coords) mapRef.current?.setView(coords, Math.max(mapZoom, 14));
+              }}>
+                <div className="vl-poi-ico"
+                  style={{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)', color: 'var(--accent)' }}
+                  dangerouslySetInnerHTML={{ __html: iconSvg('hus') }} />
+                <div className="vl-poi-body">
+                  <h4>{farm.name}</h4>
+                  <p>{farm.norron_name ? `${farm.norron_name} · ` : ''}{farm.location}</p>
+                </div>
+              </div>
+              <div className="vl-poi-sep" />
+              <div className="vl-poi-arr" onClick={() => {
+                setSelectedFarm(farm);
+                setSheetOpen(true);
+                if (coords) mapRef.current?.setView(coords, Math.max(mapZoom, 14));
+              }}>
+                <ChevSvg />
+              </div>
             </div>
-            <span className="vl-chev"><ChevSvg /></span>
-          </div>
-        ))}
+          );
+        })}
       </>
     );
   }
@@ -1457,24 +1503,35 @@ export function VeierlandApp() {
               const cat = getCat(catKey);
               const isOpen = expandedPlaceCats.has(catKey);
               return (
-                <div key={catKey} className="vl-nat-grp">
+                <div key={catKey} className={`vl-nat-grp${isOpen ? ' open' : ''}`}>
                   <div className="vl-grp-hdr" onClick={() => toggleExpandedPlaceCat(catKey)}>
-                    <span className="vl-grp-ico" dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
-                    <span className="vl-grp-lbl">{lang === 'no' ? cat.no : cat.en}</span>
+                    <span className="vl-grp-ico" style={{ color: isOpen ? cat.color : undefined }} dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
+                    <span className="vl-grp-lbl" style={{ color: isOpen ? cat.color : undefined }}>{lang === 'no' ? cat.no : cat.en}</span>
                     <span className="vl-grp-cnt">{pois.length}</span>
                     <span className={`vl-chev${isOpen ? ' open' : ''}`}><ChevSvg /></span>
                   </div>
-                  {isOpen && pois.map(poi => (
-                    <div key={poi.id} className="vl-sp-row" onClick={() => selectPOI(poi)}>
-                      <div className="vl-sp-main">
-                        <span className="vl-sp-name">{poi.navn}</span>
-                        {poi.beskrivelse && (
-                          <span className="vl-sp-sci">{poi.beskrivelse}</span>
-                        )}
-                      </div>
-                      <span className="vl-chev"><ChevSvg /></span>
+                  {isOpen && (
+                    <div className="vl-grp-children">
+                      {pois.map(poi => (
+                        <div key={poi.id} className="vl-poi-card">
+                          <div className="vl-poi-zone"
+                            onClick={() => { mapRef.current?.setView([poi.lat, poi.lng], Math.max(mapZoom, 15)); }}>
+                            <div className="vl-poi-ico"
+                              style={{ background: `${cat.color}1a`, color: cat.color }}
+                              dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
+                            <div className="vl-poi-body">
+                              <h4>{poi.navn}</h4>
+                              {poi.beskrivelse && <p>{poi.beskrivelse}</p>}
+                            </div>
+                          </div>
+                          <div className="vl-poi-sep" />
+                          <div className="vl-poi-arr" onClick={() => selectPOI(poi)}>
+                            <ChevSvg />
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
               );
             })}
@@ -1483,13 +1540,20 @@ export function VeierlandApp() {
           <>
             <div className="vl-count">{T.nt(trails.length)}</div>
             {trails.map(tr => (
-              <div key={tr.id} className="vl-card" onClick={() => selectTrail(tr)}>
-                <div className="vl-ic" dangerouslySetInnerHTML={{ __html: iconSvg('tur') }} />
-                <div className="tx">
-                  <h4>{lang === 'no' ? tr.name : tr.en}</h4>
-                  <p>{tr.km} · {tr.time} · {lang === 'no' ? tr.diff : T.easy}</p>
+              <div key={tr.id} className="vl-poi-card">
+                <div className="vl-poi-zone" onClick={() => selectTrail(tr)}>
+                  <div className="vl-poi-ico"
+                    style={{ background: 'color-mix(in srgb, var(--accent) 14%, transparent)', color: 'var(--accent)' }}
+                    dangerouslySetInnerHTML={{ __html: iconSvg('tur') }} />
+                  <div className="vl-poi-body">
+                    <h4>{lang === 'no' ? tr.name : tr.en}</h4>
+                    <p>{tr.km} · {tr.time} · {lang === 'no' ? tr.diff : T.easy}</p>
+                  </div>
                 </div>
-                <span className="chev"><ChevSvg /></span>
+                <div className="vl-poi-sep" />
+                <div className="vl-poi-arr" onClick={() => selectTrail(tr)}>
+                  <ChevSvg />
+                </div>
               </div>
             ))}
           </>
