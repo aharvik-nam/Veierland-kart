@@ -1338,20 +1338,21 @@ export function VeierlandApp() {
 
           {/* Era content card */}
           <div style={{ background: 'color-mix(in srgb, var(--accent) 8%, var(--card))', border: '1px solid color-mix(in srgb, var(--accent) 22%, transparent)', borderRadius: 16, padding: '16px 18px', marginBottom: 14 }}>
-            <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.06em', fontWeight: 600 }}>{era.period}</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
+              <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.06em', fontWeight: 600 }}>{era.period}</div>
+              {era.sea_level_m > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M2 12h2a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1 2 2h2"/><path d="M2 18h2a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1 2 2h2"/></svg>
+                  {lang === 'no' ? `+${era.sea_level_m}m hav` : `+${era.sea_level_m}m sea`}
+                </div>
+              )}
+            </div>
             <div style={{ fontFamily: 'var(--display)', fontSize: 24, fontWeight: 500, lineHeight: 1.15, marginBottom: 6, color: 'var(--ink)' }}>{era.era}</div>
             <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 10, color: 'var(--ink2, var(--muted))' }}>{lang === 'no' ? era.title.no : era.title.en}</div>
             <p style={{ fontSize: 14, lineHeight: 1.6, margin: 0, color: 'var(--ink)' }}>
               {lang === 'no' ? era.body.no : era.body.en}
             </p>
           </div>
-
-          {era.sea_level_m > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 13, color: 'var(--accent)', fontWeight: 600 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M2 12h2a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1 2 2h2"/><path d="M2 18h2a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1 2 2h2"/></svg>
-              {lang === 'no' ? `Havnivå ca. +${era.sea_level_m}m` : `Sea level ≈ +${era.sea_level_m}m`}
-            </div>
-          )}
 
           <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
             {lang === 'no' ? 'Kilde: Veierland Velforening, Nøtterøy Historielag m.fl.' : 'Source: Veierland Velforening, Nøtterøy Historielag et al.'}
