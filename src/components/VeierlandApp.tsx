@@ -733,7 +733,7 @@ export function VeierlandApp() {
     const half = Math.round(sz / 2);
     filteredPOIs.forEach(poi => {
       const cat = getCat(poi.kategori);
-      const sel = selectedPOI?.id === poi.id && view === 'detail';
+      const sel = selectedPOI?.id === poi.id;
       const icon = L.divIcon({ className: '', iconSize: [sz, sz], iconAnchor: [half, half], html: makeIconHtml(cat.icon, sel, sz) });
       L.marker(poi.coordinates as [number, number], { icon }).on('click', () => selectPOI(poi)).addTo(cg);
     });
@@ -1515,7 +1515,7 @@ export function VeierlandApp() {
                       {pois.map(poi => (
                         <div key={poi.id} className="vl-poi-card">
                           <div className="vl-poi-zone"
-                            onClick={() => { mapRef.current?.setView([poi.lat, poi.lng], Math.max(mapZoom, 15)); }}>
+                            onClick={() => { setSelectedPOI(poi); flyToAboveSheet(poi.coordinates, Math.max(mapRef.current?.getZoom() ?? 15, 15)); }}>
                             <div className="vl-poi-ico"
                               style={{ background: `${cat.color}1a`, color: cat.color }}
                               dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
