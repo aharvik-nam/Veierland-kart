@@ -7,6 +7,7 @@ export interface TimelineSection {
   period: string;
   title: { no: string; en: string };
   body: { no: string; en: string };
+  body_lang?: { no: string; en: string };
   anekdoter: string[];
   kontekst_norge: string;
   sea_level_m: number;

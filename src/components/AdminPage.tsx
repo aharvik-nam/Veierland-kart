@@ -1437,8 +1437,16 @@ function TidslinjeTab() {
                   <textarea style={{ ...fieldStyle, minHeight: 90, resize: 'vertical' }} value={sec.body.no} onChange={e => update(idx, { body: { ...sec.body, no: e.target.value } })} />
                 </div>
                 <div style={rowStyle}>
+                  <label style={labelStyle}>Les mer – utvidet tekst (norsk)</label>
+                  <textarea style={{ ...fieldStyle, minHeight: 80, resize: 'vertical' }} value={sec.body_lang?.no ?? ''} onChange={e => update(idx, { body_lang: { no: e.target.value, en: sec.body_lang?.en ?? '' } })} placeholder="Vises kun når brukeren trykker «Les mer»…" />
+                </div>
+                <div style={rowStyle}>
                   <label style={labelStyle}>Tekst (engelsk)</label>
                   <textarea style={{ ...fieldStyle, minHeight: 90, resize: 'vertical' }} value={sec.body.en} onChange={e => update(idx, { body: { ...sec.body, en: e.target.value } })} />
+                </div>
+                <div style={rowStyle}>
+                  <label style={labelStyle}>Les mer – utvidet tekst (engelsk)</label>
+                  <textarea style={{ ...fieldStyle, minHeight: 80, resize: 'vertical' }} value={sec.body_lang?.en ?? ''} onChange={e => update(idx, { body_lang: { no: sec.body_lang?.no ?? '', en: e.target.value } })} placeholder="Shown only when the user taps «Les mer»…" />
                 </div>
                 <div style={rowStyle}>
                   <label style={labelStyle}>Kontekst Norge</label>

@@ -515,6 +515,7 @@ export function VeierlandApp() {
   const [trailPath, setTrailPath] = useState<[number, number][] | null>(null);
   const [heartAnim, setHeartAnim] = useState(false);
   const [lesmerExpanded, setLesmerExpanded] = useState(false);
+  const [lesmerEraExpanded, setLesmerEraExpanded] = useState(false);
 
   // History state
   const [historyView, setHistoryView] = useState<'tidslinje' | 'garder'>('tidslinje');
@@ -1310,6 +1311,7 @@ export function VeierlandApp() {
         setEraNavIdx(i);
         setSeaLevelM(timelineSections[i].sea_level_m);
         setSeaLevelLabel(timelineSections[i].era);
+        setLesmerEraExpanded(false);
       };
       return (
         <>
@@ -1352,6 +1354,20 @@ export function VeierlandApp() {
             <p style={{ fontSize: 14, lineHeight: 1.6, margin: 0, color: 'var(--ink)' }}>
               {lang === 'no' ? era.body.no : era.body.en}
             </p>
+            {(lang === 'no' ? era.body_lang?.no : era.body_lang?.en) && !lesmerEraExpanded && (
+              <button
+                onClick={() => setLesmerEraExpanded(true)}
+                style={{ marginTop: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--accent)', fontWeight: 600, fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 4, font: 'inherit' }}
+              >
+                Les mer
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3,5 7,9 11,5"/></svg>
+              </button>
+            )}
+            {(lang === 'no' ? era.body_lang?.no : era.body_lang?.en) && lesmerEraExpanded && (
+              <p style={{ fontSize: 14, lineHeight: 1.6, marginTop: 10, marginBottom: 0, color: 'var(--ink)' }}>
+                {lang === 'no' ? era.body_lang!.no : era.body_lang!.en}
+              </p>
+            )}
           </div>
 
           <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
