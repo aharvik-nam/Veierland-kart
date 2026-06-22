@@ -572,6 +572,7 @@ export function VeierlandApp() {
   const [mapZoom, setMapZoom] = useState<number>(MAP_ZOOM);
 
   const mapRef = useRef<L.Map | null>(null);
+  const seaFadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const fitDoneRef = useRef(false);
@@ -703,7 +704,15 @@ export function VeierlandApp() {
     setMapZoom(mapRef.current.getZoom());
   }, [mapReady, allPOIs]);
 
-  const onMapReady = useCallback((m: L.Map) => { mapRef.current = m; setMapReady(true); }, []);
+  const onMapReady = useCallback((m: L.Map) => {
+    mapRef.current = m;
+    if (!m.getPane('sealevel-overlay')) {
+      const pane = m.createPane('sealevel-overlay');
+      pane.style.zIndex = '400';
+      pane.style.transition = 'opacity 400ms ease-in-out';
+    }
+    setMapReady(true);
+  }, []);
   const onMapClick = useCallback(() => {
     setShowLayerPop(false);
     if (selectedNature) { setSelectedNature(null); setSelectedNatureObs([]); }
@@ -1311,10 +1320,19 @@ export function VeierlandApp() {
       const n = timelineSections.length;
       const goEra = (idx: number) => {
         const i = Math.max(0, Math.min(n - 1, idx));
-        setEraNavIdx(i);
-        setSeaLevelM(timelineSections[i].sea_level_m);
-        setSeaLevelLabel(timelineSections[i].era);
-        setLesmerEraExpanded(false);
+        const pane = mapRef.current?.getPane('sealevel-overlay');
+        if (pane) pane.style.opacity = '0';
+        if (seaFadeRef.current) clearTimeout(seaFadeRef.current);
+        seaFadeRef.current = setTimeout(() => {
+          setEraNavIdx(i);
+          setSeaLevelM(timelineSections[i].sea_level_m);
+          setSeaLevelLabel(timelineSections[i].era);
+          setLesmerEraExpanded(false);
+          requestAnimationFrame(() => {
+            const p = mapRef.current?.getPane('sealevel-overlay');
+            if (p) p.style.opacity = '1';
+          });
+        }, 400);
       };
       return (
         <>
@@ -1874,6 +1892,7 @@ export function VeierlandApp() {
             <GeoJSON
               key={thresh}
               data={feat as any}
+              pane="sealevel-overlay"
               style={{ color: '#1a6fa8', fillColor: '#3a9de0', fillOpacity: 0.42, weight: 1.5, opacity: 0.7 }}
             />
           );
