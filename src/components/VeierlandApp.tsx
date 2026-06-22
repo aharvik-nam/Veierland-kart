@@ -525,6 +525,8 @@ export function VeierlandApp() {
   const [timelineSections, setTimelineSections] = useState<TimelineSection[]>(DEFAULT_TIMELINE_SECTIONS);
   const [seaLevelM, setSeaLevelM] = useState(DEFAULT_TIMELINE_SECTIONS[0]?.sea_level_m ?? 0); // metres above today's sea level (0–15)
   const [seaLevelLabel, setSeaLevelLabel] = useState<string | null>(null); // era name shown as label
+  const [seaLevelA, setSeaLevelA] = useState(DEFAULT_TIMELINE_SECTIONS[0]?.sea_level_m ?? 0);
+  const [seaLevelB, setSeaLevelB] = useState(DEFAULT_TIMELINE_SECTIONS[0]?.sea_level_m ?? 0);
 
   // Nature state
   const [natureObs, setNatureObs] = useState<NatureObs[]>([]);
@@ -572,7 +574,8 @@ export function VeierlandApp() {
   const [mapZoom, setMapZoom] = useState<number>(MAP_ZOOM);
 
   const mapRef = useRef<L.Map | null>(null);
-  const seaFadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const seaActivePaneRef = useRef<'a' | 'b'>('a');
+  const crossfadeReadyRef = useRef(false);
   const sheetRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const fitDoneRef = useRef(false);
@@ -691,9 +694,28 @@ export function VeierlandApp() {
     loadFarmData().then(setFarmData);
     loadTimelineSections().then(sections => {
       setTimelineSections(sections);
-      setSeaLevelM(sections[0]?.sea_level_m ?? 0);
+      const lvl = sections[0]?.sea_level_m ?? 0;
+      setSeaLevelM(lvl);
+      setSeaLevelA(lvl);
+      setSeaLevelB(lvl);
     });
   }, []);
+
+  // Crossfade: after React renders the new level into the inactive pane, swap opacities
+  useEffect(() => {
+    if (!crossfadeReadyRef.current) return;
+    crossfadeReadyRef.current = false;
+    const paneA = mapRef.current?.getPane('sealevel-a');
+    const paneB = mapRef.current?.getPane('sealevel-b');
+    if (!paneA || !paneB) return;
+    if (seaActivePaneRef.current === 'b') {
+      paneA.style.opacity = '0';
+      paneB.style.opacity = '1';
+    } else {
+      paneA.style.opacity = '1';
+      paneB.style.opacity = '0';
+    }
+  }, [seaLevelA, seaLevelB]);
 
   // Fit map bounds once both map and POIs are ready (runs once)
   useEffect(() => {
@@ -706,10 +728,16 @@ export function VeierlandApp() {
 
   const onMapReady = useCallback((m: L.Map) => {
     mapRef.current = m;
-    if (!m.getPane('sealevel-overlay')) {
-      const pane = m.createPane('sealevel-overlay');
-      pane.style.zIndex = '400';
-      pane.style.transition = 'opacity 400ms ease-in-out';
+    if (!m.getPane('sealevel-a')) {
+      const paneA = m.createPane('sealevel-a');
+      paneA.style.zIndex = '400';
+      paneA.style.transition = 'opacity 500ms ease-in-out';
+    }
+    if (!m.getPane('sealevel-b')) {
+      const paneB = m.createPane('sealevel-b');
+      paneB.style.zIndex = '401';
+      paneB.style.transition = 'opacity 500ms ease-in-out';
+      paneB.style.opacity = '0';
     }
     setMapReady(true);
   }, []);
@@ -1161,7 +1189,11 @@ export function VeierlandApp() {
           {seaLevelLabel ?? (seaLevelM === 0 ? (lang === 'no' ? 'I dag' : 'Today') : `+${seaLevelM}m`)}
         </div>
         <input type="range" min={0} max={15} step={1}
-          value={seaLevelM} onChange={e => { setSeaLevelM(Number(e.target.value)); setSeaLevelLabel(null); }}
+          value={seaLevelM} onChange={e => {
+            const v = Number(e.target.value);
+            setSeaLevelM(v); setSeaLevelLabel(null);
+            if (seaActivePaneRef.current === 'a') setSeaLevelA(v); else setSeaLevelB(v);
+          }}
           className="vl-sl-range" list="sea-level-ticks" />
         <datalist id="sea-level-ticks">
           {[0, 5, 10, 15].map(v => <option key={v} value={v} />)}
@@ -1320,19 +1352,17 @@ export function VeierlandApp() {
       const n = timelineSections.length;
       const goEra = (idx: number) => {
         const i = Math.max(0, Math.min(n - 1, idx));
-        const pane = mapRef.current?.getPane('sealevel-overlay');
-        if (pane) pane.style.opacity = '0';
-        if (seaFadeRef.current) clearTimeout(seaFadeRef.current);
-        seaFadeRef.current = setTimeout(() => {
-          setEraNavIdx(i);
-          setSeaLevelM(timelineSections[i].sea_level_m);
-          setSeaLevelLabel(timelineSections[i].era);
-          setLesmerEraExpanded(false);
-          requestAnimationFrame(() => {
-            const p = mapRef.current?.getPane('sealevel-overlay');
-            if (p) p.style.opacity = '1';
-          });
-        }, 400);
+        const newLevel = timelineSections[i].sea_level_m;
+        setEraNavIdx(i);
+        setSeaLevelM(newLevel);
+        setSeaLevelLabel(timelineSections[i].era);
+        setLesmerEraExpanded(false);
+        // Load new level into the inactive pane, then crossfade
+        const next = seaActivePaneRef.current === 'a' ? 'b' : 'a';
+        seaActivePaneRef.current = next;
+        crossfadeReadyRef.current = true;
+        if (next === 'b') setSeaLevelB(newLevel);
+        else setSeaLevelA(newLevel);
       };
       return (
         <>
@@ -1883,20 +1913,24 @@ export function VeierlandApp() {
               eventHandlers={{ click: () => {} }} />
           );
         })}
-        {mode === 'history' && seaLevelM > 0 && (() => {
-          const thresh = nearestFloodThreshold(seaLevelM);
+        {mode === 'history' && [
+          { level: seaLevelA, pane: 'sealevel-a' },
+          { level: seaLevelB, pane: 'sealevel-b' },
+        ].map(({ level, pane }) => {
+          if (level <= 0) return null;
+          const thresh = nearestFloodThreshold(level);
           if (thresh === null) return null;
           const feat = FLOOD_BY_THRESHOLD.get(thresh);
           if (!feat) return null;
           return (
             <GeoJSON
-              key={thresh}
+              key={`${pane}-${thresh}`}
               data={feat as any}
-              pane="sealevel-overlay"
+              pane={pane}
               style={{ color: '#1a6fa8', fillColor: '#3a9de0', fillOpacity: 0.42, weight: 1.5, opacity: 0.7 }}
             />
           );
-        })()}
+        })}
         {mode === 'history' && historyView === 'garder' && visibleFarms.map(farm => {
           const coords = farmCoords[farm.name];
           if (!coords) return null;
