@@ -297,23 +297,25 @@ body { display: grid; place-items: center; }
 }
 .vl-top > * { pointer-events: auto; }
 
-/* ── Panel: mode pills ──────────────────────────────────────────────────────── */
+/* ── Panel: mode tabs (underline style) ─────────────────────────────────────── */
 .vl-modepills {
-  display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; padding: 1px;
+  display: flex; gap: 0; overflow-x: auto; scrollbar-width: none; padding: 0;
+  border-bottom: 2px solid var(--line);
 }
 .vl-modepills::-webkit-scrollbar { display: none; }
 .vl-panel-modes {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 .vl-modepill {
-  padding: 9px 16px; border-radius: 999px; min-height: 40px;
+  padding: 9px 16px; border-radius: 0; min-height: 42px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--card2); border: 1px solid var(--line);
-  box-shadow: 0 1px 5px rgba(28,38,30,.09);
-  font: inherit; font-size: 14px; font-weight: 600; color: var(--ink);
+  background: none; border: none; border-bottom: 2.5px solid transparent;
+  margin-bottom: -2px;
+  font: inherit; font-size: 14px; font-weight: 500; color: var(--muted);
   white-space: nowrap; cursor: pointer;
+  transition: color .15s, border-color .15s;
 }
-.vl-modepill.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.vl-modepill.on { color: var(--ink); font-weight: 700; border-bottom-color: var(--accent); }
 
 .vl-lang {
   display: flex; align-items: center; gap: 2px; flex: 0 0 auto;

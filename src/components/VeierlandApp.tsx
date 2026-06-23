@@ -4,12 +4,11 @@ import L from 'leaflet';
 import { loadAllPOIs } from '../data/veierland';
 import { loadTurkartGeoJSON } from '../lib/geodata';
 import boundaryData from '../data/veierland_boundary.json';
-import natureCacheData from '../data/nature_cache.json';
-import assessmentCacheData from '../data/assessment_cache.json';
 import 'leaflet.markercluster';
 import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, WikipediaData } from '../lib/types';
-import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages, fetchWikipediaSpecies, fetchArtsdatabankenAssessment } from '../lib/api';
+import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages, fetchWikipediaSpecies } from '../lib/api';
 import { loadCatCfg, DEFAULT_CAT_CFG, CatCfgMap } from '../lib/catcfg';
+import { NATURE_GROUPS, NatureGroup, NatureObs, GBIF_POLYGON, STATIC_NATURE_CACHE, loadNatureObs } from '../lib/naturedata';
 import { loadFarmData, DEFAULT_FARM_DATA, Farm } from '../lib/farmdata';
 import { loadTimelineSections, DEFAULT_TIMELINE_SECTIONS, TimelineSection } from '../lib/timelinedata';
 import { ICONS } from '../lib/icons';
@@ -87,13 +86,21 @@ const GEO_DATA: Record<string, any> = {
   berggrunn: berggrunData,
 };
 
+// NGU source colors that conflict with the blue sea-level flood overlay → remapped to
+// visually distinct equivalents while preserving geological meaning.
+const GEO_COLOR_REMAP: Record<string, string> = {
+  '#4a90d9': '#c8a050',  // Marin strandavsetning: blue→sandy gold (same hue as flood overlay)
+  '#b0b0b0': '#a8b0a0',  // Bart fjell: neutral gray→cool greenish gray
+};
+
 function geoStyle(feature?: { properties?: { color?: string } }): L.PathOptions {
+  const src = feature?.properties?.color ?? '#cccccc';
   return {
-    fillColor: feature?.properties?.color ?? '#cccccc',
-    fillOpacity: 0.55,
-    color: '#555',
-    weight: 0.8,
-    opacity: 0.6,
+    fillColor: GEO_COLOR_REMAP[src] ?? src,
+    fillOpacity: 0.62,
+    color: '#222',
+    weight: 1.5,
+    opacity: 0.75,
   };
 }
 
@@ -111,15 +118,6 @@ function geoOnEach(feature: { properties?: { type_no?: string; label?: string } 
 
 // ─── Nature (Artsdatabanken) ──────────────────────────────────────────────────
 
-// GBIF backbone taxon keys for Veierland groups
-const NATURE_GROUPS = {
-  Fugler:        { no: 'Fugler',        en: 'Birds',        color: '#3b7fc4', taxonKey: 212, icon: 'fugl'       },
-  Karplanter:    { no: 'Karplanter',    en: 'Plants',       color: '#4a8a2a', taxonKey: 6,   icon: 'plante'     },
-  Pattedyr:      { no: 'Pattedyr',      en: 'Mammals',      color: '#8b5c2a', taxonKey: 359, icon: 'pattedyr'   },
-  Sommerfugler:  { no: 'Sommerfugler',  en: 'Butterflies',  color: '#b84fa0', taxonKey: 797, icon: 'sommerfugl' },
-  Sopper:        { no: 'Sopper',        en: 'Fungi',        color: '#c07a3a', taxonKey: 5,   icon: 'sopp'       },
-} as const;
-type NatureGroup = keyof typeof NATURE_GROUPS;
 const RED_LIST_CATS = /^(NT|VU|EN|CR|RE|DD)$/;
 
 const RL_LABEL: Record<string, string> = {
@@ -134,23 +132,6 @@ const RL_DESC: Record<string, string> = {
   RE: 'Arten er trolig utdødd som reproduserende bestand i Norge.',
   DD: 'Det finnes ikke nok data til å vurdere artens risiko for utdøing i Norge.',
 };
-
-interface NatureObs {
-  scientificName: string;
-  popularName: string;
-  photoUrl: string;
-  photoAttribution: string;
-  group: NatureGroup;
-  lat: number;
-  lng: number;
-  date: string;
-  obsCount: number;
-  gbifKey: number;
-  family?: string;
-  familyKey?: number;
-  redListCategory?: string;
-  alienCategory?: string;
-}
 
 // ─── History types ────────────────────────────────────────────────────────────
 
@@ -194,95 +175,6 @@ const GARDER_TIMELINE = [
 
 // Historical sea level (metres above today) per era, based on Vestfold land-uplift data
 
-// WGS84 polygon tracing Veierland's coastline (from veierland_boundary.json)
-const GBIF_POLYGON = encodeURIComponent(
-  'POLYGON((' +
-  [...(boundaryData as any).coordinates[0]].reverse().map((c: number[]) => `${c[0]} ${c[1]}`).join(',') +
-  '))'
-);
-
-async function fetchNatureGroup(group: NatureGroup): Promise<{ group: NatureGroup; obs: unknown[] }> {
-  try {
-    const allResults: unknown[] = [];
-    const limit = 300;
-    let offset = 0;
-    while (true) {
-      const url = `https://api.gbif.org/v1/occurrence/search?geometry=${GBIF_POLYGON}&taxonKey=${NATURE_GROUPS[group].taxonKey}&limit=${limit}&offset=${offset}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      allResults.push(...(data.results ?? []));
-      if (data.endOfRecords) break;
-      offset += limit;
-      if (offset > 9000) break; // safety cap: 30 pages per group
-    }
-    return { group, obs: allResults };
-  } catch {
-    return { group, obs: [] };
-  }
-}
-
-interface INatResult { norwegianName: string; photoUrl: string; photoAttribution: string; }
-
-async function fetchINaturalistTaxon(scientificName: string): Promise<INatResult> {
-  const empty: INatResult = { norwegianName: '', photoUrl: '', photoAttribution: '' };
-  try {
-    const res = await fetch(
-      `https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(scientificName)}&locale=nb&per_page=5`
-    );
-    if (!res.ok) return empty;
-    const data = await res.json();
-    const genus = scientificName.split(' ')[0].toLowerCase();
-    const taxon = (data.results as any[]).find(t =>
-      t.name.toLowerCase().startsWith(genus)
-    );
-    if (!taxon) return empty;
-    return {
-      norwegianName: taxon.preferred_common_name ?? '',
-      photoUrl: taxon.default_photo?.medium_url ?? '',
-      photoAttribution: taxon.default_photo?.attribution ?? '',
-    };
-  } catch {
-    return empty;
-  }
-}
-
-async function enrichWithINaturalist(obs: NatureObs[]): Promise<NatureObs[]> {
-  const uniqueNames = [...new Set(obs.map(o => o.scientificName))];
-  const results = await Promise.all(uniqueNames.map(n => fetchINaturalistTaxon(n)));
-  const map = new Map(uniqueNames.map((n, i) => [n, results[i]]));
-  return obs.map(o => {
-    const r = map.get(o.scientificName)!;
-    return { ...o, popularName: r.norwegianName || o.popularName, photoUrl: r.photoUrl, photoAttribution: r.photoAttribution };
-  });
-}
-
-const _assessmentCache = (assessmentCacheData as { assessments: Record<string, { redListCategory?: string; alienCategory?: string }> }).assessments;
-
-async function enrichWithAssessments(obs: NatureObs[]): Promise<NatureObs[]> {
-  const uniqueNames = [...new Set(obs.map(o => o.scientificName))];
-  const amap = new Map<string, { redListCategory?: string; alienCategory?: string }>();
-
-  // Use pre-built cache for known species (instant)
-  const cacheMisses = uniqueNames.filter(n => {
-    const cached = _assessmentCache[n];
-    if (cached !== undefined) { amap.set(n, cached); return false; }
-    return true;
-  });
-
-  // Live API only for species not in cache (rare — new observations)
-  if (cacheMisses.length > 0) {
-    const BATCH = 20;
-    for (let i = 0; i < cacheMisses.length; i += BATCH) {
-      const batch = cacheMisses.slice(i, i + BATCH);
-      const results = await Promise.all(batch.map(n => fetchArtsdatabankenAssessment(n)));
-      batch.forEach((n, j) => amap.set(n, results[j]));
-    }
-  }
-
-  return obs.map(o => ({ ...o, ...(amap.get(o.scientificName) ?? {}) }));
-}
-
 async function loadNorwegianFamilyNames(
   obs: NatureObs[],
   setMap: (m: Record<string, string>) => void
@@ -322,42 +214,6 @@ async function loadNorwegianFamilyNames(
   try { localStorage.setItem('vl-family-nor', JSON.stringify(result)); } catch {}
 }
 
-function processNatureData(rawGroups: { group: NatureGroup; obs: unknown[] }[]): NatureObs[] {
-  const countMap = new Map<number, number>();
-  const latestMap = new Map<number, { raw: Record<string, unknown>; group: NatureGroup; date: string }>();
-
-  for (const { group, obs } of rawGroups) {
-    for (const o of obs as Record<string, unknown>[]) {
-      const key = o.speciesKey as number;
-      if (!key || !o.decimalLatitude || !o.species) continue;
-      countMap.set(key, (countMap.get(key) ?? 0) + 1);
-      const date = String(o.eventDate ?? '');
-      const existing = latestMap.get(key);
-      if (!existing || date > existing.date) latestMap.set(key, { raw: o, group, date });
-    }
-  }
-
-  const result: NatureObs[] = [];
-  for (const [key, { raw, group, date }] of latestMap) {
-    result.push({
-      scientificName: String(raw.species ?? ''),
-      popularName: '',
-      photoUrl: '',
-      photoAttribution: '',
-      group,
-      lat: raw.decimalLatitude as number,
-      lng: raw.decimalLongitude as number,
-      date,
-      obsCount: countMap.get(key) ?? 1,
-      gbifKey: key,
-      family: String(raw.family ?? ''),
-      familyKey: raw.familyKey as number | undefined,
-    });
-  }
-
-  return result.sort((a, b) => b.obsCount - a.obsCount || a.scientificName.localeCompare(b.scientificName));
-}
-
 function markerSize(zoom: number): number {
   return Math.round(Math.max(14, Math.min(34, 14 + (zoom - 11) * 5)));
 }
@@ -387,6 +243,35 @@ function makeNatureIconHtml(color: string, iconKey: string, selected: boolean, s
   const svg = `<svg viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="${svgSz}" height="${svgSz}">${ICONS[iconKey] ?? ICONS.blad}</svg>`;
   return `<div class="vl-nat-pin${selected ? ' sel' : ''}${dimmed ? ' dimmed' : ''}${ring}" style="--gc:${color};width:${sz}px;height:${sz}px">${svg}</div>`;
 }
+
+// ─── Geo helpers ─────────────────────────────────────────────────────────────
+
+// Minimum distance in meters from point P to a polyline (flat-earth, accurate for short distances)
+function pointToPolylineDistM(p: [number, number], poly: [number, number][]): number {
+  const R = 6371000 * Math.PI / 180;
+  let minDist = Infinity;
+  for (let i = 0; i < poly.length - 1; i++) {
+    const [ay, ax] = poly[i], [by, bx] = poly[i + 1];
+    const cosLat = Math.cos(((ay + by) / 2) * Math.PI / 180);
+    const axm = ax * R * cosLat, aym = ay * R;
+    const bxm = bx * R * cosLat, bym = by * R;
+    const pxm = p[1] * R * cosLat, pym = p[0] * R;
+    const dx = bxm - axm, dy = bym - aym;
+    const len2 = dx * dx + dy * dy;
+    const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((pxm - axm) * dx + (pym - aym) * dy) / len2));
+    const dist = Math.sqrt((pxm - axm - t * dx) ** 2 + (pym - aym - t * dy) ** 2);
+    if (dist < minDist) minDist = dist;
+  }
+  return minDist;
+}
+
+const TRAIL_CAT_GROUPS = {
+  alle:     { no: 'Alle',        en: 'All',          cats: null as null | string[] },
+  historie: { no: 'Historie',    en: 'History',      cats: ['arkeologi', 'hvalfangst'] },
+  natur:    { no: 'Natur',       en: 'Nature',       cats: null }, // uses natureObs (GBIF), not POI categories
+  mat:      { no: 'Mat & Drikke',en: 'Food & Drink', cats: ['mat'] },
+  kultur:   { no: 'Kultur',      en: 'Culture',      cats: ['kultur', 'info', 'ferge', 'havn'] },
+} as const;
 
 // ─── Trail data ───────────────────────────────────────────────────────────────
 
@@ -533,9 +418,12 @@ export function VeierlandApp() {
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [trailPath, setTrailPath] = useState<[number, number][] | null>(null);
+  const [trailPoiFilter, setTrailPoiFilter] = useState<'along' | 'all'>('along');
+  const [trailCatFilter, setTrailCatFilter] = useState<'alle' | 'historie' | 'natur' | 'mat' | 'kultur'>('alle');
   const [heartAnim, setHeartAnim] = useState(false);
   const [lesmerExpanded, setLesmerExpanded] = useState(false);
   const [lesmerEraExpanded, setLesmerEraExpanded] = useState(false);
+  const [lokalExpanded, setLokalExpanded] = useState(false);
 
   // History state
   const [historyView, setHistoryView] = useState<'tidslinje' | 'garder'>('tidslinje');
@@ -693,6 +581,7 @@ export function VeierlandApp() {
   useEffect(() => {
     if (!selectedPOI) return;
     setLesmerExpanded(false);
+    setLokalExpanded(false);
     setSnlData(null); setLokalData(null); setDimuData([]); setWikimediaImages([]);
     let alive = true;
     setApiLoading(true);
@@ -804,11 +693,18 @@ export function VeierlandApp() {
 
     const sz = markerSize(mapZoom);
     const half = Math.round(sz / 2);
+    const dimByTrail = mode === 'trails' && view === 'detail' && !!selectedTrail && trailPoiFilter === 'along';
+
     filteredPOIs.forEach(poi => {
       const cat = getCat(poi.kategori);
       const sel = selectedPOI?.id === poi.id;
-      const icon = L.divIcon({ className: '', iconSize: [sz, sz], iconAnchor: [half, half], html: makeIconHtml(cat.icon, sel, sz) });
-      L.marker(poi.coordinates as [number, number], { icon }).on('click', () => selectPOI(poi)).addTo(cg);
+      const faded = dimByTrail && !!poi.coordinates &&
+        pointToPolylineDistM(poi.coordinates as [number, number], selectedTrail!.path) > 20;
+      const html = faded
+        ? `<div style="opacity:0.3">${makeIconHtml(cat.icon, sel, sz)}</div>`
+        : makeIconHtml(cat.icon, sel, sz);
+      const icon = L.divIcon({ className: '', iconSize: [sz, sz], iconAnchor: [half, half], html });
+      L.marker(poi.coordinates as [number, number], { icon, zIndexOffset: sel ? 1000 : 0 }).on('click', () => selectPOI(poi)).addTo(cg);
     });
 
     map.addLayer(cg);
@@ -816,49 +712,24 @@ export function VeierlandApp() {
 
     return () => { if (map) map.removeLayer(cg); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapReady, mode, filteredPOIs, selectedPOI?.id, view, mapZoom]);
+  }, [mapReady, mode, filteredPOIs, selectedPOI?.id, view, mapZoom, selectedTrail, trailPoiFilter]);
 
   useEffect(() => {
-    if (mode !== 'nature' || natureFetched) return;
+    if ((mode !== 'nature' && !(mode === 'trails' && trailCatFilter === 'natur')) || natureFetched) return;
 
-    // 1. Load pre-baked static cache instantly for fast initial display
-    const staticCache = natureCacheData as { generatedAt: string; obs: NatureObs[] };
-    setNatureObs(staticCache.obs);
+    // Show static bundle immediately for fast first render
+    setNatureObs(STATIC_NATURE_CACHE.obs);
     setNatureFetched(true);
 
-    // 2. Fetch ALL observations from GBIF and replace cache with full individual obs
+    // Load fresher data from Firebase in background (instant on repeat visits via Firestore offline cache)
     setNatureLoading(true);
-    const cacheMap = new Map(staticCache.obs.map(o => [o.gbifKey, o]));
-    const groups = Object.keys(NATURE_GROUPS) as NatureGroup[];
-    Promise.all(groups.map(fetchNatureGroup)).then(async rawGroups => {
-      const allObs = processNatureData(rawGroups);
-      if (allObs.length === 0) return; // setNatureLoading(false) handled by finally
-
-      // Re-use cached popularName/photo for known species — avoids re-fetching iNaturalist for all
-      const preEnriched = allObs.map(obs => {
-        const cached = cacheMap.get(obs.gbifKey);
-        return cached
-          ? { ...obs, popularName: cached.popularName, photoUrl: cached.photoUrl, photoAttribution: cached.photoAttribution }
-          : obs;
-      });
-
-      // Run iNaturalist (new species only) and assessments (all) in parallel
-      const newObs = preEnriched.filter(o => !cacheMap.has(o.gbifKey));
-      const [enrichedNew, assessedAll] = await Promise.all([
-        newObs.length > 0 ? enrichWithINaturalist(newObs) : Promise.resolve<NatureObs[]>([]),
-        enrichWithAssessments(preEnriched),
-      ]);
-      const inatMap = new Map(enrichedNew.map(o => [o.gbifKey, o]));
-      const assessMap = new Map(assessedAll.map(o => [o.gbifKey, o]));
-      const finalObs = preEnriched.map(o => {
-        const assessed = assessMap.get(o.gbifKey) ?? o;
-        const inat = inatMap.get(o.gbifKey);
-        return inat ? { ...assessed, popularName: inat.popularName, photoUrl: inat.photoUrl, photoAttribution: inat.photoAttribution } : assessed;
-      });
-      setNatureObs(finalObs);
-      loadNorwegianFamilyNames(finalObs, setFamilyNorMap);
+    loadNatureObs().then(obs => {
+      if (obs) {
+        setNatureObs(obs);
+        loadNorwegianFamilyNames(obs, setFamilyNorMap);
+      }
     }).finally(() => setNatureLoading(false));
-  }, [mode, natureFetched]);
+  }, [mode, natureFetched, trailCatFilter]);
 
   // Fly to a coordinate but shift the center up so the marker is visible above the sheet
   function flyToAboveSheet(coordinates: [number, number], zoom: number) {
@@ -1410,14 +1281,19 @@ export function VeierlandApp() {
               style={{ width: 46, height: 46, borderRadius: 14, background: 'var(--accent)', color: '#fff', border: 'none', display: 'grid', placeItems: 'center', cursor: 'pointer', opacity: eraNavIdx === 0 ? 0.38 : 1, flexShrink: 0 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
             </button>
-            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
-              {timelineSections.map((_, i) => (
-                <div key={i} onClick={() => goEra(i)} style={{
-                  width: i === eraNavIdx ? 18 : 8, height: 8, borderRadius: 99,
-                  background: i === eraNavIdx ? 'var(--accent)' : '#D7D3C7',
-                  cursor: 'pointer', transition: 'all .2s',
-                }} />
-              ))}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)', letterSpacing: '.02em' }}>
+                {eraNavIdx + 1} av {n}
+              </span>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+                {timelineSections.map((_, i) => (
+                  <div key={i} onClick={() => goEra(i)} style={{
+                    width: i === eraNavIdx ? 18 : 8, height: 8, borderRadius: 99,
+                    background: i === eraNavIdx ? 'var(--accent)' : '#D7D3C7',
+                    cursor: 'pointer', transition: 'all .2s',
+                  }} />
+                ))}
+              </div>
             </div>
             <button onClick={() => goEra(eraNavIdx + 1)} disabled={eraNavIdx === n - 1}
               style={{ width: 46, height: 46, borderRadius: 14, background: 'var(--accent)', color: '#fff', border: 'none', display: 'grid', placeItems: 'center', cursor: 'pointer', opacity: eraNavIdx === n - 1 ? 0.38 : 1, flexShrink: 0 }}>
@@ -1430,7 +1306,9 @@ export function VeierlandApp() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
               <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.06em', fontWeight: 600 }}>{era.period}</div>
               {era.sea_level_m > 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}>
+                <div
+                  title={lang === 'no' ? `Havet stod ca. ${era.sea_level_m} meter høyere enn i dag. Det blå overlayet viser hva som var under vann.` : `Sea level was ~${era.sea_level_m}m higher than today. The blue overlay shows what was underwater.`}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--accent)', fontWeight: 700, flexShrink: 0, cursor: 'help' }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M2 12h2a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1 2 2h2"/><path d="M2 18h2a2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1 2 2 2 2 0 0 1 2-2 2 2 0 0 1 2 2h2"/></svg>
                   {lang === 'no' ? `+${era.sea_level_m}m hav` : `+${era.sea_level_m}m sea`}
                 </div>
@@ -1558,7 +1436,6 @@ export function VeierlandApp() {
         {mode === 'places' && (
           <div className="vl-chips vl-panel-chips">
             <div className={`vl-chip${activeCats.size === 0 ? ' on' : ''}`} onClick={() => setActiveCats(new Set())}>
-              <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
               <span className="cl">{T.all}</span>
             </div>
             {[...catGroups.entries()].map(([groupName, groupCats]) => {
@@ -1591,7 +1468,6 @@ export function VeierlandApp() {
         {mode === 'nature' && (
           <div className="vl-chips vl-panel-chips">
             <div className={`vl-chip${!natureFilter ? ' on' : ''}`} onClick={() => setNatureFilter(null)}>
-              <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
               <span className="cl">{T.all}</span>
             </div>
             {(Object.entries(NATURE_GROUPS) as [NatureGroup, typeof NATURE_GROUPS[NatureGroup]][]).map(([g, cfg]) => {
@@ -1691,6 +1567,16 @@ export function VeierlandApp() {
         ) : (
           <>
             <div className="vl-count">{T.nt(trails.length)}</div>
+            {trails.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '28px 16px 8px', color: 'var(--muted)', fontSize: 14, lineHeight: 1.6 }}>
+                <p style={{ margin: '0 0 6px' }}>
+                  {lang === 'no' ? 'Ingen turer er registrert ennå.' : 'No trails registered yet.'}
+                </p>
+                <p style={{ margin: 0, fontSize: 13 }}>
+                  {lang === 'no' ? 'Kjenner du til en tur? Ta kontakt og bidra til kartet.' : 'Know a trail? Contact us and contribute to the map.'}
+                </p>
+              </div>
+            )}
             {trails.map(tr => (
               <div key={tr.id} className="vl-poi-card">
                 <div className="vl-poi-zone" onClick={() => selectTrail(tr)}>
@@ -1759,7 +1645,15 @@ export function VeierlandApp() {
           </div>
         )}
 
-        {wikimediaImages.length > 0 && (
+        {wikimediaImages.length === 1 && (
+          <a href={wikimediaImages[0].pageUrl} target="_blank" rel="noreferrer" className="vl-poi-static-img" style={{ display: 'block', textDecoration: 'none' }}>
+            <img src={wikimediaImages[0].thumbUrl} alt={wikimediaImages[0].title} style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 10, display: 'block' }} />
+            {wikimediaImages[0].author && (
+              <span className="vl-photo-credit">{wikimediaImages[0].license} · {wikimediaImages[0].author}</span>
+            )}
+          </a>
+        )}
+        {wikimediaImages.length > 1 && (
           <div className="vl-photo-strip-wrap">
             <div className="vl-photo-strip">
               {wikimediaImages.map((img, i) => (
@@ -1806,18 +1700,32 @@ export function VeierlandApp() {
           <p style={{ color: 'var(--muted)', fontSize: 13, margin: '8px 0' }}>Henter data…</p>
         )}
 
-        {lokalData && (
-          <div className="vl-api-section">
-            <p className="vl-api-label">Lokalhistoriewiki</p>
-            {lokalData.bilde && (
-              <img src={lokalData.bilde} alt={lokalData.tittel} className="vl-api-img" />
-            )}
-            <p className="vl-api-text">{lokalData.tekst}</p>
-            <a href={lokalData.url} target="_blank" rel="noreferrer" className="vl-api-link">
-              Les mer på Lokalhistoriewiki.no ↗
-            </a>
-          </div>
-        )}
+        {lokalData && (() => {
+          const MAX = 320;
+          const isTruncatable = !lokalExpanded && lokalData.tekst.length > MAX;
+          const displayText = isTruncatable
+            ? lokalData.tekst.slice(0, lokalData.tekst.lastIndexOf(' ', MAX) || MAX) + '…'
+            : lokalData.tekst;
+          return (
+            <div className="vl-api-section">
+              <p className="vl-api-label">Lokalhistoriewiki</p>
+              {lokalData.bilde && (
+                <img src={lokalData.bilde} alt={lokalData.tittel} className="vl-api-img" />
+              )}
+              <p className="vl-api-text">{displayText}</p>
+              {isTruncatable && (
+                <button onClick={() => setLokalExpanded(true)}
+                  style={{ background: 'none', border: 'none', padding: '0 0 6px', cursor: 'pointer', color: 'var(--accent)', fontWeight: 600, fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 4, font: 'inherit' }}>
+                  Les mer
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3,5 7,9 11,5"/></svg>
+                </button>
+              )}
+              <a href={lokalData.url} target="_blank" rel="noreferrer" className="vl-api-link">
+                Les mer på Lokalhistoriewiki.no ↗
+              </a>
+            </div>
+          );
+        })()}
 
         {snlData && !lokalData && (
           <div className="vl-api-section">
@@ -1903,6 +1811,162 @@ export function VeierlandApp() {
             <RouteSvg /> {T.showRoute}
           </button>
         </div>
+
+        {/* POI filter + list */}
+        {(() => {
+          // Along/All toggle
+          const toggleRow = (
+            <div style={{ display: 'flex', gap: 6, margin: '18px 0 10px' }}>
+              {(['along', 'all'] as const).map(f => (
+                <button
+                  key={f}
+                  onClick={() => setTrailPoiFilter(f)}
+                  style={{
+                    flex: 1, padding: '7px 0', borderRadius: 20, border: '1.5px solid',
+                    borderColor: trailPoiFilter === f ? 'var(--accent)' : 'var(--border)',
+                    background: trailPoiFilter === f ? 'color-mix(in srgb, var(--accent) 12%, transparent)' : 'transparent',
+                    color: trailPoiFilter === f ? 'var(--accent)' : 'var(--muted)',
+                    fontWeight: trailPoiFilter === f ? 600 : 400, fontSize: 13, cursor: 'pointer',
+                  }}
+                >
+                  {f === 'along' ? (lang === 'no' ? 'Langs ruta' : 'Along route') : (lang === 'no' ? 'Alle steder' : 'All places')}
+                </button>
+              ))}
+            </div>
+          );
+
+          // Category chips
+          const chipRow = (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+              {(Object.keys(TRAIL_CAT_GROUPS) as (keyof typeof TRAIL_CAT_GROUPS)[]).map(key => {
+                const grp = TRAIL_CAT_GROUPS[key];
+                const on = trailCatFilter === key;
+                return (
+                  <button key={key} onClick={() => setTrailCatFilter(key)} style={{
+                    padding: '4px 12px', borderRadius: 20, border: '1.5px solid',
+                    borderColor: on ? 'var(--accent)' : 'var(--border)',
+                    background: on ? 'color-mix(in srgb, var(--accent) 12%, transparent)' : 'transparent',
+                    color: on ? 'var(--accent)' : 'var(--muted)',
+                    fontWeight: on ? 600 : 400, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap',
+                  }}>
+                    {lang === 'no' ? grp.no : grp.en}
+                  </button>
+                );
+              })}
+            </div>
+          );
+
+          // ── Natur: show GBIF species observations along trail ──────────────────
+          if (trailCatFilter === 'natur') {
+            if (natureLoading && natureObs.length === 0) {
+              return <>{toggleRow}{chipRow}<p style={{ fontSize: 13, color: 'var(--muted)' }}>Henter naturdata…</p></>;
+            }
+            // Filter observations by proximity
+            const nearbyObs = natureObs.filter(obs =>
+              trailPoiFilter === 'all' || pointToPolylineDistM([obs.lat, obs.lng], trail.path) <= 20
+            );
+            // Deduplicate per species, count nearby obs per species
+            const speciesMap = new Map<number, { obs: NatureObs; count: number }>();
+            for (const obs of nearbyObs) {
+              const entry = speciesMap.get(obs.gbifKey);
+              if (entry) entry.count++;
+              else speciesMap.set(obs.gbifKey, { obs, count: 1 });
+            }
+            const species = [...speciesMap.values()].sort((a, b) => b.count - a.count);
+            return (
+              <>
+                {toggleRow}{chipRow}
+                {natureLoading && <p style={{ fontSize: 12, color: 'var(--muted)', margin: '-4px 0 8px' }}>Oppdaterer…</p>}
+                {species.length === 0 ? (
+                  <p style={{ fontSize: 13, color: 'var(--muted)', margin: '4px 0 8px' }}>
+                    {lang === 'no' ? 'Ingen naturobservasjoner langs ruta.' : 'No nature observations along this route.'}
+                  </p>
+                ) : (
+                  species.map(({ obs, count }) => {
+                    const grp = NATURE_GROUPS[obs.group];
+                    return (
+                      <div key={obs.gbifKey} className="vl-poi-card">
+                        <div className="vl-poi-zone" onClick={() => {
+                          selectNatureSpecies(obs);
+                          setMode('nature');
+                        }}>
+                          <div className="vl-poi-ico" style={{ background: `${grp.color}1a`, color: grp.color }}
+                            dangerouslySetInnerHTML={{ __html: iconSvg(grp.icon) }} />
+                          <div className="vl-poi-body">
+                            <h4>{obs.popularName || obs.scientificName}</h4>
+                            <p style={{ fontStyle: obs.popularName ? 'normal' : 'italic' }}>
+                              {obs.popularName ? obs.scientificName : (lang === 'no' ? grp.no : grp.en)}
+                              {' · '}{count} obs.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="vl-poi-sep" />
+                        <div className="vl-poi-arr" onClick={() => { selectNatureSpecies(obs); setMode('nature'); }}>
+                          <ChevSvg />
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </>
+            );
+          }
+
+          // ── Regular POI categories ─────────────────────────────────────────────
+          const catKeys = TRAIL_CAT_GROUPS[trailCatFilter].cats;
+          const nearbyPOIs = allPOIs.filter(p => {
+            if (!p.coordinates) return false;
+            if (trailPoiFilter === 'along' && pointToPolylineDistM(p.coordinates as [number, number], trail.path) > 20) return false;
+            if (catKeys && !catKeys.includes(p.kategori)) return false;
+            return true;
+          });
+          return (
+            <>
+              {toggleRow}{chipRow}
+              {nearbyPOIs.length === 0 ? (
+                <div style={{ margin: '4px 0 12px' }}>
+                  <p style={{ fontSize: 13, color: 'var(--muted)', margin: '0 0 8px' }}>
+                    {trailPoiFilter === 'along'
+                      ? (lang === 'no' ? 'Ingen steder i denne kategorien langs ruta.' : 'No places in this category along the route.')
+                      : (lang === 'no' ? 'Ingen steder å vise.' : 'No places to show.')}
+                  </p>
+                  {trailPoiFilter === 'along' && (
+                    <button
+                      onClick={() => setTrailPoiFilter('all')}
+                      style={{ fontSize: 13, color: 'var(--accent)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 600 }}
+                    >
+                      {lang === 'no' ? 'Vis alle steder →' : 'Show all places →'}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                nearbyPOIs.map(poi => {
+                  const cat = getCat(poi.kategori);
+                  return (
+                    <div key={poi.id} className="vl-poi-card">
+                      <div className="vl-poi-zone" onClick={() => {
+                        setSelectedPOI(poi);
+                        flyToAboveSheet(poi.coordinates, Math.max(mapRef.current?.getZoom() ?? 15, 15));
+                      }}>
+                        <div className="vl-poi-ico"
+                          style={{ background: `${cat.color}1a`, color: cat.color }}
+                          dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
+                        <div className="vl-poi-body">
+                          <h4>{poi.navn}</h4>
+                          {poi.beskrivelse && <p>{poi.beskrivelse}</p>}
+                        </div>
+                      </div>
+                      <div className="vl-poi-sep" />
+                      <div className="vl-poi-arr" onClick={() => selectPOI(poi)}>
+                        <ChevSvg />
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </>
+          );
+        })()}
       </>
     );
   }
@@ -1946,6 +2010,7 @@ export function VeierlandApp() {
           });
           return (
             <Marker key={poi.id} position={[lat, lng]} icon={icon}
+              zIndexOffset={selectedPOI?.id === poi.id ? 1000 : 0}
               eventHandlers={{ click: () => { setSelectedPOI(poi); setView('detail'); setSheetOpen(true); } }} />
           );
         })}
@@ -2021,6 +2086,7 @@ export function VeierlandApp() {
           });
           return (
             <Marker key={farm.name} position={coords} icon={icon}
+              zIndexOffset={selectedFarm?.name === farm.name ? 1000 : 0}
               eventHandlers={{ click: () => { setSelectedFarm(farm); setSheetOpen(true); } }} />
           );
         })}
@@ -2062,7 +2128,7 @@ export function VeierlandApp() {
       <div className="vl-top">
         <div className="vl-lang">
           <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>NO</button>
-          <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
+          <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')} title="Some content is only available in Norwegian">EN</button>
         </div>
       </div>
 
@@ -2111,15 +2177,23 @@ export function VeierlandApp() {
         <button
           className="vl-rbtn layers"
           aria-label={T.layers}
+          title={lang === 'no' ? 'Kartlag og geologi' : 'Map layers and geology'}
           onClick={e => { e.stopPropagation(); setShowLayerPop(v => !v); }}
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>
           </svg>
         </button>
-        <button className="vl-rbtn" aria-label="Min posisjon" onClick={locate}>
+        <button className="vl-rbtn" aria-label="Min posisjon" title={lang === 'no' ? 'Min posisjon' : 'My location'} onClick={locate}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="3.4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>
+          </svg>
+        </button>
+        <button className="vl-rbtn" aria-label={lang === 'no' ? 'Tilbake til Veierland' : 'Back to island'} title={lang === 'no' ? 'Tilbake til Veierland' : 'Back to island'}
+          onClick={() => mapRef.current?.flyTo(MAP_CENTER, MAP_ZOOM, { duration: 0.7 })}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9,22 9,12 15,12 15,22"/>
           </svg>
         </button>
       </div>
