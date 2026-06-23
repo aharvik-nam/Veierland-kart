@@ -387,7 +387,7 @@ function CheckSvg() {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-const MAP_CENTER: [number, number] = [59.183, 10.430];
+const MAP_CENTER: [number, number] = [59.1506, 10.3521];
 const MAP_ZOOM = 13;
 
 const USER_ICON = L.divIcon({
