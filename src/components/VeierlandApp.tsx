@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { MapContainer, Marker, Polyline, GeoJSON, useMap } from 'react-leaflet';
+import { MapContainer, Marker, Polyline, GeoJSON, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { loadAllPOIs } from '../data/veierland';
 import { loadTurkartGeoJSON } from '../lib/geodata';
@@ -416,6 +416,10 @@ export function VeierlandApp() {
   const [geoLayer, setGeoLayer] = useState<string | null>(null);
   const [showLayerPop, setShowLayerPop] = useState(false);
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
+  const [userAccuracy, setUserAccuracy] = useState<number>(0);
+  const [locating, setLocating] = useState(false);
+  const [offIsland, setOffIsland] = useState(false);
+  const watchRef = useRef<number | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [trailPath, setTrailPath] = useState<[number, number][] | null>(null);
   const [trailPoiFilter, setTrailPoiFilter] = useState<'along' | 'all'>('along');
@@ -803,17 +807,69 @@ export function VeierlandApp() {
     setSheetOpen(false);
   }
 
+  function pointInPolygon(lat: number, lng: number): boolean {
+    const poly = (boundaryData as unknown as { coordinates: [number, number][][] }).coordinates[0];
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const [xi, yi] = poly[i]; // GeoJSON is [lng, lat]
+      const [xj, yj] = poly[j];
+      if ((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)
+        inside = !inside;
+    }
+    return inside;
+  }
+
   function locate() {
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const p: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+    // Toggle off: stop watching
+    if (watchRef.current !== null) {
+      navigator.geolocation.clearWatch(watchRef.current);
+      watchRef.current = null;
+      setUserPos(null);
+      setLocating(false);
+      return;
+    }
+
+    setLocating(true);
+    setOffIsland(false);
+
+    const handlePos = (pos: GeolocationPosition, flyTo = false) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const acc = pos.coords.accuracy;
+      if (pointInPolygon(lat, lng)) {
+        const p: [number, number] = [lat, lng];
         setUserPos(p);
-        mapRef.current?.flyTo(p, 15, { duration: 0.7 });
-      },
+        setUserAccuracy(acc);
+        setOffIsland(false);
+        if (flyTo) mapRef.current?.flyTo(p, 16, { duration: 0.7 });
+      } else {
+        setUserPos(null);
+        setOffIsland(true);
+        setTimeout(() => setOffIsland(false), 4000);
+      }
+    };
+
+    // Immediate one-shot for fast first fix + fly
+    navigator.geolocation.getCurrentPosition(
+      pos => handlePos(pos, true),
+      () => {},
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+
+    // Continuous watch for live updates
+    watchRef.current = navigator.geolocation.watchPosition(
+      pos => handlePos(pos, false),
       err => console.error('Geolocation error', err),
       { enableHighAccuracy: true }
     );
   }
+
+  // Cleanup watch on unmount
+  useEffect(() => {
+    return () => {
+      if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current);
+    };
+  }, []);
 
   function toggleGroup(cats: string[]) {
     setActiveCats(prev => {
@@ -2108,7 +2164,17 @@ export function VeierlandApp() {
           );
         })}
         {userPos && (
-          <Marker position={userPos} icon={USER_ICON} interactive={false} />
+          <>
+            {userAccuracy > 0 && userAccuracy < 200 && (
+              <Circle
+                center={userPos}
+                radius={userAccuracy}
+                pathOptions={{ color: '#4a9fd4', fillColor: '#4a9fd4', fillOpacity: 0.12, weight: 1.5, opacity: 0.5 }}
+                interactive={false}
+              />
+            )}
+            <Marker position={userPos} icon={USER_ICON} interactive={false} />
+          </>
         )}
         {trailPath && (
           <>
@@ -2123,6 +2189,19 @@ export function VeierlandApp() {
           </>
         )}
       </MapContainer>
+
+      {/* Off-island toast */}
+      {offIsland && (
+        <div style={{
+          position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)',
+          background: 'var(--ink)', color: '#fff', borderRadius: 12,
+          padding: '10px 18px', fontSize: 13, fontWeight: 600,
+          zIndex: 1100, whiteSpace: 'nowrap', boxShadow: '0 4px 16px rgba(0,0,0,.25)',
+          pointerEvents: 'none',
+        }}>
+          {lang === 'no' ? 'Du er ikke på Veierland' : 'You are not on Veierland'}
+        </div>
+      )}
 
       {/* Top overlay: lang toggle */}
       <div className="vl-top">
@@ -2184,7 +2263,13 @@ export function VeierlandApp() {
             <path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>
           </svg>
         </button>
-        <button className="vl-rbtn" aria-label="Min posisjon" title={lang === 'no' ? 'Min posisjon' : 'My location'} onClick={locate}>
+        <button
+          className={`vl-rbtn${locating ? ' active' : ''}`}
+          aria-label="Min posisjon"
+          title={lang === 'no' ? (locating ? 'Stopp sporing' : 'Min posisjon') : (locating ? 'Stop tracking' : 'My location')}
+          onClick={locate}
+          style={locating ? { background: 'var(--accent)', color: '#fff' } : undefined}
+        >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="3.4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>
           </svg>
