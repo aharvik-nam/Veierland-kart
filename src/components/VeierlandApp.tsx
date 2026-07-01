@@ -419,7 +419,9 @@ export function VeierlandApp() {
   const [userAccuracy, setUserAccuracy] = useState<number>(0);
   const [locating, setLocating] = useState(false);
   const [offIsland, setOffIsland] = useState(false);
+  const [nearbyPoi, setNearbyPoi] = useState<POI | null>(null);
   const watchRef = useRef<number | null>(null);
+  const notifiedPoisRef = useRef<Set<string>>(new Set());
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [trailPath, setTrailPath] = useState<[number, number][] | null>(null);
   const [trailPoiFilter, setTrailPoiFilter] = useState<'along' | 'all'>('along');
@@ -807,6 +809,15 @@ export function VeierlandApp() {
     setSheetOpen(false);
   }
 
+  function distanceM(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
   function pointInPolygon(lat: number, lng: number): boolean {
     const poly = (boundaryData as unknown as { coordinates: [number, number][][] }).coordinates[0];
     let inside = false;
@@ -826,11 +837,17 @@ export function VeierlandApp() {
       watchRef.current = null;
       setUserPos(null);
       setLocating(false);
+      setNearbyPoi(null);
       return;
     }
 
     setLocating(true);
     setOffIsland(false);
+    notifiedPoisRef.current = new Set();
+
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
 
     const handlePos = (pos: GeolocationPosition, flyTo = false) => {
       const lat = pos.coords.latitude;
@@ -870,6 +887,43 @@ export function VeierlandApp() {
       if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current);
     };
   }, []);
+
+  // Proximity notifications when tracking
+  const NEARBY_M = 80;
+  useEffect(() => {
+    if (!userPos || !locating || allPOIs.length === 0) return;
+    const [lat, lng] = userPos;
+    let closest: POI | null = null;
+    let closestDist = Infinity;
+
+    for (const poi of allPOIs) {
+      const [pLat, pLng] = poi.coordinates;
+      const d = distanceM(lat, lng, pLat, pLng);
+      if (d <= NEARBY_M && d < closestDist) {
+        closestDist = d;
+        closest = poi;
+      }
+    }
+
+    if (closest && !notifiedPoisRef.current.has(closest.id)) {
+      notifiedPoisRef.current.add(closest.id);
+      setNearbyPoi(closest);
+      setTimeout(() => setNearbyPoi(p => p?.id === closest!.id ? null : p), 6000);
+
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const title = closest.navn;
+        const body = closest.beskrivelse
+          ? closest.beskrivelse.slice(0, 100) + (closest.beskrivelse.length > 100 ? '…' : '')
+          : `${Math.round(closestDist)}m unna`;
+        const notif = new Notification(title, { body, tag: closest.id, icon: '/vite.svg' });
+        const poiRef = closest;
+        notif.onclick = () => { window.focus(); setSelectedPOI(poiRef); };
+      }
+    } else if (!closest) {
+      setNearbyPoi(null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userPos]);
 
   function toggleGroup(cats: string[]) {
     setActiveCats(prev => {
@@ -2201,6 +2255,39 @@ export function VeierlandApp() {
         }}>
           {lang === 'no' ? 'Du er ikke på Veierland' : 'You are not on Veierland'}
         </div>
+      )}
+
+      {/* Nearby POI banner */}
+      {nearbyPoi && !offIsland && (
+        <button
+          onClick={() => { setSelectedPOI(nearbyPoi); setNearbyPoi(null); }}
+          style={{
+            position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)',
+            background: 'var(--card)', border: '1.5px solid var(--line)', borderRadius: 14,
+            padding: '10px 16px', zIndex: 1100, boxShadow: '0 4px 20px rgba(28,38,30,.18)',
+            display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+            maxWidth: 280, textAlign: 'left', font: 'inherit',
+          }}
+        >
+          <div style={{
+            width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+            background: 'color-mix(in srgb, var(--accent) 14%, transparent)',
+            display: 'grid', placeItems: 'center', color: 'var(--accent)',
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 700, marginBottom: 1 }}>
+              {lang === 'no' ? 'I nærheten' : 'Nearby'}
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.2 }}>
+              {nearbyPoi.navn}
+            </div>
+          </div>
+          <div style={{ marginLeft: 'auto', color: 'var(--muted)', fontSize: 18, flexShrink: 0 }}>›</div>
+        </button>
       )}
 
       {/* Top overlay: lang toggle */}
