@@ -424,6 +424,11 @@ function MoreDotsSvg() {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+// ≥900px uses the sidebar layout (see index.css) — no mini-card, sheet always visible
+function isDesktopView(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia('(min-width: 900px)').matches;
+}
+
 const MAP_CENTER: [number, number] = [59.1506, 10.3521];
 const MAP_ZOOM = 13;
 
@@ -831,10 +836,21 @@ export function VeierlandApp() {
     setSelectedPOI(poi);
     setSelectedTrail(null);
     setTrailPath(null);
-    flyToAboveSheet(poi.coordinates, Math.max(mapRef.current?.getZoom() ?? 15, 15));
     // On the Kart tab with nothing else open, show a compact mini-card instead
     // of pushing straight into the full sheet — keeps the map in view.
-    const showMini = tab === 'map' && !moreSection;
+    // Desktop has no mini-card (the sidebar is always visible), so open detail there.
+    const showMini = tab === 'map' && !moreSection && !isDesktopView();
+    if (showMini) {
+      // Nudge the pin slightly above centre so the mini-card doesn't cover it
+      const map = mapRef.current;
+      if (map) {
+        const z = Math.max(map.getZoom(), 15);
+        const target = map.project(L.latLng(poi.coordinates), z).add(L.point(0, 60));
+        map.flyTo(map.unproject(target, z), z, { duration: 0.7 });
+      }
+    } else {
+      flyToAboveSheet(poi.coordinates, Math.max(mapRef.current?.getZoom() ?? 15, 15));
+    }
     setView(showMini ? 'browse' : 'detail');
     setSheetOpen(!showMini);
   }
@@ -852,12 +868,16 @@ export function VeierlandApp() {
   function goBack() {
     setTrailPath(null);
     setView('browse');
-    if (tab === 'map') {
+    if (moreSection) {
+      // POI detail opened from a Natur/Historie marker — return to that section.
+      setSelectedPOI(null);
+      setSelectedTrail(null);
+    } else if (tab === 'map' && !isDesktopView()) {
       // Came from expanding a mini-card — collapse back to it, keep the selection.
       setSheetOpen(false);
       setSelectedTrail(null);
     } else {
-      // Came from the Steder/Turer/Lagret list — return to it.
+      // Came from the Steder/Turer/Lagret list (or the desktop sidebar) — return to it.
       setSelectedPOI(null);
       setSelectedTrail(null);
     }
@@ -873,14 +893,15 @@ export function VeierlandApp() {
     setTrailPath(null);
     setView('browse');
     setTab(t);
-    if (t === 'map') {
-      setSheetOpen(false);
-    } else {
-      setSheetOpen(true);
-      if (t === 'places') { setMode('places'); setCurrentLayer('soleng'); }
-      else if (t === 'trails') { setMode('trails'); setCurrentLayer('friluft'); }
-      else if (t === 'saved') { setMode('places'); }
+    // Kart/Steder/Lagret browse places; Turer browses trails. Only touch the
+    // map layer when the mode actually changes, so a manually chosen layer
+    // survives plain tab-hopping.
+    const wantMode = t === 'trails' ? 'trails' : 'places';
+    if (mode !== wantMode) {
+      setMode(wantMode);
+      setCurrentLayer(wantMode === 'trails' ? 'friluft' : 'soleng');
     }
+    setSheetOpen(t !== 'map');
   }
 
   function closeSheet() {
@@ -893,10 +914,12 @@ export function VeierlandApp() {
     setSelectedNatureObs([]);
     setTrailPath(null);
     setTab('map');
-    // Return the map to its default layer (places pins) regardless of what
-    // was being browsed (trails/nature/history) before the sheet closed.
-    setMode('places');
-    setCurrentLayer('soleng');
+    // Return the map to place pins if something else (trails/nature/history)
+    // was being browsed — but leave a manually chosen layer alone otherwise.
+    if (mode !== 'places') {
+      setMode('places');
+      setCurrentLayer('soleng');
+    }
   }
 
   function openMore() {
@@ -905,6 +928,7 @@ export function VeierlandApp() {
     setSelectedPOI(null);
     setSelectedTrail(null);
     setTrailPath(null);
+    setTab('map');
     setMoreSection('chooser');
     setSheetOpen(true);
   }
@@ -917,7 +941,11 @@ export function VeierlandApp() {
     setSelectedNatureObs([]);
     setSelectedEra(null);
     setSelectedFarm(null);
+    // Also clear the crossfade panes so a stale flood overlay from a previous
+    // history session doesn't reappear (the panes render from A/B, not M).
     setSeaLevelM(0);
+    setSeaLevelA(0);
+    setSeaLevelB(0);
   }
 
   function backToMoreChooser() {
@@ -1121,17 +1149,18 @@ export function VeierlandApp() {
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [sheetOpen, view, selectedPOI, selectedTrail, selectedNature, selectedEra, selectedFarm, historyView]);
+  }, [sheetOpen, view, selectedPOI, selectedTrail, selectedNature, selectedEra, selectedFarm, historyView, tab, moreSection]);
 
   const SHEET_OPEN_H = autoSheetH ?? SHEET_MAX_H;
   const sheetCurrentH = sheetOpen ? SHEET_OPEN_H : SHEET_MAX_H;
   // Kart tab, nothing open: a selected POI shows as a compact mini-card above the tab bar
   // instead of pushing the full sheet up over the map.
   const showMiniCard = tab === 'map' && !moreSection && !sheetOpen && view === 'browse' && !!selectedPOI;
+  // Offsets are measured within .vl-map-area, which already ends at the tab bar
   const railBottom = sheetOpen
     ? sheetCurrentH + 16
     : showMiniCard
-      ? TAB_BAR_H + MINI_CARD_H + 24
+      ? MINI_CARD_H + 28
       : TAB_BAR_H + 14;
 
   // Text strings

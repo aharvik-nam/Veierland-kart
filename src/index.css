@@ -446,8 +446,9 @@ body { display: grid; place-items: center; }
 
 /* ── Compact mini-card (map tab, single selection) ───────────────────────────── */
 .vl-minicard {
+  /* Lives inside .vl-map-area, which already ends at the tab bar */
   position: absolute; left: var(--pad); right: var(--pad);
-  bottom: calc(var(--tab-h) + 12px); z-index: 600;
+  bottom: 12px; z-index: 600;
   background: var(--card); border: 1px solid var(--line); border-radius: 16px;
   box-shadow: 0 10px 30px rgba(28,38,30,.18);
   display: flex; align-items: center; gap: 11px; padding: 10px 10px;
@@ -777,4 +778,8 @@ body { display: grid; place-items: center; }
   .vl-tabbtn.on::before { display: none; }
   .vl-tabbtn.on { background: var(--card2); border-radius: 10px; }
   .vl-minicard { display: none; }
+  /* The sheet is a sidebar here, not a bottom sheet — pin the rail (and its
+     popups) to the bottom of the map instead of tracking the sheet height. */
+  .vl-rail { bottom: 18px !important; }
+  .vl-pop { bottom: 76px !important; }
 }
