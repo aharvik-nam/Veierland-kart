@@ -414,10 +414,17 @@ function TrailsTabSvg() {
     </svg>
   );
 }
-function MoreDotsSvg() {
+function NatureTabSvg() {
   return (
-    <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor">
-      <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 21Q4 13 12 3q8 10 0 18z"/><path d="M12 3q-2 9 0 18"/>
+    </svg>
+  );
+}
+function HistoryTabSvg() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>
     </svg>
   );
 }
@@ -451,8 +458,7 @@ export function VeierlandApp() {
   const [activeCats, setActiveCats] = useState<Set<string>>(new Set());
   const [expandedPlaceCats, setExpandedPlaceCats] = useState<Set<string>>(new Set());
   const [mode, setMode] = useState<'places' | 'trails' | 'nature' | 'history'>('places');
-  const [tab, setTab] = useState<'map' | 'places' | 'trails' | 'saved'>('map');
-  const [moreSection, setMoreSection] = useState<'chooser' | 'nature' | 'history' | null>(null);
+  const [tab, setTab] = useState<'map' | 'places' | 'trails' | 'nature' | 'history' | 'saved'>('map');
   const [searchQ, setSearchQ] = useState('');
   const [view, setView] = useState<'browse' | 'detail'>('browse');
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
@@ -723,12 +729,12 @@ export function VeierlandApp() {
     setShowLayerPop(false);
     if (selectedNature) { setSelectedNature(null); setSelectedNatureObs([]); }
     // Tapping empty map while a mini-card is showing dismisses it
-    if (tab === 'map' && !moreSection && !sheetOpen && (selectedPOI || selectedTrail)) {
+    if (tab === 'map' && !sheetOpen && (selectedPOI || selectedTrail)) {
       setSelectedPOI(null);
       setSelectedTrail(null);
       setTrailPath(null);
     }
-  }, [selectedNature, tab, moreSection, sheetOpen, selectedPOI, selectedTrail]);
+  }, [selectedNature, tab, sheetOpen, selectedPOI, selectedTrail]);
   const onZoom = useCallback((z: number) => setMapZoom(z), []);
 
   // Cluster group — rebuild whenever filtered POIs, zoom, or selection changes
@@ -777,7 +783,7 @@ export function VeierlandApp() {
 
     return () => { if (map) map.removeLayer(cg); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapReady, mode, filteredPOIs, selectedPOI?.id, view, mapZoom, selectedTrail, trailPoiFilter, tab, moreSection]);
+  }, [mapReady, mode, filteredPOIs, selectedPOI?.id, view, mapZoom, selectedTrail, trailPoiFilter, tab]);
 
   useEffect(() => {
     if ((mode !== 'nature' && !(mode === 'trails' && trailCatFilter === 'natur')) || natureFetched) return;
@@ -849,7 +855,7 @@ export function VeierlandApp() {
     // On the Kart tab with nothing else open, show a compact mini-card instead
     // of pushing straight into the full sheet — keeps the map in view.
     // Desktop has no mini-card (the sidebar is always visible), so open detail there.
-    const showMini = tab === 'map' && !moreSection && !isDesktopView();
+    const showMini = tab === 'map' && !isDesktopView();
     if (showMini) {
       // Nudge the pin slightly above centre so the mini-card doesn't cover it
       const map = mapRef.current;
@@ -876,7 +882,6 @@ export function VeierlandApp() {
       mapRef.current?.flyTo(poi.coordinates, Math.max(mapRef.current?.getZoom() ?? 15, 15), { duration: 0.7 });
       return;
     }
-    setMoreSection(null);
     setView('browse');
     setTab('map');
     setSheetOpen(false);
@@ -900,31 +905,25 @@ export function VeierlandApp() {
 
   function goBack() {
     setView('browse');
-    if (moreSection) {
-      // POI detail opened from a Natur/Historie marker — return to that section.
-      setSelectedPOI(null);
-      setSelectedTrail(null);
-      setTrailPath(null);
-    } else if (tab === 'map' && !isDesktopView()) {
+    if (tab === 'map' && !isDesktopView()) {
       // Came from expanding a mini-card — collapse back to it, keep the
       // selection (POI or trail; a trail also keeps its route on the map).
       setSheetOpen(false);
     } else {
-      // Came from the Steder/Turer/Lagret list (or the desktop sidebar) — return to it.
+      // Came from a tab list (or the desktop sidebar) — return to it.
       setSelectedPOI(null);
       setSelectedTrail(null);
       setTrailPath(null);
     }
   }
 
-  function selectTab(t: 'map' | 'places' | 'trails' | 'saved') {
+  function selectTab(t: 'map' | 'places' | 'trails' | 'nature' | 'history' | 'saved') {
     // Re-tapping Kart with nothing open re-centres the island (replaces the
     // old "home" rail button)
-    if (t === 'map' && tab === 'map' && !moreSection && !sheetOpen) {
+    if (t === 'map' && tab === 'map' && !sheetOpen) {
       mapRef.current?.flyTo(MAP_CENTER, MAP_ZOOM, { duration: 0.7 });
     }
     setShowLayerPop(false);
-    setMoreSection(null);
     setSelectedPOI(null);
     setSelectedTrail(null);
     setSelectedNature(null);
@@ -932,20 +931,26 @@ export function VeierlandApp() {
     setTrailPath(null);
     setView('browse');
     setTab(t);
-    // Kart/Steder/Lagret browse places; Turer browses trails. Only touch the
-    // map layer when the mode actually changes, so a manually chosen layer
-    // survives plain tab-hopping.
-    const wantMode = t === 'trails' ? 'trails' : 'places';
+    // Each tab browses its own mode (Kart/Lagret browse places). Only touch
+    // the map layer when the mode actually changes, so a manually chosen
+    // layer survives plain tab-hopping.
+    const wantMode = t === 'trails' ? 'trails' : t === 'nature' ? 'nature' : t === 'history' ? 'history' : 'places';
     if (mode !== wantMode) {
       setMode(wantMode);
-      setCurrentLayer(wantMode === 'trails' ? 'friluft' : 'soleng');
+      setCurrentLayer(wantMode === 'trails' || wantMode === 'history' ? 'friluft' : wantMode === 'nature' ? 'flyfoto' : 'soleng');
+      setSelectedEra(null);
+      setSelectedFarm(null);
+      // Clear the crossfade panes so a stale flood overlay from a previous
+      // history session doesn't reappear (the panes render from A/B, not M).
+      setSeaLevelM(0);
+      setSeaLevelA(0);
+      setSeaLevelB(0);
     }
     setSheetOpen(t !== 'map');
   }
 
   function closeSheet() {
     setSheetOpen(false);
-    setMoreSection(null);
     setView('browse');
     setSelectedPOI(null);
     setSelectedTrail(null);
@@ -959,40 +964,6 @@ export function VeierlandApp() {
       setMode('places');
       setCurrentLayer('soleng');
     }
-  }
-
-  function openMore() {
-    setShowLayerPop(false);
-    setView('browse');
-    setSelectedPOI(null);
-    setSelectedTrail(null);
-    setTrailPath(null);
-    setTab('map');
-    setMoreSection('chooser');
-    setSheetOpen(true);
-  }
-
-  function chooseMore(section: 'nature' | 'history') {
-    setMoreSection(section);
-    setMode(section);
-    setCurrentLayer(section === 'nature' ? 'flyfoto' : 'friluft');
-    setSelectedNature(null);
-    setSelectedNatureObs([]);
-    setSelectedEra(null);
-    setSelectedFarm(null);
-    // Also clear the crossfade panes so a stale flood overlay from a previous
-    // history session doesn't reappear (the panes render from A/B, not M).
-    setSeaLevelM(0);
-    setSeaLevelA(0);
-    setSeaLevelB(0);
-  }
-
-  function backToMoreChooser() {
-    setMoreSection('chooser');
-    setSelectedNature(null);
-    setSelectedNatureObs([]);
-    setSelectedEra(null);
-    setSelectedFarm(null);
   }
 
   function distanceM(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -1191,13 +1162,13 @@ export function VeierlandApp() {
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [sheetOpen, view, selectedPOI, selectedTrail, selectedNature, selectedEra, selectedFarm, historyView, tab, moreSection]);
+  }, [sheetOpen, view, selectedPOI, selectedTrail, selectedNature, selectedEra, selectedFarm, historyView, tab]);
 
   const SHEET_OPEN_H = autoSheetH ?? SHEET_MAX_H;
   const sheetCurrentH = sheetOpen ? SHEET_OPEN_H : SHEET_MAX_H;
   // Kart tab, nothing open: a selected POI shows as a compact mini-card above the tab bar
   // instead of pushing the full sheet up over the map.
-  const showMiniCard = tab === 'map' && !moreSection && !sheetOpen && view === 'browse' && !!(selectedPOI || selectedTrail);
+  const showMiniCard = tab === 'map' && !sheetOpen && view === 'browse' && !!(selectedPOI || selectedTrail);
   // Offsets are measured within .vl-map-area, which already ends at the tab bar
   const railBottom = sheetOpen
     ? sheetCurrentH + 16
@@ -1313,7 +1284,6 @@ export function VeierlandApp() {
 
     return (
       <>
-        <button className="vl-back" onClick={backToMoreChooser}><BackSvg />{lang === 'no' ? 'Mer' : 'More'}</button>
         <div className="vl-chips vl-panel-chips">
           <div className={`vl-chip lbl${!natureFilter ? ' on' : ''}`} onClick={() => setNatureFilter(null)} title={T.all}>
             <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
@@ -1438,8 +1408,6 @@ export function VeierlandApp() {
 
   function renderHistory() {
     const viewToggle = (
-      <>
-      <button className="vl-back" onClick={backToMoreChooser}><BackSvg />{lang === 'no' ? 'Mer' : 'More'}</button>
       <div className="vl-chips" style={{ marginBottom: 14 }}>
         <div className={`vl-chip${historyView === 'tidslinje' ? ' on' : ''}`}
           onClick={() => { setHistoryView('tidslinje'); setSelectedEra(null); setSelectedFarm(null); }}>
@@ -1452,7 +1420,6 @@ export function VeierlandApp() {
           <span className="cl">{T.garder}</span>
         </div>
       </div>
-      </>
     );
 
     const nearestThresh = nearestFloodThreshold(seaLevelM);
@@ -2001,44 +1968,6 @@ export function VeierlandApp() {
     );
   }
 
-  // ── Render: Mer (Natur / Historie chooser) ──────────────────────────────────
-
-  function renderMoreChooser() {
-    return (
-      <>
-        <div className="vl-title">{lang === 'no' ? 'Mer' : 'More'}</div>
-        <div className="vl-poi-card">
-          <div className="vl-poi-zone" onClick={() => chooseMore('nature')}>
-            <div className="vl-poi-ico" style={{ background: 'color-mix(in srgb, #4a8a2a 16%, transparent)', color: '#4a8a2a' }}
-              dangerouslySetInnerHTML={{ __html: iconSvg('blad') }} />
-            <div className="vl-poi-body">
-              <h4>{T.nature}</h4>
-              <p>{lang === 'no' ? 'Fugler, planter, sopp og mer — data fra Artsdatabanken' : 'Birds, plants, fungi and more — data from Artsdatabanken'}</p>
-            </div>
-          </div>
-          <div className="vl-poi-sep" />
-          <div className="vl-poi-arr" onClick={() => chooseMore('nature')}>
-            <ChevSvg />
-          </div>
-        </div>
-        <div className="vl-poi-card">
-          <div className="vl-poi-zone" onClick={() => chooseMore('history')}>
-            <div className="vl-poi-ico" style={{ background: 'color-mix(in srgb, var(--accent) 14%, transparent)', color: 'var(--accent)' }}
-              dangerouslySetInnerHTML={{ __html: iconSvg('hus') }} />
-            <div className="vl-poi-body">
-              <h4>{T.history}</h4>
-              <p>{lang === 'no' ? 'Tidslinje, historisk havnivå og gårder' : 'Timeline, historical sea level and farms'}</p>
-            </div>
-          </div>
-          <div className="vl-poi-sep" />
-          <div className="vl-poi-arr" onClick={() => chooseMore('history')}>
-            <ChevSvg />
-          </div>
-        </div>
-      </>
-    );
-  }
-
   // ── Render: POI detail ──────────────────────────────────────────────────────
 
   function renderPOIDetail(poi: POI) {
@@ -2251,7 +2180,6 @@ export function VeierlandApp() {
               }
               // Collapse to the map so the route is actually visible; the trail
               // lives on as a mini-card that reopens this detail view.
-              setMoreSection(null);
               setView('browse');
               setTab('map');
               setSheetOpen(false);
@@ -2700,16 +2628,6 @@ export function VeierlandApp() {
           </svg>
           <span className="rl">{lang === 'no' ? 'Posisjon' : 'Locate'}</span>
         </button>
-        <button
-          className={`vl-rbtn${moreSection ? ' active' : ''}`}
-          aria-label={lang === 'no' ? 'Natur og historie' : 'Nature and history'}
-          title={lang === 'no' ? 'Natur og historie' : 'Nature and history'}
-          onClick={e => { e.stopPropagation(); moreSection ? closeSheet() : openMore(); }}
-          style={moreSection ? { background: 'var(--accent)', color: '#fff' } : undefined}
-        >
-          <MoreDotsSvg />
-          <span className="rl">{lang === 'no' ? 'Mer' : 'More'}</span>
-        </button>
       </div>
 
       {/* Compact mini-card: shown for a map-tapped POI when nothing else is open */}
@@ -2773,6 +2691,12 @@ export function VeierlandApp() {
         <button className={`vl-tabbtn${tab === 'trails' ? ' on' : ''}`} onClick={() => selectTab('trails')}>
           <TrailsTabSvg /><span>{T.trails}</span>
         </button>
+        <button className={`vl-tabbtn${tab === 'nature' ? ' on' : ''}`} onClick={() => selectTab('nature')}>
+          <NatureTabSvg /><span>{T.nature}</span>
+        </button>
+        <button className={`vl-tabbtn${tab === 'history' ? ' on' : ''}`} onClick={() => selectTab('history')}>
+          <HistoryTabSvg /><span>{T.history}</span>
+        </button>
         <button className={`vl-tabbtn${tab === 'saved' ? ' on' : ''}`} onClick={() => selectTab('saved')}>
           <HeartSvg /><span>{T.saved}</span>
           {savedIds.size > 0 && <span className="vl-tabbadge">{savedIds.size}</span>}
@@ -2797,6 +2721,12 @@ export function VeierlandApp() {
           <button className={`vl-tabbtn${tab === 'trails' ? ' on' : ''}`} onClick={() => selectTab('trails')}>
             <TrailsTabSvg /><span>{T.trails}</span>
           </button>
+          <button className={`vl-tabbtn${tab === 'nature' ? ' on' : ''}`} onClick={() => selectTab('nature')}>
+            <NatureTabSvg /><span>{T.nature}</span>
+          </button>
+          <button className={`vl-tabbtn${tab === 'history' ? ' on' : ''}`} onClick={() => selectTab('history')}>
+            <HistoryTabSvg /><span>{T.history}</span>
+          </button>
           <button className={`vl-tabbtn${tab === 'saved' ? ' on' : ''}`} onClick={() => selectTab('saved')}>
             <HeartSvg /><span>{T.saved}</span>
             {savedIds.size > 0 && <span className="vl-tabbadge">{savedIds.size}</span>}
@@ -2806,11 +2736,10 @@ export function VeierlandApp() {
           <div className="bar" />
         </div>
         <div className="vl-body" ref={bodyRef}>
-          {view === 'browse' && moreSection === 'chooser' && renderMoreChooser()}
-          {view === 'browse' && moreSection === 'nature' && renderNature()}
-          {view === 'browse' && moreSection === 'history' && renderHistory()}
-          {view === 'browse' && !moreSection && tab === 'saved' && renderSaved()}
-          {view === 'browse' && !moreSection && tab !== 'saved' && renderBrowse()}
+          {view === 'browse' && tab === 'nature' && renderNature()}
+          {view === 'browse' && tab === 'history' && renderHistory()}
+          {view === 'browse' && tab === 'saved' && renderSaved()}
+          {view === 'browse' && (tab === 'map' || tab === 'places' || tab === 'trails') && renderBrowse()}
           {view === 'detail' && selectedPOI && renderPOIDetail(selectedPOI)}
           {view === 'detail' && selectedTrail && renderTrailDetail(selectedTrail)}
         </div>
