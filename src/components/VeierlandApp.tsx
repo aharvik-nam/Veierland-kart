@@ -429,6 +429,11 @@ function isDesktopView(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(min-width: 900px)').matches;
 }
 
+// Hide <img> elements whose remote source fails instead of showing a broken-image icon
+function hideBrokenImg(e: React.SyntheticEvent<HTMLImageElement>) {
+  e.currentTarget.style.display = 'none';
+}
+
 const MAP_CENTER: [number, number] = [59.1506, 10.3521];
 const MAP_ZOOM = 13;
 
@@ -467,7 +472,10 @@ export function VeierlandApp() {
   const watchRef = useRef<number | null>(null);
   const notifiedPoisRef = useRef<Set<string>>(new Set());
   const offIslandShownRef = useRef(false);
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [savedIds, setSavedIds] = useState<Set<string>>(() => {
+    try { return new Set<string>(JSON.parse(localStorage.getItem('vl-saved') || '[]')); }
+    catch { return new Set<string>(); }
+  });
   const [trailPath, setTrailPath] = useState<[number, number][] | null>(null);
   const [trailPoiFilter, setTrailPoiFilter] = useState<'along' | 'all'>('along');
   const [trailCatFilter, setTrailCatFilter] = useState<'alle' | 'historie' | 'natur' | 'mat' | 'kultur'>('alle');
@@ -714,11 +722,13 @@ export function VeierlandApp() {
   const onMapClick = useCallback(() => {
     setShowLayerPop(false);
     if (selectedNature) { setSelectedNature(null); setSelectedNatureObs([]); }
-    // Tapping empty map while a POI mini-card is showing dismisses it
-    if (tab === 'map' && !moreSection && !sheetOpen && selectedPOI) {
+    // Tapping empty map while a mini-card is showing dismisses it
+    if (tab === 'map' && !moreSection && !sheetOpen && (selectedPOI || selectedTrail)) {
       setSelectedPOI(null);
+      setSelectedTrail(null);
+      setTrailPath(null);
     }
-  }, [selectedNature, tab, moreSection, sheetOpen, selectedPOI]);
+  }, [selectedNature, tab, moreSection, sheetOpen, selectedPOI, selectedTrail]);
   const onZoom = useCallback((z: number) => setMapZoom(z), []);
 
   // Cluster group — rebuild whenever filtered POIs, zoom, or selection changes
@@ -855,6 +865,29 @@ export function VeierlandApp() {
     setSheetOpen(!showMini);
   }
 
+  // "Show on map" from a list row: collapse everything down to the mini-card so
+  // the map (and the pin we just flew to) is actually visible. On desktop the
+  // sidebar stays put, so just fly the map.
+  function showOnMap(poi: POI) {
+    setSelectedPOI(poi);
+    setSelectedTrail(null);
+    setTrailPath(null);
+    if (isDesktopView()) {
+      mapRef.current?.flyTo(poi.coordinates, Math.max(mapRef.current?.getZoom() ?? 15, 15), { duration: 0.7 });
+      return;
+    }
+    setMoreSection(null);
+    setView('browse');
+    setTab('map');
+    setSheetOpen(false);
+    const map = mapRef.current;
+    if (map) {
+      const z = Math.max(map.getZoom(), 15);
+      const target = map.project(L.latLng(poi.coordinates), z).add(L.point(0, 60));
+      map.flyTo(map.unproject(target, z), z, { duration: 0.7 });
+    }
+  }
+
   function selectTrail(trail: Trail) {
     setSelectedTrail(trail);
     setSelectedPOI(null);
@@ -866,24 +899,30 @@ export function VeierlandApp() {
   }
 
   function goBack() {
-    setTrailPath(null);
     setView('browse');
     if (moreSection) {
       // POI detail opened from a Natur/Historie marker — return to that section.
       setSelectedPOI(null);
       setSelectedTrail(null);
+      setTrailPath(null);
     } else if (tab === 'map' && !isDesktopView()) {
-      // Came from expanding a mini-card — collapse back to it, keep the selection.
+      // Came from expanding a mini-card — collapse back to it, keep the
+      // selection (POI or trail; a trail also keeps its route on the map).
       setSheetOpen(false);
-      setSelectedTrail(null);
     } else {
       // Came from the Steder/Turer/Lagret list (or the desktop sidebar) — return to it.
       setSelectedPOI(null);
       setSelectedTrail(null);
+      setTrailPath(null);
     }
   }
 
   function selectTab(t: 'map' | 'places' | 'trails' | 'saved') {
+    // Re-tapping Kart with nothing open re-centres the island (replaces the
+    // old "home" rail button)
+    if (t === 'map' && tab === 'map' && !moreSection && !sheetOpen) {
+      mapRef.current?.flyTo(MAP_CENTER, MAP_ZOOM, { duration: 0.7 });
+    }
     setShowLayerPop(false);
     setMoreSection(null);
     setSelectedPOI(null);
@@ -1130,11 +1169,14 @@ export function VeierlandApp() {
     setSavedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
+      try { localStorage.setItem('vl-saved', JSON.stringify([...next])); } catch { /* private mode etc. */ }
       return next;
     });
   }
 
-  const SHEET_MAX_H = Math.min(window.innerHeight * 0.82, 720);
+  // Browse lists are capped lower than detail so the map always stays in view
+  // (interactions like the sea-level slider have a visible effect)
+  const SHEET_MAX_H = Math.min(window.innerHeight * (view === 'detail' ? 0.82 : 0.62), 720);
   const TAB_BAR_H = 62; // keep in sync with --tab-h in index.css
   const MINI_CARD_H = 68;
 
@@ -1155,7 +1197,7 @@ export function VeierlandApp() {
   const sheetCurrentH = sheetOpen ? SHEET_OPEN_H : SHEET_MAX_H;
   // Kart tab, nothing open: a selected POI shows as a compact mini-card above the tab bar
   // instead of pushing the full sheet up over the map.
-  const showMiniCard = tab === 'map' && !moreSection && !sheetOpen && view === 'browse' && !!selectedPOI;
+  const showMiniCard = tab === 'map' && !moreSection && !sheetOpen && view === 'browse' && !!(selectedPOI || selectedTrail);
   // Offsets are measured within .vl-map-area, which already ends at the tab bar
   const railBottom = sheetOpen
     ? sheetCurrentH + 16
@@ -1214,7 +1256,7 @@ export function VeierlandApp() {
           </div>
           {selectedNature.photoUrl && (
             <div style={{ marginBottom: 14 }}>
-              <img src={selectedNature.photoUrl} alt={selectedNature.popularName || selectedNature.scientificName} className="vl-api-img" />
+              <img src={selectedNature.photoUrl} alt={selectedNature.popularName || selectedNature.scientificName} className="vl-api-img" onError={hideBrokenImg} />
               {selectedNature.photoAttribution && (
                 <p style={{ fontSize: 11, color: 'var(--muted)', margin: '4px 0 0' }}
                   dangerouslySetInnerHTML={{ __html: selectedNature.photoAttribution }} />
@@ -1246,7 +1288,7 @@ export function VeierlandApp() {
           {speciesWiki && (
             <div className="vl-api-section">
               {!selectedNature.photoUrl && speciesWiki.imageUrl && (
-                <img src={speciesWiki.imageUrl} alt={speciesWiki.title} className="vl-api-img" />
+                <img src={speciesWiki.imageUrl} alt={speciesWiki.title} className="vl-api-img" onError={hideBrokenImg} />
               )}
               <p className="vl-api-text">{speciesWiki.extract}</p>
               <a href={speciesWiki.pageUrl} target="_blank" rel="noreferrer" className="vl-api-link">
@@ -1273,7 +1315,7 @@ export function VeierlandApp() {
       <>
         <button className="vl-back" onClick={backToMoreChooser}><BackSvg />{lang === 'no' ? 'Mer' : 'More'}</button>
         <div className="vl-chips vl-panel-chips">
-          <div className={`vl-chip${!natureFilter ? ' on' : ''}`} onClick={() => setNatureFilter(null)} title={T.all}>
+          <div className={`vl-chip lbl${!natureFilter ? ' on' : ''}`} onClick={() => setNatureFilter(null)} title={T.all}>
             <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
             <span className="cl">{T.all}</span>
           </div>
@@ -1340,11 +1382,14 @@ export function VeierlandApp() {
                     .sort(([a], [b]) => a === '—' ? 1 : b === '—' ? -1 : a.localeCompare(b))
                     .map(([fam, species]) => {
                       const famKey = `${g}::${fam}`;
-                      const famOpen = expandedFamilies.has(famKey);
+                      // Unknown family: a "—" accordion row is just noise —
+                      // list the species directly instead
+                      const famOpen = fam === '—' || expandedFamilies.has(famKey);
                       const rlCount = species.filter(o => RED_LIST_CATS.test(o.redListCategory ?? '')).length;
                       const alCount = species.filter(o => o.alienCategory).length;
                       return (
                         <div key={famKey} className="vl-nat-fam">
+                          {fam !== '—' && (
                           <div className="vl-fam-hdr" onClick={() => toggleExpandedFam(famKey)}>
                             <span className="vl-fam-lbl">
                               {fam === '—' ? '—' : showNorFamilies ? (familyNorMap[fam] ?? fam) : fam}
@@ -1356,6 +1401,7 @@ export function VeierlandApp() {
                               <span className={`vl-chev${famOpen ? ' open' : ''}`}><ChevSvg /></span>
                             </div>
                           </div>
+                          )}
                           {famOpen && [...species].sort((a, b) => b.obsCount - a.obsCount).map(obs => (
                             <div key={obs.gbifKey} className="vl-sp-row" onClick={() => selectNatureSpecies(obs)}>
                               <div className="vl-sp-main">
@@ -1459,7 +1505,7 @@ export function VeierlandApp() {
           <div className="vl-sub" style={{ marginBottom: 12 }}>{selectedEra.era}</div>
           {selectedEra.image && (
             <div className="vl-era-img">
-              <img src={selectedEra.image} alt={selectedEra.image_caption || selectedEra.era} />
+              <img src={selectedEra.image} alt={selectedEra.image_caption || selectedEra.era} onError={hideBrokenImg} />
               {selectedEra.image_caption && (
                 <span className="vl-era-img-caption">{selectedEra.image_caption}</span>
               )}
@@ -1754,19 +1800,19 @@ export function VeierlandApp() {
         {/* Filter chips — icon-only, expand to a labeled pill when active */}
         {mode === 'places' && (
           <div className="vl-chips vl-panel-chips">
-            <div className={`vl-chip${activeCats.size === 0 ? ' on' : ''}`} onClick={() => setActiveCats(new Set())} title={T.all}>
+            <div className={`vl-chip lbl${activeCats.size === 0 ? ' on' : ''}`} onClick={() => setActiveCats(new Set())} title={T.all}>
               <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
               <span className="cl">{T.all}</span>
             </div>
             {[...catGroups.entries()].map(([groupName, groupCats]) => {
               const on = groupCats.some(k => activeCats.has(k));
-              const groupIcon = (catCfg as Record<string, {icon?: string}>)[groupCats[0]]?.icon ?? 'pin';
               const groupColor = (catCfg as Record<string, {color?: string}>)[groupCats[0]]?.color ?? 'var(--muted)';
               return (
-                <div key={groupName} className={`vl-chip${on ? ' on' : ''}`}
+                /* Group chips keep their label — the borrowed first-category icon
+                   alone reads as the wrong thing (a wave for "Praktisk") */
+                <div key={groupName} className={`vl-chip lbl${on ? ' on' : ''}`}
                   style={{ '--chip-color': groupColor } as React.CSSProperties}
                   onClick={() => toggleGroup(groupCats)} title={groupName}>
-                  <span className="ci" style={{ color: on ? undefined : groupColor }} dangerouslySetInnerHTML={{ __html: iconSvg(groupIcon) }} />
                   <span className="cl">{groupName}</span>
                 </div>
               );
@@ -1809,7 +1855,13 @@ export function VeierlandApp() {
 
         {mode === 'places' ? (
           <>
-            <div className="vl-count">{filteredPOIs.length ? T.np(filteredPOIs.length) : T.nohit}</div>
+            {/* Place-name lookups (66 of ~98 entries) would drown the real count */}
+            <div className="vl-count">{(() => {
+              const sn = filteredPOIs.filter(p => p.kategori === 'stedsnavn').length;
+              const main = filteredPOIs.length - sn;
+              if (!filteredPOIs.length) return T.nohit;
+              return T.np(main) + (sn ? ` · ${sn} ${lang === 'no' ? 'stedsnavn' : 'place names'}` : '');
+            })()}</div>
             {filteredPOIs.length === 0 && (searchQ || activeCats.size > 0) && (
               <div className="vl-empty">
                 <p>{lang === 'no' ? 'Ingen steder passer søket ditt.' : 'No places match your search.'}</p>
@@ -1820,7 +1872,9 @@ export function VeierlandApp() {
             )}
             {groupedPOIs.map(([catKey, pois]) => {
               const cat = getCat(catKey);
-              const isOpen = expandedPlaceCats.has(catKey);
+              // Auto-expand while searching/filtering — a filtered list of
+              // closed accordions shows nothing
+              const isOpen = expandedPlaceCats.has(catKey) || !!searchQ || activeCats.size > 0;
               return (
                 <div key={catKey} className={`vl-nat-grp${isOpen ? ' open' : ''}`}>
                   <div className="vl-grp-hdr" onClick={() => toggleExpandedPlaceCat(catKey)}>
@@ -1834,7 +1888,7 @@ export function VeierlandApp() {
                       {pois.map(poi => (
                         <div key={poi.id} className="vl-poi-card">
                           <div className="vl-poi-zone"
-                            onClick={() => { setSelectedPOI(poi); flyToAboveSheet(poi.coordinates, Math.max(mapRef.current?.getZoom() ?? 15, 15)); }}>
+                            onClick={() => showOnMap(poi)}>
                             <div className="vl-poi-ico"
                               style={{ background: `${cat.color}1a`, color: cat.color }}
                               dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
@@ -1912,7 +1966,7 @@ export function VeierlandApp() {
           const cat = getCat(poi.kategori);
           return (
             <div key={poi.id} className="vl-poi-card">
-              <div className="vl-poi-zone" onClick={() => { setSelectedPOI(poi); flyToAboveSheet(poi.coordinates, Math.max(mapRef.current?.getZoom() ?? 15, 15)); }}>
+              <div className="vl-poi-zone" onClick={() => showOnMap(poi)}>
                 <div className="vl-poi-ico" style={{ background: `${cat.color}1a`, color: cat.color }}
                   dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
                 <div className="vl-poi-body">
@@ -2025,14 +2079,14 @@ export function VeierlandApp() {
 
         {poi.bilde && (
           <div className="vl-poi-static-img">
-            <img src={poi.bilde} alt={poi.navn} />
+            <img src={poi.bilde} alt={poi.navn} onError={hideBrokenImg} />
             {poi.bilde_lisens && <span className="vl-photo-credit">{poi.bilde_lisens}</span>}
           </div>
         )}
 
         {wikimediaImages.length === 1 && (
           <a href={wikimediaImages[0].pageUrl} target="_blank" rel="noreferrer" className="vl-poi-static-img" style={{ display: 'block', textDecoration: 'none' }}>
-            <img src={wikimediaImages[0].thumbUrl} alt={wikimediaImages[0].title} style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 10, display: 'block' }} />
+            <img src={wikimediaImages[0].thumbUrl} alt={wikimediaImages[0].title} style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 10, display: 'block' }} onError={hideBrokenImg} />
             {wikimediaImages[0].author && (
               <span className="vl-photo-credit">{wikimediaImages[0].license} · {wikimediaImages[0].author}</span>
             )}
@@ -2043,7 +2097,7 @@ export function VeierlandApp() {
             <div className="vl-photo-strip">
               {wikimediaImages.map((img, i) => (
                 <a key={i} href={img.pageUrl} target="_blank" rel="noreferrer" className="vl-photo-thumb">
-                  <img src={img.thumbUrl} alt={img.title} />
+                  <img src={img.thumbUrl} alt={img.title} onError={hideBrokenImg} />
                   {img.author && (
                     <span className="vl-photo-credit">{img.license} · {img.author}</span>
                   )}
@@ -2096,7 +2150,7 @@ export function VeierlandApp() {
             <div className="vl-api-section">
               <p className="vl-api-label">Lokalhistoriewiki</p>
               {lokalData.bilde && (
-                <img src={lokalData.bilde} alt={lokalData.tittel} className="vl-api-img" />
+                <img src={lokalData.bilde} alt={lokalData.tittel} className="vl-api-img" onError={hideBrokenImg} />
               )}
               <p className="vl-api-text">{displayText}</p>
               {isTruncatable && (
@@ -2129,7 +2183,7 @@ export function VeierlandApp() {
             {dimuData.map(img => (
               <div key={img.id} style={{ marginBottom: 12 }}>
                 {img.bilde600 && (
-                  <img src={img.bilde600} alt={img.tittel} className="vl-api-img" />
+                  <img src={img.bilde600} alt={img.tittel} className="vl-api-img" onError={hideBrokenImg} />
                 )}
                 <p style={{ fontSize: 12, color: 'var(--muted)', margin: '4px 0 2px' }}>
                   {img.tittel}{img.fraTid ? ` (${img.fraTid})` : ''}
@@ -2191,7 +2245,17 @@ export function VeierlandApp() {
             onClick={() => {
               setTrailPath(trail.path);
               const bounds = L.latLngBounds(trail.path);
-              mapRef.current?.fitBounds(bounds.pad(0.35), { paddingBottomRight: [0, 260] });
+              if (isDesktopView()) {
+                mapRef.current?.fitBounds(bounds.pad(0.35), { paddingBottomRight: [0, 40] });
+                return;
+              }
+              // Collapse to the map so the route is actually visible; the trail
+              // lives on as a mini-card that reopens this detail view.
+              setMoreSection(null);
+              setView('browse');
+              setTab('map');
+              setSheetOpen(false);
+              mapRef.current?.fitBounds(bounds.pad(0.2), { paddingTopLeft: [20, 90], paddingBottomRight: [20, 110] });
             }}
           >
             <RouteSvg /> {T.showRoute}
@@ -2330,10 +2394,7 @@ export function VeierlandApp() {
                   const cat = getCat(poi.kategori);
                   return (
                     <div key={poi.id} className="vl-poi-card">
-                      <div className="vl-poi-zone" onClick={() => {
-                        setSelectedPOI(poi);
-                        flyToAboveSheet(poi.coordinates, Math.max(mapRef.current?.getZoom() ?? 15, 15));
-                      }}>
+                      <div className="vl-poi-zone" onClick={() => showOnMap(poi)}>
                         <div className="vl-poi-ico"
                           style={{ background: `${cat.color}1a`, color: cat.color }}
                           dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
@@ -2625,6 +2686,7 @@ export function VeierlandApp() {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>
           </svg>
+          <span className="rl">{lang === 'no' ? 'Kartlag' : 'Layers'}</span>
         </button>
         <button
           className={`vl-rbtn${locating ? ' active' : ''}`}
@@ -2636,13 +2698,7 @@ export function VeierlandApp() {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="3.4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>
           </svg>
-        </button>
-        <button className="vl-rbtn" aria-label={lang === 'no' ? 'Tilbake til Veierland' : 'Back to island'} title={lang === 'no' ? 'Tilbake til Veierland' : 'Back to island'}
-          onClick={() => mapRef.current?.flyTo(MAP_CENTER, MAP_ZOOM, { duration: 0.7 })}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-            <polyline points="9,22 9,12 15,12 15,22"/>
-          </svg>
+          <span className="rl">{lang === 'no' ? 'Posisjon' : 'Locate'}</span>
         </button>
         <button
           className={`vl-rbtn${moreSection ? ' active' : ''}`}
@@ -2652,6 +2708,7 @@ export function VeierlandApp() {
           style={moreSection ? { background: 'var(--accent)', color: '#fff' } : undefined}
         >
           <MoreDotsSvg />
+          <span className="rl">{lang === 'no' ? 'Mer' : 'More'}</span>
         </button>
       </div>
 
@@ -2670,6 +2727,29 @@ export function VeierlandApp() {
             <div className="acts">
               <button className={`ab${saved ? ' on' : ''}`} aria-label={saved ? (lang === 'no' ? 'Fjern fra lagret' : 'Remove saved') : (lang === 'no' ? 'Lagre' : 'Save')}
                 onClick={e => { e.stopPropagation(); toggleSaved(selectedPOI.id); }}>
+                <HeartSvg />
+              </button>
+              <button className="ab pri" aria-label={lang === 'no' ? 'Mer' : 'More'}
+                onClick={e => { e.stopPropagation(); setView('detail'); setSheetOpen(true); }}>
+                <UpChevSvg />
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+      {showMiniCard && !selectedPOI && selectedTrail && (() => {
+        const saved = savedIds.has(selectedTrail.id);
+        return (
+          <div className="vl-minicard" onClick={() => { setView('detail'); setSheetOpen(true); }}>
+            <div className="vl-ic" style={{ background: 'color-mix(in srgb, var(--accent) 14%, transparent)', color: 'var(--accent)' }}
+              dangerouslySetInnerHTML={{ __html: iconSvg('tur') }} />
+            <div className="tx">
+              <h4>{lang === 'no' ? selectedTrail.name : selectedTrail.en}</h4>
+              <p>{selectedTrail.km} · {selectedTrail.time} · {lang === 'no' ? selectedTrail.diff : T.easy}</p>
+            </div>
+            <div className="acts">
+              <button className={`ab${saved ? ' on' : ''}`} aria-label={saved ? (lang === 'no' ? 'Fjern fra lagret' : 'Remove saved') : (lang === 'no' ? 'Lagre' : 'Save')}
+                onClick={e => { e.stopPropagation(); toggleSaved(selectedTrail.id); }}>
                 <HeartSvg />
               </button>
               <button className="ab pri" aria-label={lang === 'no' ? 'Mer' : 'More'}
