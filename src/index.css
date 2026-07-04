@@ -17,6 +17,7 @@
   --display: 'Newsreader', Georgia, 'Times New Roman', serif;
   --r: 12px;
   --pad: 18px;
+  --tab-h: 62px;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -297,25 +298,6 @@ body { display: grid; place-items: center; }
 }
 .vl-top > * { pointer-events: auto; }
 
-/* ── Panel: mode tabs (underline style) ─────────────────────────────────────── */
-.vl-modepills {
-  display: flex; gap: 0; overflow-x: auto; scrollbar-width: none; padding: 0;
-  border-bottom: 2px solid var(--line);
-}
-.vl-modepills::-webkit-scrollbar { display: none; }
-.vl-panel-modes {
-  margin-bottom: 12px;
-}
-.vl-modepill {
-  padding: 9px 16px; border-radius: 0; min-height: 42px;
-  display: flex; align-items: center; justify-content: center;
-  background: none; border: none; border-bottom: 2.5px solid transparent;
-  margin-bottom: -2px;
-  font: inherit; font-size: 14px; font-weight: 500; color: var(--muted);
-  white-space: nowrap; cursor: pointer;
-  transition: color .15s, border-color .15s;
-}
-.vl-modepill.on { color: var(--ink); font-weight: 700; border-bottom-color: var(--accent); }
 
 .vl-lang {
   display: flex; align-items: center; gap: 2px; flex: 0 0 auto;
@@ -435,18 +417,84 @@ body { display: grid; place-items: center; }
 .vl-opt-dim { opacity: 0.5; cursor: default; }
 .vl-geo-tip { background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; font-size: 13px; font-weight: 600; padding: 4px 8px; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
 
+/* ── Bottom tab bar ─────────────────────────────────────────────────────────── */
+.vl-tabbar {
+  background: var(--card); border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: repeat(4, 1fr);
+}
+.vl-tabbar-mobile {
+  position: absolute; left: 0; right: 0; bottom: 0; height: var(--tab-h); z-index: 700;
+}
+.vl-tabbar-desktop { display: none; }
+.vl-tabbtn {
+  border: none; background: transparent; font: inherit; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; color: var(--muted); padding: 6px 0 8px; position: relative;
+}
+.vl-tabbtn svg { width: 22px; height: 22px; }
+.vl-tabbtn span { font-size: 10.5px; font-weight: 600; letter-spacing: .01em; }
+.vl-tabbtn.on { color: var(--accent); }
+.vl-tabbtn.on::before {
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 30px; height: 2.5px; border-radius: 0 0 4px 4px; background: var(--accent);
+}
+.vl-tabbadge {
+  position: absolute; top: 3px; right: calc(50% - 21px); min-width: 15px; height: 15px;
+  border-radius: 99px; background: var(--accent); color: #fff;
+  font-size: 9.5px; font-weight: 700; display: grid; place-items: center; padding: 0 4px;
+}
+
+/* ── Compact mini-card (map tab, single selection) ───────────────────────────── */
+.vl-minicard {
+  position: absolute; left: var(--pad); right: var(--pad);
+  bottom: calc(var(--tab-h) + 12px); z-index: 600;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(28,38,30,.18);
+  display: flex; align-items: center; gap: 11px; padding: 10px 10px;
+  cursor: pointer;
+}
+.vl-minicard .vl-ic { width: 40px; height: 40px; flex: 0 0 40px; }
+.vl-minicard .tx { flex: 1; min-width: 0; }
+.vl-minicard .tx h4 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -.005em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vl-minicard .tx p { margin: 2px 0 0; font-size: 12px; color: var(--muted); font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vl-minicard .acts { display: flex; gap: 6px; flex: 0 0 auto; }
+.vl-minicard .ab {
+  width: 36px; height: 36px; border-radius: 11px; border: 1px solid var(--line);
+  background: var(--card2); display: grid; place-items: center; cursor: pointer; color: var(--ink);
+}
+.vl-minicard .ab svg { width: 17px; height: 17px; }
+.vl-minicard .ab.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
+.vl-minicard .ab.on { background: color-mix(in srgb, var(--accent) 14%, #fff); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, #fff); }
+.vl-minicard .ab:active { transform: scale(.94); }
+
+/* ── Compact icon-only filter chips (Steder categories, Natur groups) ────────── */
+.vl-panel-chips .vl-chip {
+  padding: 0; width: 38px; justify-content: center; gap: 0;
+}
+.vl-panel-chips .vl-chip .cl {
+  max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap; margin-left: 0;
+  transition: max-width .2s ease, opacity .15s ease;
+}
+.vl-panel-chips .vl-chip.on {
+  width: auto; padding: 0 14px 0 12px; gap: 7px;
+}
+.vl-panel-chips .vl-chip.on .cl { max-width: 160px; opacity: 1; }
+
 /* ── Bottom sheet ───────────────────────────────────────────────────────────── */
-.vl-map-area { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+.vl-map-area { position: absolute; top: 0; left: 0; right: 0; bottom: var(--tab-h); }
 
 .vl-sheet {
-  position: absolute; left: 0; right: 0; bottom: 0; z-index: 600;
+  position: absolute; left: 0; right: 0; bottom: var(--tab-h); z-index: 600;
   background: var(--card);
   border-radius: 20px 20px 0 0;
   border-top: 1px solid var(--line);
   display: flex; flex-direction: column;
-  transition: height .34s cubic-bezier(.3,.8,.3,1);
-  will-change: height;
+  transition: height .34s cubic-bezier(.3,.8,.3,1), transform .3s cubic-bezier(.3,.8,.3,1), opacity .2s;
+  will-change: height, transform;
 }
+.vl-sheet.closed { transform: translateY(115%); opacity: 0; pointer-events: none; }
 .vl-grab {
   flex: 0 0 auto; padding: 11px 0 7px; cursor: grab; touch-action: none;
 }
@@ -708,7 +756,7 @@ body { display: grid; place-items: center; }
     border-radius: 0 !important; border: none; box-shadow: none;
     display: flex; flex-direction: row;
   }
-  .vl-map-area { position: relative; flex: 1; min-width: 0; order: 2; }
+  .vl-map-area { position: relative; flex: 1; min-width: 0; order: 2; bottom: auto; }
   .vl-sheet {
     position: relative !important; order: 1;
     width: 420px; min-width: 420px;
@@ -716,7 +764,17 @@ body { display: grid; place-items: center; }
     border-radius: 0 !important; border-top: none;
     border-right: 1px solid var(--line);
     transition: none !important;
+    bottom: auto !important;
   }
+  .vl-sheet.closed { transform: none !important; opacity: 1 !important; pointer-events: auto !important; }
   .vl-grab { display: none; }
   .vl-body { padding: 22px 24px 28px; }
+  .vl-tabbar-mobile { display: none; }
+  .vl-tabbar-desktop {
+    display: grid; border-top: none; border-bottom: 1px solid var(--line);
+    padding: 10px 10px 4px;
+  }
+  .vl-tabbtn.on::before { display: none; }
+  .vl-tabbtn.on { background: var(--card2); border-radius: 10px; }
+  .vl-minicard { display: none; }
 }
