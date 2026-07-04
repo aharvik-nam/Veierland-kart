@@ -7,8 +7,14 @@ import { DEFAULT_CAT_CFG, CatCfgMap, CatEntry, loadCatCfg, saveCatCfg } from '..
 import { loadFarmData, saveFarmData, DEFAULT_FARM_DATA, Farm, FarmPerson, FarmShip } from '../lib/farmdata';
 import { loadTimelineSections, saveTimelineSections, DEFAULT_TIMELINE_SECTIONS, TimelineSection } from '../lib/timelinedata';
 import { ICONS, ICON_LABELS } from '../lib/icons';
+import {
+  NATURE_GROUPS, NatureGroup, NatureObs, STATIC_NATURE_CACHE,
+  loadNatureObs, saveNatureObs, getNatureObsMetadata,
+  fetchNatureGroup, processNatureData, enrichWithINaturalist, enrichWithAssessments,
+  applyAssessments,
+} from '../lib/naturedata';
 
-type Tab = 'poi' | 'stedsnavn' | 'turer' | 'kategorier' | 'garder' | 'tidslinje';
+type Tab = 'poi' | 'stedsnavn' | 'turer' | 'kategorier' | 'garder' | 'tidslinje' | 'natur';
 type GeoTab = 'poi' | 'stedsnavn' | 'turer';
 
 const COL = 'geodata';
@@ -32,6 +38,16 @@ function groupByCat<T>(items: T[], getKey: (t: T) => string): Map<string, T[]> {
     m.get(k)!.push(item);
   }
   return m;
+}
+
+// Sections report unsaved changes here so the shell can warn before losing them
+const DirtyCtx = React.createContext<(dirty: boolean) => void>(() => {});
+function useReportDirty(dirty: boolean) {
+  const report = React.useContext(DirtyCtx);
+  useEffect(() => {
+    report(dirty);
+    return () => report(false);
+  }, [dirty, report]);
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
@@ -155,6 +171,8 @@ function useTabData(tab: GeoTab) {
       }
     }).catch(e => { setErr(e.message); setDataState(FALLBACK[tab]); });
   }, [tab]);
+
+  useReportDirty(dirty);
 
   const setData = (d: GeoCollection) => { setDataState(d); setDirty(true); };
 
@@ -769,8 +787,45 @@ function StedsnavnTab() {
 }
 
 // ─── Turer tab ────────────────────────────────────────────────────────────────
+function TrailEditor({ feature, onChange, onDelete }: {
+  feature: any; onChange: (f: any) => void; onDelete: () => void;
+}) {
+  const p = feature.properties;
+  const setP = (k: string, v: any) => onChange({ ...feature, properties: { ...p, [k]: v } });
+  return (
+    <div style={S.editGrid}>
+      <Field label="Navn (norsk)"><input style={S.input} value={p.navn ?? ''} onChange={e => setP('navn', e.target.value)} /></Field>
+      <Field label="Navn (engelsk)"><input style={S.input} value={p.en ?? ''} onChange={e => setP('en', e.target.value)} /></Field>
+      <Field label="Lengde"><input style={S.input} value={p.km ?? ''} onChange={e => setP('km', e.target.value)} placeholder="8,5 km" /></Field>
+      <Field label="Tid"><input style={S.input} value={p.tid ?? ''} onChange={e => setP('tid', e.target.value)} placeholder="2 t 30 min" /></Field>
+      <Field label="Vanskelighet">
+        <select style={S.input} value={p.vanskelighet ?? 'Lett'} onChange={e => setP('vanskelighet', e.target.value)}>
+          <option>Lett</option><option>Middels</option><option>Krevende</option>
+        </select>
+      </Field>
+      <Field label="Rute-ID"><input style={S.input} value={p.id ?? ''} onChange={e => setP('id', e.target.value)} /></Field>
+      <Field label="Beskrivelse (norsk)" full><textarea style={S.textarea} value={p.no ?? ''} onChange={e => setP('no', e.target.value)} rows={3} /></Field>
+      <Field label="Beskrivelse (engelsk)" full><textarea style={S.textarea} value={p.enT ?? ''} onChange={e => setP('enT', e.target.value)} rows={3} /></Field>
+      <div style={{ ...S.fullSpan, fontSize: 12, color: 'var(--muted)' }}>
+        Selve ruta (GPS-sporet) redigeres i QGIS/Google My Maps og lastes opp som GeoJSON øverst — tekstfeltene her kan endres fritt.
+      </div>
+      <button style={S.deleteBtn} onClick={onDelete}>Slett denne turen</button>
+    </div>
+  );
+}
+
 function TurerTab() {
   const { data, setData, dirty, saving, save, err, seeded } = useTabData('turer');
+
+  const update = (i: number, f: any) => {
+    if (!data) return;
+    const features = [...data.features]; features[i] = f;
+    setData({ ...data, features });
+  };
+  const del = (i: number) => {
+    if (!data || !confirm(`Slett turen "${data.features[i].properties.navn}"?`)) return;
+    setData({ ...data, features: data.features.filter((_, j) => j !== i) });
+  };
 
   if (!data) return <p style={{ color: 'var(--muted)' }}>{err || 'Laster…'}</p>;
   return (
@@ -783,19 +838,14 @@ function TurerTab() {
         </div>
       )}
       <div style={S.infoBox}>
-        {data.features.length} turrute(r) · GPS-ruter redigeres best i QGIS, GPSBabel eller Google My Maps og lastes opp som ny GeoJSON.
+        {data.features.length} turrute(r). Navn, lengde, tid og beskrivelser redigeres her — GPS-sporet lastes opp som GeoJSON.
       </div>
       {data.features.map((f, i) => (
-        <div key={i} style={S.featureRow}>
-          <div style={{ padding: '12px 14px' }}>
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>{f.properties.navn ?? f.properties.id ?? `Rute ${i + 1}`}</div>
-            <div style={{ fontSize: 12, color: 'var(--muted)' }}>
-              {f.properties.km && `${f.properties.km} · `}
-              {f.properties.tid && `${f.properties.tid} · `}
-              {f.properties.vanskelighet}
-            </div>
-          </div>
-        </div>
+        <FeatureRow key={i}
+          label={f.properties.navn ?? f.properties.id ?? `Rute ${i + 1}`}
+          meta={[f.properties.km, f.properties.tid, f.properties.vanskelighet].filter(Boolean).join(' · ')}>
+          <TrailEditor feature={f} onChange={nf => update(i, nf)} onDelete={() => del(i)} />
+        </FeatureRow>
       ))}
     </>
   );
@@ -872,6 +922,8 @@ function CategoryConfigTab() {
   const [cfg, setCfg] = useState<CatCfgMap>(DEFAULT_CAT_CFG);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [dirtyLocal, setDirtyLocal] = useState(false);
+  useReportDirty(dirtyLocal);
   const [newKey, setNewKey] = useState('');
   const [newGroup, setNewGroup] = useState('');
   const [editingGroup, setEditingGroup] = useState<string | null>(null);
@@ -883,7 +935,7 @@ function CategoryConfigTab() {
 
   const set = (key: string, field: keyof CatEntry, val: any) => {
     setCfg(prev => ({ ...prev, [key]: { ...prev[key], [field]: val } }));
-    setSaved(false);
+    setSaved(false); setDirtyLocal(true);
   };
 
   const groups = [...new Set(Object.values(cfg).map(e => e.group).filter(Boolean))];
@@ -907,7 +959,7 @@ function CategoryConfigTab() {
       };
     });
     setNewGroup('');
-    setSaved(false);
+    setSaved(false); setDirtyLocal(true);
   };
 
   const renameGroup = (oldName: string, newName: string) => {
@@ -926,7 +978,7 @@ function CategoryConfigTab() {
       return next;
     });
     setEditingGroup(null);
-    setSaved(false);
+    setSaved(false); setDirtyLocal(true);
   };
 
   const deleteGroup = (g: string) => {
@@ -943,7 +995,7 @@ function CategoryConfigTab() {
       }
       return next;
     });
-    setSaved(false);
+    setSaved(false); setDirtyLocal(true);
   };
 
   const addCategory = () => {
@@ -951,20 +1003,20 @@ function CategoryConfigTab() {
     if (!k || cfg[k]) return;
     setCfg(prev => ({ ...prev, [k]: { no: k, en: k, color: '#7c876f', icon: 'wc', group: '', showInFilter: true, showInHistory: false } }));
     setNewKey('');
-    setSaved(false);
+    setSaved(false); setDirtyLocal(true);
   };
 
   const removeCategory = (key: string) => {
     if (!confirm(`Slett kategorien «${key}»? POI-er som bruker den beholder verdien, men den vises ikke lenger i filteret.`)) return;
     setCfg(prev => { const next = { ...prev }; delete next[key]; return next; });
-    setSaved(false);
+    setSaved(false); setDirtyLocal(true);
   };
 
   const save = async () => {
     setSaving(true);
     await saveCatCfg(cfg);
     setSaving(false);
-    setSaved(true);
+    setSaved(true); setDirtyLocal(false);
   };
 
   // Merge groups from cfg + manually-added
@@ -1325,17 +1377,19 @@ function GarderTab() {
   const [farms, setFarms] = useState<Farm[]>(DEFAULT_FARM_DATA);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [dirtyLocal, setDirtyLocal] = useState(false);
+  useReportDirty(dirtyLocal);
 
   useEffect(() => { loadFarmData().then(setFarms); }, []);
 
   const update = (name: string, patch: Partial<Farm>) => {
     setFarms(prev => prev.map(f => f.name === name ? { ...f, ...patch } : f));
-    setSaved(false);
+    setSaved(false); setDirtyLocal(true);
   };
 
   const save = async () => {
     setSaving(true);
-    try { await saveFarmData(farms); setSaved(true); }
+    try { await saveFarmData(farms); setSaved(true); setDirtyLocal(false); }
     catch (e: any) { alert(e.message); }
     finally { setSaving(false); }
   };
@@ -1452,6 +1506,8 @@ function TidslinjeTab() {
   const [sections, setSections] = useState<TimelineSection[]>(DEFAULT_TIMELINE_SECTIONS);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [dirtyLocal, setDirtyLocal] = useState(false);
+  useReportDirty(dirtyLocal);
   const [open, setOpen] = useState<number | null>(null);
   const [allPois, setAllPois] = useState<{ id: string; navn: string; kategori: string }[]>([]);
 
@@ -1476,12 +1532,12 @@ function TidslinjeTab() {
 
   const update = (idx: number, patch: Partial<TimelineSection>) => {
     setSections(prev => prev.map((s, i) => i === idx ? { ...s, ...patch } : s));
-    setSaved(false);
+    setSaved(false); setDirtyLocal(true);
   };
 
   const save = async () => {
     setSaving(true);
-    try { await saveTimelineSections(sections); setSaved(true); }
+    try { await saveTimelineSections(sections); setSaved(true); setDirtyLocal(false); }
     catch (e: any) { alert(e.message); }
     finally { setSaving(false); }
   };
@@ -1630,17 +1686,228 @@ function TidslinjeTab() {
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
+// ─── Natur tab ────────────────────────────────────────────────────────────────
+function NaturTab() {
+  const [meta, setMeta] = useState<{ updatedAt: string; count: number } | null>(null);
+  const [metaLoaded, setMetaLoaded] = useState(false);
+  const [obs, setObs] = useState<NatureObs[] | null>(null);
+  const [running, setRunning] = useState(false);
+  const [log, setLog] = useState<string[]>([]);
+  const [err, setErr] = useState('');
+  useReportDirty(running); // don't let the user navigate away mid-refresh unwarned
+
+  useEffect(() => {
+    getNatureObsMetadata().then(m => { setMeta(m); setMetaLoaded(true); });
+    loadNatureObs().then(o => setObs(applyAssessments(o ?? STATIC_NATURE_CACHE.obs)));
+  }, []);
+
+  const RED_LIST = /^(NT|VU|EN|CR|RE|DD)$/;
+  const stats = obs ? {
+    total: obs.length,
+    redlisted: obs.filter(o => RED_LIST.test(o.redListCategory ?? '')).length,
+    alien: obs.filter(o => o.alienCategory).length,
+    withPhoto: obs.filter(o => o.photoUrl).length,
+    perGroup: (Object.keys(NATURE_GROUPS) as NatureGroup[]).map(g => ({
+      g, n: obs.filter(o => o.group === g).length,
+    })),
+  } : null;
+
+  const refresh = async () => {
+    if (!confirm('Dette henter alle observasjoner på nytt fra GBIF og beriker dem med navn, bilder og rødlistestatus. Det kan ta flere minutter. Fortsette?')) return;
+    setRunning(true); setErr(''); setLog([]);
+    const add = (l: string) => setLog(prev => [...prev, l]);
+    try {
+      const groups = Object.keys(NATURE_GROUPS) as NatureGroup[];
+      const raw: { group: NatureGroup; obs: unknown[] }[] = [];
+      for (const g of groups) {
+        add(`Henter ${g} fra GBIF…`);
+        const r = await fetchNatureGroup(g);
+        add(`  → ${r.obs.length} observasjoner`);
+        raw.push(r);
+      }
+      add('Bearbeider til artsliste…');
+      let processed = processNatureData(raw);
+      add(`${processed.length} arter. Henter norske navn og bilder fra iNaturalist…`);
+      processed = await enrichWithINaturalist(processed);
+      add('Henter rødliste- og fremmedartsstatus…');
+      processed = await enrichWithAssessments(processed);
+      add('Lagrer til Firebase…');
+      await saveNatureObs(processed);
+      setObs(applyAssessments(processed));
+      const m = await getNatureObsMetadata();
+      setMeta(m);
+      add('Ferdig ✓');
+    } catch (e: any) {
+      setErr(e?.message || 'Ukjent feil under oppdatering');
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: 680 }}>
+      <div style={S.infoBox}>
+        Naturdataene kommer fra GBIF (Artsdatabanken m.fl.) og vises i appens Natur-fane.
+        Oppdater datasettet her når du vil ha med nye observasjoner.
+      </div>
+
+      <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12, padding: '16px 18px', marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Datasett i bruk</div>
+        {!metaLoaded ? (
+          <p style={{ margin: 0, color: 'var(--muted)' }}>Sjekker Firebase…</p>
+        ) : meta ? (
+          <p style={{ margin: 0 }}>
+            <strong>{meta.count} arter</strong> i Firebase · sist oppdatert {meta.updatedAt ? new Date(meta.updatedAt).toLocaleString('no') : 'ukjent'}
+          </p>
+        ) : (
+          <p style={{ margin: 0 }}>
+            Ingen data i Firebase — appen bruker den innebygde pakken
+            (<strong>{STATIC_NATURE_CACHE.obs.length} arter</strong>, generert {new Date(STATIC_NATURE_CACHE.generatedAt).toLocaleDateString('no')}).
+          </p>
+        )}
+        {stats && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+            {stats.perGroup.map(({ g, n }) => (
+              <span key={g} style={{ fontSize: 12, fontWeight: 600, background: 'var(--card2)', border: '1px solid var(--line)', borderRadius: 99, padding: '4px 11px' }}>
+                {g} {n}
+              </span>
+            ))}
+            <span style={{ fontSize: 12, fontWeight: 700, background: 'rgba(192,57,43,.09)', color: '#c0392b', border: '1px solid rgba(192,57,43,.25)', borderRadius: 99, padding: '4px 11px' }}>
+              Rødlistet {stats.redlisted}
+            </span>
+            <span style={{ fontSize: 12, fontWeight: 700, background: 'rgba(212,105,10,.09)', color: '#d4690a', border: '1px solid rgba(212,105,10,.25)', borderRadius: 99, padding: '4px 11px' }}>
+              Fremmed {stats.alien}
+            </span>
+            <span style={{ fontSize: 12, fontWeight: 600, background: 'var(--card2)', border: '1px solid var(--line)', borderRadius: 99, padding: '4px 11px' }}>
+              Med bilde {stats.withPhoto}/{stats.total}
+            </span>
+          </div>
+        )}
+      </div>
+
+      <button style={{ ...S.pill('primary'), opacity: running ? 0.6 : 1 }} onClick={refresh} disabled={running}>
+        {running ? 'Oppdaterer…' : 'Oppdater fra GBIF'}
+      </button>
+      {err && <p style={{ color: '#dc2626', marginTop: 10, fontWeight: 600 }}>{err}</p>}
+      {log.length > 0 && (
+        <pre style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 10, padding: '12px 14px', marginTop: 12, fontSize: 12, lineHeight: 1.7, whiteSpace: 'pre-wrap', color: 'var(--ink2)' }}>
+          {log.join('\n')}
+        </pre>
+      )}
+    </div>
+  );
+}
+
+// ─── Shell ────────────────────────────────────────────────────────────────────
+
+const NAV_ICON: Record<Tab, React.ReactNode> = {
+  poi: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+  stedsnavn: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>,
+  turer: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 21c-4-6 4-7 5-11 .8-3.2 5.5-2.8 3.5-7"/><circle cx="17" cy="3" r="1.4"/></svg>,
+  kategorier: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.6"/><rect x="3" y="14" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/></svg>,
+  garder: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10l9-7 9 7"/><path d="M5 9v11h14V9"/><path d="M10 20v-6h4v6"/></svg>,
+  tidslinje: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>,
+  natur: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21Q4 13 12 3q8 10 0 18z"/><path d="M12 3q-2 9 0 18"/></svg>,
+};
+
+const NAV_GROUPS: { title: string; items: { key: Tab; label: string; sub: string }[] }[] = [
+  {
+    title: 'Kartdata',
+    items: [
+      { key: 'poi', label: 'Steder', sub: 'Attraksjoner og punkter på kartet' },
+      { key: 'stedsnavn', label: 'Stedsnavn', sub: 'Navneoppslag med forklaringer' },
+      { key: 'turer', label: 'Turer', sub: 'Turruter med lengde og beskrivelse' },
+      { key: 'kategorier', label: 'Kategorier', sub: 'Farger, ikoner og filtergrupper' },
+    ],
+  },
+  {
+    title: 'Historie',
+    items: [
+      { key: 'garder', label: 'Gårder', sub: 'Gårdshistorie i Historie-fanen' },
+      { key: 'tidslinje', label: 'Tidslinje', sub: 'Epoker, havnivå og koblede steder' },
+    ],
+  },
+  {
+    title: 'Natur',
+    items: [
+      { key: 'natur', label: 'Naturdata', sub: 'GBIF-observasjoner og rødliste' },
+    ],
+  },
+];
+
+const SECTION_TITLE: Record<Tab, string> = {
+  poi: 'Steder', stedsnavn: 'Stedsnavn', turer: 'Turer',
+  kategorier: 'Kategorier', garder: 'Gårder', tidslinje: 'Tidslinje', natur: 'Naturdata',
+};
+
+function useIsNarrow(bp = 900): boolean {
+  const [narrow, setNarrow] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia(`(max-width: ${bp}px)`).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${bp}px)`);
+    const h = (e: MediaQueryListEvent) => setNarrow(e.matches);
+    mq.addEventListener('change', h);
+    return () => mq.removeEventListener('change', h);
+  }, [bp]);
+  return narrow;
+}
+
 export function AdminPage() {
   const [user, setUser] = useState<User | null | undefined>(
     isFirebaseConfigured ? undefined : null
   );
   const [tab, setTab] = useState<Tab>('poi');
+  const [dirty, setDirty] = useState(false);
+  const dirtyRef = useRef(false);
+  const [counts, setCounts] = useState<Partial<Record<Tab, number>>>({});
+  const narrow = useIsNarrow();
+
+  const reportDirty = React.useCallback((d: boolean) => {
+    dirtyRef.current = d;
+    setDirty(d);
+  }, []);
 
   useEffect(() => {
     if (!isFirebaseConfigured) return;
     const unsub = onAuthStateChanged(auth, u => setUser(u));
     return unsub;
   }, []);
+
+  // Warn before the browser tab closes with unsaved edits
+  useEffect(() => {
+    const h = (e: BeforeUnloadEvent) => { if (dirtyRef.current) e.preventDefault(); };
+    window.addEventListener('beforeunload', h);
+    return () => window.removeEventListener('beforeunload', h);
+  }, []);
+
+  // Section counters for the sidebar (Firestore when available, local fallback otherwise)
+  useEffect(() => {
+    if (!isFirebaseConfigured || !user) return;
+    let alive = true;
+    (['poi', 'stedsnavn', 'turer'] as GeoTab[]).forEach(g => {
+      getDoc(doc(db, COL, DOC[g])).then(snap => {
+        if (!alive) return;
+        const raw = snap.exists()
+          ? (snap.data().json ? JSON.parse(snap.data().json) : snap.data())
+          : FALLBACK[g];
+        setCounts(c => ({ ...c, [g]: (raw as GeoCollection).features?.length }));
+      }).catch(() => { if (alive) setCounts(c => ({ ...c, [g]: FALLBACK[g].features.length })); });
+    });
+    loadCatCfg().then(cfg => { if (alive) setCounts(c => ({ ...c, kategorier: Object.keys(cfg).length })); });
+    loadFarmData().then(f => { if (alive) setCounts(c => ({ ...c, garder: f.length })); });
+    loadTimelineSections().then(ts => { if (alive) setCounts(c => ({ ...c, tidslinje: ts.length })); });
+    getNatureObsMetadata().then(m => {
+      if (alive) setCounts(c => ({ ...c, natur: m?.count ?? STATIC_NATURE_CACHE.obs.length }));
+    });
+    return () => { alive = false; };
+  }, [user]);
+
+  const switchTab = (t: Tab) => {
+    if (t === tab) return;
+    if (dirtyRef.current && !confirm('Du har ulagrede endringer som går tapt hvis du bytter seksjon. Bytte likevel?')) return;
+    reportDirty(false);
+    setTab(t);
+  };
 
   if (!isFirebaseConfigured) {
     return (
@@ -1660,52 +1927,122 @@ export function AdminPage() {
   if (user === undefined) return null;
   if (!user) return <LoginForm onLogin={setUser} />;
 
-  const TAB_LABELS: Record<Tab, string> = {
-    poi: 'Steder', stedsnavn: 'Stedsnavn', turer: 'Turer',
-    kategorier: 'Kategorier', garder: 'Gårder', tidslinje: 'Tidslinje',
-  };
+  const sideW = narrow ? 62 : 234;
+  const initial = (user.email ?? '?')[0].toUpperCase();
 
   return (
-    <div style={S.page}>
-      <div style={S.header}>
-        <h1 style={S.h1}>
-          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: 'var(--accent)' }}>
-            <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8 1C5.2 1 3 3.2 3 6c0 3.8 5 9 5 9s5-5.2 5-9c0-2.8-2.2-5-5-5z"/>
-              <circle cx="8" cy="6" r="1.5"/>
-            </svg>
-          </span>
-          <span>Veierland</span>
-          <span style={{ color: 'var(--line)', fontWeight: 300 }}>·</span>
-          <span style={{ color: 'var(--muted)', fontWeight: 400 }}>Admin</span>
-        </h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 12, color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 5 }}>
-            <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><circle cx="7" cy="5" r="2.5"/><path d="M2 12c0-2.8 2.2-4.5 5-4.5s5 1.7 5 4.5"/></svg>
-            {user.email}
-          </span>
-          <a href="/" style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 500 }}>
-            <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><polyline points="8,2 3,7 8,12"/></svg>
-            Kart
-          </a>
-          <button style={{ background: 'none', border: '1px solid var(--line)', borderRadius: 8, color: 'var(--ink2)', fontSize: 13, padding: '5px 12px', cursor: 'pointer', fontWeight: 500 }} onClick={() => signOut(auth)}>Logg ut</button>
-        </div>
+    <DirtyCtx.Provider value={reportDirty}>
+      <div style={{ ...S.page, display: 'grid', gridTemplateColumns: `${sideW}px 1fr`, height: '100vh', overflow: 'hidden' }}>
+        {/* ── Sidebar ── */}
+        <aside style={{ background: 'var(--sidebar)', borderRight: '1px solid var(--line)', display: 'flex', flexDirection: 'column', overflowY: 'auto', minHeight: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: narrow ? '16px 0 10px' : '16px 16px 10px', justifyContent: narrow ? 'center' : 'flex-start' }}>
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: 10, background: 'var(--accent)', flexShrink: 0 }}>
+              <svg viewBox="0 0 16 16" width="17" height="17" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 1C5.2 1 3 3.2 3 6c0 3.8 5 9 5 9s5-5.2 5-9c0-2.8-2.2-5-5-5z"/>
+                <circle cx="8" cy="6" r="1.5"/>
+              </svg>
+            </span>
+            {!narrow && (
+              <span>
+                <b style={{ display: 'block', fontSize: 15, letterSpacing: '-.01em' }}>Veierland</b>
+                <span style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 600 }}>Admin</span>
+              </span>
+            )}
+          </div>
+
+          <nav style={{ padding: '2px 8px 8px', display: 'flex', flexDirection: 'column' }}>
+            {NAV_GROUPS.map(grp => (
+              <React.Fragment key={grp.title}>
+                {!narrow && (
+                  <h6 style={{ margin: '13px 10px 5px', fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{grp.title}</h6>
+                )}
+                {narrow && <div style={{ height: 10 }} />}
+                {grp.items.map(it => {
+                  const on = tab === it.key;
+                  return (
+                    <button key={it.key} onClick={() => switchTab(it.key)} title={it.label}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                        padding: narrow ? '11px 0' : '8px 11px', justifyContent: narrow ? 'center' : 'flex-start',
+                        borderRadius: 10, border: 'none', font: 'inherit', fontWeight: 600, fontSize: 13.5,
+                        cursor: 'pointer', textAlign: 'left', marginBottom: 1,
+                        background: on ? 'color-mix(in srgb, var(--accent) 13%, transparent)' : 'transparent',
+                        color: on ? 'var(--accent)' : 'var(--ink)',
+                      }}>
+                      <span style={{ color: on ? 'var(--accent)' : 'var(--muted)', display: 'flex', flexShrink: 0 }}>{NAV_ICON[it.key]}</span>
+                      {!narrow && <span style={{ flex: 1 }}>{it.label}</span>}
+                      {!narrow && counts[it.key] !== undefined && (
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, borderRadius: 99, padding: '1px 8px',
+                          background: on ? 'var(--card)' : 'var(--card2)',
+                          border: '1px solid var(--line)',
+                          color: on ? 'var(--accent)' : 'var(--muted)',
+                        }}>{counts[it.key]}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </React.Fragment>
+            ))}
+          </nav>
+
+          <div style={{ marginTop: 'auto', borderTop: '1px solid var(--line)', padding: narrow ? '10px 0' : '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <a href="/" title="Til kartet" style={{
+              display: 'flex', alignItems: 'center', gap: 9, padding: narrow ? '8px 0' : '7px 10px',
+              justifyContent: narrow ? 'center' : 'flex-start',
+              borderRadius: 9, fontSize: 13, fontWeight: 600, color: 'var(--accent)', textDecoration: 'none',
+            }}>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+              {!narrow && 'Til kartet'}
+            </a>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: narrow ? '0' : '2px 10px 4px', justifyContent: narrow ? 'center' : 'flex-start' }}>
+              <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'color-mix(in srgb, var(--accent) 16%, var(--card))', color: 'var(--accent)', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0 }}>{initial}</span>
+              {!narrow && (
+                <span style={{ flex: 1, minWidth: 0, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={user.email ?? ''}>
+                  {user.email}
+                </span>
+              )}
+              {!narrow && (
+                <button onClick={() => signOut(auth)} title="Logg ut" style={{ border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', padding: 6, borderRadius: 8, display: 'grid' }}>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+                </button>
+              )}
+            </div>
+            {narrow && (
+              <button onClick={() => signOut(auth)} title="Logg ut" style={{ border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', padding: 8, borderRadius: 8, display: 'grid', justifyContent: 'center' }}>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+              </button>
+            )}
+          </div>
+        </aside>
+
+        {/* ── Main ── */}
+        <main style={{ display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 24px', background: 'var(--card)', borderBottom: '1px solid var(--line)', flexShrink: 0 }}>
+            <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, letterSpacing: '-.01em' }}>{SECTION_TITLE[tab]}</h2>
+            <span style={{ fontSize: 12.5, color: 'var(--muted)', fontWeight: 500 }}>
+              {NAV_GROUPS.flatMap(g => g.items).find(i => i.key === tab)?.sub}
+            </span>
+            {dirty && (
+              <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 700, color: 'var(--accent)' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)' }} />
+                Ulagrede endringer
+              </span>
+            )}
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+            <div style={{ padding: '22px 24px 48px', maxWidth: 860 }}>
+              {tab === 'poi' && <PoiTab />}
+              {tab === 'stedsnavn' && <StedsnavnTab />}
+              {tab === 'turer' && <TurerTab />}
+              {tab === 'kategorier' && <CategoryConfigTab />}
+              {tab === 'garder' && <GarderTab />}
+              {tab === 'tidslinje' && <TidslinjeTab />}
+              {tab === 'natur' && <NaturTab />}
+            </div>
+          </div>
+        </main>
       </div>
-      <div style={S.tabs}>
-        {(['poi', 'stedsnavn', 'turer', 'kategorier', 'garder', 'tidslinje'] as Tab[]).map(t => (
-          <button key={t} style={S.tab(tab === t)} onClick={() => setTab(t)}>
-            {TAB_LABELS[t]}
-          </button>
-        ))}
-      </div>
-      <div style={S.body}>
-        {tab === 'poi' && <PoiTab />}
-        {tab === 'stedsnavn' && <StedsnavnTab />}
-        {tab === 'turer' && <TurerTab />}
-        {tab === 'kategorier' && <CategoryConfigTab />}
-        {tab === 'garder' && <GarderTab />}
-        {tab === 'tidslinje' && <TidslinjeTab />}
-      </div>
-    </div>
+    </DirtyCtx.Provider>
   );
 }
