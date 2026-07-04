@@ -136,6 +136,20 @@ export async function enrichWithINaturalist(obs: NatureObs[]): Promise<NatureObs
 
 const _assessmentCache = (assessmentCacheData as { assessments: Record<string, { redListCategory?: string; alienCategory?: string }> }).assessments;
 
+// Merge the bundled red-list/alien assessments into observation data at load
+// time (synchronous, no network). Values already present on the data win.
+export function applyAssessments(obs: NatureObs[]): NatureObs[] {
+  return obs.map(o => {
+    const a = _assessmentCache[o.scientificName];
+    if (!a) return o;
+    return {
+      ...o,
+      redListCategory: o.redListCategory ?? a.redListCategory,
+      alienCategory: o.alienCategory ?? a.alienCategory,
+    };
+  });
+}
+
 export async function enrichWithAssessments(obs: NatureObs[]): Promise<NatureObs[]> {
   const uniqueNames = [...new Set(obs.map(o => o.scientificName))];
   const amap = new Map<string, { redListCategory?: string; alienCategory?: string }>();

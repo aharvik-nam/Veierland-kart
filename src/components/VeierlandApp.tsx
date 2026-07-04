@@ -8,7 +8,7 @@ import 'leaflet.markercluster';
 import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, WikipediaData } from '../lib/types';
 import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages, fetchWikipediaSpecies } from '../lib/api';
 import { loadCatCfg, DEFAULT_CAT_CFG, CatCfgMap } from '../lib/catcfg';
-import { NATURE_GROUPS, NatureGroup, NatureObs, GBIF_POLYGON, STATIC_NATURE_CACHE, loadNatureObs } from '../lib/naturedata';
+import { NATURE_GROUPS, NatureGroup, NatureObs, GBIF_POLYGON, STATIC_NATURE_CACHE, loadNatureObs, applyAssessments } from '../lib/naturedata';
 import { loadFarmData, DEFAULT_FARM_DATA, Farm } from '../lib/farmdata';
 import { loadTimelineSections, DEFAULT_TIMELINE_SECTIONS, TimelineSection } from '../lib/timelinedata';
 import { ICONS } from '../lib/icons';
@@ -119,6 +119,9 @@ function geoOnEach(feature: { properties?: { type_no?: string; label?: string } 
 // ─── Nature (Artsdatabanken) ──────────────────────────────────────────────────
 
 const RED_LIST_CATS = /^(NT|VU|EN|CR|RE|DD)$/;
+
+// Severity order for sorting highlights: most threatened first
+const RL_RANK: Record<string, number> = { CR: 0, RE: 1, EN: 2, VU: 3, NT: 4, DD: 5 };
 
 const RL_LABEL: Record<string, string> = {
   NT: 'Nær truet (NT)', VU: 'Sårbar (VU)', EN: 'Sterkt truet (EN)',
@@ -473,7 +476,10 @@ export function VeierlandApp() {
   const isHighlight = (o: NatureObs) =>
     RED_LIST_CATS.test(o.redListCategory ?? '') || !!o.alienCategory;
   const natureHighlights = useMemo(
-    () => filteredNatureObs.filter(isHighlight).sort((a, b) => b.obsCount - a.obsCount),
+    () => filteredNatureObs.filter(isHighlight).sort((a, b) => {
+      const rank = (o: NatureObs) => RL_RANK[o.redListCategory ?? ''] ?? 10;
+      return rank(a) - rank(b) || b.obsCount - a.obsCount;
+    }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [natureObs, natureFilter]);
   const natureCommon = useMemo(
@@ -741,13 +747,13 @@ export function VeierlandApp() {
     if ((mode !== 'nature' && !(mode === 'trails' && trailCatFilter === 'natur')) || natureFetched) return;
 
     // Show static bundle immediately for fast first render
-    setNatureObs(STATIC_NATURE_CACHE.obs);
+    setNatureObs(applyAssessments(STATIC_NATURE_CACHE.obs));
     setNatureFetched(true);
 
     // Load fresher data from Firebase in background (instant on repeat visits via Firestore offline cache)
     setNatureLoading(true);
     loadNatureObs().then(obs => {
-      if (obs) setNatureObs(obs);
+      if (obs) setNatureObs(applyAssessments(obs));
     }).finally(() => setNatureLoading(false));
   }, [mode, natureFetched, trailCatFilter]);
 
@@ -1238,9 +1244,9 @@ export function VeierlandApp() {
           </div>
           <div className="vl-sp-right">
             {obs.redListCategory && RED_LIST_CATS.test(obs.redListCategory) && (
-              <span className="vl-rlbadge">{obs.redListCategory}</span>
+              <span className="vl-rlbadge" title={RL_LABEL[obs.redListCategory]}>{obs.redListCategory}</span>
             )}
-            {obs.alienCategory && <span className="vl-albadge">FA</span>}
+            {obs.alienCategory && <span className="vl-albadge" title="Fremmedart">FA</span>}
             <span className="vl-sp-cnt">{obs.obsCount}</span>
             <span className="vl-chev"><ChevSvg /></span>
           </div>
