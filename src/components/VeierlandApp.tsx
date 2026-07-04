@@ -265,13 +265,13 @@ function pointToPolylineDistM(p: [number, number], poly: [number, number][]): nu
   return minDist;
 }
 
-const TRAIL_CAT_GROUPS = {
-  alle:     { no: 'Alle',        en: 'All',          cats: null as null | string[] },
+const TRAIL_CAT_GROUPS: Record<'alle' | 'historie' | 'natur' | 'mat' | 'kultur', { no: string; en: string; cats: string[] | null }> = {
+  alle:     { no: 'Alle',        en: 'All',          cats: null },
   historie: { no: 'Historie',    en: 'History',      cats: ['arkeologi', 'hvalfangst'] },
   natur:    { no: 'Natur',       en: 'Nature',       cats: null }, // uses natureObs (GBIF), not POI categories
   mat:      { no: 'Mat & Drikke',en: 'Food & Drink', cats: ['mat'] },
   kultur:   { no: 'Kultur',      en: 'Culture',      cats: ['kultur', 'info', 'ferge', 'havn'] },
-} as const;
+};
 
 // ─── Trail data ───────────────────────────────────────────────────────────────
 
@@ -422,6 +422,7 @@ export function VeierlandApp() {
   const [nearbyPoi, setNearbyPoi] = useState<POI | null>(null);
   const watchRef = useRef<number | null>(null);
   const notifiedPoisRef = useRef<Set<string>>(new Set());
+  const offIslandShownRef = useRef(false);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [trailPath, setTrailPath] = useState<[number, number][] | null>(null);
   const [trailPoiFilter, setTrailPoiFilter] = useState<'along' | 'all'>('along');
@@ -562,7 +563,7 @@ export function VeierlandApp() {
       const ai = catOrder.indexOf(a); const bi = catOrder.indexOf(b);
       return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
     });
-  }, [filteredPOIs]);
+  }, [filteredPOIs, catCfg]);
 
   // Fetch Wikipedia when a nature obs is selected
   useEffect(() => {
@@ -726,6 +727,7 @@ export function VeierlandApp() {
     // Show static bundle immediately for fast first render
     setNatureObs(STATIC_NATURE_CACHE.obs);
     setNatureFetched(true);
+    loadNorwegianFamilyNames(STATIC_NATURE_CACHE.obs, setFamilyNorMap);
 
     // Load fresher data from Firebase in background (instant on repeat visits via Firestore offline cache)
     setNatureLoading(true);
@@ -844,6 +846,7 @@ export function VeierlandApp() {
     setLocating(true);
     setOffIsland(false);
     notifiedPoisRef.current = new Set();
+    offIslandShownRef.current = false;
 
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
@@ -858,25 +861,43 @@ export function VeierlandApp() {
         setUserPos(p);
         setUserAccuracy(acc);
         setOffIsland(false);
+        offIslandShownRef.current = false;
         if (flyTo) mapRef.current?.flyTo(p, 16, { duration: 0.7 });
       } else {
         setUserPos(null);
-        setOffIsland(true);
-        setTimeout(() => setOffIsland(false), 4000);
+        // Show the toast once per off-island episode, not on every GPS update
+        if (!offIslandShownRef.current) {
+          offIslandShownRef.current = true;
+          setOffIsland(true);
+          setTimeout(() => setOffIsland(false), 4000);
+        }
+      }
+    };
+
+    const handleErr = (err: GeolocationPositionError) => {
+      console.error('Geolocation error', err);
+      // Permission denied or unavailable: stop tracking so the button doesn't stay stuck on
+      if (err.code === err.PERMISSION_DENIED) {
+        if (watchRef.current !== null) {
+          navigator.geolocation.clearWatch(watchRef.current);
+          watchRef.current = null;
+        }
+        setLocating(false);
+        setUserPos(null);
       }
     };
 
     // Immediate one-shot for fast first fix + fly
     navigator.geolocation.getCurrentPosition(
       pos => handlePos(pos, true),
-      () => {},
+      handleErr,
       { enableHighAccuracy: true, timeout: 10000 }
     );
 
     // Continuous watch for live updates
     watchRef.current = navigator.geolocation.watchPosition(
       pos => handlePos(pos, false),
-      err => console.error('Geolocation error', err),
+      handleErr,
       { enableHighAccuracy: true }
     );
   }
@@ -908,22 +929,27 @@ export function VeierlandApp() {
     if (closest && !notifiedPoisRef.current.has(closest.id)) {
       notifiedPoisRef.current.add(closest.id);
       setNearbyPoi(closest);
-      setTimeout(() => setNearbyPoi(p => p?.id === closest!.id ? null : p), 6000);
+      const closestId = closest.id;
+      setTimeout(() => setNearbyPoi(p => p?.id === closestId ? null : p), 6000);
 
       if ('Notification' in window && Notification.permission === 'granted') {
         const title = closest.navn;
         const body = closest.beskrivelse
           ? closest.beskrivelse.slice(0, 100) + (closest.beskrivelse.length > 100 ? '…' : '')
           : `${Math.round(closestDist)}m unna`;
-        const notif = new Notification(title, { body, tag: closest.id, icon: '/vite.svg' });
         const poiRef = closest;
-        notif.onclick = () => { window.focus(); setSelectedPOI(poiRef); };
+        try {
+          // new Notification() throws on Android Chrome (requires a service worker there);
+          // the in-app banner above covers that case
+          const notif = new Notification(title, { body, tag: closest.id });
+          notif.onclick = () => { window.focus(); selectPOI(poiRef); };
+        } catch { /* in-app banner is the fallback */ }
       }
     } else if (!closest) {
       setNearbyPoi(null);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userPos]);
+  }, [userPos, locating, allPOIs]);
 
   function toggleGroup(cats: string[]) {
     setActiveCats(prev => {
@@ -1393,7 +1419,7 @@ export function VeierlandApp() {
             </button>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)', letterSpacing: '.02em' }}>
-                {eraNavIdx + 1} av {n}
+                {eraNavIdx + 1} {lang === 'no' ? 'av' : 'of'} {n}
               </span>
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
                 {timelineSections.map((_, i) => (
@@ -1813,8 +1839,9 @@ export function VeierlandApp() {
         {lokalData && (() => {
           const MAX = 320;
           const isTruncatable = !lokalExpanded && lokalData.tekst.length > MAX;
+          const cutAt = lokalData.tekst.lastIndexOf(' ', MAX);
           const displayText = isTruncatable
-            ? lokalData.tekst.slice(0, lokalData.tekst.lastIndexOf(' ', MAX) || MAX) + '…'
+            ? lokalData.tekst.slice(0, cutAt > 0 ? cutAt : MAX) + '…'
             : lokalData.tekst;
           return (
             <div className="vl-api-section">
@@ -2260,7 +2287,7 @@ export function VeierlandApp() {
       {/* Nearby POI banner */}
       {nearbyPoi && !offIsland && (
         <button
-          onClick={() => { setSelectedPOI(nearbyPoi); setNearbyPoi(null); }}
+          onClick={() => { selectPOI(nearbyPoi); setNearbyPoi(null); }}
           style={{
             position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)',
             background: 'var(--card)', border: '1.5px solid var(--line)', borderRadius: 14,

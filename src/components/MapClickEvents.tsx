@@ -52,7 +52,7 @@ export function MapClickEvents() {
   if (!clickedData) return null;
 
   return (
-    <Popup position={clickedData.latlng} onClose={() => setClickedData(null)}>
+    <Popup position={clickedData.latlng} eventHandlers={{ remove: () => setClickedData(null) }}>
       <div className="w-64 max-h-[400px] overflow-y-auto custom-scrollbar flex flex-col gap-3">
         {clickedData.loading ? (
           <div className="text-sm font-medium animate-pulse text-slate-500">Søker etter naturtype...</div>

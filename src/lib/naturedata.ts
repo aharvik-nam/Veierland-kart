@@ -120,7 +120,13 @@ async function fetchINaturalistTaxon(scientificName: string): Promise<{ norwegia
 
 export async function enrichWithINaturalist(obs: NatureObs[]): Promise<NatureObs[]> {
   const uniqueNames = [...new Set(obs.map(o => o.scientificName))];
-  const results = await Promise.all(uniqueNames.map(n => fetchINaturalistTaxon(n)));
+  // Batch requests to stay under iNaturalist's rate limit
+  const BATCH = 20;
+  const results: { norwegianName: string; photoUrl: string; photoAttribution: string }[] = [];
+  for (let i = 0; i < uniqueNames.length; i += BATCH) {
+    const batch = uniqueNames.slice(i, i + BATCH);
+    results.push(...await Promise.all(batch.map(n => fetchINaturalistTaxon(n))));
+  }
   const map = new Map(uniqueNames.map((n, i) => [n, results[i]]));
   return obs.map(o => {
     const r = map.get(o.scientificName)!;
