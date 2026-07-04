@@ -175,45 +175,6 @@ const GARDER_TIMELINE = [
 
 // Historical sea level (metres above today) per era, based on Vestfold land-uplift data
 
-async function loadNorwegianFamilyNames(
-  obs: NatureObs[],
-  setMap: (m: Record<string, string>) => void
-) {
-  try {
-    const cached = localStorage.getItem('vl-family-nor');
-    if (cached) { setMap(JSON.parse(cached)); return; }
-  } catch {}
-
-  const familyMap = new Map<number, string>();
-  for (const o of obs) {
-    if (o.familyKey && o.family && !familyMap.has(o.familyKey)) {
-      familyMap.set(o.familyKey, o.family);
-    }
-  }
-  if (familyMap.size === 0) return;
-
-  const result: Record<string, string> = {};
-  const BATCH = 20;
-  const entries = [...familyMap.entries()];
-  for (let i = 0; i < entries.length; i += BATCH) {
-    const batch = entries.slice(i, i + BATCH);
-    await Promise.all(batch.map(async ([key, latin]) => {
-      try {
-        const res = await fetch(`https://api.gbif.org/v1/species/${key}/vernacularNames?limit=100`);
-        if (!res.ok) return;
-        const d = await res.json();
-        const nor = (d.results as any[]).find((v: any) =>
-          v.language === 'nob' || v.language === 'nor' || v.language === 'nno'
-        );
-        if (nor) result[latin] = nor.vernacularName;
-      } catch {}
-    }));
-  }
-
-  setMap(result);
-  try { localStorage.setItem('vl-family-nor', JSON.stringify(result)); } catch {}
-}
-
 function markerSize(zoom: number): number {
   return Math.round(Math.max(14, Math.min(34, 14 + (zoom - 11) * 5)));
 }
@@ -226,10 +187,6 @@ function makeIconHtml(icon: string, selected: boolean, sz: number): string {
 
 function iconSvg(icon: string): string {
   return `<svg viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">${ICONS[icon] ?? ICONS.wc}</svg>`;
-}
-
-function coloredSvg(icon: string, color: string): string {
-  return `<svg viewBox="-12 -12 24 24" fill="none" stroke="${color}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[icon] ?? ICONS.wc}</svg>`;
 }
 
 function obsRingClass(obs: NatureObs): string {
@@ -507,31 +464,26 @@ export function VeierlandApp() {
   const [natureLoading, setNatureLoading] = useState(false);
   const [natureFetched, setNatureFetched] = useState(false);
   const [natureFilter, setNatureFilter] = useState<NatureGroup | null>(null);
-  const [redListFilter, setRedListFilter] = useState(false);
-  const [alienFilter, setAlienFilter] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Set<NatureGroup>>(new Set());
-  const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(new Set());
-  const [showNorFamilies, setShowNorFamilies] = useState(true);
-  const [familyNorMap, setFamilyNorMap] = useState<Record<string, string>>({});
-  const filteredNatureObs = natureObs.filter(o => {
-    if (natureFilter && o.group !== natureFilter) return false;
-    if (redListFilter && !RED_LIST_CATS.test(o.redListCategory ?? '')) return false;
-    if (alienFilter && !o.alienCategory) return false;
-    return true;
-  });
-  const groupedNatureObs = useMemo(() => {
-    const result = new Map<NatureGroup, Map<string, NatureObs[]>>();
-    for (const g of Object.keys(NATURE_GROUPS) as NatureGroup[]) result.set(g, new Map());
-    for (const obs of filteredNatureObs) {
-      const families = result.get(obs.group)!;
-      const fam = obs.family || '—';
-      if (!families.has(fam)) families.set(fam, []);
-      families.get(fam)!.push(obs);
-    }
-    return result;
-  // filteredNatureObs identity changes on every render, so depend on the source state
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [natureObs, natureFilter, redListFilter, alienFilter]);
+  // Curated list: highlights (red-listed/alien) + most-observed, paged
+  const [natureHlN, setNatureHlN] = useState(10);
+  const [natureTopN, setNatureTopN] = useState(15);
+  const filteredNatureObs = natureFilter
+    ? natureObs.filter(o => o.group === natureFilter)
+    : natureObs;
+  const isHighlight = (o: NatureObs) =>
+    RED_LIST_CATS.test(o.redListCategory ?? '') || !!o.alienCategory;
+  const natureHighlights = useMemo(
+    () => filteredNatureObs.filter(isHighlight).sort((a, b) => b.obsCount - a.obsCount),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [natureObs, natureFilter]);
+  const natureCommon = useMemo(
+    () => filteredNatureObs.filter(o => !isHighlight(o)).sort((a, b) => b.obsCount - a.obsCount),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [natureObs, natureFilter]);
+  // The map mirrors exactly what the list shows — not all 500 species
+  const natureVisible = useMemo(
+    () => [...natureHighlights.slice(0, natureHlN), ...natureCommon.slice(0, natureTopN)],
+    [natureHighlights, natureCommon, natureHlN, natureTopN]);
   const [selectedNatureObs, setSelectedNatureObs] = useState<NatureObs[]>([]);
   const [speciesObsLoading, setSpeciesObsLoading] = useState(false);
   const [selectedNature, setSelectedNature] = useState<NatureObs | null>(null);
@@ -791,15 +743,11 @@ export function VeierlandApp() {
     // Show static bundle immediately for fast first render
     setNatureObs(STATIC_NATURE_CACHE.obs);
     setNatureFetched(true);
-    loadNorwegianFamilyNames(STATIC_NATURE_CACHE.obs, setFamilyNorMap);
 
     // Load fresher data from Firebase in background (instant on repeat visits via Firestore offline cache)
     setNatureLoading(true);
     loadNatureObs().then(obs => {
-      if (obs) {
-        setNatureObs(obs);
-        loadNorwegianFamilyNames(obs, setFamilyNorMap);
-      }
+      if (obs) setNatureObs(obs);
     }).finally(() => setNatureLoading(false));
   }, [mode, natureFetched, trailCatFilter]);
 
@@ -946,6 +894,7 @@ export function VeierlandApp() {
       setSeaLevelA(0);
       setSeaLevelB(0);
     }
+    if (t === 'nature') { setNatureHlN(10); setNatureTopN(15); }
     setSheetOpen(t !== 'map');
   }
 
@@ -1128,14 +1077,6 @@ export function VeierlandApp() {
     setExpandedPlaceCats(prev => { const n = new Set(prev); n.has(k) ? n.delete(k) : n.add(k); return n; });
   }
 
-  function toggleExpandedGroup(g: NatureGroup) {
-    setExpandedGroups(prev => { const n = new Set(prev); n.has(g) ? n.delete(g) : n.add(g); return n; });
-  }
-
-  function toggleExpandedFam(key: string) {
-    setExpandedFamilies(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; });
-  }
-
   function toggleSaved(id: string) {
     setSavedIds(prev => {
       const next = new Set(prev);
@@ -1146,8 +1087,11 @@ export function VeierlandApp() {
   }
 
   // Browse lists are capped lower than detail so the map always stays in view
-  // (interactions like the sea-level slider have a visible effect)
-  const SHEET_MAX_H = Math.min(window.innerHeight * (view === 'detail' ? 0.82 : 0.62), 720);
+  // (interactions like the sea-level slider have a visible effect). Natur is
+  // capped lower still — its content is about the map.
+  const SHEET_MAX_H = Math.min(window.innerHeight * (
+    view === 'detail' || selectedNature ? 0.82 : tab === 'nature' ? 0.45 : 0.62
+  ), 720);
   const TAB_BAR_H = 62; // keep in sync with --tab-h in index.css
   const MINI_CARD_H = 68;
 
@@ -1282,10 +1226,33 @@ export function VeierlandApp() {
       );
     }
 
+    const natRow = (obs: NatureObs) => {
+      const cfg = NATURE_GROUPS[obs.group];
+      return (
+        <div key={obs.gbifKey} className="vl-sp-row flat" onClick={() => selectNatureSpecies(obs)}>
+          <span className="vl-sp-ico" style={{ background: `${cfg.color}1a`, color: cfg.color }}
+            dangerouslySetInnerHTML={{ __html: iconSvg(cfg.icon) }} />
+          <div className="vl-sp-main">
+            <span className="vl-sp-name">{obs.popularName || obs.scientificName}</span>
+            <span className="vl-sp-sci">{obs.popularName ? obs.scientificName : (lang === 'no' ? cfg.no : cfg.en)}</span>
+          </div>
+          <div className="vl-sp-right">
+            {obs.redListCategory && RED_LIST_CATS.test(obs.redListCategory) && (
+              <span className="vl-rlbadge">{obs.redListCategory}</span>
+            )}
+            {obs.alienCategory && <span className="vl-albadge">FA</span>}
+            <span className="vl-sp-cnt">{obs.obsCount}</span>
+            <span className="vl-chev"><ChevSvg /></span>
+          </div>
+        </div>
+      );
+    };
+
     return (
       <>
         <div className="vl-chips vl-panel-chips">
-          <div className={`vl-chip lbl${!natureFilter ? ' on' : ''}`} onClick={() => setNatureFilter(null)} title={T.all}>
+          <div className={`vl-chip lbl${!natureFilter ? ' on' : ''}`}
+            onClick={() => { setNatureFilter(null); setNatureHlN(10); setNatureTopN(15); }} title={T.all}>
             <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
             <span className="cl">{T.all}</span>
           </div>
@@ -1294,111 +1261,45 @@ export function VeierlandApp() {
             if (count === 0) return null;
             const label = `${lang === 'no' ? cfg.no : cfg.en} ${count}`;
             return (
-              <div key={g} className={`vl-chip${natureFilter === g ? ' on' : ''}`} onClick={() => setNatureFilter(natureFilter === g ? null : g)} title={label}>
+              <div key={g} className={`vl-chip${natureFilter === g ? ' on' : ''}`}
+                onClick={() => { setNatureFilter(natureFilter === g ? null : g); setNatureHlN(10); setNatureTopN(15); }} title={label}>
                 <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg(cfg.icon) }} />
                 <span className="cl">{label}</span>
               </div>
             );
           })}
-          {natureObs.some(o => RED_LIST_CATS.test(o.redListCategory ?? '')) && (
-            <div className={`vl-chip vl-chip-rl${redListFilter ? ' on' : ''}`} onClick={() => setRedListFilter(f => !f)}
-              title={`${lang === 'no' ? 'Rødlista' : 'Red list'} ${natureObs.filter(o => RED_LIST_CATS.test(o.redListCategory ?? '')).length}`}>
-              <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('rodliste') }} />
-              <span className="cl">{lang === 'no' ? 'Rødlista' : 'Red list'} {natureObs.filter(o => RED_LIST_CATS.test(o.redListCategory ?? '')).length}</span>
-            </div>
-          )}
-          {natureObs.some(o => o.alienCategory) && (
-            <div className={`vl-chip vl-chip-al${alienFilter ? ' on' : ''}`} onClick={() => setAlienFilter(f => !f)}
-              title={`${lang === 'no' ? 'Fremmedarter' : 'Alien species'} ${natureObs.filter(o => o.alienCategory).length}`}>
-              <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('fremmed') }} />
-              <span className="cl">{lang === 'no' ? 'Fremmedarter' : 'Alien species'} {natureObs.filter(o => o.alienCategory).length}</span>
-            </div>
-          )}
         </div>
         {natureLoading && (
           <p className="vl-loading-blink" style={{ fontSize: 13, margin: '8px 0' }}>
             {lang === 'no' ? 'Henter siste observasjoner fra Artsdatabanken…' : 'Fetching latest observations from Artsdatabanken…'}
           </p>
         )}
-        <div className="vl-nat-toprow">
-          <div className="vl-count">{T.natObs(filteredNatureObs.length)}</div>
-          <div className="vl-lang vl-fam-lang">
-            <button className={showNorFamilies ? 'on' : ''} onClick={() => setShowNorFamilies(true)}>
-              {lang === 'no' ? 'Norsk' : 'Norwegian'}
-            </button>
-            <button className={!showNorFamilies ? 'on' : ''} onClick={() => setShowNorFamilies(false)}>
-              Latin
-            </button>
-          </div>
-        </div>
 
-        {(Object.keys(NATURE_GROUPS) as NatureGroup[]).map(g => {
-          const cfg = NATURE_GROUPS[g];
-          const families = groupedNatureObs.get(g)!;
-          const total = [...families.values()].reduce((s, arr) => s + arr.length, 0);
-          if (total === 0) return null;
-          const grpOpen = expandedGroups.has(g);
-          return (
-            <div key={g} className={`vl-nat-grp${grpOpen ? ' open' : ''}`}>
-              <div className="vl-grp-hdr" onClick={() => toggleExpandedGroup(g)}>
-                <span className="vl-grp-ico" dangerouslySetInnerHTML={{ __html: coloredSvg(cfg.icon, cfg.color) }} />
-                <span className="vl-grp-lbl" style={{ color: grpOpen ? cfg.color : undefined }}>{lang === 'no' ? cfg.no : cfg.en}</span>
-                <span className="vl-grp-cnt">{total}</span>
-                <span className={`vl-chev${grpOpen ? ' open' : ''}`}><ChevSvg /></span>
-              </div>
-              {grpOpen && (
-                <div className="vl-grp-children">
-                  {[...families.entries()]
-                    .sort(([a], [b]) => a === '—' ? 1 : b === '—' ? -1 : a.localeCompare(b))
-                    .map(([fam, species]) => {
-                      const famKey = `${g}::${fam}`;
-                      // Unknown family: a "—" accordion row is just noise —
-                      // list the species directly instead
-                      const famOpen = fam === '—' || expandedFamilies.has(famKey);
-                      const rlCount = species.filter(o => RED_LIST_CATS.test(o.redListCategory ?? '')).length;
-                      const alCount = species.filter(o => o.alienCategory).length;
-                      return (
-                        <div key={famKey} className="vl-nat-fam">
-                          {fam !== '—' && (
-                          <div className="vl-fam-hdr" onClick={() => toggleExpandedFam(famKey)}>
-                            <span className="vl-fam-lbl">
-                              {fam === '—' ? '—' : showNorFamilies ? (familyNorMap[fam] ?? fam) : fam}
-                            </span>
-                            <div className="vl-fam-right">
-                              {rlCount > 0 && <span className="vl-rlbadge">{rlCount}</span>}
-                              {alCount > 0 && <span className="vl-albadge">{alCount}</span>}
-                              <span className="vl-fam-cnt">{species.length}</span>
-                              <span className={`vl-chev${famOpen ? ' open' : ''}`}><ChevSvg /></span>
-                            </div>
-                          </div>
-                          )}
-                          {famOpen && [...species].sort((a, b) => b.obsCount - a.obsCount).map(obs => (
-                            <div key={obs.gbifKey} className="vl-sp-row" onClick={() => selectNatureSpecies(obs)}>
-                              <div className="vl-sp-main">
-                                <span className="vl-sp-name">{obs.popularName || obs.scientificName}</span>
-                                {obs.popularName && <span className="vl-sp-sci">{obs.scientificName}</span>}
-                              </div>
-                              <div className="vl-sp-right">
-                                {obs.redListCategory && RED_LIST_CATS.test(obs.redListCategory) && (
-                                  <span className="vl-rlbadge">{obs.redListCategory}</span>
-                                )}
-                                {obs.alienCategory && <span className="vl-albadge">FA</span>}
-                                <span className="vl-sp-cnt">{obs.obsCount}</span>
-                                <span className="vl-chev"><ChevSvg /></span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {natureHighlights.length > 0 && (
+          <>
+            <div className="vl-nat-sec">{lang === 'no' ? 'Høydepunkter' : 'Highlights'}</div>
+            <p className="vl-nat-sec-sub">
+              {lang === 'no' ? 'Rødlistede og fremmede arter observert på øya' : 'Red-listed and alien species observed on the island'}
+            </p>
+            {natureHighlights.slice(0, natureHlN).map(natRow)}
+            {natureHighlights.length > natureHlN && (
+              <button className="vl-showmore" onClick={() => setNatureHlN(n => n + 20)}>
+                {lang === 'no' ? 'Vis flere' : 'Show more'} ({natureHighlights.length - natureHlN})
+              </button>
+            )}
+          </>
+        )}
 
-        <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
-          Kilde: GBIF (CC BY 4.0)
+        <div className="vl-nat-sec">{lang === 'no' ? 'Mest observert' : 'Most observed'}</div>
+        {natureCommon.slice(0, natureTopN).map(natRow)}
+        {natureCommon.length > natureTopN && (
+          <button className="vl-showmore" onClick={() => setNatureTopN(n => n + 20)}>
+            {lang === 'no' ? 'Vis flere' : 'Show more'} ({natureCommon.length - natureTopN})
+          </button>
+        )}
+
+        <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 12 }}>
+          {T.natObs(filteredNatureObs.length)} · Kilde: GBIF (CC BY 4.0)
         </p>
       </>
     );
@@ -2389,7 +2290,7 @@ export function VeierlandApp() {
               eventHandlers={{ click: () => { setSelectedPOI(poi); setView('detail'); setSheetOpen(true); } }} />
           );
         })}
-        {mode === 'nature' && !selectedNature && filteredNatureObs.map(obs => {
+        {mode === 'nature' && !selectedNature && natureVisible.map(obs => {
           const cfg = NATURE_GROUPS[obs.group];
           const sz = Math.max(18, Math.min(28, 18 + (mapZoom - 13) * 3));
           const icon = L.divIcon({
@@ -2403,7 +2304,7 @@ export function VeierlandApp() {
               eventHandlers={{ click: () => selectNatureSpecies(obs) }} />
           );
         })}
-        {mode === 'nature' && selectedNature && filteredNatureObs.filter(o => o.gbifKey !== selectedNature.gbifKey).map(obs => {
+        {mode === 'nature' && selectedNature && natureVisible.filter(o => o.gbifKey !== selectedNature.gbifKey).map(obs => {
           const cfg = NATURE_GROUPS[obs.group];
           const sz = 14;
           const icon = L.divIcon({
