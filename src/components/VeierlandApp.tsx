@@ -2543,13 +2543,25 @@ export function VeierlandApp() {
                 </div>
               ))}
               <h5 style={{ marginTop: 10 }}>{(lang === 'no' ? 'Fra Tenvik' : 'From Tenvik') + (ferryTomorrow ? (lang === 'no' ? ' · i morgen' : ' · tomorrow') : '')}</h5>
-              {upcomingFerry.filter(d => !d.onIsland).slice(0, 3).map((d, i) => (
+              {upcomingFerry.filter(d => d.quay === 'tenvik').slice(0, 3).map((d, i) => (
                 <div key={`m${i}`} className="vl-fdep">
                   <b>{fmtDepTime(d.time)}</b>
                   <span className="fq">→ {d.destination || 'Veierland'}</span>
                   {!ferryTomorrow && <span className="in">{minsUntil(d.time)} min</span>}
                 </div>
               ))}
+              {upcomingFerry.some(d => d.quay === 'engo') && (
+                <>
+                  <h5 style={{ marginTop: 10 }}>{(lang === 'no' ? 'Fra Engø (Sandefjord-siden)' : 'From Engø (Sandefjord side)') + (ferryTomorrow ? (lang === 'no' ? ' · i morgen' : ' · tomorrow') : '')}</h5>
+                  {upcomingFerry.filter(d => d.quay === 'engo').slice(0, 3).map((d, i) => (
+                    <div key={`e${i}`} className="vl-fdep">
+                      <b>{fmtDepTime(d.time)}</b>
+                      <span className="fq">→ {d.destination}</span>
+                      {!ferryTomorrow && <span className="in">{minsUntil(d.time)} min</span>}
+                    </div>
+                  ))}
+                </>
+              )}
             </>
           ) : (
             <p className="vl-fempty">

@@ -22,11 +22,13 @@ export interface FerryQuay {
   onIsland: boolean;
 }
 
-// Coordinates from the Veierland-Ferge app (authoritative for the quays)
+// Coordinates from the Veierland-Ferge app (authoritative for the quays).
+// Island quays are Vestgården and Tangen; Tenvik (Nøtterøy) and Engø
+// (Sandefjord side) are on the mainland.
 export const FERRY_QUAYS: FerryQuay[] = [
   { key: 'vestgarden', name: 'Vestgården', lat: 59.16496191981857, lng: 10.343429236051696, onIsland: true },
   { key: 'tangen',     name: 'Tangen',     lat: 59.15344925258157, lng: 10.33775055215706,  onIsland: true },
-  { key: 'engo',       name: 'Engø',       lat: 59.147476312611,   lng: 10.31832985729631,  onIsland: true },
+  { key: 'engo',       name: 'Engø',       lat: 59.147476312611,   lng: 10.31832985729631,  onIsland: false },
   { key: 'tenvik',     name: 'Tenvik',     lat: 59.1744256064253,  lng: 10.364987204418728, onIsland: false },
 ];
 
@@ -154,8 +156,16 @@ function loopsFor(tables: FerryTables, d: Date): FerryLoop[] {
 const ISLAND_IN_FIELDS: { field: string; quay: FerryQuayKey; name: string }[] = [
   { field: 'vestgardenInn', quay: 'vestgarden', name: 'Vestgården' },
   { field: 'tangenInn',     quay: 'tangen',     name: 'Tangen' },
-  { field: 'engoInn',       quay: 'engo',       name: 'Engø' },
 ];
+
+// Engø is only served 1 April – 28 September (single sailings outside the
+// season are on-request by phone — the full ferry app covers the rules)
+function engoInService(d: Date): boolean {
+  const m = d.getMonth() + 1, day = d.getDate();
+  if (m >= 4 && m <= 8) return true;
+  if (m === 9) return day <= 28;
+  return false;
+}
 
 function timeOn(base: Date, hhmm: string): Date {
   const [h, m] = hhmm.split(':').map(Number);
@@ -174,8 +184,18 @@ function departuresForDate(tables: FerryTables, date: Date): FerryDeparture[] {
     }
     // Tenvik → island ("Ut" leg); destination = the loop's first island stop
     if (loop.tenvikUt) {
-      const dest = loop.vestgardenUt ? 'Vestgården' : loop.engoUt ? 'Engø' : loop.tangenUt ? 'Tangen' : 'Veierland';
+      const dest = loop.vestgardenUt ? 'Vestgården' : loop.tangenUt ? 'Tangen' : 'Veierland';
       deps.push({ quay: 'tenvik', quayName: 'Tenvik', onIsland: false, time: timeOn(date, loop.tenvikUt), destination: dest });
+    }
+    // Engø (Sandefjord side) → island: the outbound leg continues to Tangen,
+    // the return leg calls at Vestgården on its way to Tenvik
+    if (engoInService(date)) {
+      if (loop.engoUt) {
+        deps.push({ quay: 'engo', quayName: 'Engø', onIsland: false, time: timeOn(date, loop.engoUt), destination: 'Tangen' });
+      }
+      if (loop.engoInn) {
+        deps.push({ quay: 'engo', quayName: 'Engø', onIsland: false, time: timeOn(date, loop.engoInn), destination: 'Vestgården' });
+      }
     }
   }
   return deps.sort((a, b) => a.time.getTime() - b.time.getTime());
