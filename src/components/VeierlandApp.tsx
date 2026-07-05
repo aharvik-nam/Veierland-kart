@@ -14,6 +14,11 @@ import { loadTimelineSections, DEFAULT_TIMELINE_SECTIONS, TimelineSection } from
 import { ICONS } from '../lib/icons';
 import floodData from '../data/sea_level_flood.geojson';
 import { fetchFerryDepartures, fetchQuaySailings, nearestQuay, FerryBoard, FERRY_QUAYS, fmtDepTime, minsUntil } from '../lib/ferrydata';
+import {
+  hasDomGrid, sunPosition, sunlitAt, shelterAt,
+  makeSunShadowOverlay, makeShelterOverlay,
+  fetchWeatherNow, fetchSeaTemp, WeatherNow, windDirLabel,
+} from '../lib/conditions';
 import losmassData from '../data/losmasser.geojson';
 import berggrunData from '../data/berggrunn.geojson';
 
@@ -544,6 +549,23 @@ export function VeierlandApp() {
     return () => { alive = false; };
   }, [selectedPOI]);
 
+  // Conditions: sun-shadow / wind-shelter overlays (needs the DOM grid) and
+  // current weather + sea temperature from MET (for the beach card)
+  const [condLayer, setCondLayer] = useState<'sun' | 'wind' | null>(null);
+  const [weatherNow, setWeatherNow] = useState<WeatherNow | null>(null);
+  const [seaTemp, setSeaTemp] = useState<number | null>(null);
+  const condOverlayRef = useRef<L.ImageOverlay | null>(null);
+  const isBeachPOI = !!selectedPOI && (selectedPOI.kategorier ?? [selectedPOI.kategori]).includes('bad');
+
+  useEffect(() => {
+    if (!isBeachPOI) return;
+    let alive = true;
+    fetchWeatherNow().then(w => { if (alive && w) setWeatherNow(w); });
+    fetchSeaTemp().then(t => { if (alive && t !== null) setSeaTemp(t); });
+    return () => { alive = false; };
+  }, [isBeachPOI]);
+
+
   const mapRef = useRef<L.Map | null>(null);
   const seaActivePaneRef = useRef<'a' | 'b'>('a');
   const crossfadeReadyRef = useRef(false);
@@ -666,6 +688,36 @@ export function VeierlandApp() {
 
   const [mapReady, setMapReady] = useState(false);
   const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+    let cancelled = false;
+    const clear = () => {
+      if (condOverlayRef.current) { map.removeLayer(condOverlayRef.current); condOverlayRef.current = null; }
+    };
+    clear();
+    if (!condLayer || !hasDomGrid) return;
+    (async () => {
+      let img: { dataUrl: string; bounds: [[number, number], [number, number]] } | null = null;
+      if (condLayer === 'sun') {
+        img = makeSunShadowOverlay(new Date());
+      } else {
+        const w = weatherNow ?? await fetchWeatherNow();
+        if (w) {
+          if (!weatherNow) setWeatherNow(w);
+          img = makeShelterOverlay(w.windFromDeg);
+        }
+      }
+      if (cancelled) return;
+      if (!img) { setCondLayer(null); return; }
+      clear();
+      condOverlayRef.current = L.imageOverlay(img.dataUrl, img.bounds, { opacity: 0.8, interactive: false }).addTo(map);
+    })();
+    return () => { cancelled = true; clear(); };
+  // weatherNow is read once at activation; re-running on its change would flicker
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [condLayer, mapReady]);
 
   // Load POIs and trails from Firestore (or local JSON fallback)
   useEffect(() => {
@@ -1962,6 +2014,39 @@ export function VeierlandApp() {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="13" cy="4" r="1.7"/><path d="M11 8l3 2 1 4M11 8l-2 4-2 5M14 14l-1 6M9 12l-3 3"/></svg>
           {walkLong(poi.coordinates)}
         </div>
+        {isBeachPOI && (() => {
+          const sun = hasDomGrid ? sunlitAt(poi.coordinates[0], poi.coordinates[1], new Date()) : null;
+          const lee = hasDomGrid && weatherNow ? shelterAt(poi.coordinates[0], poi.coordinates[1], weatherNow.windFromDeg) : null;
+          const leeLabel = lee === null ? null
+            : lee > 0.6 ? (lang === 'no' ? 'God le' : 'Sheltered')
+            : lee > 0.25 ? (lang === 'no' ? 'Litt le' : 'Some shelter')
+            : (lang === 'no' ? 'Vindutsatt' : 'Windy');
+          return (
+            <div className="vl-beachcond">
+              {seaTemp !== null && (
+                <div className="bc">
+                  <span className="k">{lang === 'no' ? 'Badetemp' : 'Sea temp'}</span>
+                  <span className="v">{seaTemp.toFixed(1)}°</span>
+                </div>
+              )}
+              {sun !== null && (
+                <div className="bc">
+                  <span className="k">{lang === 'no' ? 'Sol nå' : 'Sun now'}</span>
+                  <span className="v">{sun ? (lang === 'no' ? '☀︎ Sol' : '☀︎ Sunny') : (lang === 'no' ? '☁ Skygge' : '☁ Shade')}</span>
+                </div>
+              )}
+              {leeLabel && (
+                <div className="bc">
+                  <span className="k">{lang === 'no' ? 'Vind' : 'Wind'}</span>
+                  <span className="v">{leeLabel}{weatherNow ? ` · ${windDirLabel(weatherNow.windFromDeg, lang)} ${Math.round(weatherNow.windSpeed)} m/s` : ''}</span>
+                </div>
+              )}
+              {seaTemp === null && sun === null && !leeLabel && (
+                <p className="vl-fempty" style={{ margin: 0 }}>{lang === 'no' ? 'Henter forhold…' : 'Loading conditions…'}</p>
+              )}
+            </div>
+          );
+        })()}
         {selectedQuay && (
           <div className="vl-quayferry">
             <h5>
@@ -2684,7 +2769,57 @@ export function VeierlandApp() {
           </svg>
           <span className="rl">{lang === 'no' ? 'Posisjon' : 'Locate'}</span>
         </button>
+        {hasDomGrid && (
+          <>
+            <button
+              className={`vl-rbtn${condLayer === 'sun' ? ' active' : ''}`}
+              aria-label={lang === 'no' ? 'Sol og skygge nå' : 'Sun and shade now'}
+              title={lang === 'no' ? 'Sol og skygge nå' : 'Sun and shade now'}
+              onClick={e => { e.stopPropagation(); setCondLayer(c => c === 'sun' ? null : 'sun'); }}
+              style={condLayer === 'sun' ? { background: 'var(--accent)', color: '#fff' } : undefined}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/></svg>
+              <span className="rl">{lang === 'no' ? 'Sol' : 'Sun'}</span>
+            </button>
+            <button
+              className={`vl-rbtn${condLayer === 'wind' ? ' active' : ''}`}
+              aria-label={lang === 'no' ? 'Vind og le nå' : 'Wind and shelter now'}
+              title={lang === 'no' ? 'Vind og le nå' : 'Wind and shelter now'}
+              onClick={e => { e.stopPropagation(); setCondLayer(c => c === 'wind' ? null : 'wind'); }}
+              style={condLayer === 'wind' ? { background: 'var(--accent)', color: '#fff' } : undefined}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h11a2.5 2.5 0 1 0-2.5-2.5"/><path d="M3 12h15a2.5 2.5 0 1 1-2.5 2.5"/><path d="M3 16h8a2 2 0 1 1-2 2"/></svg>
+              <span className="rl">{lang === 'no' ? 'Vind' : 'Wind'}</span>
+            </button>
+          </>
+        )}
       </div>
+
+      {/* Legend for the active conditions overlay */}
+      {condLayer && hasDomGrid && (
+        <div className="vl-condlegend" onClick={e => e.stopPropagation()}>
+          {condLayer === 'sun' ? (() => {
+            const sun = sunPosition(new Date(), 59.155, 10.351);
+            return (
+              <>
+                <b>{lang === 'no' ? 'Sol og skygge nå' : 'Sun & shade now'}</b>
+                <span>{sun.elevation > 0
+                  ? (lang === 'no' ? `Sola står ${Math.round(sun.elevation)}° over horisonten. Blå felt ligger i skygge.` : `Sun is ${Math.round(sun.elevation)}° up. Blue areas are shaded.`)
+                  : (lang === 'no' ? 'Sola er under horisonten — hele øya er i skygge.' : 'Sun is below the horizon — the whole island is shaded.')}</span>
+              </>
+            );
+          })() : (
+            <>
+              <b>{lang === 'no' ? 'Le for vinden nå' : 'Wind shelter now'}</b>
+              <span>{weatherNow
+                ? (lang === 'no'
+                    ? `Vind fra ${windDirLabel(weatherNow.windFromDeg, 'no')} ${Math.round(weatherNow.windSpeed)} m/s. Grønne felt er i le.`
+                    : `Wind from ${windDirLabel(weatherNow.windFromDeg, 'en')} ${Math.round(weatherNow.windSpeed)} m/s. Green areas are sheltered.`)
+                : (lang === 'no' ? 'Henter vind…' : 'Loading wind…')}</span>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Compact mini-card: shown for a map-tapped POI when nothing else is open */}
       {showMiniCard && selectedPOI && (() => {
