@@ -59,17 +59,19 @@ const TABLE_NAMES: (keyof FerryTables)[] = [
   'summerMonFriLoops', 'summerSatLoops', 'summerSunLoops',
 ];
 
-export interface FerryDeparture {
-  quay: FerryQuayKey;
-  quayName: string;
-  onIsland: boolean;
-  time: Date;          // in the Oslo-shifted clock (compare with osloNow())
-  destination: string;
+export interface FerryRouteDep {
+  from: FerryQuayKey;
+  fromName: string;
+  to: FerryQuayKey;
+  toName: string;
+  fromIsland: boolean;
+  time: Date;          // departure, in the Oslo-shifted clock (compare with osloNow())
+  arrive: Date;
 }
 
 export interface FerryBoard {
-  deps: FerryDeparture[]; // upcoming, sorted by time
-  tomorrow: boolean;      // true when today's sailings are done and this is tomorrow's list
+  routes: FerryRouteDep[]; // next departure per route, sorted by time
+  tomorrow: boolean;       // true when today's sailings are done and this is tomorrow's board
 }
 
 // ── Timetable parsing ─────────────────────────────────────────────────────────
@@ -153,9 +155,32 @@ function loopsFor(tables: FerryTables, d: Date): FerryLoop[] {
 
 // ── Departure boards ──────────────────────────────────────────────────────────
 
-const ISLAND_IN_FIELDS: { field: string; quay: FerryQuayKey; name: string }[] = [
-  { field: 'vestgardenInn', quay: 'vestgarden', name: 'Vestgården' },
-  { field: 'tangenInn',     quay: 'tangen',     name: 'Tangen' },
+// The ferry's stop order within one loop. A journey A→B exists when A has a
+// time at position i and B has a time at some position j > i — that covers
+// e.g. Engø→Vestgården riding the return leg via Tangen.
+const LOOP_SEQ: { field: string; stop: FerryQuayKey }[] = [
+  { field: 'tenvikUt',      stop: 'tenvik' },
+  { field: 'vestgardenUt',  stop: 'vestgarden' },
+  { field: 'engoUt',        stop: 'engo' },
+  { field: 'tangenUt',      stop: 'tangen' },
+  { field: 'tangenInn',     stop: 'tangen' },
+  { field: 'engoInn',       stop: 'engo' },
+  { field: 'vestgardenInn', stop: 'vestgarden' },
+  { field: 'tenvikInn',     stop: 'tenvik' },
+];
+
+// The eight routes shown in the popup
+const ROUTES: { from: FerryQuayKey; to: FerryQuayKey }[] = [
+  // Fra Veierland
+  { from: 'vestgarden', to: 'tenvik' },
+  { from: 'vestgarden', to: 'engo' },
+  { from: 'tangen',     to: 'tenvik' },
+  { from: 'tangen',     to: 'engo' },
+  // Til Veierland
+  { from: 'tenvik', to: 'vestgarden' },
+  { from: 'tenvik', to: 'tangen' },
+  { from: 'engo',   to: 'tangen' },
+  { from: 'engo',   to: 'vestgarden' },
 ];
 
 // Engø is only served 1 April – 28 September (single sailings outside the
@@ -174,45 +199,58 @@ function timeOn(base: Date, hhmm: string): Date {
   return d;
 }
 
-function departuresForDate(tables: FerryTables, date: Date): FerryDeparture[] {
-  const deps: FerryDeparture[] = [];
-  for (const loop of loopsFor(tables, date)) {
-    // Island → Tenvik ("Inn" legs)
-    for (const f of ISLAND_IN_FIELDS) {
-      const t = loop[f.field];
-      if (t) deps.push({ quay: f.quay, quayName: f.name, onIsland: true, time: timeOn(date, t), destination: 'Tenvik' });
-    }
-    // Tenvik → island ("Ut" leg); destination = the loop's first island stop
-    if (loop.tenvikUt) {
-      const dest = loop.vestgardenUt ? 'Vestgården' : loop.tangenUt ? 'Tangen' : 'Veierland';
-      deps.push({ quay: 'tenvik', quayName: 'Tenvik', onIsland: false, time: timeOn(date, loop.tenvikUt), destination: dest });
-    }
-    // Engø (Sandefjord side) → island: the outbound leg continues to Tangen,
-    // the return leg calls at Vestgården on its way to Tenvik
-    if (engoInService(date)) {
-      if (loop.engoUt) {
-        deps.push({ quay: 'engo', quayName: 'Engø', onIsland: false, time: timeOn(date, loop.engoUt), destination: 'Tangen' });
+const QUAY_BY_KEY = Object.fromEntries(FERRY_QUAYS.map(q => [q.key, q])) as Record<FerryQuayKey, FerryQuay>;
+
+// Next departure per route on the given date, at/after `after` (null = whole day)
+function routeBoardForDate(tables: FerryTables, date: Date, after: Date | null): FerryRouteDep[] {
+  const loops = loopsFor(tables, date);
+  const engoOk = engoInService(date);
+  const result: FerryRouteDep[] = [];
+
+  for (const r of ROUTES) {
+    if ((r.from === 'engo' || r.to === 'engo') && !engoOk) continue;
+    let best: { dep: Date; arr: Date } | null = null;
+    for (const loop of loops) {
+      for (let i = 0; i < LOOP_SEQ.length; i++) {
+        if (LOOP_SEQ[i].stop !== r.from) continue;
+        const depT = loop[LOOP_SEQ[i].field];
+        if (!depT) continue;
+        const dep = timeOn(date, depT);
+        if (after && dep.getTime() < after.getTime() - 60_000) continue;
+        for (let j = i + 1; j < LOOP_SEQ.length; j++) {
+          if (LOOP_SEQ[j].stop !== r.to) continue;
+          const arrT = loop[LOOP_SEQ[j].field];
+          if (!arrT) continue;
+          if (!best || dep.getTime() < best.dep.getTime()) {
+            best = { dep, arr: timeOn(date, arrT) };
+          }
+          break; // first later call at the destination
+        }
       }
-      if (loop.engoInn) {
-        deps.push({ quay: 'engo', quayName: 'Engø', onIsland: false, time: timeOn(date, loop.engoInn), destination: 'Vestgården' });
-      }
+    }
+    if (best) {
+      const fq = QUAY_BY_KEY[r.from], tq = QUAY_BY_KEY[r.to];
+      result.push({
+        from: r.from, fromName: fq.name, to: r.to, toName: tq.name,
+        fromIsland: fq.onIsland, time: best.dep, arrive: best.arr,
+      });
     }
   }
-  return deps.sort((a, b) => a.time.getTime() - b.time.getTime());
+  return result.sort((a, b) => a.time.getTime() - b.time.getTime());
 }
 
-// Upcoming departures: the rest of today, or tomorrow's board once today is done.
+// Next departure per route: the rest of today, or tomorrow once today is done.
 // Returns null only when the timetable can't be loaded at all.
 export async function fetchFerryDepartures(): Promise<FerryBoard | null> {
   const tables = await loadTables();
   if (!tables) return null;
   const now = osloNow();
-  const today = departuresForDate(tables, now).filter(d => d.time.getTime() >= now.getTime() - 60_000);
-  if (today.length > 0) return { deps: today, tomorrow: false };
+  const today = routeBoardForDate(tables, now, now);
+  if (today.length > 0) return { routes: today, tomorrow: false };
   const tmrw = new Date(now);
   tmrw.setDate(tmrw.getDate() + 1);
   tmrw.setHours(0, 0, 0, 0);
-  return { deps: departuresForDate(tables, tmrw), tomorrow: true };
+  return { routes: routeBoardForDate(tables, tmrw, null), tomorrow: true };
 }
 
 export function fmtDepTime(d: Date): string {
