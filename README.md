@@ -21,14 +21,20 @@ View your app in AI Studio: https://ai.studio/apps/b6b22ff7-7955-411a-8042-71789
 
 ## Sol- og vindforhold (DOM-høydedata)
 
-Kart-appen kan vise sol/skygge- og vind/le-lag over hele øya, og sol/le/badetemp
-på hver badeplass. Sol- og vindlaget trenger en overflatemodell (DOM) fra
-Kartverket — trær og bygninger, ikke bare bakken:
+Kart-appen viser sol/skygge- og vind/le-lag over hele øya, og sol/le/badetemp
+på hver badeplass. Terrenget ligger i `src/data/dom_grid.json`.
 
-1. Last ned DOM (overflatemodell) for Veierland som GeoTIFF fra <https://hoydedata.no>
-2. `pip install rasterio numpy`
-3. `python scripts/generate_dom_grid.py <sti/til/dom.tif>`
+**Ferdig i repoet:** en terreng-fallback bygget fra flood-konturene (Kartverkets
+DTM, bar bakke) — generert med `python scripts/generate_dtm_grid_from_flood.py`.
+Den gir fungerende sol/skygge og landformbasert le med en gang.
 
-Dette skriver `src/data/dom_grid.json`. Uten dette laget skjuler appen sol/vind-
-knappene automatisk (badetemperatur vises fortsatt — den kommer fra api.met.no).
-Vær- og sjøtemperatur hentes live fra MET (ingen nøkkel nødvendig).
+**Oppgradering med trær og bygninger (DOM):** for mer presis skygge (skogbelter
+og hus kaster også skygge) last ned DOM (overflatemodell) for Veierland som
+GeoTIFF fra <https://hoydedata.no>, så:
+
+1. `pip install rasterio numpy`
+2. `python scripts/generate_dom_grid.py <sti/til/dom.tif>`  (overskriver samme fil)
+
+Hvis `dom_grid.json` settes til `{"empty": true}` skjuler appen sol/vind-knappene
+automatisk (badetemperatur vises fortsatt). Vær og sjøtemperatur hentes live fra
+MET (api.met.no, ingen nøkkel nødvendig).
