@@ -59,19 +59,24 @@ const TABLE_NAMES: (keyof FerryTables)[] = [
   'summerMonFriLoops', 'summerSatLoops', 'summerSunLoops',
 ];
 
-export interface FerryRouteDep {
+export interface FerryCall {
+  at: FerryQuayKey;
+  name: string;
+  time: Date; // arrival/departure at this stop
+}
+
+// One physical sailing from a quay, with the stops it serves on the other side
+export interface FerrySailing {
   from: FerryQuayKey;
   fromName: string;
-  to: FerryQuayKey;
-  toName: string;
   fromIsland: boolean;
   time: Date;          // departure, in the Oslo-shifted clock (compare with osloNow())
-  arrive: Date;
+  calls: FerryCall[];  // opposite-side stops in call order
 }
 
 export interface FerryBoard {
-  routes: FerryRouteDep[]; // next departure per route, sorted by time
-  tomorrow: boolean;       // true when today's sailings are done and this is tomorrow's board
+  sailings: FerrySailing[]; // upcoming sailings worth showing, sorted by time
+  tomorrow: boolean;        // true when today's sailings are done and this is tomorrow's board
 }
 
 // ── Timetable parsing ─────────────────────────────────────────────────────────
@@ -169,20 +174,6 @@ const LOOP_SEQ: { field: string; stop: FerryQuayKey }[] = [
   { field: 'tenvikInn',     stop: 'tenvik' },
 ];
 
-// The eight routes shown in the popup
-const ROUTES: { from: FerryQuayKey; to: FerryQuayKey }[] = [
-  // Fra Veierland
-  { from: 'vestgarden', to: 'tenvik' },
-  { from: 'vestgarden', to: 'engo' },
-  { from: 'tangen',     to: 'tenvik' },
-  { from: 'tangen',     to: 'engo' },
-  // Til Veierland
-  { from: 'tenvik', to: 'vestgarden' },
-  { from: 'tenvik', to: 'tangen' },
-  { from: 'engo',   to: 'tangen' },
-  { from: 'engo',   to: 'vestgarden' },
-];
-
 // Engø is only served 1 April – 28 September (single sailings outside the
 // season are on-request by phone — the full ferry app covers the rules)
 function engoInService(d: Date): boolean {
@@ -201,56 +192,73 @@ function timeOn(base: Date, hhmm: string): Date {
 
 const QUAY_BY_KEY = Object.fromEntries(FERRY_QUAYS.map(q => [q.key, q])) as Record<FerryQuayKey, FerryQuay>;
 
-// Next departure per route on the given date, at/after `after` (null = whole day)
-function routeBoardForDate(tables: FerryTables, date: Date, after: Date | null): FerryRouteDep[] {
-  const loops = loopsFor(tables, date);
+// All sailings on the given date at/after `after` (null = whole day): for
+// every boarding point, the subsequent opposite-side stops in call order.
+function sailingsForDate(tables: FerryTables, date: Date, after: Date | null): FerrySailing[] {
   const engoOk = engoInService(date);
-  const result: FerryRouteDep[] = [];
+  const byKey = new Map<string, FerrySailing>(); // one per (origin, departure time)
 
-  for (const r of ROUTES) {
-    if ((r.from === 'engo' || r.to === 'engo') && !engoOk) continue;
-    let best: { dep: Date; arr: Date } | null = null;
-    for (const loop of loops) {
-      for (let i = 0; i < LOOP_SEQ.length; i++) {
-        if (LOOP_SEQ[i].stop !== r.from) continue;
-        const depT = loop[LOOP_SEQ[i].field];
-        if (!depT) continue;
-        const dep = timeOn(date, depT);
-        if (after && dep.getTime() < after.getTime() - 60_000) continue;
-        for (let j = i + 1; j < LOOP_SEQ.length; j++) {
-          if (LOOP_SEQ[j].stop !== r.to) continue;
-          const arrT = loop[LOOP_SEQ[j].field];
-          if (!arrT) continue;
-          if (!best || dep.getTime() < best.dep.getTime()) {
-            best = { dep, arr: timeOn(date, arrT) };
-          }
-          break; // first later call at the destination
-        }
+  for (const loop of loopsFor(tables, date)) {
+    for (let i = 0; i < LOOP_SEQ.length; i++) {
+      const origin = LOOP_SEQ[i];
+      const depT = loop[origin.field];
+      if (!depT) continue;
+      if (origin.stop === 'engo' && !engoOk) continue;
+      const oq = QUAY_BY_KEY[origin.stop];
+      const dep = timeOn(date, depT);
+      if (after && dep.getTime() < after.getTime() - 60_000) continue;
+      const key = `${origin.stop}@${depT}`;
+      if (byKey.has(key)) continue; // Ut/Inn turnaround at the same minute — earlier index wins
+
+      const seen = new Set<FerryQuayKey>();
+      const calls: FerryCall[] = [];
+      for (let j = i + 1; j < LOOP_SEQ.length; j++) {
+        const st = LOOP_SEQ[j];
+        const t = loop[st.field];
+        if (!t || seen.has(st.stop)) continue;
+        const q = QUAY_BY_KEY[st.stop];
+        if (q.onIsland === oq.onIsland) continue; // only opposite-side stops
+        if (st.stop === 'engo' && !engoOk) continue;
+        seen.add(st.stop);
+        calls.push({ at: st.stop, name: q.name, time: timeOn(date, t) });
+      }
+      if (calls.length > 0) {
+        byKey.set(key, { from: origin.stop, fromName: oq.name, fromIsland: oq.onIsland, time: dep, calls });
       }
     }
-    if (best) {
-      const fq = QUAY_BY_KEY[r.from], tq = QUAY_BY_KEY[r.to];
-      result.push({
-        from: r.from, fromName: fq.name, to: r.to, toName: tq.name,
-        fromIsland: fq.onIsland, time: best.dep, arrive: best.arr,
-      });
-    }
   }
-  return result.sort((a, b) => a.time.getTime() - b.time.getTime());
+  return [...byKey.values()].sort((a, b) => a.time.getTime() - b.time.getTime());
 }
 
-// Next departure per route: the rest of today, or tomorrow once today is done.
+// Per origin quay: keep the next sailing, plus later ones only when they add
+// a destination the earlier ones don't cover (e.g. next Tenvik sailing only
+// calls at Vestgården — also show the next one that reaches Tangen).
+function pickPerOrigin(sailings: FerrySailing[]): FerrySailing[] {
+  const covered = new Map<FerryQuayKey, Set<FerryQuayKey>>();
+  const out: FerrySailing[] = [];
+  for (const sail of sailings) {
+    let set = covered.get(sail.from);
+    if (!set) { set = new Set(); covered.set(sail.from, set); }
+    if (sail.calls.some(c => !set!.has(c.at))) {
+      out.push(sail);
+      sail.calls.forEach(c => set!.add(c.at));
+    }
+  }
+  return out;
+}
+
+// Upcoming sailings: the rest of today, or tomorrow once today is done.
 // Returns null only when the timetable can't be loaded at all.
 export async function fetchFerryDepartures(): Promise<FerryBoard | null> {
   const tables = await loadTables();
   if (!tables) return null;
   const now = osloNow();
-  const today = routeBoardForDate(tables, now, now);
-  if (today.length > 0) return { routes: today, tomorrow: false };
+  const today = pickPerOrigin(sailingsForDate(tables, now, now));
+  if (today.length > 0) return { sailings: today, tomorrow: false };
   const tmrw = new Date(now);
   tmrw.setDate(tmrw.getDate() + 1);
   tmrw.setHours(0, 0, 0, 0);
-  return { routes: routeBoardForDate(tables, tmrw, null), tomorrow: true };
+  return { sailings: pickPerOrigin(sailingsForDate(tables, tmrw, null)), tomorrow: true };
 }
 
 export function fmtDepTime(d: Date): string {

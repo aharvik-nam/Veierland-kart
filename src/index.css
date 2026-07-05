@@ -355,15 +355,15 @@ body { display: grid; place-items: center; }
   margin: 0 0 6px; font-size: 10.5px; font-weight: 700;
   text-transform: uppercase; letter-spacing: .07em; color: var(--muted);
 }
-.vl-fdep {
-  display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13.5px;
-}
+.vl-fdep { padding: 5px 0; font-size: 13.5px; }
+.vl-fdep + .vl-fdep { border-top: 1px solid var(--line2); }
+.vl-fdep .hd { display: flex; align-items: center; gap: 8px; }
 .vl-fdep b { font-weight: 700; min-width: 42px; }
 .vl-fdep .fq { flex: 1; color: var(--ink2); font-weight: 500; min-width: 0;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.vl-fdep .rt { width: 7px; height: 7px; border-radius: 50%; background: #38a169;
-  flex: 0 0 auto; }
 .vl-fdep .in { font-size: 11.5px; color: var(--muted); font-weight: 600; flex: 0 0 auto; }
+.vl-fdep .ds { font-size: 12px; color: var(--muted); font-weight: 600;
+  margin: 1px 0 0 50px; }
 .vl-fempty { font-size: 13px; color: var(--muted); margin: 4px 0 8px; }
 .vl-flink {
   display: block; margin-top: 8px; padding: 8px 0 2px;

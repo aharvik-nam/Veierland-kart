@@ -526,9 +526,9 @@ export function VeierlandApp() {
       return next;
     });
   };
-  const ferryRoutes = ferryBoard?.routes ?? [];
+  const ferrySailings = ferryBoard?.sailings ?? [];
   const ferryTomorrow = ferryBoard?.tomorrow ?? false;
-  const nextFromIsland = ferryRoutes.find(d => d.fromIsland);
+  const nextFromIsland = ferrySailings.find(d => d.fromIsland);
 
   const mapRef = useRef<L.Map | null>(null);
   const seaActivePaneRef = useRef<'a' | 'b'>('a');
@@ -2532,22 +2532,32 @@ export function VeierlandApp() {
       {/* Ferry departures popup */}
       {showFerryPop && (
         <div className="vl-ferrypop" onClick={e => e.stopPropagation()}>
-          {ferryRoutes.length > 0 ? (
+          {ferrySailings.length > 0 ? (
             <>
               <h5>{(lang === 'no' ? 'Fra Veierland' : 'From Veierland') + (ferryTomorrow ? (lang === 'no' ? ' · i morgen' : ' · tomorrow') : '')}</h5>
-              {ferryRoutes.filter(d => d.fromIsland).map((d, i) => (
+              {ferrySailings.filter(d => d.fromIsland).map((d, i) => (
                 <div key={`i${i}`} className="vl-fdep">
-                  <b>{fmtDepTime(d.time)}</b>
-                  <span className="fq">{d.fromName} → {d.toName}</span>
-                  {!ferryTomorrow && <span className="in">{minsUntil(d.time)} min</span>}
+                  <div className="hd">
+                    <b>{fmtDepTime(d.time)}</b>
+                    <span className="fq">{lang === 'no' ? 'fra' : 'from'} {d.fromName}</span>
+                    {!ferryTomorrow && <span className="in">{minsUntil(d.time)} min</span>}
+                  </div>
+                  <div className="ds">
+                    → {d.calls.map(c => `${c.name} ${fmtDepTime(c.time)}`).join(' · ')}
+                  </div>
                 </div>
               ))}
               <h5 style={{ marginTop: 10 }}>{(lang === 'no' ? 'Til Veierland' : 'To Veierland') + (ferryTomorrow ? (lang === 'no' ? ' · i morgen' : ' · tomorrow') : '')}</h5>
-              {ferryRoutes.filter(d => !d.fromIsland).map((d, i) => (
+              {ferrySailings.filter(d => !d.fromIsland).map((d, i) => (
                 <div key={`m${i}`} className="vl-fdep">
-                  <b>{fmtDepTime(d.time)}</b>
-                  <span className="fq">{d.fromName} → {d.toName}</span>
-                  {!ferryTomorrow && <span className="in">{minsUntil(d.time)} min</span>}
+                  <div className="hd">
+                    <b>{fmtDepTime(d.time)}</b>
+                    <span className="fq">{lang === 'no' ? 'fra' : 'from'} {d.fromName}</span>
+                    {!ferryTomorrow && <span className="in">{minsUntil(d.time)} min</span>}
+                  </div>
+                  <div className="ds">
+                    → {d.calls.map(c => `${c.name} ${fmtDepTime(c.time)}`).join(' · ')}
+                  </div>
                 </div>
               ))}
             </>
