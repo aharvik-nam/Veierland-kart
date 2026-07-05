@@ -13,7 +13,7 @@ import { loadFarmData, DEFAULT_FARM_DATA, Farm } from '../lib/farmdata';
 import { loadTimelineSections, DEFAULT_TIMELINE_SECTIONS, TimelineSection } from '../lib/timelinedata';
 import { ICONS } from '../lib/icons';
 import floodData from '../data/sea_level_flood.geojson';
-import { fetchFerryDepartures, FerryBoard, FERRY_QUAYS, fmtDepTime, minsUntil } from '../lib/ferrydata';
+import { fetchFerryDepartures, fetchQuaySailings, nearestQuay, FerryBoard, FERRY_QUAYS, fmtDepTime, minsUntil } from '../lib/ferrydata';
 import losmassData from '../data/losmasser.geojson';
 import berggrunData from '../data/berggrunn.geojson';
 
@@ -529,6 +529,20 @@ export function VeierlandApp() {
   const ferrySailings = ferryBoard?.sailings ?? [];
   const ferryTomorrow = ferryBoard?.tomorrow ?? false;
   const nextFromIsland = ferrySailings.find(d => d.fromIsland);
+
+  // Departure board for a selected ferry-quay POI (matched by proximity).
+  // undefined = loading, null = couldn't load.
+  const selectedQuay = selectedPOI ? nearestQuay(selectedPOI.coordinates[0], selectedPOI.coordinates[1]) : null;
+  const [quayBoard, setQuayBoard] = useState<FerryBoard | null | undefined>(undefined);
+  useEffect(() => {
+    setQuayBoard(undefined);
+    if (!selectedPOI) return;
+    const q = nearestQuay(selectedPOI.coordinates[0], selectedPOI.coordinates[1]);
+    if (!q) return;
+    let alive = true;
+    fetchQuaySailings(q.key, 3).then(b => { if (alive) setQuayBoard(b); });
+    return () => { alive = false; };
+  }, [selectedPOI]);
 
   const mapRef = useRef<L.Map | null>(null);
   const seaActivePaneRef = useRef<'a' | 'b'>('a');
@@ -1948,6 +1962,36 @@ export function VeierlandApp() {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="13" cy="4" r="1.7"/><path d="M11 8l3 2 1 4M11 8l-2 4-2 5M14 14l-1 6M9 12l-3 3"/></svg>
           {walkLong(poi.coordinates)}
         </div>
+        {selectedQuay && (
+          <div className="vl-quayferry">
+            <h5>
+              <span className="fi" dangerouslySetInnerHTML={{ __html: iconSvg('ferge') }} />
+              {(lang === 'no' ? 'Neste avganger herfra' : 'Next departures from here')
+                + (quayBoard && quayBoard.tomorrow ? (lang === 'no' ? ' · i morgen' : ' · tomorrow') : '')}
+            </h5>
+            {quayBoard === undefined && (
+              <p className="vl-fempty">{lang === 'no' ? 'Henter rutetider…' : 'Loading timetable…'}</p>
+            )}
+            {quayBoard === null && (
+              <p className="vl-fempty">{lang === 'no' ? 'Fikk ikke hentet rutetidene akkurat nå.' : 'Could not load the timetable right now.'}</p>
+            )}
+            {quayBoard && quayBoard.sailings.length === 0 && (
+              <p className="vl-fempty">{lang === 'no' ? 'Ingen flere avganger.' : 'No more departures.'}</p>
+            )}
+            {quayBoard && quayBoard.sailings.map((sl, i) => (
+              <div key={i} className="vl-fdep">
+                <div className="hd">
+                  <b>{fmtDepTime(sl.time)}</b>
+                  <span className="fq">→ {sl.calls.map(c => `${c.name} ${fmtDepTime(c.time)}`).join(' · ')}</span>
+                  {!quayBoard.tomorrow && <span className="in">{minsUntil(sl.time)} min</span>}
+                </div>
+              </div>
+            ))}
+            <a className="vl-flink" href="https://jutoya.veierland.org/" target="_blank" rel="noreferrer">
+              {lang === 'no' ? 'Full ruteplan og reiseplanlegger ↗' : 'Full timetable & planner ↗'}
+            </a>
+          </div>
+        )}
         <p className="vl-desc">{poi.beskrivelse}</p>
         {poi.beskrivelse_lang && !lesmerExpanded && (
           <button
@@ -2652,7 +2696,11 @@ export function VeierlandApp() {
               dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
             <div className="tx">
               <h4>{selectedPOI.navn}</h4>
-              <p>{lang === 'no' ? cat.no : cat.en} · {walkLong(selectedPOI.coordinates)}</p>
+              <p>
+                {selectedQuay && quayBoard && quayBoard.sailings.length > 0
+                  ? `${lang === 'no' ? 'Neste ferge' : 'Next ferry'} ${fmtDepTime(quayBoard.sailings[0].time)}${quayBoard.tomorrow ? (lang === 'no' ? ' i morgen' : ' tomorrow') : ''} · ${walkLong(selectedPOI.coordinates)}`
+                  : `${lang === 'no' ? cat.no : cat.en} · ${walkLong(selectedPOI.coordinates)}`}
+              </p>
             </div>
             <div className="acts">
               <button className={`ab${saved ? ' on' : ''}`} aria-label={saved ? (lang === 'no' ? 'Fjern fra lagret' : 'Remove saved') : (lang === 'no' ? 'Lagre' : 'Save')}

@@ -372,6 +372,20 @@ body { display: grid; place-items: center; }
 }
 .vl-fsrc { margin: 4px 0 0; font-size: 10.5px; color: var(--muted); }
 
+/* ── Quay departures card in POI detail ────────────────────────────────────── */
+.vl-quayferry {
+  background: var(--card2); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 12px 14px 10px; margin: 0 0 14px;
+}
+.vl-quayferry h5 {
+  margin: 0 0 6px; font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em; color: var(--muted);
+  display: flex; align-items: center; gap: 6px;
+}
+.vl-quayferry h5 .fi { display: flex; color: var(--accent); }
+.vl-quayferry .vl-fdep + .vl-fdep { border-top: 1px solid var(--line); }
+.vl-quayferry .vl-flink { border-top: 1px solid var(--line); }
+
 /* ── Walk-time line in POI detail ──────────────────────────────────────────── */
 .vl-walkline {
   display: flex; align-items: center; gap: 6px;

@@ -261,6 +261,37 @@ export async function fetchFerryDepartures(): Promise<FerryBoard | null> {
   return { sailings: pickPerOrigin(sailingsForDate(tables, tmrw, null)), tomorrow: true };
 }
 
+// Nearest ferry quay to a coordinate, or null if none is within maxMeters.
+// Used to attach departure boards to the quay POIs on the map.
+export function nearestQuay(lat: number, lng: number, maxMeters = 500): FerryQuay | null {
+  const R = 6371000;
+  let best: FerryQuay | null = null;
+  let bestD = Infinity;
+  for (const q of FERRY_QUAYS) {
+    const dLat = (q.lat - lat) * Math.PI / 180;
+    const dLng = (q.lng - lng) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat * Math.PI / 180) * Math.cos(q.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    const d = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    if (d < bestD) { bestD = d; best = q; }
+  }
+  return bestD <= maxMeters ? best : null;
+}
+
+// The next `n` sailings from one specific quay (today, or tomorrow's first
+// ones when today is done). Returns null when the timetable can't be loaded.
+export async function fetchQuaySailings(quay: FerryQuayKey, n = 3): Promise<FerryBoard | null> {
+  const tables = await loadTables();
+  if (!tables) return null;
+  const now = osloNow();
+  const today = sailingsForDate(tables, now, now).filter(sl => sl.from === quay).slice(0, n);
+  if (today.length > 0) return { sailings: today, tomorrow: false };
+  const tmrw = new Date(now);
+  tmrw.setDate(tmrw.getDate() + 1);
+  tmrw.setHours(0, 0, 0, 0);
+  return { sailings: sailingsForDate(tables, tmrw, null).filter(sl => sl.from === quay).slice(0, n), tomorrow: true };
+}
+
 export function fmtDepTime(d: Date): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
