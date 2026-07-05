@@ -1,12 +1,16 @@
-// Ferry departures for M/F Jutøya (Tenvik–Veierland) via Entur's open
-// journey-planner API. Nothing is hardcoded beyond the quay coordinates:
-// stop-place IDs are discovered from coordinates and cached, and the
-// timetable itself lives with VKT/Entur — season changes arrive by
-// themselves. On any failure the UI falls back to linking the dedicated
-// ferry app at https://jutoya.veierland.org/.
+// Ferry departures for M/F Jutøya (Tenvik–Veierland).
+//
+// Entur does not cover this ferry (only the buses that connect to it), so the
+// timetable is read straight from the dedicated ferry app's repository:
+//   https://github.com/aharvik-nam/Veierland-Ferge  →  src/data.ts
+// raw.githubusercontent.com serves it with CORS `*`, so the browser can fetch
+// it directly. That repo stays the single source of truth — update the
+// timetable there and this app follows along. Results are cached in
+// localStorage so the map still shows times offline/on flaky ferry wifi.
 
-const ENTUR_URL = 'https://api.entur.io/journey-planner/v3/graphql';
-const CLIENT_NAME = 'veierland-kartapp';
+const DATA_URL = 'https://raw.githubusercontent.com/aharvik-nam/Veierland-Ferge/main/src/data.ts';
+const CACHE_KEY = 'vl-ferry-tables-v1';
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 export type FerryQuayKey = 'vestgarden' | 'tangen' | 'engo' | 'tenvik';
 
@@ -26,138 +30,175 @@ export const FERRY_QUAYS: FerryQuay[] = [
   { key: 'tenvik',     name: 'Tenvik',     lat: 59.1744256064253,  lng: 10.364987204418728, onIsland: false },
 ];
 
+interface FerryLoop {
+  id: string;
+  tenvikUt: string | null;
+  vestgardenUt: string | null;
+  engoUt: string | null;
+  tangenUt: string | null;
+  tangenInn: string | null;
+  engoInn: string | null;
+  vestgardenInn: string | null;
+  tenvikInn: string | null;
+  [key: string]: string | null;
+}
+
+interface FerryTables {
+  monFriLoops: FerryLoop[];
+  satLoops: FerryLoop[];
+  sunLoops: FerryLoop[];
+  summerMonFriLoops: FerryLoop[];
+  summerSatLoops: FerryLoop[];
+  summerSunLoops: FerryLoop[];
+}
+
+const TABLE_NAMES: (keyof FerryTables)[] = [
+  'monFriLoops', 'satLoops', 'sunLoops',
+  'summerMonFriLoops', 'summerSatLoops', 'summerSunLoops',
+];
+
 export interface FerryDeparture {
   quay: FerryQuayKey;
   quayName: string;
   onIsland: boolean;
-  time: string;        // ISO timestamp (expected, i.e. realtime when available)
-  aimedTime: string;   // ISO timestamp from the timetable
-  realtime: boolean;
-  destination: string; // e.g. "Tenvik"
+  time: Date;          // in the Oslo-shifted clock (compare with osloNow())
+  destination: string;
 }
 
-const ID_CACHE_KEY = 'vl-ferry-nsr-v1';
-
-async function gql<T>(query: string, variables: Record<string, unknown>): Promise<T> {
-  const res = await fetch(ENTUR_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'ET-Client-Name': CLIENT_NAME },
-    body: JSON.stringify({ query, variables }),
-  });
-  if (!res.ok) throw new Error(`Entur HTTP ${res.status}`);
-  const data = await res.json();
-  if (data.errors?.length) throw new Error(data.errors[0]?.message ?? 'Entur GraphQL error');
-  return data.data as T;
+export interface FerryBoard {
+  deps: FerryDeparture[]; // upcoming, sorted by time
+  tomorrow: boolean;      // true when today's sailings are done and this is tomorrow's list
 }
 
-// Find the NSR stop-place ID closest to a quay's coordinates
-async function discoverStopPlaceId(q: FerryQuay): Promise<string | null> {
-  interface NearestResp {
-    nearest: { edges: { node: { distance: number; place: { id?: string; name?: string } | null } }[] } | null;
-  }
-  const d = await gql<NearestResp>(
-    `query($lat: Float!, $lng: Float!) {
-      nearest(latitude: $lat, longitude: $lng, maximumDistance: 600, maximumResults: 5,
-              filterByPlaceTypes: [stopPlace]) {
-        edges { node { distance place { ... on StopPlace { id name } } } }
-      }
-    }`,
-    { lat: q.lat, lng: q.lng }
-  );
-  const edges = d.nearest?.edges ?? [];
-  const hit = edges.find(e => e.node.place?.id);
-  return hit?.node.place?.id ?? null;
-}
+// ── Timetable parsing ─────────────────────────────────────────────────────────
 
-async function getStopPlaceIds(): Promise<Partial<Record<FerryQuayKey, string>>> {
-  try {
-    const cached = localStorage.getItem(ID_CACHE_KEY);
-    if (cached) {
-      const parsed = JSON.parse(cached) as Partial<Record<FerryQuayKey, string>>;
-      if (Object.keys(parsed).length > 0) return parsed;
+// Extract `export const <name> ... = [ ... ];` array literals from the TS
+// source and parse them as JSON (quote the keys, strip trailing commas).
+function parseTables(src: string): FerryTables | null {
+  const out: Partial<FerryTables> = {};
+  for (const name of TABLE_NAMES) {
+    const declAt = src.indexOf(`export const ${name}`);
+    if (declAt < 0) return null;
+    // Scan from the `=` so the `[` in a `FerryLoop[]` type annotation isn't matched
+    const eqAt = src.indexOf('=', declAt);
+    if (eqAt < 0) return null;
+    const start = src.indexOf('[', eqAt);
+    if (start < 0) return null;
+    let depth = 0, end = -1;
+    for (let i = start; i < src.length; i++) {
+      if (src[i] === '[') depth++;
+      else if (src[i] === ']') { depth--; if (depth === 0) { end = i; break; } }
     }
-  } catch { /* fall through to discovery */ }
-
-  const ids: Partial<Record<FerryQuayKey, string>> = {};
-  await Promise.all(FERRY_QUAYS.map(async q => {
+    if (end < 0) return null;
+    const literal = src.slice(start, end + 1)
+      .replace(/([A-Za-z_]\w*)\s*:/g, '"$1":')   // quote keys (times are "HH:MM" strings, unaffected)
+      .replace(/,\s*([\]}])/g, '$1');            // strip trailing commas
     try {
-      const id = await discoverStopPlaceId(q);
-      if (id) ids[q.key] = id;
-    } catch { /* quay missing from Entur — skip it */ }
-  }));
-  if (Object.keys(ids).length > 0) {
-    try { localStorage.setItem(ID_CACHE_KEY, JSON.stringify(ids)); } catch { /* ignore */ }
-  }
-  return ids;
-}
-
-interface CallsResp {
-  stopPlace: {
-    estimatedCalls: {
-      expectedDepartureTime: string;
-      aimedDepartureTime: string;
-      realtime: boolean;
-      destinationDisplay: { frontText: string } | null;
-      serviceJourney: { line: { transportMode: string } | null } | null;
-    }[];
-  } | null;
-}
-
-async function fetchQuayDepartures(q: FerryQuay, id: string, n: number): Promise<FerryDeparture[]> {
-  const d = await gql<CallsResp>(
-    `query($id: String!, $n: Int!) {
-      stopPlace(id: $id) {
-        estimatedCalls(numberOfDepartures: $n, timeRange: 86400) {
-          expectedDepartureTime aimedDepartureTime realtime
-          destinationDisplay { frontText }
-          serviceJourney { line { transportMode } }
-        }
-      }
-    }`,
-    { id, n }
-  );
-  return (d.stopPlace?.estimatedCalls ?? [])
-    // The quays may serve other modes in theory — only keep boat departures
-    .filter(c => c.serviceJourney?.line?.transportMode === 'water')
-    .map(c => ({
-      quay: q.key,
-      quayName: q.name,
-      onIsland: q.onIsland,
-      time: c.expectedDepartureTime,
-      aimedTime: c.aimedDepartureTime,
-      realtime: c.realtime,
-      destination: c.destinationDisplay?.frontText ?? '',
-    }));
-}
-
-// All upcoming ferry departures (both directions), sorted by time.
-// Returns null when Entur is unreachable or has no data for the route,
-// so the caller can fall back to linking the ferry app.
-export async function fetchFerryDepartures(): Promise<FerryDeparture[] | null> {
-  try {
-    const ids = await getStopPlaceIds();
-    const quays = FERRY_QUAYS.filter(q => ids[q.key]);
-    if (quays.length === 0) return null;
-    const per = await Promise.all(
-      quays.map(q => fetchQuayDepartures(q, ids[q.key]!, 6).catch(() => [] as FerryDeparture[]))
-    );
-    const all = per.flat().sort((a, b) => a.time.localeCompare(b.time));
-    if (all.length === 0) {
-      // Stop places found but no boat departures — cached IDs may be stale/wrong
-      try { localStorage.removeItem(ID_CACHE_KEY); } catch { /* ignore */ }
+      const arr = JSON.parse(literal) as FerryLoop[];
+      if (!Array.isArray(arr) || arr.length === 0) return null; // empty table = parse went wrong
+      out[name] = arr;
+    } catch {
       return null;
     }
-    return all;
+  }
+  return out as FerryTables;
+}
+
+async function loadTables(): Promise<FerryTables | null> {
+  // Fresh-enough cache?
+  let cached: { at: number; tables: FerryTables } | null = null;
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (raw) cached = JSON.parse(raw);
+  } catch { /* ignore */ }
+  if (cached && Date.now() - cached.at < CACHE_TTL_MS) return cached.tables;
+
+  try {
+    const res = await fetch(DATA_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const tables = parseTables(await res.text());
+    if (!tables) throw new Error('parse failed');
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), tables })); } catch { /* ignore */ }
+    return tables;
   } catch {
-    return null;
+    // Network/parse failure: fall back to a stale cache if we have one
+    return cached?.tables ?? null;
   }
 }
 
-export function fmtDepTime(iso: string): string {
-  const d = new Date(iso);
+// ── Day selection (mirrors the ferry app's ferryData.ts) ─────────────────────
+
+export function osloNow(): Date {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Oslo' }));
+}
+
+// Summer timetable applies 22 June – 16 August
+function isSummerSeason(d: Date): boolean {
+  const m = d.getMonth() + 1, day = d.getDate();
+  if (m === 7) return true;
+  if (m === 6) return day >= 22;
+  if (m === 8) return day <= 16;
+  return false;
+}
+
+function loopsFor(tables: FerryTables, d: Date): FerryLoop[] {
+  const summer = isSummerSeason(d);
+  const wd = d.getDay();
+  if (wd === 6) return summer ? tables.summerSatLoops : tables.satLoops;
+  if (wd === 0) return summer ? tables.summerSunLoops : tables.sunLoops;
+  return summer ? tables.summerMonFriLoops : tables.monFriLoops;
+}
+
+// ── Departure boards ──────────────────────────────────────────────────────────
+
+const ISLAND_IN_FIELDS: { field: string; quay: FerryQuayKey; name: string }[] = [
+  { field: 'vestgardenInn', quay: 'vestgarden', name: 'Vestgården' },
+  { field: 'tangenInn',     quay: 'tangen',     name: 'Tangen' },
+  { field: 'engoInn',       quay: 'engo',       name: 'Engø' },
+];
+
+function timeOn(base: Date, hhmm: string): Date {
+  const [h, m] = hhmm.split(':').map(Number);
+  const d = new Date(base);
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+
+function departuresForDate(tables: FerryTables, date: Date): FerryDeparture[] {
+  const deps: FerryDeparture[] = [];
+  for (const loop of loopsFor(tables, date)) {
+    // Island → Tenvik ("Inn" legs)
+    for (const f of ISLAND_IN_FIELDS) {
+      const t = loop[f.field];
+      if (t) deps.push({ quay: f.quay, quayName: f.name, onIsland: true, time: timeOn(date, t), destination: 'Tenvik' });
+    }
+    // Tenvik → island ("Ut" leg); destination = the loop's first island stop
+    if (loop.tenvikUt) {
+      const dest = loop.vestgardenUt ? 'Vestgården' : loop.engoUt ? 'Engø' : loop.tangenUt ? 'Tangen' : 'Veierland';
+      deps.push({ quay: 'tenvik', quayName: 'Tenvik', onIsland: false, time: timeOn(date, loop.tenvikUt), destination: dest });
+    }
+  }
+  return deps.sort((a, b) => a.time.getTime() - b.time.getTime());
+}
+
+// Upcoming departures: the rest of today, or tomorrow's board once today is done.
+// Returns null only when the timetable can't be loaded at all.
+export async function fetchFerryDepartures(): Promise<FerryBoard | null> {
+  const tables = await loadTables();
+  if (!tables) return null;
+  const now = osloNow();
+  const today = departuresForDate(tables, now).filter(d => d.time.getTime() >= now.getTime() - 60_000);
+  if (today.length > 0) return { deps: today, tomorrow: false };
+  const tmrw = new Date(now);
+  tmrw.setDate(tmrw.getDate() + 1);
+  tmrw.setHours(0, 0, 0, 0);
+  return { deps: departuresForDate(tables, tmrw), tomorrow: true };
+}
+
+export function fmtDepTime(d: Date): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-export function minsUntil(iso: string): number {
-  return Math.round((new Date(iso).getTime() - Date.now()) / 60000);
+export function minsUntil(d: Date): number {
+  return Math.round((d.getTime() - osloNow().getTime()) / 60000);
 }

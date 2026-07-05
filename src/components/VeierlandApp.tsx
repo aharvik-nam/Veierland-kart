@@ -13,7 +13,7 @@ import { loadFarmData, DEFAULT_FARM_DATA, Farm } from '../lib/farmdata';
 import { loadTimelineSections, DEFAULT_TIMELINE_SECTIONS, TimelineSection } from '../lib/timelinedata';
 import { ICONS } from '../lib/icons';
 import floodData from '../data/sea_level_flood.geojson';
-import { fetchFerryDepartures, FerryDeparture, FERRY_QUAYS, fmtDepTime, minsUntil } from '../lib/ferrydata';
+import { fetchFerryDepartures, FerryBoard, FERRY_QUAYS, fmtDepTime, minsUntil } from '../lib/ferrydata';
 import losmassData from '../data/losmasser.geojson';
 import berggrunData from '../data/berggrunn.geojson';
 
@@ -506,13 +506,14 @@ export function VeierlandApp() {
 
   const [mapZoom, setMapZoom] = useState<number>(MAP_ZOOM);
 
-  // Ferry departures (Entur). null = unavailable -> pill links to the ferry app.
-  const [ferryDeps, setFerryDeps] = useState<FerryDeparture[] | null>(null);
+  // Ferry departures, read from the Veierland-Ferge repo's timetable.
+  // null = couldn't load -> pill still links to the ferry app.
+  const [ferryBoard, setFerryBoard] = useState<FerryBoard | null>(null);
   const [showFerryPop, setShowFerryPop] = useState(false);
   const ferryFetchedAt = useRef(0);
   const loadFerry = useCallback(() => {
-    fetchFerryDepartures().then(d => {
-      setFerryDeps(d);
+    fetchFerryDepartures().then(b => {
+      setFerryBoard(b);
       ferryFetchedAt.current = Date.now();
     });
   }, []);
@@ -525,7 +526,8 @@ export function VeierlandApp() {
       return next;
     });
   };
-  const upcomingFerry = (ferryDeps ?? []).filter(d => minsUntil(d.time) >= 0);
+  const upcomingFerry = ferryBoard?.deps ?? [];
+  const ferryTomorrow = ferryBoard?.tomorrow ?? false;
   const nextFromIsland = upcomingFerry.find(d => d.onIsland);
 
   const mapRef = useRef<L.Map | null>(null);
@@ -2521,7 +2523,7 @@ export function VeierlandApp() {
             title={lang === 'no' ? 'Fergetider' : 'Ferry times'}>
             <span className="fi" dangerouslySetInnerHTML={{ __html: iconSvg('ferge') }} />
             {nextFromIsland
-              ? <>{fmtDepTime(nextFromIsland.time)} <span className="fq">{nextFromIsland.quayName}</span></>
+              ? <>{fmtDepTime(nextFromIsland.time)} <span className="fq">{nextFromIsland.quayName}{ferryTomorrow ? (lang === 'no' ? ' · i morgen' : ' · tomorrow') : ''}</span></>
               : (lang === 'no' ? 'Fergetider' : 'Ferry')}
           </button>
         </div>
@@ -2532,36 +2534,34 @@ export function VeierlandApp() {
         <div className="vl-ferrypop" onClick={e => e.stopPropagation()}>
           {upcomingFerry.length > 0 ? (
             <>
-              <h5>{lang === 'no' ? 'Fra Veierland' : 'From Veierland'}</h5>
+              <h5>{(lang === 'no' ? 'Fra Veierland' : 'From Veierland') + (ferryTomorrow ? (lang === 'no' ? ' · i morgen' : ' · tomorrow') : '')}</h5>
               {upcomingFerry.filter(d => d.onIsland).slice(0, 4).map((d, i) => (
                 <div key={`i${i}`} className="vl-fdep">
                   <b>{fmtDepTime(d.time)}</b>
                   <span className="fq">{d.quayName}{d.destination ? ` → ${d.destination}` : ''}</span>
-                  {d.realtime && <span className="rt" title={lang === 'no' ? 'Sanntid' : 'Realtime'} />}
-                  <span className="in">{minsUntil(d.time)} min</span>
+                  {!ferryTomorrow && <span className="in">{minsUntil(d.time)} min</span>}
                 </div>
               ))}
-              <h5 style={{ marginTop: 10 }}>{lang === 'no' ? 'Fra Tenvik' : 'From Tenvik'}</h5>
+              <h5 style={{ marginTop: 10 }}>{(lang === 'no' ? 'Fra Tenvik' : 'From Tenvik') + (ferryTomorrow ? (lang === 'no' ? ' · i morgen' : ' · tomorrow') : '')}</h5>
               {upcomingFerry.filter(d => !d.onIsland).slice(0, 3).map((d, i) => (
                 <div key={`m${i}`} className="vl-fdep">
                   <b>{fmtDepTime(d.time)}</b>
-                  <span className="fq">{d.destination || 'Veierland'}</span>
-                  {d.realtime && <span className="rt" />}
-                  <span className="in">{minsUntil(d.time)} min</span>
+                  <span className="fq">→ {d.destination || 'Veierland'}</span>
+                  {!ferryTomorrow && <span className="in">{minsUntil(d.time)} min</span>}
                 </div>
               ))}
             </>
           ) : (
             <p className="vl-fempty">
-              {ferryDeps === null
-                ? (lang === 'no' ? 'Fikk ikke hentet avganger akkurat nå.' : 'Could not load departures right now.')
+              {ferryBoard === null
+                ? (lang === 'no' ? 'Fikk ikke hentet rutetidene akkurat nå.' : 'Could not load the timetable right now.')
                 : (lang === 'no' ? 'Ingen flere avganger i dag.' : 'No more departures today.')}
             </p>
           )}
           <a className="vl-flink" href="https://jutoya.veierland.org/" target="_blank" rel="noreferrer">
             {lang === 'no' ? 'Full ruteplan og reiseplanlegger ↗' : 'Full timetable & planner ↗'}
           </a>
-          <p className="vl-fsrc">{lang === 'no' ? 'Kilde: Entur / VKT' : 'Source: Entur / VKT'}</p>
+          <p className="vl-fsrc">{lang === 'no' ? 'Rutetider fra jutoya.veierland.org' : 'Timetable from jutoya.veierland.org'}</p>
         </div>
       )}
 
