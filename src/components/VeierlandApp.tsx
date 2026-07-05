@@ -13,6 +13,7 @@ import { loadFarmData, DEFAULT_FARM_DATA, Farm } from '../lib/farmdata';
 import { loadTimelineSections, DEFAULT_TIMELINE_SECTIONS, TimelineSection } from '../lib/timelinedata';
 import { ICONS } from '../lib/icons';
 import floodData from '../data/sea_level_flood.geojson';
+import { fetchFerryDepartures, FerryDeparture, FERRY_QUAYS, fmtDepTime, minsUntil } from '../lib/ferrydata';
 import losmassData from '../data/losmasser.geojson';
 import berggrunData from '../data/berggrunn.geojson';
 
@@ -505,6 +506,28 @@ export function VeierlandApp() {
 
   const [mapZoom, setMapZoom] = useState<number>(MAP_ZOOM);
 
+  // Ferry departures (Entur). null = unavailable -> pill links to the ferry app.
+  const [ferryDeps, setFerryDeps] = useState<FerryDeparture[] | null>(null);
+  const [showFerryPop, setShowFerryPop] = useState(false);
+  const ferryFetchedAt = useRef(0);
+  const loadFerry = useCallback(() => {
+    fetchFerryDepartures().then(d => {
+      setFerryDeps(d);
+      ferryFetchedAt.current = Date.now();
+    });
+  }, []);
+  useEffect(() => { loadFerry(); }, [loadFerry]);
+  const toggleFerryPop = () => {
+    setShowFerryPop(v => {
+      const next = !v;
+      // Refresh quietly if the data is over a minute old when opening
+      if (next && Date.now() - ferryFetchedAt.current > 60_000) loadFerry();
+      return next;
+    });
+  };
+  const upcomingFerry = (ferryDeps ?? []).filter(d => minsUntil(d.time) >= 0);
+  const nextFromIsland = upcomingFerry.find(d => d.onIsland);
+
   const mapRef = useRef<L.Map | null>(null);
   const seaActivePaneRef = useRef<'a' | 'b'>('a');
   const crossfadeReadyRef = useRef(false);
@@ -595,7 +618,7 @@ export function VeierlandApp() {
 
   // Close layer popup on document click
   useEffect(() => {
-    const handle = () => setShowLayerPop(false);
+    const handle = () => { setShowLayerPop(false); setShowFerryPop(false); };
     document.addEventListener('click', handle);
     return () => document.removeEventListener('click', handle);
   }, []);
@@ -685,6 +708,7 @@ export function VeierlandApp() {
   }, []);
   const onMapClick = useCallback(() => {
     setShowLayerPop(false);
+    setShowFerryPop(false);
     if (selectedNature) { setSelectedNature(null); setSelectedNatureObs([]); }
     // Tapping empty map while a mini-card is showing dismisses it
     if (tab === 'map' && !sheetOpen && (selectedPOI || selectedTrail)) {
@@ -928,6 +952,25 @@ export function VeierlandApp() {
     const a = Math.sin(dLat / 2) ** 2 +
       Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  // Walking estimate: from the user's position when tracking, otherwise from
+  // Vestgården quay (where visitors arrive). 5 km/h with a 30% path factor,
+  // rounded to 5-minute steps.
+  const WALK_BASIS_QUAY = FERRY_QUAYS[0]; // Vestgården
+  function walkMins(coords: [number, number]): number {
+    const from = userPos ?? [WALK_BASIS_QUAY.lat, WALK_BASIS_QUAY.lng];
+    const km = distanceM(from[0], from[1], coords[0], coords[1]) / 1000;
+    return Math.max(5, Math.round((km * 1.3 * 12) / 5) * 5);
+  }
+  function walkShort(coords: [number, number]): string {
+    return `~${walkMins(coords)} min`;
+  }
+  function walkLong(coords: [number, number]): string {
+    const suffix = userPos
+      ? (lang === 'no' ? 'å gå herfra' : 'walk from here')
+      : (lang === 'no' ? 'å gå fra brygga' : 'walk from the quay');
+    return `${walkShort(coords)} ${suffix}`;
   }
 
   function pointInPolygon(lat: number, lng: number): boolean {
@@ -1768,7 +1811,7 @@ export function VeierlandApp() {
                               dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
                             <div className="vl-poi-body">
                               <h4>{poi.navn}</h4>
-                              {poi.beskrivelse && <p>{poi.beskrivelse}</p>}
+                              <p>{walkShort(poi.coordinates)}{poi.beskrivelse ? ` · ${poi.beskrivelse}` : ''}</p>
                             </div>
                           </div>
                           <div className="vl-poi-sep" />
@@ -1845,7 +1888,7 @@ export function VeierlandApp() {
                   dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
                 <div className="vl-poi-body">
                   <h4>{poi.navn}</h4>
-                  {poi.beskrivelse && <p>{poi.beskrivelse}</p>}
+                  <p>{walkShort(poi.coordinates)}{poi.beskrivelse ? ` · ${poi.beskrivelse}` : ''}</p>
                 </div>
               </div>
               <div className="vl-poi-sep" />
@@ -1899,6 +1942,10 @@ export function VeierlandApp() {
           })}
         </div>
         <div className="vl-h2">{poi.navn}</div>
+        <div className="vl-walkline">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="13" cy="4" r="1.7"/><path d="M11 8l3 2 1 4M11 8l-2 4-2 5M14 14l-1 6M9 12l-3 3"/></svg>
+          {walkLong(poi.coordinates)}
+        </div>
         <p className="vl-desc">{poi.beskrivelse}</p>
         {poi.beskrivelse_lang && !lesmerExpanded && (
           <button
@@ -2462,13 +2509,61 @@ export function VeierlandApp() {
         </button>
       )}
 
-      {/* Top overlay: lang toggle */}
+      {/* Top overlay: lang toggle + ferry pill */}
       <div className="vl-top">
-        <div className="vl-lang">
-          <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>NO</button>
-          <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')} title="Some content is only available in Norwegian">EN</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="vl-lang">
+            <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>NO</button>
+            <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')} title="Some content is only available in Norwegian">EN</button>
+          </div>
+          <button className={`vl-ferrypill${showFerryPop ? ' on' : ''}`}
+            onClick={e => { e.stopPropagation(); toggleFerryPop(); }}
+            title={lang === 'no' ? 'Fergetider' : 'Ferry times'}>
+            <span className="fi" dangerouslySetInnerHTML={{ __html: iconSvg('ferge') }} />
+            {nextFromIsland
+              ? <>{fmtDepTime(nextFromIsland.time)} <span className="fq">{nextFromIsland.quayName}</span></>
+              : (lang === 'no' ? 'Fergetider' : 'Ferry')}
+          </button>
         </div>
       </div>
+
+      {/* Ferry departures popup */}
+      {showFerryPop && (
+        <div className="vl-ferrypop" onClick={e => e.stopPropagation()}>
+          {upcomingFerry.length > 0 ? (
+            <>
+              <h5>{lang === 'no' ? 'Fra Veierland' : 'From Veierland'}</h5>
+              {upcomingFerry.filter(d => d.onIsland).slice(0, 4).map((d, i) => (
+                <div key={`i${i}`} className="vl-fdep">
+                  <b>{fmtDepTime(d.time)}</b>
+                  <span className="fq">{d.quayName}{d.destination ? ` → ${d.destination}` : ''}</span>
+                  {d.realtime && <span className="rt" title={lang === 'no' ? 'Sanntid' : 'Realtime'} />}
+                  <span className="in">{minsUntil(d.time)} min</span>
+                </div>
+              ))}
+              <h5 style={{ marginTop: 10 }}>{lang === 'no' ? 'Fra Tenvik' : 'From Tenvik'}</h5>
+              {upcomingFerry.filter(d => !d.onIsland).slice(0, 3).map((d, i) => (
+                <div key={`m${i}`} className="vl-fdep">
+                  <b>{fmtDepTime(d.time)}</b>
+                  <span className="fq">{d.destination || 'Veierland'}</span>
+                  {d.realtime && <span className="rt" />}
+                  <span className="in">{minsUntil(d.time)} min</span>
+                </div>
+              ))}
+            </>
+          ) : (
+            <p className="vl-fempty">
+              {ferryDeps === null
+                ? (lang === 'no' ? 'Fikk ikke hentet avganger akkurat nå.' : 'Could not load departures right now.')
+                : (lang === 'no' ? 'Ingen flere avganger i dag.' : 'No more departures today.')}
+            </p>
+          )}
+          <a className="vl-flink" href="https://jutoya.veierland.org/" target="_blank" rel="noreferrer">
+            {lang === 'no' ? 'Full ruteplan og reiseplanlegger ↗' : 'Full timetable & planner ↗'}
+          </a>
+          <p className="vl-fsrc">{lang === 'no' ? 'Kilde: Entur / VKT' : 'Source: Entur / VKT'}</p>
+        </div>
+      )}
 
       {/* Layer popup */}
       <div
@@ -2547,7 +2642,7 @@ export function VeierlandApp() {
               dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
             <div className="tx">
               <h4>{selectedPOI.navn}</h4>
-              <p>{lang === 'no' ? cat.no : cat.en}</p>
+              <p>{lang === 'no' ? cat.no : cat.en} · {walkLong(selectedPOI.coordinates)}</p>
             </div>
             <div className="acts">
               <button className={`ab${saved ? ' on' : ''}`} aria-label={saved ? (lang === 'no' ? 'Fjern fra lagret' : 'Remove saved') : (lang === 'no' ? 'Lagre' : 'Save')}
