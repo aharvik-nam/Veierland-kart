@@ -209,6 +209,22 @@ function makeCanvas(g: DomGrid): CanvasRenderingContext2D | null {
   return c.getContext('2d');
 }
 
+// The grid is coarse (15 m cells), so drawing it 1:1 and letting Leaflet
+// stretch the <img> over the map looks blocky. Upscale with bilinear
+// smoothing baked into the PNG itself so cell edges blend softly no matter
+// how the browser handles the final image scaling.
+function toSmoothDataUrl(src: HTMLCanvasElement, scale = 4): string {
+  const out = document.createElement('canvas');
+  out.width = src.width * scale;
+  out.height = src.height * scale;
+  const octx = out.getContext('2d');
+  if (!octx) return src.toDataURL();
+  octx.imageSmoothingEnabled = true;
+  octx.imageSmoothingQuality = 'high';
+  octx.drawImage(src, 0, 0, out.width, out.height);
+  return out.toDataURL();
+}
+
 // Wind speed -> colour + alpha, calm (faint green) to hurricane (strong magenta).
 // 32.7 m/s = Beaufort 12 (orkan).
 export const ORKAN_MS = 32.7;
@@ -222,6 +238,32 @@ export function windColor(speedMs: number): { r: number; g: number; b: number; a
     b: Math.round(from.b + t * (to.b - from.b)),
     alpha: 0.22 + t * 0.68, // vindstille: faint · orkan: strong
   };
+}
+
+// Individual 15 m cells flip between forest/clearing at high frequency, so a
+// hard per-cell decision reads as speckled noise even once the final image
+// is smoothly upscaled. Averaging each cell with its neighbours first turns
+// that into soft, natural-looking patches.
+function boxBlur(vals: Float32Array, cols: number, rows: number, radius: number): Float32Array {
+  const out = new Float32Array(vals.length);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      let sum = 0, n = 0;
+      for (let dr = -radius; dr <= radius; dr++) {
+        const rr = r + dr;
+        if (rr < 0 || rr >= rows) continue;
+        const base = rr * cols;
+        for (let dc = -radius; dc <= radius; dc++) {
+          const cc = c + dc;
+          if (cc < 0 || cc >= cols) continue;
+          sum += vals[base + cc];
+          n++;
+        }
+      }
+      out[r * cols + c] = sum / n;
+    }
+  }
+  return out;
 }
 
 // Current sun exposure: sunlit cells tinted sun-yellow, shaded cells tinted
@@ -240,18 +282,30 @@ export function makeSunShadowOverlay(date: Date): OverlayImage | null {
   const img = ctx.createImageData(g.cols, g.rows);
   const d = img.data;
   const ALPHA = 130;
+
+  const shade = new Float32Array(g.cols * g.rows);
   for (let r = 0; r < g.rows; r++) {
     for (let c = 0; c < g.cols; c++) {
       const blocked = underCanopy(g, r, c)
         || horizonAngleCells(g, r, c, sun.azimuth, 400) >= sun.elevation;
-      const col = blocked ? SHADED : SUNLIT;
+      shade[r * g.cols + c] = blocked ? 1 : 0;
+    }
+  }
+  const smooth = boxBlur(shade, g.cols, g.rows, 1);
+
+  for (let r = 0; r < g.rows; r++) {
+    for (let c = 0; c < g.cols; c++) {
+      const t = smooth[r * g.cols + c];
       const i = (r * g.cols + c) * 4;
-      d[i] = col.r; d[i + 1] = col.g; d[i + 2] = col.b; d[i + 3] = ALPHA;
+      d[i] = Math.round(SUNLIT.r + t * (SHADED.r - SUNLIT.r));
+      d[i + 1] = Math.round(SUNLIT.g + t * (SHADED.g - SUNLIT.g));
+      d[i + 2] = Math.round(SUNLIT.b + t * (SHADED.b - SUNLIT.b));
+      d[i + 3] = ALPHA;
     }
   }
   ctx.putImageData(img, 0, 0);
   return {
-    dataUrl: ctx.canvas.toDataURL(),
+    dataUrl: toSmoothDataUrl(ctx.canvas),
     bounds: [[g.minLat, g.minLng], [g.maxLat, g.maxLng]],
   };
 }
@@ -268,21 +322,30 @@ export function makeShelterOverlay(windFromDeg: number, windSpeed: number): Over
   const img = ctx.createImageData(g.cols, g.rows);
   const d = img.data;
   const col = windColor(windSpeed);
+
+  const exposure = new Float32Array(g.cols * g.rows);
   for (let r = 0; r < g.rows; r++) {
     for (let c = 0; c < g.cols; c++) {
-      if (underCanopy(g, r, c)) continue; // inside forest: good lee, no colour
+      if (underCanopy(g, r, c)) continue; // inside forest: good lee, stays 0
       const ang = horizonAngleCells(g, r, c, windFromDeg, 300);
       const s = Math.min(1, Math.max(0, ang / 8)); // 0 exposed, 1 well sheltered
-      if (s >= LEE_CUTOFF) continue; // in lee: leave transparent
-      const exposure = 1 - s / LEE_CUTOFF; // 0 at the lee boundary, 1 fully exposed
+      if (s < LEE_CUTOFF) exposure[r * g.cols + c] = 1 - s / LEE_CUTOFF;
+    }
+  }
+  const smooth = boxBlur(exposure, g.cols, g.rows, 1);
+
+  for (let r = 0; r < g.rows; r++) {
+    for (let c = 0; c < g.cols; c++) {
+      const e = smooth[r * g.cols + c];
+      if (e <= 0.02) continue; // effectively invisible: skip
       const i = (r * g.cols + c) * 4;
       d[i] = col.r; d[i + 1] = col.g; d[i + 2] = col.b;
-      d[i + 3] = Math.round(255 * col.alpha * exposure);
+      d[i + 3] = Math.round(255 * col.alpha * e);
     }
   }
   ctx.putImageData(img, 0, 0);
   return {
-    dataUrl: ctx.canvas.toDataURL(),
+    dataUrl: toSmoothDataUrl(ctx.canvas),
     bounds: [[g.minLat, g.minLng], [g.maxLat, g.maxLng]],
   };
 }
