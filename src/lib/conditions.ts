@@ -175,16 +175,32 @@ function makeCanvas(g: DomGrid): CanvasRenderingContext2D | null {
   return c.getContext('2d');
 }
 
-// Air temperature -> colour, -30°C (cold blue) to 50°C (dark yellow).
+// HSL -> RGB, h in degrees, s/l in 0..1.
+function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
+  h = ((h % 360) + 360) % 360;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r = 0, g = 0, b = 0;
+  if (h < 60) { r = c; g = x; b = 0; }
+  else if (h < 120) { r = x; g = c; b = 0; }
+  else if (h < 180) { r = 0; g = c; b = x; }
+  else if (h < 240) { r = 0; g = x; b = c; }
+  else if (h < 300) { r = x; g = 0; b = c; }
+  else { r = c; g = 0; b = x; }
+  return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255) };
+}
+
+// Air temperature -> colour, -30°C (cold blue) to 50°C (dark yellow), via
+// green through the middle. A straight RGB blend between blue and dark
+// yellow crosses right through neutral grey at everyday temperatures —
+// indistinguishable from the shadow tint — so this interpolates hue/
+// lightness in HSL instead, keeping saturation up the whole way.
 function tempToColor(tempC: number): { r: number; g: number; b: number } {
   const t = Math.min(1, Math.max(0, (tempC + 30) / 80));
-  const from = { r: 40, g: 96, b: 222 };   // -30°C: blue
-  const to = { r: 150, g: 122, b: 8 };     // 50°C: dark yellow
-  return {
-    r: Math.round(from.r + t * (to.r - from.r)),
-    g: Math.round(from.g + t * (to.g - from.g)),
-    b: Math.round(from.b + t * (to.b - from.b)),
-  };
+  const hue = 215 - t * 170;    // 215° blue -> 45° yellow (through green)
+  const light = 0.52 - t * 0.17; // lighter blue -> darker yellow, per "mørk gult"
+  return hslToRgb(hue, 0.7, light);
 }
 
 // Wind speed -> colour + alpha, calm (faint green) to hurricane (strong magenta).
