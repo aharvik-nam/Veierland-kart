@@ -22,6 +22,7 @@ import {
 } from '../lib/conditions';
 import losmassData from '../data/losmasser.geojson';
 import berggrunData from '../data/berggrunn.geojson';
+import { networkWalkDistanceM, networkWalkRoute } from '../lib/routing';
 
 // ─── Layer configs ────────────────────────────────────────────────────────────
 
@@ -473,6 +474,7 @@ export function VeierlandApp() {
     catch { return new Set<string>(); }
   });
   const [trailPath, setTrailPath] = useState<[number, number][] | null>(null);
+  const [walkRoutePath, setWalkRoutePath] = useState<[number, number][] | null>(null);
   const [trailPoiFilter, setTrailPoiFilter] = useState<'along' | 'all'>('along');
   const [trailCatFilter, setTrailCatFilter] = useState<'alle' | 'historie' | 'natur' | 'mat' | 'kultur'>('alle');
   const [heartAnim, setHeartAnim] = useState(false);
@@ -1065,13 +1067,19 @@ export function VeierlandApp() {
   }
 
   // Walking estimate: from the user's position when tracking, otherwise from
-  // Vestgården quay (where visitors arrive). 5 km/h with a 30% path factor,
-  // rounded to 5-minute steps.
+  // Vestgården quay (where visitors arrive). 5 km/h. Uses the real path/road
+  // network (src/data/road_network.json, see scripts/generate_road_network.mjs)
+  // when both ends are close enough to a known path; a 30% path factor on the
+  // straight-line distance is the fallback for points the network can't
+  // reach (or if the data is missing), rounded to 5-minute steps.
   const WALK_BASIS_QUAY = FERRY_QUAYS[0]; // Vestgården
   function walkMins(coords: [number, number]): number {
     const from = userPos ?? [WALK_BASIS_QUAY.lat, WALK_BASIS_QUAY.lng];
-    const km = distanceM(from[0], from[1], coords[0], coords[1]) / 1000;
-    return Math.max(5, Math.round((km * 1.3 * 12) / 5) * 5);
+    const networkM = networkWalkDistanceM(from, coords);
+    const mins = networkM !== null
+      ? (networkM / 1000) * 12
+      : (distanceM(from[0], from[1], coords[0], coords[1]) / 1000) * 1.3 * 12;
+    return Math.max(5, Math.round(mins / 5) * 5);
   }
   function walkShort(coords: [number, number]): string {
     return `~${walkMins(coords)} min`;
@@ -1079,9 +1087,20 @@ export function VeierlandApp() {
   function walkLong(coords: [number, number]): string {
     const suffix = userPos
       ? (lang === 'no' ? 'å gå herfra' : 'walk from here')
-      : (lang === 'no' ? 'å gå fra brygga' : 'walk from the quay');
+      : (lang === 'no' ? `å gå fra ${WALK_BASIS_QUAY.name}` : `walk from ${WALK_BASIS_QUAY.name}`);
     return `${walkShort(coords)} ${suffix}`;
   }
+
+  // Draw the walking route to whichever POI is currently open, from the
+  // user's live position when tracking or from Vestgården quay otherwise —
+  // recomputed whenever either changes, so it follows along as you walk.
+  useEffect(() => {
+    if (!selectedPOI || view !== 'detail') { setWalkRoutePath(null); return; }
+    const from = userPos ?? [WALK_BASIS_QUAY.lat, WALK_BASIS_QUAY.lng];
+    const route = networkWalkRoute(from, selectedPOI.coordinates);
+    setWalkRoutePath(route?.path ?? null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPOI, view, userPos]);
 
   function pointInPolygon(lat: number, lng: number): boolean {
     const poly = (boundaryData as unknown as { coordinates: [number, number][][] }).coordinates[0];
@@ -2634,6 +2653,20 @@ export function VeierlandApp() {
             <Polyline
               positions={trailPath}
               pathOptions={{ color: '#4a7c64', weight: 3.6, opacity: 1, lineCap: 'round', lineJoin: 'round' }}
+            />
+          </>
+        )}
+        {walkRoutePath && (
+          <>
+            <Polyline
+              positions={walkRoutePath}
+              pathOptions={{ color: '#fff', weight: 6, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }}
+              interactive={false}
+            />
+            <Polyline
+              positions={walkRoutePath}
+              pathOptions={{ color: '#2d6cdf', weight: 3.2, opacity: 0.9, lineCap: 'round', lineJoin: 'round', dashArray: '1,10' }}
+              interactive={false}
             />
           </>
         )}
