@@ -196,8 +196,10 @@ function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: n
 // yellow crosses right through neutral grey at everyday temperatures —
 // indistinguishable from the shadow tint — so this interpolates hue/
 // lightness in HSL instead, keeping saturation up the whole way.
-function tempToColor(tempC: number): { r: number; g: number; b: number } {
-  const t = Math.min(1, Math.max(0, (tempC + 30) / 80));
+export const TEMP_MIN = -30;
+export const TEMP_MAX = 50;
+export function tempToColor(tempC: number): { r: number; g: number; b: number } {
+  const t = Math.min(1, Math.max(0, (tempC - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)));
   const hue = 215 - t * 170;    // 215° blue -> 45° yellow (through green)
   const light = 0.52 - t * 0.17; // lighter blue -> darker yellow, per "mørk gult"
   return hslToRgb(hue, 0.7, light);
@@ -205,8 +207,8 @@ function tempToColor(tempC: number): { r: number; g: number; b: number } {
 
 // Wind speed -> colour + alpha, calm (faint green) to hurricane (strong magenta).
 // 32.7 m/s = Beaufort 12 (orkan).
-const ORKAN_MS = 32.7;
-function windColor(speedMs: number): { r: number; g: number; b: number; alpha: number } {
+export const ORKAN_MS = 32.7;
+export function windColor(speedMs: number): { r: number; g: number; b: number; alpha: number } {
   const t = Math.min(1, Math.max(0, speedMs / ORKAN_MS));
   const from = { r: 34, g: 197, b: 94 };    // calm: green
   const to = { r: 192, g: 38, b: 211 };     // orkan: magenta
@@ -219,37 +221,27 @@ function windColor(speedMs: number): { r: number; g: number; b: number; alpha: n
 }
 
 // Current sun exposure: sunlit cells tinted by air temperature (cold blue to
-// hot dark-yellow); shaded cells are flat grey — the map stays visible
-// through both via alpha.
+// hot dark-yellow); shaded cells are left fully transparent so the map shows
+// through untouched — no grey wash to compete with it.
 export function makeSunShadowOverlay(date: Date, airTemp: number): OverlayImage | null {
   if (!DOM_GRID) return null;
   const g = DOM_GRID;
   const midLat = (g.minLat + g.maxLat) / 2;
   const midLng = (g.minLng + g.maxLng) / 2;
   const sun = sunPosition(date, midLat, midLng);
+  if (sun.elevation <= 0) return null; // night: the whole island is shaded, nothing to draw
   const ctx = makeCanvas(g);
   if (!ctx) return null;
   const img = ctx.createImageData(g.cols, g.rows);
   const d = img.data;
   const sunC = tempToColor(airTemp);
-  const GREY = 128;
-  const ALPHA = 110;
-  if (sun.elevation > 0) {
-    for (let r = 0; r < g.rows; r++) {
-      for (let c = 0; c < g.cols; c++) {
-        const blocked = horizonAngleCells(g, r, c, sun.azimuth, 400) >= sun.elevation;
-        const i = (r * g.cols + c) * 4;
-        if (blocked) {
-          d[i] = GREY; d[i + 1] = GREY; d[i + 2] = GREY; d[i + 3] = ALPHA;
-        } else {
-          d[i] = sunC.r; d[i + 1] = sunC.g; d[i + 2] = sunC.b; d[i + 3] = ALPHA;
-        }
-      }
-    }
-  } else {
-    // Sun below the horizon: everything is in shade
-    for (let i = 0; i < d.length; i += 4) {
-      d[i] = GREY; d[i + 1] = GREY; d[i + 2] = GREY; d[i + 3] = ALPHA;
+  const ALPHA = 130;
+  for (let r = 0; r < g.rows; r++) {
+    for (let c = 0; c < g.cols; c++) {
+      const blocked = horizonAngleCells(g, r, c, sun.azimuth, 400) >= sun.elevation;
+      if (blocked) continue; // shaded: leave transparent
+      const i = (r * g.cols + c) * 4;
+      d[i] = sunC.r; d[i + 1] = sunC.g; d[i + 2] = sunC.b; d[i + 3] = ALPHA;
     }
   }
   ctx.putImageData(img, 0, 0);
