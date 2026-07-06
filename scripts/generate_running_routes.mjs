@@ -310,6 +310,11 @@ for (const r of ROUTES) {
       // cycling is left out entirely once the route uses any real stretch
       // of narrow trail (see activityModes / BIKE_TRAIL_TOLERANCE_M).
       transportmodi: modes,
+      // The named-waypoint sequence this route was built from (see `P` and
+      // `ROUTES` above) — lets the admin route builder load a route back by
+      // its logical waypoints instead of only the dense computed geometry.
+      // Display names for each `key` come from routing.ts's NAMED_WAYPOINTS.
+      rutepunkter: r.seq.map(key => ({ key, lat: P[key][0], lng: P[key][1] })),
       no: r.no,
       enT: r.enT,
     },

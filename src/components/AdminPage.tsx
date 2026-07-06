@@ -7,6 +7,7 @@ import { DEFAULT_CAT_CFG, CatCfgMap, CatEntry, loadCatCfg, saveCatCfg } from '..
 import { loadFarmData, saveFarmData, DEFAULT_FARM_DATA, Farm, FarmPerson, FarmShip } from '../lib/farmdata';
 import { loadTimelineSections, saveTimelineSections, DEFAULT_TIMELINE_SECTIONS, TimelineSection } from '../lib/timelinedata';
 import { ICONS, ICON_LABELS } from '../lib/icons';
+import { RouteBuilderMap, RouteOverviewMap, BuiltRouteResult } from './RouteBuilderMap';
 import {
   NATURE_GROUPS, NatureGroup, NatureObs, STATIC_NATURE_CACHE,
   loadNatureObs, saveNatureObs, getNatureObsMetadata,
@@ -787,8 +788,30 @@ function StedsnavnTab() {
 }
 
 // ─── Turer tab ────────────────────────────────────────────────────────────────
-function TrailEditor({ feature, onChange, onDelete }: {
-  feature: any; onChange: (f: any) => void; onDelete: () => void;
+// Applies a builder result onto a feature: new geometry + all the computed
+// properties, keeping name/id/description untouched so re-routing an
+// existing trail doesn't wipe its text content.
+function applyBuiltRoute(feature: any, built: BuiltRouteResult): any {
+  return {
+    ...feature,
+    properties: {
+      ...feature.properties,
+      km: built.km,
+      tid: built.tid,
+      vanskelighet: built.vanskelighet,
+      stigning: built.stigning,
+      hoydeprofil: built.hoydeprofil,
+      minHoyde: built.minHoyde,
+      maxHoyde: built.maxHoyde,
+      transportmodi: built.transportmodi,
+      rutepunkter: built.rutepunkter,
+    },
+    geometry: { type: 'LineString', coordinates: built.path.map(([lat, lng]) => [lng, lat]) },
+  };
+}
+
+function TrailEditor({ feature, onChange, onDelete, onOpenBuilder }: {
+  feature: any; onChange: (f: any) => void; onDelete: () => void; onOpenBuilder: () => void;
 }) {
   const p = feature.properties;
   const setP = (k: string, v: any) => onChange({ ...feature, properties: { ...p, [k]: v } });
@@ -806,8 +829,15 @@ function TrailEditor({ feature, onChange, onDelete }: {
       <Field label="Rute-ID"><input style={S.input} value={p.id ?? ''} onChange={e => setP('id', e.target.value)} /></Field>
       <Field label="Beskrivelse (norsk)" full><textarea style={S.textarea} value={p.no ?? ''} onChange={e => setP('no', e.target.value)} rows={3} /></Field>
       <Field label="Beskrivelse (engelsk)" full><textarea style={S.textarea} value={p.enT ?? ''} onChange={e => setP('enT', e.target.value)} rows={3} /></Field>
-      <div style={{ ...S.fullSpan, fontSize: 12, color: 'var(--muted)' }}>
-        Selve ruta (GPS-sporet) redigeres i QGIS/Google My Maps og lastes opp som GeoJSON øverst — tekstfeltene her kan endres fritt.
+      <div style={S.fullSpan}>
+        <button type="button" onClick={onOpenBuilder} style={{ ...S.pill('secondary'), width: '100%', justifyContent: 'center' }}>
+          🗺️ {p.rutepunkter ? 'Rediger rute på kart' : 'Bygg rute på kart (erstatter sporet)'}
+        </button>
+        {!p.rutepunkter && (
+          <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 6 }}>
+            Denne ruta har ingen lagrede rutepunkter (håndtegnet spor) — å bygge på kart her erstatter hele sporet med en ny rute langs veinettet.
+          </div>
+        )}
       </div>
       <button style={S.deleteBtn} onClick={onDelete}>Slett denne turen</button>
     </div>
@@ -816,6 +846,8 @@ function TrailEditor({ feature, onChange, onDelete }: {
 
 function TurerTab() {
   const { data, setData, dirty, saving, save, err, seeded } = useTabData('turer');
+  const [builderFor, setBuilderFor] = useState<number | 'new' | null>(null);
+  const [showOverview, setShowOverview] = useState(false);
 
   const update = (i: number, f: any) => {
     if (!data) return;
@@ -828,6 +860,38 @@ function TurerTab() {
   };
 
   if (!data) return <p style={{ color: 'var(--muted)' }}>{err || 'Laster…'}</p>;
+
+  if (builderFor !== null) {
+    const editingExisting = typeof builderFor === 'number';
+    const feature = editingExisting ? data.features[builderFor as number] : null;
+    const initialWaypoints = feature?.properties.rutepunkter ?? [];
+    return (
+      <div>
+        <div style={{ marginBottom: 12, fontWeight: 600 }}>
+          {editingExisting ? `Redigerer: ${feature.properties.navn}` : 'Ny rute'}
+        </div>
+        <RouteBuilderMap
+          initialWaypoints={initialWaypoints}
+          onCancel={() => setBuilderFor(null)}
+          onUse={built => {
+            if (editingExisting) {
+              update(builderFor as number, applyBuiltRoute(feature, built));
+            } else {
+              const id = `t-custom-${Date.now()}`;
+              const newFeature = applyBuiltRoute({
+                type: 'Feature',
+                properties: { id, navn: 'Ny rute', en: '', no: '', enT: '' },
+                geometry: { type: 'LineString', coordinates: [] },
+              }, built);
+              setData({ ...data, features: [...data.features, newFeature] });
+            }
+            setBuilderFor(null);
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <>
       <FileActions tab="turer" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} seeded={seeded} />
@@ -838,13 +902,32 @@ function TurerTab() {
         </div>
       )}
       <div style={S.infoBox}>
-        {data.features.length} turrute(r). Navn, lengde, tid og beskrivelser redigeres her — GPS-sporet lastes opp som GeoJSON.
+        {data.features.length} turrute(r). Navn, lengde, tid og beskrivelser redigeres her direkte; selve ruta bygges på kart —
+        klikk «Bygg rute på kart» inne på en tur, eller «Ny rute» under.
       </div>
+      <div style={S.toolbar}>
+        <button type="button" style={S.pill('secondary')} onClick={() => setShowOverview(v => !v)}>
+          {showOverview ? 'Skjul kartoversikt' : '🗺️ Vis alle ruter på kart'}
+        </button>
+        <button type="button" style={S.pill('primary')} onClick={() => setBuilderFor('new')}>+ Ny rute</button>
+      </div>
+      {showOverview && (
+        <div style={{ marginBottom: 18 }}>
+          <RouteOverviewMap routes={data.features.map((f, i) => ({
+            id: f.properties.id ?? String(i),
+            navn: f.properties.navn ?? `Rute ${i + 1}`,
+            path: (f.geometry.coordinates as [number, number][]).map(([lng, lat]) => [lat, lng] as [number, number]),
+          }))} />
+          <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 6 }}>
+            Grønt flagg = start, rødt flagg = mål, piler viser gåretningen for hver rute.
+          </div>
+        </div>
+      )}
       {data.features.map((f, i) => (
         <FeatureRow key={i}
           label={f.properties.navn ?? f.properties.id ?? `Rute ${i + 1}`}
           meta={[f.properties.km, f.properties.tid, f.properties.vanskelighet].filter(Boolean).join(' · ')}>
-          <TrailEditor feature={f} onChange={nf => update(i, nf)} onDelete={() => del(i)} />
+          <TrailEditor feature={f} onChange={nf => update(i, nf)} onDelete={() => del(i)} onOpenBuilder={() => setBuilderFor(i)} />
         </FeatureRow>
       ))}
     </>
