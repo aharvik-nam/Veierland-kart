@@ -8,17 +8,22 @@ solskygge og le for vind (DTM-en er bar bakke og ser ikke skogbelter).
 Bruk:
   pip install rasterio numpy
   python scripts/generate_dom_grid.py <sti/til/dom.tif>
+  python scripts/generate_dom_grid.py <mappe/med/fliser>
 
 DOM-fil lastes ned fra https://hoydedata.no :
   1. Zoom til Veierland
   2. «Last ned» → velg prosjekt med DOM (overflatemodell), GeoTIFF
-  3. Kjør dette skriptet med fila som argument
+  3. Pakk ut zip-fila et sted UTENFOR git-repoet (nedlastingen er typisk
+     mange hundre MB–flere GB og skal ikke committes)
+  4. Kjør dette skriptet med filen — eller mappen fliser ble pakket ut i —
+     som argument. Flere fliser mosaikkeres automatisk ved sampling.
 
 Output: src/data/dom_grid.json — et kompakt grid (15 m celler) med høyder
 i desimeter som base64-kodet uint16, som appen bruker til sol/vind-laget.
 """
 
 import base64
+import glob
 import json
 import math
 import os
@@ -47,11 +52,63 @@ OUTPUT = os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'dom_grid.
 # -------------------------------------------------------------------------
 
 
+def find_tiles(src_path: str) -> list[str]:
+    if os.path.isfile(src_path):
+        return [src_path]
+    tiles = sorted(
+        p for p in glob.glob(os.path.join(src_path, '**', '*.tif'), recursive=True)
+        if not p.lower().endswith('.ovr')
+    )
+    if not tiles:
+        print(f"Fant ingen .tif-filer under {src_path}")
+        sys.exit(1)
+    return tiles
+
+
+def sample_tiles(tile_paths: list[str], lng_grid: np.ndarray, lat_grid: np.ndarray):
+    """Sample each grid point from whichever tile covers it. Handles an
+    arbitrary number of (possibly overlapping) tiles without loading a full
+    mosaic into memory — only the sparse output grid is held in RAM."""
+    n = lng_grid.size
+    samples = np.zeros(n, dtype=np.float64)
+    covered = np.zeros(n, dtype=bool)
+
+    with rasterio.open(tile_paths[0]) as first:
+        crs = first.crs
+    print(f"CRS: {crs} · {len(tile_paths)} flis(er)")
+
+    xs, ys = rio_transform('EPSG:4326', crs, lng_grid.ravel().tolist(), lat_grid.ravel().tolist())
+    xs = np.asarray(xs)
+    ys = np.asarray(ys)
+
+    for i, path in enumerate(tile_paths):
+        with rasterio.open(path) as src:
+            b = src.bounds
+            mask = (~covered) & (xs >= b.left) & (xs < b.right) & (ys > b.bottom) & (ys <= b.top)
+            idx = np.nonzero(mask)[0]
+            if idx.size == 0:
+                continue
+            vals = np.array([v[0] for v in src.sample(zip(xs[idx], ys[idx]))], dtype=np.float64)
+            nodata = src.nodata
+            if nodata is not None:
+                vals[vals == nodata] = np.nan
+            samples[idx] = vals
+            covered[idx] = True
+        if len(tile_paths) > 1 and ((i + 1) % 40 == 0 or i == len(tile_paths) - 1):
+            print(f"  flis {i + 1}/{len(tile_paths)} · {covered.sum()}/{n} punkter dekket")
+
+    uncovered = n - int(covered.sum())
+    if uncovered > 0:
+        print(f"NB: {uncovered} rutepunkter falt utenfor alle flisene (behandles som hav/0 m)")
+    return samples
+
+
 def main() -> None:
     if len(sys.argv) < 2:
         print(__doc__)
         sys.exit(1)
     src_path = sys.argv[1]
+    tile_paths = find_tiles(src_path)
 
     min_lng, min_lat, max_lng, max_lat = BBOX
     mid_lat = (min_lat + max_lat) / 2
@@ -63,21 +120,12 @@ def main() -> None:
     rows = max(2, round(height_m / CELL_M))
     print(f"Grid: {cols} x {rows} celler ({CELL_M} m) = {cols * rows} punkter")
 
-    with rasterio.open(src_path) as src:
-        print(f"Kilde: {src_path} · CRS {src.crs} · {src.width}x{src.height}")
+    # Målkoordinater (WGS84) for hver celle, radvis fra nordvest
+    lngs = np.linspace(min_lng, max_lng, cols)
+    lats = np.linspace(max_lat, min_lat, rows)  # nord -> sør
+    lng_grid, lat_grid = np.meshgrid(lngs, lats)
 
-        # Målkoordinater (WGS84) for hver celle, radvis fra nordvest
-        lngs = np.linspace(min_lng, max_lng, cols)
-        lats = np.linspace(max_lat, min_lat, rows)  # nord -> sør
-        lng_grid, lat_grid = np.meshgrid(lngs, lats)
-
-        xs, ys = rio_transform('EPSG:4326', src.crs,
-                               lng_grid.ravel().tolist(), lat_grid.ravel().tolist())
-
-        samples = np.array([v[0] for v in src.sample(zip(xs, ys))], dtype=np.float64)
-        nodata = src.nodata
-        if nodata is not None:
-            samples[samples == nodata] = 0.0
+    samples = sample_tiles(tile_paths, lng_grid, lat_grid)
 
     samples = np.nan_to_num(samples, nan=0.0)
     samples[samples < 0] = 0.0  # hav / støy under null
