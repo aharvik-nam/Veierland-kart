@@ -103,7 +103,7 @@ function computeFull(waypoints: { key?: string; lat: number; lng: number }[]): {
       result: {
         path: built.path,
         km: fmtKm(built.totalM),
-        tid: fmtRouteTime(built.totalM, 6.5),
+        tid: fmtRouteTime(built.totalM, 12), // walking pace by default — most people walk these
         vanskelighet: routeDifficulty(built.totalM, prof.ascentM),
         stigning: `${prof.ascentM} m`,
         hoydeprofil: prof.series,
@@ -220,7 +220,7 @@ export function RouteBuilderMap({
         {error && <div style={{ fontSize: 12.5, color: '#dc2626' }}>{error}</div>}
         {result && (
           <div style={{ background: 'var(--card2)', border: '1px solid var(--line)', borderRadius: 8, padding: 10, fontSize: 12.5, display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <div><b>{result.km}</b> · {result.tid} løp · {result.vanskelighet}</div>
+            <div><b>{result.km}</b> · {result.tid} gange · {result.vanskelighet}</div>
             <div>Stigning: {result.stigning}</div>
             <div>Modi: {result.transportmodi.map(m => m.mode).join(', ')}</div>
           </div>

@@ -298,7 +298,7 @@ for (const r of ROUTES) {
       navn: r.navn,
       en: r.en,
       km: fmtKm(totalM),
-      tid: fmtTime(totalM, 6.5), // running pace estimate, ~6.5 min/km
+      tid: fmtTime(totalM, 12), // walking pace, ~5 km/h — most people walk these, not run them
       vanskelighet: difficulty(totalM, ascentM),
       stigning: `${ascentM} m`,
       // Elevation profile for the chart: [metresFromStart, elevationM][],
@@ -322,7 +322,7 @@ for (const r of ROUTES) {
   });
   const reusedPct = (reusedM / totalM * 100).toFixed(0);
   console.log(
-    `${r.navn}: ${fmtKm(totalM)}, ${fmtTime(totalM, 6.5)} løp, ` +
+    `${r.navn}: ${fmtKm(totalM)}, ${fmtTime(totalM, 12)} gange, ` +
     `stigning ${ascentM}m / fall ${descentM}m, maks ${maxElevationM}moh, ` +
     `${difficulty(totalM, ascentM)}, backtrack ${reusedM.toFixed(0)}m (${reusedPct}%), ` +
     `sti ${trailM.toFixed(0)}m, modi [${modes.map(m => m.mode).join(',')}], ${path.length} punkter`

@@ -8,6 +8,7 @@ import { loadFarmData, saveFarmData, DEFAULT_FARM_DATA, Farm, FarmPerson, FarmSh
 import { loadTimelineSections, saveTimelineSections, DEFAULT_TIMELINE_SECTIONS, TimelineSection } from '../lib/timelinedata';
 import { ICONS, ICON_LABELS } from '../lib/icons';
 import { RouteBuilderMap, RouteOverviewMap, BuiltRouteResult } from './RouteBuilderMap';
+import { fmtRouteTime } from '../lib/routing';
 import {
   NATURE_GROUPS, NatureGroup, NatureObs, STATIC_NATURE_CACHE,
   loadNatureObs, saveNatureObs, getNatureObsMetadata,
@@ -788,6 +789,28 @@ function StedsnavnTab() {
 }
 
 // ─── Turer tab ────────────────────────────────────────────────────────────────
+
+function haversineM(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371000;
+  const dLat = (bLat - aLat) * Math.PI / 180;
+  const dLng = (bLng - aLng) * Math.PI / 180;
+  const s = Math.sin(dLat / 2) ** 2 +
+    Math.cos(aLat * Math.PI / 180) * Math.cos(bLat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
+}
+// Total length of a trail's own LineString geometry — used to compute a
+// cycling-time estimate when the admin ticks "sykling mulig" for a route
+// that doesn't already carry one (e.g. hand-authored trails).
+function pathLengthM(feature: any): number {
+  const coords: [number, number][] = feature.geometry?.coordinates ?? [];
+  let m = 0;
+  for (let i = 1; i < coords.length; i++) {
+    const [lngA, latA] = coords[i - 1], [lngB, latB] = coords[i];
+    m += haversineM(latA, lngA, latB, lngB);
+  }
+  return m;
+}
+
 // Applies a builder result onto a feature: new geometry + all the computed
 // properties, keeping name/id/description untouched so re-routing an
 // existing trail doesn't wipe its text content.
@@ -827,6 +850,20 @@ function TrailEditor({ feature, onChange, onDelete, onOpenBuilder }: {
         </select>
       </Field>
       <Field label="Rute-ID"><input style={S.input} value={p.id ?? ''} onChange={e => setP('id', e.target.value)} /></Field>
+      <Field label="Sykling">
+        <label style={{ display: 'flex', alignItems: 'center', gap: 7, height: 34, fontSize: 13.5, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={(p.transportmodi ?? []).some((m: any) => m.mode === 'sykkel')}
+            onChange={e => {
+              const modes = (p.transportmodi ?? []).filter((m: any) => m.mode !== 'sykkel');
+              if (e.target.checked) modes.push({ mode: 'sykkel', tid: fmtRouteTime(pathLengthM(feature), 4) });
+              setP('transportmodi', modes);
+            }}
+          />
+          Mulig å sykle denne ruta
+        </label>
+      </Field>
       <Field label="Beskrivelse (norsk)" full><textarea style={S.textarea} value={p.no ?? ''} onChange={e => setP('no', e.target.value)} rows={3} /></Field>
       <Field label="Beskrivelse (engelsk)" full><textarea style={S.textarea} value={p.enT ?? ''} onChange={e => setP('enT', e.target.value)} rows={3} /></Field>
       <div style={S.fullSpan}>
