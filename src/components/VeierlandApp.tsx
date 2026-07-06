@@ -250,6 +250,7 @@ interface Trail {
   km: string;
   time: string;
   diff: string;
+  climb?: string;
   no: string;
   enT: string;
   path: [number, number][];
@@ -263,6 +264,7 @@ function trailsFromGeoJSON(geo: any): Trail[] {
     km: f.properties.km,
     time: f.properties.tid,
     diff: f.properties.vanskelighet,
+    climb: f.properties.stigning,
     no: f.properties.no,
     enT: f.properties.enT,
     path: f.geometry.coordinates.map((c: number[]) => [c[1], c[0]] as [number, number]),
@@ -1303,7 +1305,7 @@ export function VeierlandApp() {
     search: 'Søk på Veierland', all: 'Alle', explore: 'Utforsk Veierland',
     map: 'Kart', saved: 'Lagret',
     places: 'Steder', trails: 'Turer', nature: 'Natur', history: 'Historie', back: 'Tilbake',
-    directions: 'Veibeskrivelse', length: 'Lengde', duration: 'Tid', diff: 'Vanskelighet',
+    directions: 'Veibeskrivelse', length: 'Lengde', duration: 'Tid', diff: 'Vanskelighet', climb: 'Stigning',
     layers: 'Kartlag', nohit: 'Ingen treff', easy: 'Lett', showRoute: 'Vis rute',
     natObs: (n: number) => `${n} ${n === 1 ? 'art' : 'arter'} observert`,
     np: (n: number) => `${n} ${n === 1 ? 'sted' : 'steder'}`,
@@ -1314,7 +1316,7 @@ export function VeierlandApp() {
     search: 'Search Veierland', all: 'All', explore: 'Explore Veierland',
     map: 'Map', saved: 'Saved',
     places: 'Places', trails: 'Trails', nature: 'Nature', history: 'History', back: 'Back',
-    directions: 'Directions', length: 'Length', duration: 'Time', diff: 'Difficulty',
+    directions: 'Directions', length: 'Length', duration: 'Time', diff: 'Difficulty', climb: 'Climb',
     layers: 'Map layer', nohit: 'No matches', easy: 'Easy', showRoute: 'Show route',
     natObs: (n: number) => `${n} ${n === 1 ? 'species' : 'species'} observed`,
     np: (n: number) => `${n} ${n === 1 ? 'place' : 'places'}`,
@@ -2305,6 +2307,12 @@ export function VeierlandApp() {
             <div className="k">{T.diff}</div>
             <div className="v">{lang === 'no' ? trail.diff : T.easy}</div>
           </div>
+          {trail.climb && (
+            <div className="vl-tm">
+              <div className="k">{T.climb}</div>
+              <div className="v">{trail.climb}</div>
+            </div>
+          )}
         </div>
         <p className="vl-desc">{lang === 'no' ? trail.no : trail.enT}</p>
         <div className="vl-actions">

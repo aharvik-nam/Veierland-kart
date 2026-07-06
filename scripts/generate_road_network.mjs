@@ -70,10 +70,20 @@ function nodeKey(lat, lon) {
   return `${lat.toFixed(6)},${lon.toFixed(6)}`;
 }
 
+// Path "feel", used to steer route suggestions toward quiet forest trails
+// over gravel driveways over paved/village roads — 0 is the most trail-like.
+const SURFACE_CLASS = {
+  path: 0, footway: 0, steps: 0,
+  track: 1,
+  service: 2,
+  unclassified: 3, residential: 3,
+  tertiary: 4,
+};
+
 function buildGraph(ways) {
   const nodeIndex = new Map(); // key -> index into `nodes`
   const nodes = [];
-  const edges = []; // [fromIdx, toIdx, meters]
+  const edges = []; // [fromIdx, toIdx, meters, surfaceClass]
 
   function getNode(lat, lon) {
     const key = nodeKey(lat, lon);
@@ -87,6 +97,7 @@ function buildGraph(ways) {
   }
 
   for (const w of ways) {
+    const cls = SURFACE_CLASS[w.tags?.highway] ?? 3;
     const g = w.geometry ?? [];
     for (let i = 1; i < g.length; i++) {
       const a = g[i - 1], b = g[i];
@@ -95,7 +106,7 @@ function buildGraph(ways) {
       if (d <= 0) continue;
       const ai = getNode(a.lat, a.lon);
       const bi = getNode(b.lat, b.lon);
-      edges.push([ai, bi, Math.round(d * 10) / 10]);
+      edges.push([ai, bi, Math.round(d * 10) / 10, cls]);
     }
   }
   return { nodes, edges };
@@ -122,7 +133,7 @@ async function main() {
     generatedAt: new Date().toISOString(),
     source: 'OpenStreetMap contributors (Overpass API)',
     nodes,  // [lat, lng][]
-    edges,  // [fromNodeIdx, toNodeIdx, meters][]
+    edges,  // [fromNodeIdx, toNodeIdx, meters, surfaceClass][] — surfaceClass: 0=path/footway/steps, 1=track, 2=service, 3=unclassified/residential, 4=tertiary
   };
   writeFileSync(OUT, JSON.stringify(out));
   console.log(`Wrote ${OUT} (${(JSON.stringify(out).length / 1024).toFixed(0)} kB)`);
