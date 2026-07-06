@@ -16,9 +16,9 @@ import floodData from '../data/sea_level_flood.geojson';
 import { fetchFerryDepartures, fetchQuaySailings, nearestQuay, FerryBoard, FERRY_QUAYS, fmtDepTime, minsUntil } from '../lib/ferrydata';
 import {
   hasDomGrid, sunPosition, sunlitAt, shelterAt,
-  makeSunShadowOverlay, makeShelterOverlay,
+  makeSunShadowOverlay, makeShelterOverlay, makeEffectiveTempOverlay,
   fetchWeatherNow, fetchSeaTemp, WeatherNow, windDirLabel,
-  windColor, ORKAN_MS,
+  windColor, ORKAN_MS, effectiveTemp, effectiveTempColor,
 } from '../lib/conditions';
 import losmassData from '../data/losmasser.geojson';
 import berggrunData from '../data/berggrunn.geojson';
@@ -426,6 +426,13 @@ function hideBrokenImg(e: React.SyntheticEvent<HTMLImageElement>) {
 
 const MAP_CENTER: [number, number] = [59.1506, 10.3521];
 const MAP_ZOOM = 13;
+const MAP_MIN_ZOOM = 13; // don't let people scroll/pinch out further than this
+// Padded out from the DOM/DTM terrain grid bbox (scripts/generate_dom_grid.py):
+// Leaflet auto-raises the effective minimum zoom so maxBounds always covers the
+// viewport, so a box padded only to the island itself would force a much higher
+// zoom than MAP_ZOOM on wide screens. The extra margin keeps that floor at 13
+// while still stopping people from panning far away from the island.
+const MAP_MAX_BOUNDS = L.latLngBounds([59.12, 10.31], [59.21, 10.40]).pad(0.6);
 
 const USER_ICON = L.divIcon({
   className: '',
@@ -545,6 +552,11 @@ export function VeierlandApp() {
       const next = !v;
       // Refresh quietly if the data is over a minute old when opening
       if (next && Date.now() - ferryFetchedAt.current > 60_000) loadFerry();
+      // Fetch weather for ferry display
+      if (next && !weatherNow) {
+        fetchWeatherNow().then(w => { if (w) setWeatherNow(w); });
+        fetchSeaTemp().then(t => { if (t !== null) setSeaTemp(t); });
+      }
       return next;
     });
   };
@@ -571,11 +583,12 @@ export function VeierlandApp() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedQuay?.key]);
 
-  // Conditions: sun-shadow / wind-shelter overlays (needs the DOM grid) and
+  // Conditions: sun-shadow / wind-shelter / effective-temp overlays (needs the DOM grid) and
   // current weather + sea temperature from MET (for the beach card)
-  const [condLayer, setCondLayer] = useState<'sun' | 'wind' | null>(null);
+  const [condLayer, setCondLayer] = useState<'sun' | 'wind' | 'effectiveTemp' | null>(null);
   const [weatherNow, setWeatherNow] = useState<WeatherNow | null>(null);
   const [seaTemp, setSeaTemp] = useState<number | null>(null);
+  const [tempRange, setTempRange] = useState<[number, number] | null>(null);
   const condOverlayRef = useRef<L.ImageOverlay | null>(null);
   const isBeachPOI = !!selectedPOI && (selectedPOI.kategorier ?? [selectedPOI.kategori]).includes('bad');
 
@@ -721,18 +734,25 @@ export function VeierlandApp() {
     clear();
     if (!condLayer || !hasDomGrid) return;
     (async () => {
-      let img: { dataUrl: string; bounds: [[number, number], [number, number]] } | null = null;
+      let img: { dataUrl: string; bounds: [[number, number], [number, number]]; tempRange?: [number, number] } | null = null;
       if (condLayer === 'sun') {
         img = makeSunShadowOverlay(new Date());
-      } else {
+      } else if (condLayer === 'wind') {
         const w = weatherNow ?? await fetchWeatherNow();
         if (w) {
           if (!weatherNow) setWeatherNow(w);
           img = makeShelterOverlay(w.windFromDeg, w.windSpeed);
         }
+      } else if (condLayer === 'effectiveTemp') {
+        const w = weatherNow ?? await fetchWeatherNow();
+        if (w) {
+          if (!weatherNow) setWeatherNow(w);
+          img = makeEffectiveTempOverlay(w.airTemp, w.windSpeed, w.windFromDeg, w.humidity);
+        }
       }
       if (cancelled) return;
       if (!img) { setCondLayer(null); return; }
+      setTempRange(img.tempRange ?? null);
       clear();
       condOverlayRef.current = L.imageOverlay(img.dataUrl, img.bounds, { opacity: 0.8, interactive: false }).addTo(map);
     })();
@@ -777,7 +797,7 @@ export function VeierlandApp() {
     if (!mapReady || !mapRef.current || allPOIs.length === 0 || fitDoneRef.current) return;
     fitDoneRef.current = true;
     const coords = allPOIs.map(p => p.coordinates as [number, number]);
-    mapRef.current.fitBounds(L.latLngBounds(coords).pad(0.08), { animate: false });
+    mapRef.current.fitBounds(L.latLngBounds(coords).pad(0.08), { animate: false, maxZoom: MAP_ZOOM });
     setMapZoom(mapRef.current.getZoom());
   }, [mapReady, allPOIs]);
 
@@ -2463,6 +2483,9 @@ export function VeierlandApp() {
       <MapContainer
         center={MAP_CENTER}
         zoom={MAP_ZOOM}
+        minZoom={MAP_MIN_ZOOM}
+        maxBounds={MAP_MAX_BOUNDS}
+        maxBoundsViscosity={1.0}
         zoomControl={false}
         attributionControl
         style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
@@ -2683,6 +2706,23 @@ export function VeierlandApp() {
       {/* Ferry departures popup */}
       {showFerryPop && (
         <div className="vl-ferrypop" onClick={e => e.stopPropagation()}>
+          {/* Weather info header */}
+          {(weatherNow || seaTemp !== null) && (
+            <div className="vl-ferry-weather">
+              <div className="vl-fw-item">
+                <span className="vl-fw-label">{lang === 'no' ? 'Luft' : 'Air'}</span>
+                <span className="vl-fw-val">{Math.round(weatherNow?.airTemp ?? 0)}°</span>
+              </div>
+              <div className="vl-fw-item">
+                <span className="vl-fw-label">{lang === 'no' ? 'Vann' : 'Sea'}</span>
+                <span className="vl-fw-val">{seaTemp !== null ? Math.round(seaTemp) + '°' : '—'}</span>
+              </div>
+              <div className="vl-fw-item">
+                <span className="vl-fw-label">{lang === 'no' ? 'Vind' : 'Wind'}</span>
+                <span className="vl-fw-val">{Math.round(weatherNow?.windSpeed ?? 0)} m/s</span>
+              </div>
+            </div>
+          )}
           {ferrySailings.length > 0 ? (
             <>
               <h5>{(lang === 'no' ? 'Fra Veierland' : 'From Veierland') + (ferryTomorrow ? (lang === 'no' ? ' · i morgen' : ' · tomorrow') : '')}</h5>
@@ -2813,6 +2853,16 @@ export function VeierlandApp() {
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h11a2.5 2.5 0 1 0-2.5-2.5"/><path d="M3 12h15a2.5 2.5 0 1 1-2.5 2.5"/><path d="M3 16h8a2 2 0 1 1-2 2"/></svg>
               <span className="rl">{lang === 'no' ? 'Vind' : 'Wind'}</span>
             </button>
+            <button
+              className={`vl-rbtn${condLayer === 'effectiveTemp' ? ' active' : ''}`}
+              aria-label={lang === 'no' ? 'Effektiv temperatur nå' : 'Effective temperature now'}
+              title={lang === 'no' ? 'Effektiv temperatur nå' : 'Effective temperature now'}
+              onClick={e => { e.stopPropagation(); setCondLayer(c => c === 'effectiveTemp' ? null : 'effectiveTemp'); }}
+              style={condLayer === 'effectiveTemp' ? { background: 'var(--accent)', color: '#fff' } : undefined}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v16M9 20h6a2 2 0 0 0 2-2v-2H7v2a2 2 0 0 0 2 2z"/><path d="M10 8h4" strokeWidth="2.5"/></svg>
+              <span className="rl">{lang === 'no' ? 'Temp' : 'Temp'}</span>
+            </button>
           </>
         )}
       </div>
@@ -2838,7 +2888,7 @@ export function VeierlandApp() {
                 )}
               </>
             );
-          })() : (
+          })() : condLayer === 'wind' ? (
             <>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 {weatherNow && (
@@ -2869,6 +2919,44 @@ export function VeierlandApp() {
                   </>
                 );
               })()}
+            </>
+          ) : (
+            <>
+              <b>{lang === 'no' ? 'Effektiv temperatur nå' : 'Effective temperature now'}</b>
+              {weatherNow ? (
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>
+                      {Math.round(effectiveTemp(weatherNow.airTemp, weatherNow.windSpeed, weatherNow.humidity))}°C
+                    </span>
+                    <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                      {lang === 'no' ? `(luft: ${Math.round(weatherNow.airTemp)}°C)` : `(air: ${Math.round(weatherNow.airTemp)}°C)`}
+                    </span>
+                  </div>
+                  {(() => {
+                    // The overlay's colour scale is stretched to the actual spread of
+                    // effective temperature across the island right now (see
+                    // makeEffectiveTempOverlay), so the legend mirrors that same range
+                    // instead of a fixed -20..40°C — otherwise a 1-2°C wind effect would
+                    // never register as a visible position on a 60°-wide bar.
+                    const [MIN_T, MAX_T] = tempRange ?? [-20, 40];
+                    const tempStops = [MIN_T, MIN_T + (MAX_T - MIN_T) / 4, (MIN_T + MAX_T) / 2, MAX_T - (MAX_T - MIN_T) / 4, MAX_T]
+                      .map(t => effectiveTempColor(t, MIN_T, MAX_T));
+                    const effTemp = effectiveTemp(weatherNow.airTemp, weatherNow.windSpeed, weatherNow.humidity);
+                    const tempT = Math.min(1, Math.max(0, (effTemp - MIN_T) / (MAX_T - MIN_T)));
+                    return (
+                      <>
+                        <GradientBar stops={tempStops} posT={tempT} />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--muted)' }}>
+                          <span>{Math.round(MIN_T)}°C</span><span>{Math.round(MAX_T)}°C</span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              ) : (
+                <span>{lang === 'no' ? 'Henter temperatur…' : 'Loading temperature…'}</span>
+              )}
             </>
           )}
         </div>

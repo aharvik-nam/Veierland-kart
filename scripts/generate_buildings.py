@@ -92,12 +92,19 @@ def year_color(year):
 
 # ─── Hent fra WFS ────────────────────────────────────────────────────────────
 
-# Kandidater for byggeår-felt og typefeltnavn
-YEAR_FIELDS   = ['byggeaar', 'byggeAar', 'bygg_aar', 'year_built', 'dateOfConstruction',
-                  'conditionOfConstruction', 'beginLifespanVersion']
-TYPE_FIELDS   = ['bygningstype', 'bygningstype_kode', 'typeKode', 'type_kode',
-                 'currentUse', 'usage', 'buildingNature']
-STATUS_FIELDS = ['bygningsstatus', 'status', 'conditionOfConstruction']
+# INSPIRE BU Core 2D field mapping
+YEAR_FIELDS   = ['dateOfConstruction', 'byggeaar', 'byggeAar', 'beginLifespanVersion']
+TYPE_FIELDS   = ['currentUse', 'bygningstype', 'typeKode', 'buildingNature', 'CharacterString']
+STATUS_FIELDS = ['conditionOfConstruction', 'bygningsstatus', 'status']
+
+CONDITION_MAP = {
+    'functional':        'Aktiv',
+    'projected':         'Planlagt',
+    'underconstruction': 'Under bygging',
+    'ruin':              'Ruin',
+    'demolished':        'Revet',
+    'disused':           'Ikke i bruk',
+}
 
 def best_field(gdf, candidates):
     lower = {c.lower(): c for c in gdf.columns}
@@ -198,26 +205,46 @@ def fetch_buildings_wfs(clip_poly):
 
 # ─── Konverter til GeoJSON-features ──────────────────────────────────────────
 
+def parse_year(val):
+    """Trekk ut årstall fra ISO-dato, rent tall, eller None."""
+    if val is None or str(val).strip() in ('', 'None', 'nan'):
+        return None
+    s = str(val).strip()
+    # ISO datetime: "2015-03-22T00:00:00" eller "2015-03-22"
+    if len(s) >= 4 and s[:4].isdigit():
+        y = int(s[:4])
+        return y if 1600 < y <= 2030 else None
+    return None
+
+
 def to_buildings(gdf):
     year_f   = best_field(gdf, YEAR_FIELDS)
     type_f   = best_field(gdf, TYPE_FIELDS)
     status_f = best_field(gdf, STATUS_FIELDS)
-    print(f'  byggeår={year_f}  type={type_f}  status={status_f}')
+    lifespan_f = best_field(gdf, ['beginLifespanVersion'])
+    print(f'  year_f={year_f}  type_f={type_f}  status_f={status_f}  lifespan_f={lifespan_f}')
+
+    # Vis eksempel-verdier for hvert felt
+    for f in [year_f, type_f, status_f, lifespan_f]:
+        if f and f in gdf.columns:
+            sample = gdf[f].dropna().head(3).tolist()
+            print(f'    {f}: {sample}')
 
     out = []
     for _, row in gdf.iterrows():
         try:
-            year_raw = row[year_f] if year_f else None
-            try:
-                year = int(year_raw) if year_raw not in (None, '', 'None') else None
-            except (ValueError, TypeError):
-                year = None
-            # Ignorer åpenbart feil årstall
-            if year is not None and (year < 1600 or year > 2030):
-                year = None
+            # Årstall: prøv dedikert felt først, fall tilbake til beginLifespanVersion
+            year = parse_year(row[year_f]) if year_f else None
+            if year is None and lifespan_f:
+                year = parse_year(row[lifespan_f])
 
-            type_code = row[type_f] if type_f else None
-            type_label = bygningstype_label(type_code)
+            # Type/bruk
+            type_raw = str(row[type_f]).strip() if type_f and row[type_f] not in (None, '') else ''
+            type_label = bygningstype_label(type_raw) if type_raw.isdigit() else (type_raw or 'Bygg')
+
+            # Status
+            cond_raw = str(row[status_f]).strip().lower().replace(' ', '') if status_f else ''
+            status_label = CONDITION_MAP.get(cond_raw, '')
 
             out.append({
                 'type': 'Feature',
@@ -225,7 +252,7 @@ def to_buildings(gdf):
                 'properties': {
                     'byggeaar': year,
                     'type': type_label,
-                    'type_kode': int(type_code) if type_code else None,
+                    'status': status_label,
                     'color': year_color(year),
                 },
             })

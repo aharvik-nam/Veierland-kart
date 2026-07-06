@@ -200,6 +200,7 @@ export function shelterAt(lat: number, lng: number, windFromDeg: number): number
 export interface OverlayImage {
   dataUrl: string;
   bounds: [[number, number], [number, number]]; // [[s, w], [n, e]]
+  tempRange?: [number, number]; // effective-temp overlay only: the °C range the colour scale was stretched over
 }
 
 function makeCanvas(g: DomGrid): CanvasRenderingContext2D | null {
@@ -310,19 +311,13 @@ export function makeSunShadowOverlay(date: Date): OverlayImage | null {
   };
 }
 
-// Wind exposure for the current wind: sheltered (le) cells get no colour at
-// all; exposed cells are tinted by current wind strength (calm green to
-// orkan magenta), fading in as exposure increases.
-const LEE_CUTOFF = 0.45; // shelter score above this counts as "in lee" -> no colour
-export function makeShelterOverlay(windFromDeg: number, windSpeed: number): OverlayImage | null {
-  if (!DOM_GRID) return null;
-  const g = DOM_GRID;
-  const ctx = makeCanvas(g);
-  if (!ctx) return null;
-  const img = ctx.createImageData(g.cols, g.rows);
-  const d = img.data;
-  const col = windColor(windSpeed);
-
+// Per-cell wind exposure (0 = fully sheltered/lee, 1 = fully exposed) for a
+// given "wind from" bearing. Shared by the wind-shelter overlay and the
+// effective-temperature overlay, so both agree on where the wind actually
+// reaches: inside forest canopy is always sheltered, and anywhere with high
+// ground/trees upwind gets progressively more lee.
+const LEE_CUTOFF = 0.45; // shelter score above this counts as "in lee" -> no exposure
+function windExposureField(g: DomGrid, windFromDeg: number): Float32Array {
   const exposure = new Float32Array(g.cols * g.rows);
   for (let r = 0; r < g.rows; r++) {
     for (let c = 0; c < g.cols; c++) {
@@ -332,7 +327,22 @@ export function makeShelterOverlay(windFromDeg: number, windSpeed: number): Over
       if (s < LEE_CUTOFF) exposure[r * g.cols + c] = 1 - s / LEE_CUTOFF;
     }
   }
-  const smooth = boxBlur(exposure, g.cols, g.rows, 1);
+  return boxBlur(exposure, g.cols, g.rows, 1);
+}
+
+// Wind exposure for the current wind: sheltered (le) cells get no colour at
+// all; exposed cells are tinted by current wind strength (calm green to
+// orkan magenta), fading in as exposure increases.
+export function makeShelterOverlay(windFromDeg: number, windSpeed: number): OverlayImage | null {
+  if (!DOM_GRID) return null;
+  const g = DOM_GRID;
+  const ctx = makeCanvas(g);
+  if (!ctx) return null;
+  const img = ctx.createImageData(g.cols, g.rows);
+  const d = img.data;
+  const col = windColor(windSpeed);
+
+  const smooth = windExposureField(g, windFromDeg);
 
   for (let r = 0; r < g.rows; r++) {
     for (let c = 0; c < g.cols; c++) {
@@ -360,6 +370,7 @@ export interface WeatherNow {
   windSpeed: number;      // m/s
   airTemp: number;        // °C
   cloudFraction: number;  // 0–100
+  humidity: number;       // relative humidity, 0–100
 }
 
 interface CacheEntry<T> { at: number; val: T }
@@ -379,7 +390,7 @@ function writeCache<T>(key: string, val: T): void {
 }
 
 export async function fetchWeatherNow(): Promise<WeatherNow | null> {
-  const cached = readCache<WeatherNow>('vl-weather-v1', 30 * 60 * 1000);
+  const cached = readCache<WeatherNow>('vl-weather-v2', 30 * 60 * 1000);
   if (cached) return cached;
   try {
     const res = await fetch(
@@ -395,8 +406,9 @@ export async function fetchWeatherNow(): Promise<WeatherNow | null> {
       windSpeed: det.wind_speed ?? 0,
       airTemp: det.air_temperature ?? 0,
       cloudFraction: det.cloud_area_fraction ?? 0,
+      humidity: det.relative_humidity ?? 50,
     };
-    writeCache('vl-weather-v1', w);
+    writeCache('vl-weather-v2', w);
     return w;
   } catch {
     return null;
@@ -420,6 +432,125 @@ export async function fetchSeaTemp(): Promise<number | null> {
   } catch {
     return null;
   }
+}
+
+// Windchill at a given air temp and wind speed.
+// Formula: W = 13.12 + 0.6215·T − 11.37·V^0.16 + 0.3965·T·V^0.16
+// Valid for T ≤ 10°C and V ≥ 0.5 m/s; outside range return air temperature.
+function windChill(airTempC: number, windSpeedMs: number): number {
+  if (airTempC > 10 || windSpeedMs < 0.5) return airTempC;
+  return 13.12 + 0.6215 * airTempC - 11.37 * Math.pow(windSpeedMs, 0.16) + 0.3965 * airTempC * Math.pow(windSpeedMs, 0.16);
+}
+
+// Heat index (Rothfusz regression) at a given air temp and relative humidity.
+// Full formula requires T ≥ 27°C and RH ≥ 40%; below that a simpler linear
+// approximation is used, which itself is only meaningful once it settles
+// above 27°C (otherwise plain air temperature is close enough).
+function heatIndex(airTempC: number, rh: number): number {
+  const T = airTempC;
+  if (T >= 27 && rh >= 40) {
+    const hi = -8.78469475556 + 1.61139411 * T + 2.33854883889 * rh - 0.14611605 * T * rh
+      - 0.012308094 * T * T - 0.016424828 * rh * rh + 0.002211732 * T * T * rh
+      + 0.00072546 * T * rh * rh - 0.000003582 * T * T * rh * rh;
+    return hi <= 20 ? T : hi;
+  }
+  let hi = 0.5 * (T + 16.0 + (T - 20.0) * 1.2 + rh * 0.094);
+  if (hi < 27) hi = (T + hi) / 2;
+  return hi;
+}
+
+// Effective ("feels like") temperature: windchill below 10°C, heat index
+// above 27°C, and a light empirical wind-cooling term in between where
+// neither the windchill nor heat-index formula applies.
+export function effectiveTemp(airTempC: number, windSpeedMs: number, humidity: number): number {
+  if (airTempC <= 10) return windChill(airTempC, windSpeedMs);
+  if (airTempC >= 27) return heatIndex(airTempC, humidity);
+  return airTempC - 0.1 * windSpeedMs;
+}
+
+// Temperature -> colour, cold (blue) to hot (red), stretched over [minT, maxT].
+export function effectiveTempColor(tempC: number, minT = -20, maxT = 40): { r: number; g: number; b: number; alpha: number } {
+  const t = Math.min(1, Math.max(0, (tempC - minT) / (maxT - minT)));
+
+  // Blue at cold, yellow at moderate, red at hot
+  let r, g, b;
+  if (t < 0.5) {
+    // Blue (#0066cc) to yellow (#ffd700)
+    const s = t * 2; // 0 to 1
+    r = Math.round(0 + s * 255);
+    g = Math.round(102 + s * 85);
+    b = Math.round(204 - s * 204);
+  } else {
+    // Yellow (#ffd700) to red (#ff3300)
+    const s = (t - 0.5) * 2; // 0 to 1
+    r = Math.round(255);
+    g = Math.round(215 - s * 215);
+    b = Math.round(0 + s * 0);
+  }
+
+  return { r, g, b, alpha: 0.65 };
+}
+
+// Effective temperature heatmap: windchill/wind-cooling-adjusted temperature
+// across the island. Reuses the same per-cell wind exposure as the shelter
+// overlay (windExposureField) so sheltered spots (in the lee of hills/forest)
+// feel closer to the still-air temperature while exposed spots feel the full
+// effect of the current wind.
+// The wind's effect on effective temperature is often just 1-3°C — invisible
+// if plotted on a fixed -20..40°C scale. The colour scale is instead
+// stretched to whatever range is actually present on the island right now
+// (with a floor so a dead-calm day doesn't blow up a near-zero spread into
+// visual noise), the same way you'd autoscale a chart's y-axis.
+const MIN_SPAN = 2; // °C — minimum colour-scale width, even if the real spread is smaller
+export function makeEffectiveTempOverlay(airTempC: number, windSpeedMs: number, windFromDeg: number, humidity: number): OverlayImage | null {
+  if (!DOM_GRID) return null;
+  const g = DOM_GRID;
+  const ctx = makeCanvas(g);
+  if (!ctx) return null;
+  const img = ctx.createImageData(g.cols, g.rows);
+  const d = img.data;
+
+  // Wind matters for the windchill branch (≤10°C) and the empirical
+  // wind-cooling branch (10–27°C); the heat-index branch (≥27°C) is uniform
+  // across the island since the Rothfusz formula doesn't take wind into account.
+  const exposure = airTempC < 27 ? windExposureField(g, windFromDeg) : null;
+
+  const rawTemp = new Float32Array(g.cols * g.rows);
+  for (let r = 0; r < g.rows; r++) {
+    for (let c = 0; c < g.cols; c++) {
+      const localWind = exposure ? windSpeedMs * exposure[r * g.cols + c] : windSpeedMs;
+      rawTemp[r * g.cols + c] = effectiveTemp(airTempC, localWind, humidity);
+    }
+  }
+  const smooth = boxBlur(rawTemp, g.cols, g.rows, 1);
+
+  let minT = Infinity, maxT = -Infinity;
+  for (let i = 0; i < smooth.length; i++) {
+    if (smooth[i] < minT) minT = smooth[i];
+    if (smooth[i] > maxT) maxT = smooth[i];
+  }
+  if (maxT - minT < MIN_SPAN) {
+    const mid = (minT + maxT) / 2;
+    minT = mid - MIN_SPAN / 2;
+    maxT = mid + MIN_SPAN / 2;
+  }
+
+  for (let r = 0; r < g.rows; r++) {
+    for (let c = 0; c < g.cols; c++) {
+      const col = effectiveTempColor(smooth[r * g.cols + c], minT, maxT);
+      const i = (r * g.cols + c) * 4;
+      d[i] = col.r;
+      d[i + 1] = col.g;
+      d[i + 2] = col.b;
+      d[i + 3] = Math.round(255 * col.alpha);
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return {
+    dataUrl: toSmoothDataUrl(ctx.canvas),
+    bounds: [[g.minLat, g.minLng], [g.maxLat, g.maxLng]],
+    tempRange: [minT, maxT],
+  };
 }
 
 // Compass direction label for a "wind from" bearing
