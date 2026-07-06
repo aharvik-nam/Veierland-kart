@@ -175,10 +175,37 @@ function makeCanvas(g: DomGrid): CanvasRenderingContext2D | null {
   return c.getContext('2d');
 }
 
-// Current sun shadows: shaded cells get a translucent blue-grey tint.
-// Shadows falling on the sea near shore are real and kept — that's exactly
-// what a bather cares about.
-export function makeSunShadowOverlay(date: Date): OverlayImage | null {
+// Air temperature -> colour, -30°C (cold blue) to 50°C (dark yellow).
+function tempToColor(tempC: number): { r: number; g: number; b: number } {
+  const t = Math.min(1, Math.max(0, (tempC + 30) / 80));
+  const from = { r: 40, g: 96, b: 222 };   // -30°C: blue
+  const to = { r: 150, g: 122, b: 8 };     // 50°C: dark yellow
+  return {
+    r: Math.round(from.r + t * (to.r - from.r)),
+    g: Math.round(from.g + t * (to.g - from.g)),
+    b: Math.round(from.b + t * (to.b - from.b)),
+  };
+}
+
+// Wind speed -> colour + alpha, calm (faint green) to hurricane (strong magenta).
+// 32.7 m/s = Beaufort 12 (orkan).
+const ORKAN_MS = 32.7;
+function windColor(speedMs: number): { r: number; g: number; b: number; alpha: number } {
+  const t = Math.min(1, Math.max(0, speedMs / ORKAN_MS));
+  const from = { r: 34, g: 197, b: 94 };    // calm: green
+  const to = { r: 192, g: 38, b: 211 };     // orkan: magenta
+  return {
+    r: Math.round(from.r + t * (to.r - from.r)),
+    g: Math.round(from.g + t * (to.g - from.g)),
+    b: Math.round(from.b + t * (to.b - from.b)),
+    alpha: 0.12 + t * 0.63, // vindstille: barely visible · orkan: strong
+  };
+}
+
+// Current sun exposure: sunlit cells tinted by air temperature (cold blue to
+// hot dark-yellow); shaded cells are flat grey — the map stays visible
+// through both via alpha.
+export function makeSunShadowOverlay(date: Date, airTemp: number): OverlayImage | null {
   if (!DOM_GRID) return null;
   const g = DOM_GRID;
   const midLat = (g.minLat + g.maxLat) / 2;
@@ -188,20 +215,25 @@ export function makeSunShadowOverlay(date: Date): OverlayImage | null {
   if (!ctx) return null;
   const img = ctx.createImageData(g.cols, g.rows);
   const d = img.data;
+  const sunC = tempToColor(airTemp);
+  const GREY = 128;
+  const ALPHA = 110;
   if (sun.elevation > 0) {
     for (let r = 0; r < g.rows; r++) {
       for (let c = 0; c < g.cols; c++) {
         const blocked = horizonAngleCells(g, r, c, sun.azimuth, 400) >= sun.elevation;
+        const i = (r * g.cols + c) * 4;
         if (blocked) {
-          const i = (r * g.cols + c) * 4;
-          d[i] = 45; d[i + 1] = 62; d[i + 2] = 92; d[i + 3] = 115;
+          d[i] = GREY; d[i + 1] = GREY; d[i + 2] = GREY; d[i + 3] = ALPHA;
+        } else {
+          d[i] = sunC.r; d[i + 1] = sunC.g; d[i + 2] = sunC.b; d[i + 3] = ALPHA;
         }
       }
     }
   } else {
     // Sun below the horizon: everything is in shade
     for (let i = 0; i < d.length; i += 4) {
-      d[i] = 45; d[i + 1] = 62; d[i + 2] = 92; d[i + 3] = 115;
+      d[i] = GREY; d[i + 1] = GREY; d[i + 2] = GREY; d[i + 3] = ALPHA;
     }
   }
   ctx.putImageData(img, 0, 0);
@@ -211,22 +243,27 @@ export function makeSunShadowOverlay(date: Date): OverlayImage | null {
   };
 }
 
-// Lee for the current wind: sheltered cells tinted green (stronger = better lee)
-export function makeShelterOverlay(windFromDeg: number): OverlayImage | null {
+// Wind exposure for the current wind: sheltered (le) cells get no colour at
+// all; exposed cells are tinted by current wind strength (calm green to
+// orkan magenta), fading in as exposure increases.
+const LEE_CUTOFF = 0.45; // shelter score above this counts as "in lee" -> no colour
+export function makeShelterOverlay(windFromDeg: number, windSpeed: number): OverlayImage | null {
   if (!DOM_GRID) return null;
   const g = DOM_GRID;
   const ctx = makeCanvas(g);
   if (!ctx) return null;
   const img = ctx.createImageData(g.cols, g.rows);
   const d = img.data;
+  const col = windColor(windSpeed);
   for (let r = 0; r < g.rows; r++) {
     for (let c = 0; c < g.cols; c++) {
       const ang = horizonAngleCells(g, r, c, windFromDeg, 300);
-      const s = Math.min(1, Math.max(0, ang / 8));
-      if (s > 0.12) {
-        const i = (r * g.cols + c) * 4;
-        d[i] = 46; d[i + 1] = 125; d[i + 2] = 80; d[i + 3] = Math.round(140 * s);
-      }
+      const s = Math.min(1, Math.max(0, ang / 8)); // 0 exposed, 1 well sheltered
+      if (s >= LEE_CUTOFF) continue; // in lee: leave transparent
+      const exposure = 1 - s / LEE_CUTOFF; // 0 at the lee boundary, 1 fully exposed
+      const i = (r * g.cols + c) * 4;
+      d[i] = col.r; d[i + 1] = col.g; d[i + 2] = col.b;
+      d[i + 3] = Math.round(255 * col.alpha * exposure);
     }
   }
   ctx.putImageData(img, 0, 0);

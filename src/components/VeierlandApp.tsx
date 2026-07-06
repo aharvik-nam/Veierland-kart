@@ -705,14 +705,12 @@ export function VeierlandApp() {
     if (!condLayer || !hasDomGrid) return;
     (async () => {
       let img: { dataUrl: string; bounds: [[number, number], [number, number]] } | null = null;
+      const w = weatherNow ?? await fetchWeatherNow();
+      if (w && !weatherNow) setWeatherNow(w);
       if (condLayer === 'sun') {
-        img = makeSunShadowOverlay(new Date());
-      } else {
-        const w = weatherNow ?? await fetchWeatherNow();
-        if (w) {
-          if (!weatherNow) setWeatherNow(w);
-          img = makeShelterOverlay(w.windFromDeg);
-        }
+        img = makeSunShadowOverlay(new Date(), w?.airTemp ?? 15);
+      } else if (w) {
+        img = makeShelterOverlay(w.windFromDeg, w.windSpeed);
       }
       if (cancelled) return;
       if (!img) { setCondLayer(null); return; }
@@ -2809,18 +2807,34 @@ export function VeierlandApp() {
               <>
                 <b>{lang === 'no' ? 'Sol og skygge nå' : 'Sun & shade now'}</b>
                 <span>{sun.elevation > 0
-                  ? (lang === 'no' ? `Sola står ${Math.round(sun.elevation)}° over horisonten. Blå felt ligger i skygge.` : `Sun is ${Math.round(sun.elevation)}° up. Blue areas are shaded.`)
+                  ? (lang === 'no'
+                      ? `Sola står ${Math.round(sun.elevation)}° over horisonten. Fargen viser lufttemperaturen i sol (blå = kaldt, gult = varmt). Grå felt ligger i skygge.`
+                      : `Sun is ${Math.round(sun.elevation)}° up. Colour shows air temperature in the sun (blue = cold, yellow = warm). Grey areas are shaded.`)
                   : (lang === 'no' ? 'Sola er under horisonten — hele øya er i skygge.' : 'Sun is below the horizon — the whole island is shaded.')}</span>
               </>
             );
           })() : (
             <>
-              <b>{lang === 'no' ? 'Le for vinden nå' : 'Wind shelter now'}</b>
-              <span>{weatherNow
-                ? (lang === 'no'
-                    ? `Vind fra ${windDirLabel(weatherNow.windFromDeg, 'no')} ${Math.round(weatherNow.windSpeed)} m/s. Grønne felt er i le.`
-                    : `Wind from ${windDirLabel(weatherNow.windFromDeg, 'en')} ${Math.round(weatherNow.windSpeed)} m/s. Green areas are sheltered.`)
-                : (lang === 'no' ? 'Henter vind…' : 'Loading wind…')}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                {weatherNow && (
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
+                    style={{ transform: `rotate(${weatherNow.windFromDeg}deg)`, flexShrink: 0 }}>
+                    <path d="M12 2 L12 20 M12 2 L6 9 M12 2 L18 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+                <div>
+                  <b>{lang === 'no' ? 'Vindeksponering nå' : 'Wind exposure now'}</b>
+                  <br />
+                  <span>{weatherNow
+                    ? (lang === 'no'
+                        ? `Vind fra ${windDirLabel(weatherNow.windFromDeg, 'no')} ${Math.round(weatherNow.windSpeed)} m/s.`
+                        : `Wind from ${windDirLabel(weatherNow.windFromDeg, 'en')} ${Math.round(weatherNow.windSpeed)} m/s.`)
+                    : (lang === 'no' ? 'Henter vind…' : 'Loading wind…')}</span>
+                </div>
+              </div>
+              <span>{lang === 'no'
+                ? 'Fargede felt er utsatt for vind — grønt er svakt, magenta er sterkt. Felt uten farge ligger i le.'
+                : 'Coloured areas are exposed to wind — green is light, magenta is strong. Uncoloured areas are sheltered.'}</span>
             </>
           )}
         </div>
