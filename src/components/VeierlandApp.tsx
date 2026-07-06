@@ -18,7 +18,7 @@ import {
   hasDomGrid, sunPosition, sunlitAt, shelterAt,
   makeSunShadowOverlay, makeShelterOverlay,
   fetchWeatherNow, fetchSeaTemp, WeatherNow, windDirLabel,
-  tempToColor, windColor, TEMP_MIN, TEMP_MAX, ORKAN_MS,
+  windColor, ORKAN_MS,
 } from '../lib/conditions';
 import losmassData from '../data/losmasser.geojson';
 import berggrunData from '../data/berggrunn.geojson';
@@ -722,12 +722,14 @@ export function VeierlandApp() {
     if (!condLayer || !hasDomGrid) return;
     (async () => {
       let img: { dataUrl: string; bounds: [[number, number], [number, number]] } | null = null;
-      const w = weatherNow ?? await fetchWeatherNow();
-      if (w && !weatherNow) setWeatherNow(w);
       if (condLayer === 'sun') {
-        img = makeSunShadowOverlay(new Date(), w?.airTemp ?? 15);
-      } else if (w) {
-        img = makeShelterOverlay(w.windFromDeg, w.windSpeed);
+        img = makeSunShadowOverlay(new Date());
+      } else {
+        const w = weatherNow ?? await fetchWeatherNow();
+        if (w) {
+          if (!weatherNow) setWeatherNow(w);
+          img = makeShelterOverlay(w.windFromDeg, w.windSpeed);
+        }
       }
       if (cancelled) return;
       if (!img) { setCondLayer(null); return; }
@@ -2820,64 +2822,55 @@ export function VeierlandApp() {
         <div className="vl-condlegend" onClick={e => e.stopPropagation()}>
           {condLayer === 'sun' ? (() => {
             const sun = sunPosition(new Date(), 59.155, 10.351);
-            const temp = weatherNow?.airTemp;
-            const tempStops = [TEMP_MIN, TEMP_MIN + (TEMP_MAX - TEMP_MIN) / 4, TEMP_MIN + (TEMP_MAX - TEMP_MIN) / 2, TEMP_MIN + (TEMP_MAX - TEMP_MIN) * 3 / 4, TEMP_MAX].map(tempToColor);
-            const tempT = temp !== undefined ? (temp - TEMP_MIN) / (TEMP_MAX - TEMP_MIN) : 0.5;
             return (
               <>
                 <b>{lang === 'no' ? 'Sol og skygge nå' : 'Sun & shade now'}</b>
-                <span>{sun.elevation > 0
-                  ? (lang === 'no'
-                      ? `Sola står ${Math.round(sun.elevation)}° over horisonten. Fargen viser lufttemperaturen i sol${temp !== undefined ? ` (${Math.round(temp)}°)` : ''}. Skyggefelt vises ikke.`
-                      : `Sun is ${Math.round(sun.elevation)}° up. Colour shows air temperature in the sun${temp !== undefined ? ` (${Math.round(temp)}°)` : ''}. Shaded areas are left uncoloured.`)
-                  : (lang === 'no' ? 'Sola er under horisonten — hele øya er i skygge.' : 'Sun is below the horizon — the whole island is shaded.')}</span>
-                {sun.elevation > 0 && (
-                  <>
-                    <GradientBar stops={tempStops} posT={tempT} />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--muted)' }}>
-                      <span>{TEMP_MIN}°</span><span>{TEMP_MAX}°</span>
-                    </div>
-                  </>
+                {sun.elevation > 0 ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
+                      style={{ transform: `rotate(${sun.azimuth}deg)`, flexShrink: 0, color: '#f5b120' }}>
+                      <path d="M12 2 L12 20 M12 2 L6 9 M12 2 L18 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>{Math.round(sun.elevation)}°</span>
+                  </div>
+                ) : (
+                  <span>{lang === 'no' ? 'Sola er under horisonten.' : 'Sun is below the horizon.'}</span>
                 )}
               </>
             );
-          })() : (() => {
-            const speed = weatherNow?.windSpeed;
-            const windStops = [0, ORKAN_MS / 4, ORKAN_MS / 2, ORKAN_MS * 3 / 4, ORKAN_MS].map(s => windColor(s));
-            const windT = speed !== undefined ? Math.min(1, speed / ORKAN_MS) : 0;
-            return (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  {weatherNow && (
-                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
-                      style={{ transform: `rotate(${weatherNow.windFromDeg}deg)`, flexShrink: 0 }}>
-                      <path d="M12 2 L12 20 M12 2 L6 9 M12 2 L18 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                  <div>
-                    <b>{lang === 'no' ? 'Vindeksponering nå' : 'Wind exposure now'}</b>
-                    <br />
-                    <span>{weatherNow
-                      ? (lang === 'no'
-                          ? `Vind fra ${windDirLabel(weatherNow.windFromDeg, 'no')} ${Math.round(weatherNow.windSpeed)} m/s.`
-                          : `Wind from ${windDirLabel(weatherNow.windFromDeg, 'en')} ${Math.round(weatherNow.windSpeed)} m/s.`)
-                      : (lang === 'no' ? 'Henter vind…' : 'Loading wind…')}</span>
-                  </div>
-                </div>
-                <span>{lang === 'no'
-                  ? 'Fargede felt er utsatt for vind — grønt er svakt, magenta er sterkt. Felt uten farge ligger i le.'
-                  : 'Coloured areas are exposed to wind — green is light, magenta is strong. Uncoloured areas are sheltered.'}</span>
+          })() : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 {weatherNow && (
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
+                    style={{ transform: `rotate(${weatherNow.windFromDeg}deg)`, flexShrink: 0 }}>
+                    <path d="M12 2 L12 20 M12 2 L6 9 M12 2 L18 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+                <div>
+                  <b>{lang === 'no' ? 'Vindeksponering nå' : 'Wind exposure now'}</b>
+                  <br />
+                  <span>{weatherNow
+                    ? (lang === 'no'
+                        ? `Vind fra ${windDirLabel(weatherNow.windFromDeg, 'no')} ${Math.round(weatherNow.windSpeed)} m/s.`
+                        : `Wind from ${windDirLabel(weatherNow.windFromDeg, 'en')} ${Math.round(weatherNow.windSpeed)} m/s.`)
+                    : (lang === 'no' ? 'Henter vind…' : 'Loading wind…')}</span>
+                </div>
+              </div>
+              {weatherNow && (() => {
+                const windStops = [0, ORKAN_MS / 4, ORKAN_MS / 2, ORKAN_MS * 3 / 4, ORKAN_MS].map(s => windColor(s));
+                const windT = Math.min(1, weatherNow.windSpeed / ORKAN_MS);
+                return (
                   <>
                     <GradientBar stops={windStops} posT={windT} />
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--muted)' }}>
                       <span>{lang === 'no' ? 'Stille' : 'Calm'}</span><span>{lang === 'no' ? 'Orkan' : 'Hurricane'}</span>
                     </div>
                   </>
-                )}
-              </>
-            );
-          })()}
+                );
+              })()}
+            </>
+          )}
         </div>
       )}
 

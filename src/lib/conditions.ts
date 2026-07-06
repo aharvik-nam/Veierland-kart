@@ -175,36 +175,6 @@ function makeCanvas(g: DomGrid): CanvasRenderingContext2D | null {
   return c.getContext('2d');
 }
 
-// HSL -> RGB, h in degrees, s/l in 0..1.
-function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
-  h = ((h % 360) + 360) % 360;
-  const c = (1 - Math.abs(2 * l - 1)) * s;
-  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-  const m = l - c / 2;
-  let r = 0, g = 0, b = 0;
-  if (h < 60) { r = c; g = x; b = 0; }
-  else if (h < 120) { r = x; g = c; b = 0; }
-  else if (h < 180) { r = 0; g = c; b = x; }
-  else if (h < 240) { r = 0; g = x; b = c; }
-  else if (h < 300) { r = x; g = 0; b = c; }
-  else { r = c; g = 0; b = x; }
-  return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255) };
-}
-
-// Air temperature -> colour, -30°C (cold blue) to 50°C (dark yellow), via
-// green through the middle. A straight RGB blend between blue and dark
-// yellow crosses right through neutral grey at everyday temperatures —
-// indistinguishable from the shadow tint — so this interpolates hue/
-// lightness in HSL instead, keeping saturation up the whole way.
-export const TEMP_MIN = -30;
-export const TEMP_MAX = 50;
-export function tempToColor(tempC: number): { r: number; g: number; b: number } {
-  const t = Math.min(1, Math.max(0, (tempC - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)));
-  const hue = 215 - t * 170;    // 215° blue -> 45° yellow (through green)
-  const light = 0.52 - t * 0.17; // lighter blue -> darker yellow, per "mørk gult"
-  return hslToRgb(hue, 0.7, light);
-}
-
 // Wind speed -> colour + alpha, calm (faint green) to hurricane (strong magenta).
 // 32.7 m/s = Beaufort 12 (orkan).
 export const ORKAN_MS = 32.7;
@@ -220,10 +190,11 @@ export function windColor(speedMs: number): { r: number; g: number; b: number; a
   };
 }
 
-// Current sun exposure: sunlit cells tinted by air temperature (cold blue to
-// hot dark-yellow); shaded cells are left fully transparent so the map shows
-// through untouched — no grey wash to compete with it.
-export function makeSunShadowOverlay(date: Date, airTemp: number): OverlayImage | null {
+// Current sun exposure: sunlit cells tinted sun-yellow, shaded cells tinted
+// dark — both semi-transparent so the map stays visible underneath.
+const SUNLIT = { r: 250, g: 191, b: 36 };
+const SHADED = { r: 22, g: 26, b: 33 };
+export function makeSunShadowOverlay(date: Date): OverlayImage | null {
   if (!DOM_GRID) return null;
   const g = DOM_GRID;
   const midLat = (g.minLat + g.maxLat) / 2;
@@ -234,14 +205,13 @@ export function makeSunShadowOverlay(date: Date, airTemp: number): OverlayImage 
   if (!ctx) return null;
   const img = ctx.createImageData(g.cols, g.rows);
   const d = img.data;
-  const sunC = tempToColor(airTemp);
   const ALPHA = 130;
   for (let r = 0; r < g.rows; r++) {
     for (let c = 0; c < g.cols; c++) {
       const blocked = horizonAngleCells(g, r, c, sun.azimuth, 400) >= sun.elevation;
-      if (blocked) continue; // shaded: leave transparent
+      const col = blocked ? SHADED : SUNLIT;
       const i = (r * g.cols + c) * 4;
-      d[i] = sunC.r; d[i + 1] = sunC.g; d[i + 2] = sunC.b; d[i + 3] = ALPHA;
+      d[i] = col.r; d[i + 1] = col.g; d[i + 2] = col.b; d[i + 3] = ALPHA;
     }
   }
   ctx.putImageData(img, 0, 0);
