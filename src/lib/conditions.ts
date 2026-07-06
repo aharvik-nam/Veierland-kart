@@ -1,10 +1,14 @@
 // Sun/shadow and wind-shelter conditions for the island, plus current
 // weather (MET locationforecast) and sea temperature (MET oceanforecast).
 //
-// Terrain input is a DOM grid (surface model incl. trees/buildings) produced
-// by scripts/generate_dom_grid.py from hoydedata.no data. Until that script
-// has been run the bundled dom_grid.json is `{"empty": true}` and the
-// terrain-based features stay hidden — same pattern as the geology layers.
+// Terrain input is produced by scripts/generate_dom_grid.py from hoydedata.no
+// data: a DOM (surface model incl. trees/buildings) used for what blocks sun
+// and wind, plus — when available — a DTM ground channel (b64Ground) used for
+// where the observer actually stands. Without the ground channel the observer
+// would be placed on top of the tree canopy and forests would read as sunny.
+// Until the script has been run the bundled dom_grid.json is `{"empty": true}`
+// and the terrain-based features stay hidden — same pattern as the geology
+// layers.
 
 import domGridData from '../data/dom_grid.json';
 
@@ -15,33 +19,54 @@ interface DomGridJson {
   minLng?: number; minLat?: number; maxLng?: number; maxLat?: number;
   cols?: number; rows?: number; cellM?: number;
   b64?: string;
+  b64Ground?: string;
 }
 
 export interface DomGrid {
   minLng: number; minLat: number; maxLng: number; maxLat: number;
   cols: number; rows: number; cellM: number;
-  heights: Uint16Array; // decimetres, row-major from the north-west corner
+  heights: Uint16Array; // DOM surface, decimetres, row-major from the north-west corner
+  ground: Uint16Array;  // DTM ground level; equals heights when no DTM was supplied
+}
+
+function b64ToU16(b64: string): Uint16Array {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Uint16Array(bytes.buffer);
 }
 
 function decodeGrid(raw: DomGridJson): DomGrid | null {
   if (raw.empty || !raw.b64 || !raw.cols || !raw.rows) return null;
-  const bin = atob(raw.b64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const heights = b64ToU16(raw.b64);
   return {
     minLng: raw.minLng!, minLat: raw.minLat!, maxLng: raw.maxLng!, maxLat: raw.maxLat!,
     cols: raw.cols, rows: raw.rows, cellM: raw.cellM ?? 15,
-    heights: new Uint16Array(bytes.buffer),
+    heights,
+    ground: raw.b64Ground ? b64ToU16(raw.b64Ground) : heights,
   };
 }
 
 export const DOM_GRID: DomGrid | null = decodeGrid(domGridData as DomGridJson);
 export const hasDomGrid = DOM_GRID !== null;
 
-// Height in metres at a cell (row/col), 0 outside the grid
+// Surface height (DOM) in metres at a cell (row/col), 0 outside the grid
 function cellH(g: DomGrid, row: number, col: number): number {
   if (row < 0 || row >= g.rows || col < 0 || col >= g.cols) return 0;
   return g.heights[row * g.cols + col] / 10;
+}
+
+// Ground height (DTM) in metres at a cell — where a person actually stands
+function cellGround(g: DomGrid, row: number, col: number): number {
+  if (row < 0 || row >= g.rows || col < 0 || col >= g.cols) return 0;
+  return g.ground[row * g.cols + col] / 10;
+}
+
+// Canopy: vegetation/building height above the ground at a cell. More than a
+// couple of metres means you are standing inside forest or under a roof.
+const CANOPY_M = 2.5;
+function underCanopy(g: DomGrid, row: number, col: number): boolean {
+  return cellH(g, row, col) - cellGround(g, row, col) > CANOPY_M;
 }
 
 function toCell(g: DomGrid, lat: number, lng: number): { row: number; col: number } {
@@ -53,14 +78,16 @@ function toCell(g: DomGrid, lat: number, lng: number): { row: number; col: numbe
 export function elevationAt(lat: number, lng: number): number {
   if (!DOM_GRID) return 0;
   const { row, col } = toCell(DOM_GRID, lat, lng);
-  return cellH(DOM_GRID, row, col);
+  return cellGround(DOM_GRID, row, col);
 }
 
 // Max horizon angle (degrees) seen from a cell toward a bearing (deg from
 // north, clockwise), sampled out to maxDist metres. This is what decides both
 // "is the sun blocked" and "is there something upwind giving shelter".
+// The observer's eyes are at GROUND level + 1.6 m (people stand on the DTM);
+// the obstacles are the DOM surface (hills, trees, buildings).
 function horizonAngleCells(g: DomGrid, row: number, col: number, bearingDeg: number, maxDist: number): number {
-  const h0 = cellH(g, row, col) + 1.6; // eye height
+  const h0 = cellGround(g, row, col) + 1.6; // eye height above ground
   const rad = (bearingDeg * Math.PI) / 180;
   // Grid steps per cell toward the bearing (row axis points south)
   const dCol = Math.sin(rad);
@@ -145,19 +172,26 @@ export function sunPosition(date: Date, lat: number, lng: number): SunPos {
 
 // ── Per-point scores ──────────────────────────────────────────────────────────
 
-// True when the sun is up and no surface (trees/buildings/hills) blocks it
+// True when the sun is up and no surface (trees/buildings/hills) blocks it.
+// Standing inside forest (canopy overhead) counts as shade regardless of the
+// horizon toward the sun.
 export function sunlitAt(lat: number, lng: number, date: Date): boolean | null {
   if (!DOM_GRID) return null;
   const sun = sunPosition(date, lat, lng);
   if (sun.elevation <= 0) return false;
-  return horizonAngleAt(lat, lng, sun.azimuth, 400) < sun.elevation;
+  const { row, col } = toCell(DOM_GRID, lat, lng);
+  if (underCanopy(DOM_GRID, row, col)) return false;
+  return horizonAngleCells(DOM_GRID, row, col, sun.azimuth, 400) < sun.elevation;
 }
 
 // 0 = fully exposed, 1 = well sheltered from wind coming FROM windFromDeg.
-// An upwind horizon of ~8° within 300 m reads as good lee.
+// An upwind horizon of ~8° within 300 m reads as good lee; standing inside
+// forest is good lee by itself.
 export function shelterAt(lat: number, lng: number, windFromDeg: number): number | null {
   if (!DOM_GRID) return null;
-  const ang = horizonAngleAt(lat, lng, windFromDeg, 300);
+  const { row, col } = toCell(DOM_GRID, lat, lng);
+  if (underCanopy(DOM_GRID, row, col)) return 1;
+  const ang = horizonAngleCells(DOM_GRID, row, col, windFromDeg, 300);
   return Math.min(1, Math.max(0, ang / 8));
 }
 
@@ -208,7 +242,8 @@ export function makeSunShadowOverlay(date: Date): OverlayImage | null {
   const ALPHA = 130;
   for (let r = 0; r < g.rows; r++) {
     for (let c = 0; c < g.cols; c++) {
-      const blocked = horizonAngleCells(g, r, c, sun.azimuth, 400) >= sun.elevation;
+      const blocked = underCanopy(g, r, c)
+        || horizonAngleCells(g, r, c, sun.azimuth, 400) >= sun.elevation;
       const col = blocked ? SHADED : SUNLIT;
       const i = (r * g.cols + c) * 4;
       d[i] = col.r; d[i + 1] = col.g; d[i + 2] = col.b; d[i + 3] = ALPHA;
@@ -235,6 +270,7 @@ export function makeShelterOverlay(windFromDeg: number, windSpeed: number): Over
   const col = windColor(windSpeed);
   for (let r = 0; r < g.rows; r++) {
     for (let c = 0; c < g.cols; c++) {
+      if (underCanopy(g, r, c)) continue; // inside forest: good lee, no colour
       const ang = horizonAngleCells(g, r, c, windFromDeg, 300);
       const s = Math.min(1, Math.max(0, ang / 8)); // 0 exposed, 1 well sheltered
       if (s >= LEE_CUTOFF) continue; // in lee: leave transparent

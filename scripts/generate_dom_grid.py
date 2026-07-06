@@ -7,8 +7,12 @@ solskygge og le for vind (DTM-en er bar bakke og ser ikke skogbelter).
 
 Bruk:
   pip install rasterio numpy
-  python scripts/generate_dom_grid.py <sti/til/dom.tif>
-  python scripts/generate_dom_grid.py <mappe/med/fliser>
+  python scripts/generate_dom_grid.py <dom.tif|mappe> [dtm.tif|mappe]
+
+Oppgis også en DTM (bar bakke) lagres den som egen kanal (b64Ground).
+Appen bruker da DTM som observatørhøyde (der mennesker faktisk står) og
+DOM som hindringer — uten DTM står «observatøren» oppå trekronene og
+skyggeberegningen blir gal i skogsområder.
 
 DOM-fil lastes ned fra https://hoydedata.no :
   1. Zoom til Veierland
@@ -103,12 +107,31 @@ def sample_tiles(tile_paths: list[str], lng_grid: np.ndarray, lat_grid: np.ndarr
     return samples
 
 
+def sample_surface(src_path: str, lng_grid: np.ndarray, lat_grid: np.ndarray, label: str) -> np.ndarray:
+    tile_paths = find_tiles(src_path)
+    print(f"--- {label}: {src_path}")
+    samples = sample_tiles(tile_paths, lng_grid, lat_grid)
+    samples = np.nan_to_num(samples, nan=0.0)
+    samples[samples < 0] = 0.0  # hav / støy under null
+    land = int((samples > 0.2).sum())
+    print(f"{label}: maks {samples.max():.1f} m · {land} celler over 0,2 m")
+    if land < 500:
+        print(f"ADVARSEL: nesten ingen landceller — dekker {label}-fila Veierland?")
+    return samples
+
+
+def to_b64_dm(samples: np.ndarray) -> str:
+    # Desimeter som uint16 (0–6553,5 m holder i massevis)
+    dm = np.clip(np.round(samples * 10), 0, 65535).astype('<u2')
+    return base64.b64encode(dm.tobytes()).decode('ascii')
+
+
 def main() -> None:
     if len(sys.argv) < 2:
         print(__doc__)
         sys.exit(1)
-    src_path = sys.argv[1]
-    tile_paths = find_tiles(src_path)
+    dom_path = sys.argv[1]
+    dtm_path = sys.argv[2] if len(sys.argv) > 2 else None
 
     min_lng, min_lat, max_lng, max_lat = BBOX
     mid_lat = (min_lat + max_lat) / 2
@@ -125,18 +148,7 @@ def main() -> None:
     lats = np.linspace(max_lat, min_lat, rows)  # nord -> sør
     lng_grid, lat_grid = np.meshgrid(lngs, lats)
 
-    samples = sample_tiles(tile_paths, lng_grid, lat_grid)
-
-    samples = np.nan_to_num(samples, nan=0.0)
-    samples[samples < 0] = 0.0  # hav / støy under null
-
-    land = int((samples > 0.2).sum())
-    print(f"Høyder: maks {samples.max():.1f} m · {land} celler over 0,2 m")
-    if land < 500:
-        print("ADVARSEL: nesten ingen landceller — dekker DOM-fila Veierland?")
-
-    # Desimeter som uint16 (0–6553,5 m holder i massevis)
-    dm = np.clip(np.round(samples * 10), 0, 65535).astype('<u2')
+    dom = sample_surface(dom_path, lng_grid, lat_grid, "DOM")
 
     out = {
         "empty": False,
@@ -144,10 +156,28 @@ def main() -> None:
         "maxLng": max_lng, "maxLat": max_lat,
         "cols": cols, "rows": rows,
         "cellM": CELL_M,
-        "b64": base64.b64encode(dm.tobytes()).decode('ascii'),
+        "b64": to_b64_dm(dom),
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "source": "Kartverket DOM (hoydedata.no)",
     }
+
+    if dtm_path:
+        dtm = sample_surface(dtm_path, lng_grid, lat_grid, "DTM")
+        # DTM-nedlastinger fra hoydedata.no er ofte klippet til et lite område
+        # (f.eks. bare Veierland). Der DTM mangler (0) men DOM har terreng,
+        # fall tilbake til DOM som bakkenivå så fastlandet ikke feilaktig
+        # framstår som 100 m med trekroner.
+        no_dtm = (dtm <= 0.05) & (dom > 2.0)
+        dtm = np.where(no_dtm, dom, dtm)
+        print(f"DTM-fallback (DOM som bakke): {int(no_dtm.sum())} celler uten DTM-dekning")
+        # DOM skal aldri ligge under DTM; klipp støy så kronehøyde >= 0
+        dtm = np.minimum(dtm, dom)
+        canopy = dom - dtm
+        print(f"Kronehøyde (DOM-DTM): maks {canopy.max():.1f} m · "
+              f"{int((canopy > 2).sum())} celler med >2 m vegetasjon/bygg")
+        out["b64Ground"] = to_b64_dm(dtm)
+        out["source"] = "Kartverket DOM + DTM (hoydedata.no)"
+
     with open(OUTPUT, 'w') as f:
         json.dump(out, f)
     print(f"Skrev {OUTPUT} ({os.path.getsize(OUTPUT) // 1024} kB)")
