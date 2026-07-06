@@ -45,20 +45,44 @@ function elevationAt(lat, lng) {
   return domGround[row * g.cols + col] / 10;
 }
 
-function elevationProfile(path) {
-  let ascent = 0, descent = 0, maxEl = -Infinity, minEl = Infinity;
-  let prev = null;
-  for (const [lat, lng] of path) {
+// Resamples the (irregularly spaced) per-point elevation into `numPoints`
+// evenly-spaced-by-distance samples, for a compact elevation-profile chart —
+// [metresFromStart, elevationM][].
+function resampleByDistance(dist, elev, numPoints) {
+  const total = dist[dist.length - 1];
+  const series = [];
+  let j = 0;
+  for (let k = 0; k < numPoints; k++) {
+    const target = total * k / (numPoints - 1);
+    while (j < dist.length - 2 && dist[j + 1] < target) j++;
+    const d0 = dist[j], d1 = dist[j + 1], e0 = elev[j], e1 = elev[j + 1];
+    const t = d1 > d0 ? (target - d0) / (d1 - d0) : 0;
+    series.push([Math.round(target), Math.round((e0 + t * (e1 - e0)) * 10) / 10]);
+  }
+  return series;
+}
+
+function elevationProfile(path, numPoints = 60) {
+  const dist = [0];
+  const elev = [elevationAt(path[0][0], path[0][1])];
+  let ascent = 0, descent = 0, maxEl = elev[0], minEl = elev[0];
+  for (let i = 1; i < path.length; i++) {
+    const [lat, lng] = path[i];
     const el = elevationAt(lat, lng);
-    if (prev !== null) {
-      const d = el - prev;
-      if (d > 0) ascent += d; else descent -= d;
-    }
-    prev = el;
+    dist.push(dist[i - 1] + distanceM(path[i - 1][0], path[i - 1][1], lat, lng));
+    elev.push(el);
+    const d = el - elev[i - 1];
+    if (d > 0) ascent += d; else descent -= d;
     if (el > maxEl) maxEl = el;
     if (el < minEl) minEl = el;
   }
-  return { ascentM: Math.round(ascent), descentM: Math.round(descent), maxElevationM: Math.round(maxEl) };
+  return {
+    ascentM: Math.round(ascent),
+    descentM: Math.round(descent),
+    maxElevationM: Math.round(maxEl),
+    minElevationM: Math.round(minEl),
+    series: resampleByDistance(dist, elev, numPoints),
+  };
 }
 
 // ── Distance + weighted (surface + no-backtrack) Dijkstra ─────────────────
@@ -233,7 +257,7 @@ turkart.features = turkart.features.filter(f => !GENERATED_IDS.has(f.properties.
 
 for (const r of ROUTES) {
   const { path, totalM, reusedM } = buildLoopPath(r.seq, P);
-  const { ascentM, descentM, maxElevationM } = elevationProfile(path);
+  const { ascentM, descentM, maxElevationM, minElevationM, series } = elevationProfile(path);
   const coordinates = path.map(([lat, lng]) => [lng, lat]); // GeoJSON order
   turkart.features.push({
     type: 'Feature',
@@ -245,6 +269,11 @@ for (const r of ROUTES) {
       tid: fmtTime(totalM, 6.5), // running pace estimate, ~6.5 min/km
       vanskelighet: difficulty(totalM, ascentM),
       stigning: `${ascentM} m`,
+      // Elevation profile for the chart: [metresFromStart, elevationM][],
+      // resampled to an even spacing (see resampleByDistance).
+      hoydeprofil: series,
+      minHoyde: minElevationM,
+      maxHoyde: maxElevationM,
       no: r.no,
       enT: r.enT,
     },

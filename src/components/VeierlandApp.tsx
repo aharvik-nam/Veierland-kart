@@ -251,6 +251,9 @@ interface Trail {
   time: string;
   diff: string;
   climb?: string;
+  profile?: [number, number][];
+  minEl?: number;
+  maxEl?: number;
   no: string;
   enT: string;
   path: [number, number][];
@@ -265,6 +268,9 @@ function trailsFromGeoJSON(geo: any): Trail[] {
     time: f.properties.tid,
     diff: f.properties.vanskelighet,
     climb: f.properties.stigning,
+    profile: f.properties.hoydeprofil,
+    minEl: f.properties.minHoyde,
+    maxEl: f.properties.maxHoyde,
     no: f.properties.no,
     enT: f.properties.enT,
     path: f.geometry.coordinates.map((c: number[]) => [c[1], c[0]] as [number, number]),
@@ -330,6 +336,33 @@ function GradientBar({ stops, posT }: { stops: { r: number; g: number; b: number
         width: 4, height: 14, borderRadius: 2, background: 'var(--ink)',
         boxShadow: '0 0 0 1.5px #fff',
       }} />
+    </div>
+  );
+}
+// Elevation-vs-distance chart for a trail, from the DTM-sampled profile
+// (see scripts/generate_running_routes.mjs). [metresFromStart, elevationM][].
+function ElevationChart({ profile, minEl, maxEl }: { profile: [number, number][]; minEl: number; maxEl: number }) {
+  if (profile.length < 2) return null;
+  const W = 300, H = 70, PAD_Y = 8;
+  const totalM = profile[profile.length - 1][0];
+  const span = Math.max(1, maxEl - minEl);
+  const x = (m: number) => (m / totalM) * W;
+  const y = (el: number) => PAD_Y + (1 - (el - minEl) / span) * (H - PAD_Y * 2);
+
+  const linePts = profile.map(([m, el]) => `${x(m).toFixed(1)},${y(el).toFixed(1)}`).join(' ');
+  const areaPts = `0,${H} ${linePts} ${W},${H}`;
+
+  return (
+    <div style={{ margin: '2px 0 14px' }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none" style={{ display: 'block' }}>
+        <polygon points={areaPts} fill="var(--accent)" opacity={0.14} />
+        <polyline points={linePts} fill="none" stroke="var(--accent)" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+      </svg>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'var(--muted)', marginTop: 2 }}>
+        <span>{Math.round(minEl)} moh</span>
+        <span>{(totalM / 1000).toFixed(1)} km</span>
+        <span>{Math.round(maxEl)} moh</span>
+      </div>
     </div>
   );
 }
@@ -2314,6 +2347,9 @@ export function VeierlandApp() {
             </div>
           )}
         </div>
+        {trail.profile && trail.minEl !== undefined && trail.maxEl !== undefined && (
+          <ElevationChart profile={trail.profile} minEl={trail.minEl} maxEl={trail.maxEl} />
+        )}
         <p className="vl-desc">{lang === 'no' ? trail.no : trail.enT}</p>
         <div className="vl-actions">
           <button
