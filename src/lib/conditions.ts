@@ -220,7 +220,7 @@ export function windColor(speedMs: number): { r: number; g: number; b: number; a
     r: Math.round(from.r + t * (to.r - from.r)),
     g: Math.round(from.g + t * (to.g - from.g)),
     b: Math.round(from.b + t * (to.b - from.b)),
-    alpha: 0.12 + t * 0.63, // vindstille: barely visible · orkan: strong
+    alpha: 0.22 + t * 0.68, // vindstille: faint · orkan: strong
   };
 }
 
