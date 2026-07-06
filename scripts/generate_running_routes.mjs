@@ -154,31 +154,52 @@ function walkLeg(from, to, usedEdges, edgeUseCount) {
   const b = nearestNode(to[0], to[1]);
   const r = weightedShortestPath(a.idx, b.idx, usedEdges);
   if (!r) throw new Error(`unreachable: ${from} -> ${to}`);
-  let legReusedM = 0;
+  let legReusedM = 0, legTrailM = 0;
   for (const e of r.edgeIdxs) {
     usedEdges.add(e);
     edgeUseCount.set(e, (edgeUseCount.get(e) ?? 0) + 1);
     if (edgeUseCount.get(e) > 1) legReusedM += NETWORK.edges[e][2];
+    if ((NETWORK.edges[e][3] ?? 3) === 0) legTrailM += NETWORK.edges[e][2]; // path/footway/steps
   }
-  return { m: a.distM + r.realM + b.distM, path: [from, ...r.nodeIdxs.map(i => NETWORK.nodes[i]), to], legReusedM };
+  return { m: a.distM + r.realM + b.distM, path: [from, ...r.nodeIdxs.map(i => NETWORK.nodes[i]), to], legReusedM, legTrailM };
 }
 
-// Builds one continuous loop path from a sequence of named waypoints,
-// penalizing re-use of edges across the WHOLE loop (not just within one
-// leg) so the route only backtracks where the network truly dead-ends.
+// Builds one continuous path from a sequence of named waypoints (a loop if
+// the first and last are the same point, otherwise a one-way route),
+// penalizing re-use of edges across the WHOLE route (not just within one
+// leg) so it only backtracks where the network truly dead-ends.
 function buildLoopPath(seq, points) {
   const usedEdges = new Set();
   const edgeUseCount = new Map();
   let fullPath = [];
   let totalM = 0;
   let reusedM = 0;
+  let trailM = 0; // metres on narrow path/footway/steps — used to gate cycling
   for (let i = 0; i < seq.length - 1; i++) {
     const leg = walkLeg(points[seq[i]], points[seq[i + 1]], usedEdges, edgeUseCount);
     totalM += leg.m;
     reusedM += leg.legReusedM;
+    trailM += leg.legTrailM;
     fullPath = fullPath.concat(i === 0 ? leg.path : leg.path.slice(1));
   }
-  return { path: fullPath, totalM, reusedM };
+  return { path: fullPath, totalM, reusedM, trailM };
+}
+
+// ── Activity modes (walking / running / cycling) ───────────────────────────
+
+// Any meaningful stretch of narrow trail rules a route out for cycling —
+// a route is either bike-friendly throughout or it isn't recommended for
+// biking at all, rather than "mostly rideable with one unrideable bit".
+const BIKE_TRAIL_TOLERANCE_M = 20;
+function activityModes(totalM, trailM) {
+  const modes = [
+    { mode: 'gaa', tid: fmtTime(totalM, 12) },      // walking, ~5 km/h
+    { mode: 'lop', tid: fmtTime(totalM, 6.5) },     // running, ~9 km/h
+  ];
+  if (trailM <= BIKE_TRAIL_TOLERANCE_M) {
+    modes.push({ mode: 'sykkel', tid: fmtTime(totalM, 4) }); // cycling, ~15 km/h
+  }
+  return modes;
 }
 
 // ── Formatting + difficulty ────────────────────────────────────────────────
@@ -212,6 +233,8 @@ const P = {
   Hvervodden: [59.1454859, 10.3514448],   // Hvervodden, south tip
   Kjolholmen: [59.164907, 10.3601789],    // Kjølholmen / Kjølholmhåsen area
   Kongshavn: [59.14567, 10.33569],        // Kongshavn badeplass, SW coast
+  Alby: [59.163406, 10.352505],           // Alby gård
+  VillaVeierland: [59.155874, 10.3530783], // Villa Veierland (kafé)
 };
 
 const ROUTES = [
@@ -247,6 +270,14 @@ const ROUTES = [
     no: 'Skogsstirunde til Kjølholmhåsen på østsiden av øya, med hjemtur forbi Brentås fremfor å snu og gå tilbake samme sti.',
     enT: "A forest-trail loop out to Kjølholmhåsen on the east side, returning past Brentås rather than turning back the way you came.",
   },
+  {
+    id: 't-pilegrimsleden',
+    navn: 'Pilegrimsleden gjennom Veierland',
+    en: 'The Pilgrim\'s Way across Veierland',
+    seq: ['Vestgarden', 'Alby', 'VillaVeierland', 'Dagros', 'TangenFerge'],
+    no: 'Pilegrimsleden krysser øya fra Vestgården fergeleie i nord til Tangen fergekai i sør, forbi Alby gård, Villa Veierland og Dagros.',
+    enT: "The Pilgrim's Way crosses the island from Vestgården ferry quay in the north to Tangen ferry quay in the south, passing Alby farm, Villa Veierland and Dagros.",
+  },
 ];
 
 // ── Build + write ────────────────────────────────────────────────────────
@@ -256,9 +287,10 @@ const GENERATED_IDS = new Set(ROUTES.map(r => r.id));
 turkart.features = turkart.features.filter(f => !GENERATED_IDS.has(f.properties.id));
 
 for (const r of ROUTES) {
-  const { path, totalM, reusedM } = buildLoopPath(r.seq, P);
+  const { path, totalM, reusedM, trailM } = buildLoopPath(r.seq, P);
   const { ascentM, descentM, maxElevationM, minElevationM, series } = elevationProfile(path);
   const coordinates = path.map(([lat, lng]) => [lng, lat]); // GeoJSON order
+  const modes = activityModes(totalM, trailM);
   turkart.features.push({
     type: 'Feature',
     properties: {
@@ -274,6 +306,10 @@ for (const r of ROUTES) {
       hoydeprofil: series,
       minHoyde: minElevationM,
       maxHoyde: maxElevationM,
+      // Which activities the route suits + an estimated time for each —
+      // cycling is left out entirely once the route uses any real stretch
+      // of narrow trail (see activityModes / BIKE_TRAIL_TOLERANCE_M).
+      transportmodi: modes,
       no: r.no,
       enT: r.enT,
     },
@@ -283,7 +319,37 @@ for (const r of ROUTES) {
   console.log(
     `${r.navn}: ${fmtKm(totalM)}, ${fmtTime(totalM, 6.5)} løp, ` +
     `stigning ${ascentM}m / fall ${descentM}m, maks ${maxElevationM}moh, ` +
-    `${difficulty(totalM, ascentM)}, backtrack ${reusedM.toFixed(0)}m (${reusedPct}%), ${path.length} punkter`
+    `${difficulty(totalM, ascentM)}, backtrack ${reusedM.toFixed(0)}m (${reusedPct}%), ` +
+    `sti ${trailM.toFixed(0)}m, modi [${modes.map(m => m.mode).join(',')}], ${path.length} punkter`
+  );
+}
+
+// ── Enrich hand-authored trails that aren't (re)generated above ────────────
+// "Rundt øya" keeps its own hand-traced geometry, but still gets an
+// elevation profile from the DTM and activity-time estimates. Its own
+// description already says it mixes gravel roads and narrow paths, so
+// cycling is left off rather than trying to infer trail-fraction from a
+// geometry we didn't build ourselves.
+const NO_BIKE_HAND_AUTHORED = new Set(['t-rundt']);
+for (const f of turkart.features) {
+  if (GENERATED_IDS.has(f.properties.id) || f.properties.hoydeprofil) continue;
+  const path = f.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+  const { ascentM, descentM, maxElevationM, minElevationM, series } = elevationProfile(path);
+  let totalM = 0;
+  for (let i = 1; i < path.length; i++) totalM += distanceM(path[i - 1][0], path[i - 1][1], path[i][0], path[i][1]);
+  const modes = [
+    { mode: 'gaa', tid: fmtTime(totalM, 12) },
+    { mode: 'lop', tid: fmtTime(totalM, 6.5) },
+  ];
+  if (!NO_BIKE_HAND_AUTHORED.has(f.properties.id)) modes.push({ mode: 'sykkel', tid: fmtTime(totalM, 4) });
+  f.properties.stigning = `${ascentM} m`;
+  f.properties.hoydeprofil = series;
+  f.properties.minHoyde = minElevationM;
+  f.properties.maxHoyde = maxElevationM;
+  f.properties.transportmodi = modes;
+  console.log(
+    `${f.properties.navn} (hand-authored): stigning ${ascentM}m / fall ${descentM}m, ` +
+    `maks ${maxElevationM}moh, modi [${modes.map(m => m.mode).join(',')}]`
   );
 }
 

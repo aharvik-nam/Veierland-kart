@@ -243,6 +243,11 @@ const TRAIL_CAT_GROUPS: Record<'alle' | 'historie' | 'natur' | 'mat' | 'kultur',
 
 // ─── Trail data ───────────────────────────────────────────────────────────────
 
+interface TrailMode {
+  mode: 'gaa' | 'lop' | 'sykkel';
+  tid: string;
+}
+
 interface Trail {
   id: string;
   name: string;
@@ -254,6 +259,7 @@ interface Trail {
   profile?: [number, number][];
   minEl?: number;
   maxEl?: number;
+  modes?: TrailMode[];
   no: string;
   enT: string;
   path: [number, number][];
@@ -271,6 +277,7 @@ function trailsFromGeoJSON(geo: any): Trail[] {
     profile: f.properties.hoydeprofil,
     minEl: f.properties.minHoyde,
     maxEl: f.properties.maxHoyde,
+    modes: f.properties.transportmodi,
     no: f.properties.no,
     enT: f.properties.enT,
     path: f.geometry.coordinates.map((c: number[]) => [c[1], c[0]] as [number, number]),
@@ -2318,6 +2325,10 @@ export function VeierlandApp() {
 
   // ── Render: trail detail ────────────────────────────────────────────────────
 
+  const MODE_ICON: Record<string, string> = { gaa: 'gaatur', lop: 'lopetur', sykkel: 'sykkel' };
+  const MODE_LABEL_NO: Record<string, string> = { gaa: 'Gåtur', lop: 'Løping', sykkel: 'Sykling' };
+  const MODE_LABEL_EN: Record<string, string> = { gaa: 'Walking', lop: 'Running', sykkel: 'Cycling' };
+
   function renderTrailDetail(trail: Trail) {
     const cat = getCat('friluft');
     const saved = savedIds.has(trail.id);
@@ -2347,6 +2358,16 @@ export function VeierlandApp() {
             </div>
           )}
         </div>
+        {trail.modes && trail.modes.length > 0 && (
+          <div className="vl-trailmodes">
+            {trail.modes.map(m => (
+              <div key={m.mode} className="vl-tmode" title={lang === 'no' ? MODE_LABEL_NO[m.mode] : MODE_LABEL_EN[m.mode]}>
+                <span className="ic" dangerouslySetInnerHTML={{ __html: iconSvg(MODE_ICON[m.mode]) }} />
+                <span className="tid">{m.tid}</span>
+              </div>
+            ))}
+          </div>
+        )}
         {trail.profile && trail.minEl !== undefined && trail.maxEl !== undefined && (
           <ElevationChart profile={trail.profile} minEl={trail.minEl} maxEl={trail.maxEl} />
         )}

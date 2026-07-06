@@ -749,6 +749,11 @@ body { display: grid; place-items: center; }
 .vl-tm .k { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
 .vl-tm .v { font-size: 17px; font-weight: 700; margin-top: 3px; }
 
+.vl-trailmodes { display: flex; gap: 14px; margin: 0 0 16px; }
+.vl-tmode { display: flex; align-items: center; gap: 6px; }
+.vl-tmode .ic { display: flex; color: var(--accent); flex: 0 0 auto; }
+.vl-tmode .tid { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+
 /* ── Static POI image ───────────────────────────────────────────────────────── */
 .vl-poi-static-img { margin: 0 0 14px; position: relative; }
 .vl-poi-static-img img {

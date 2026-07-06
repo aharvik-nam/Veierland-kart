@@ -26,6 +26,8 @@ export const ICONS: Record<string, string> = {
   bat:        '<path d="M-8,3 Q0,-1 8,3"/><path d="M-6,3 L-5,7 H5 L6,3"/><path d="M0,3 V-5"/><path d="M0,-5 L4,-2"/>',
   fisk:       '<path d="M8,0 C5,-5 -1,-4 -5,-1 C-8,0 -9,0 -8,1 C-6,4 -1,4 -5,1 C-1,4 5,5 8,0Z"/><circle cx="5" cy="-1" r="1.2" fill="#fff" stroke="none"/>',
   sykkel:     '<circle cx="-5" cy="4" r="4" fill="none"/><circle cx="5" cy="4" r="4" fill="none"/><path d="M-5,4 L0,-3 L5,4"/><path d="M0,-3 V-7"/><path d="M-2,-7 H2"/>',
+  gaatur:     '<circle cx="1" cy="-7" r="2" fill="none"/><path d="M1,-5 L-1,1 M1,-5 L4,-2 M-1,1 L-4,7 M-1,1 L2,7 M1,-3 L-3,-1"/>',
+  lopetur:    '<circle cx="2" cy="-7" r="2" fill="none"/><path d="M2,-5 L-2,0 M2,-5 L5,-3 M-2,0 L-6,3 M-2,0 L3,2 L2,7 M-1,-2 L3,-4"/>',
   baal:       '<path d="M0,8 C-3,4 -4,-1 -1,-6 C0,-2 2,-4 1,-8 C4,-4 4,2 2,5 C3,2 3,-1 1,-3 C2,1 1,5 0,8Z"/>',
   kors:       '<path d="M0,-8 V8"/><path d="M-5,-2 H5"/>',
   parkering:  '<rect x="-7" y="-8" width="14" height="16" rx="2" fill="none"/><path d="M-3,-5 H1 C3,-5 4.5,-3.5 4.5,-1.5 C4.5,0.5 3,2 1,2 H-3"/><path d="M-3,-5 V6"/>',
