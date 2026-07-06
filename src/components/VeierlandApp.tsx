@@ -535,19 +535,24 @@ export function VeierlandApp() {
   const ferryTomorrow = ferryBoard?.tomorrow ?? false;
   const nextFromIsland = ferrySailings.find(d => d.fromIsland);
 
-  // Departure board for a selected ferry-quay POI (matched by proximity).
+  // Departure board for a selected ferry-quay POI. Only POIs in the "Brygge"
+  // (ferge) category get one — then we resolve *which* physical quay by
+  // proximity. Gating on category avoids showing ferry times on nearby
+  // beaches/cafés just because they sit close to a quay.
   // undefined = loading, null = couldn't load.
-  const selectedQuay = selectedPOI ? nearestQuay(selectedPOI.coordinates[0], selectedPOI.coordinates[1]) : null;
+  const isQuayPOI = !!selectedPOI && (selectedPOI.kategorier ?? [selectedPOI.kategori]).includes('ferge');
+  const selectedQuay = isQuayPOI && selectedPOI
+    ? nearestQuay(selectedPOI.coordinates[0], selectedPOI.coordinates[1])
+    : null;
   const [quayBoard, setQuayBoard] = useState<FerryBoard | null | undefined>(undefined);
   useEffect(() => {
     setQuayBoard(undefined);
-    if (!selectedPOI) return;
-    const q = nearestQuay(selectedPOI.coordinates[0], selectedPOI.coordinates[1]);
-    if (!q) return;
+    if (!selectedQuay) return;
     let alive = true;
-    fetchQuaySailings(q.key, 3).then(b => { if (alive) setQuayBoard(b); });
+    fetchQuaySailings(selectedQuay.key, 3).then(b => { if (alive) setQuayBoard(b); });
     return () => { alive = false; };
-  }, [selectedPOI]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedQuay?.key]);
 
   // Conditions: sun-shadow / wind-shelter overlays (needs the DOM grid) and
   // current weather + sea temperature from MET (for the beach card)
