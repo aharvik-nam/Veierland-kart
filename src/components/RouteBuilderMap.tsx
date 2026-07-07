@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { MapContainer, TileLayer, Polyline, Marker, CircleMarker, useMapEvents } from 'react-leaflet';
+import React, { useEffect, useMemo, useState } from 'react';
+import { MapContainer, TileLayer, Polyline, Marker, CircleMarker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import {
   NETWORK_NODES, NETWORK_EDGES, NAMED_WAYPOINTS,
@@ -146,6 +146,37 @@ function ClickCatcher({ onClick }: { onClick: (lat: number, lng: number) => void
   return null;
 }
 
+// Leaflet computes its tile/pane layout from the container's size at the
+// moment it mounts. If that container was 0×0 or mid-transition (a flex
+// child whose height hadn't settled yet, a modal still animating in), the
+// map can end up permanently mis-sized — tiles missing or the whole thing
+// looking "hidden" even though the DOM node is there. Forcing a couple of
+// invalidateSize() calls after mount (and on window resize) fixes that.
+function InvalidateSizeOnMount() {
+  const map = useMap();
+  useEffect(() => {
+    const t1 = setTimeout(() => map.invalidateSize(), 0);
+    const t2 = setTimeout(() => map.invalidateSize(), 250);
+    const onResize = () => map.invalidateSize();
+    window.addEventListener('resize', onResize);
+    return () => { clearTimeout(t1); clearTimeout(t2); window.removeEventListener('resize', onResize); };
+  }, [map]);
+  return null;
+}
+
+// Degree-2 nodes are just interior points along a single OSM way segment —
+// not decision points. Junctions (degree >= 3) and dead-ends (degree 1) are
+// what you actually want to click on when building a route by hand.
+function useJunctionNodes(): [number, number][] {
+  return useMemo(() => {
+    const degree = new Array(NETWORK_NODES.length).fill(0);
+    for (const [a, b] of NETWORK_EDGES) { degree[a]++; degree[b]++; }
+    const out: [number, number][] = [];
+    for (let i = 0; i < degree.length; i++) if (degree[i] !== 2) out.push(NETWORK_NODES[i]);
+    return out;
+  }, []);
+}
+
 const nameForKey = (key?: string) => NAMED_WAYPOINTS.find(w => w.key === key)?.name;
 
 export function RouteBuilderMap({
@@ -158,6 +189,7 @@ export function RouteBuilderMap({
   const [waypoints, setWaypoints] = useState(initialWaypoints);
 
   const networkLines = useMemo(() => NETWORK_EDGES.map(([a, b]) => [NETWORK_NODES[a], NETWORK_NODES[b]] as [[number, number], [number, number]]), []);
+  const junctionNodes = useJunctionNodes();
 
   const { result, error } = useMemo(() => waypoints.length >= 2 ? computeFull(waypoints) : { result: null, error: null }, [waypoints]);
   const arrows = result ? arrowsAlong(result.path, Math.max(2, Math.round(result.path.length / 40))) : [];
@@ -169,12 +201,27 @@ export function RouteBuilderMap({
   const reverse = () => setWaypoints(w => [...w].reverse());
   const clear = () => setWaypoints([]);
 
+  // Full-screen overlay: the builder is a precision map-clicking tool, and
+  // embedding it inline in the (narrow, max-width-860px) admin content
+  // column left too little room and made the map prone to mis-sizing on
+  // mount. Escape closes it, same as the Avbryt button.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onCancel]);
+
   return (
-    <div style={{ display: 'flex', gap: 12, height: 560 }}>
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 2000, background: 'var(--page, #fff)',
+      display: 'flex', flexDirection: 'column', padding: 16, boxSizing: 'border-box',
+    }}>
+    <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0 }}>
       <div style={{ flex: '0 0 260px', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'auto' }}>
         <div style={{ fontSize: 12.5, lineHeight: 1.5, color: 'var(--muted)' }}>
-          Klikk på kartet for å legge til et rutepunkt. Klikk nær et navngitt sted (blå prikk) for å bruke det,
-          ellers snappes klikket til nærmeste kjente sti/vei. Rekkefølgen under er rekkefølgen ruta går i —
+          Små blå prikker = alle kryss og endepunkter i veinettet — store blå prikker = navngitte steder.
+          Klikk på en av dem (eller hvor som helst på en sti) for å legge til et rutepunkt; klikket snappes
+          alltid til nærmeste faktiske sti/vei. Rekkefølgen under er rekkefølgen ruta går i —
           <b> grønt flagg = start, rødt flagg = mål</b>, piler viser retning.
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
@@ -239,7 +286,13 @@ export function RouteBuilderMap({
       </div>
 
       <div style={{ flex: 1, position: 'relative', borderRadius: 10, overflow: 'hidden', border: '1px solid var(--line)' }}>
+        <button type="button" onClick={onCancel} title="Lukk (Esc)" style={{
+          position: 'absolute', top: 10, right: 10, zIndex: 1000, width: 32, height: 32,
+          borderRadius: 8, border: '1px solid var(--line)', background: 'var(--card)', cursor: 'pointer',
+          fontSize: 16, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>✕</button>
         <MapContainer center={MAP_CENTER} zoom={13} style={{ width: '100%', height: '100%' }}>
+          <InvalidateSizeOnMount />
           <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" subdomains="abcd" maxZoom={19} />
           <ClickCatcher onClick={addPoint} />
 
@@ -248,13 +301,22 @@ export function RouteBuilderMap({
               array of disjoint line-strings as a single layer. */}
           <Polyline positions={networkLines} pathOptions={{ color: '#94a3b8', weight: 1.2, opacity: 0.5 }} interactive={false} />
 
-          {/* Named waypoints, clickable */}
+          {/* Every road junction/dead-end (degree != 2) — click any of these
+              to add that exact point, no guessing where the network actually
+              lets you turn. */}
+          {junctionNodes.map((pos, i) => (
+            <CircleMarker key={i} center={pos} radius={3.5}
+              pathOptions={{ color: '#2d6cdf', fillColor: '#2d6cdf', fillOpacity: 0.65, weight: 1 }}
+              eventHandlers={{ click: () => addPoint(pos[0], pos[1]) }}
+            />
+          ))}
+
+          {/* Named waypoints, clickable — bigger + labeled */}
           {NAMED_WAYPOINTS.map(w => (
-            <CircleMarker key={w.key} center={[w.lat, w.lng]} radius={5}
-              pathOptions={{ color: '#2d6cdf', fillColor: '#2d6cdf', fillOpacity: 0.8, weight: 1.5 }}
+            <CircleMarker key={w.key} center={[w.lat, w.lng]} radius={6}
+              pathOptions={{ color: '#fff', fillColor: '#2d6cdf', fillOpacity: 1, weight: 2 }}
               eventHandlers={{ click: () => addPoint(w.lat, w.lng) }}
-            >
-            </CircleMarker>
+            />
           ))}
 
           {/* Current sequence markers */}
@@ -274,6 +336,7 @@ export function RouteBuilderMap({
           )}
         </MapContainer>
       </div>
+    </div>
     </div>
   );
 }
