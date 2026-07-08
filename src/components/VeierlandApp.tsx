@@ -548,6 +548,7 @@ export function VeierlandApp() {
   });
   const [geoLayer, setGeoLayer] = useState<string | null>(null);
   const [showLayerPop, setShowLayerPop] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
   const [userAccuracy, setUserAccuracy] = useState<number>(0);
   const [locating, setLocating] = useState(false);
@@ -782,7 +783,7 @@ export function VeierlandApp() {
 
   // Close layer popup on document click
   useEffect(() => {
-    const handle = () => { setShowLayerPop(false); setShowFerryPop(false); };
+    const handle = () => { setShowLayerPop(false); setShowFerryPop(false); setShowMenu(false); };
     document.addEventListener('click', handle);
     return () => document.removeEventListener('click', handle);
   }, []);
@@ -2878,8 +2879,12 @@ export function VeierlandApp() {
         </button>
       )}
 
-      {/* Glass top bar: place name + weather one-liner, lang toggle, ferry countdown ring */}
+      {/* Glass top bar: menu, place name + weather one-liner, lang toggle, ferry countdown ring */}
       <div className="vl-topbar2">
+        <button className="vl-menubtn" onClick={e => { e.stopPropagation(); setShowMenu(m => !m); }}
+          aria-label={lang === 'no' ? 'Meny' : 'Menu'} title={lang === 'no' ? 'Meny' : 'Menu'}>
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
         <div className="vl-topbar2-info">
           <div className="vl-topbar2-title">Veierland</div>
           <div className="vl-topbar2-weather">{weatherOneLiner(weatherNow, lang)}</div>
@@ -2902,6 +2907,30 @@ export function VeierlandApp() {
           </div>
         </button>
       </div>
+
+      {/* Menu: reaches Steder/Turer/Natur/Historie/Lagret now that the tab
+          bar is gone — wired straight to the existing selectTab(), so this
+          adds a new entry point without any new list/browse logic. */}
+      {showMenu && (
+        <div className="vl-menu" onClick={e => e.stopPropagation()}>
+          <button className="vl-menu-item" onClick={() => { setShowMenu(false); exitActivityTile(); selectTab('places'); }}>
+            <PlacesTabSvg /><span>{T.places}</span>
+          </button>
+          <button className="vl-menu-item" onClick={() => { setShowMenu(false); exitActivityTile(); selectTab('trails'); }}>
+            <TrailsTabSvg /><span>{T.trails}</span>
+          </button>
+          <button className="vl-menu-item" onClick={() => { setShowMenu(false); exitActivityTile(); selectTab('nature'); }}>
+            <NatureTabSvg /><span>{T.nature}</span>
+          </button>
+          <button className="vl-menu-item" onClick={() => { setShowMenu(false); exitActivityTile(); selectTab('history'); }}>
+            <HistoryTabSvg /><span>{T.history}</span>
+          </button>
+          <button className="vl-menu-item" onClick={() => { setShowMenu(false); exitActivityTile(); selectTab('saved'); }}>
+            <HeartSvg /><span>{T.saved}</span>
+            {savedIds.size > 0 && <span className="vl-menu-badge">{savedIds.size}</span>}
+          </button>
+        </div>
+      )}
 
       {/* Ferry board — full-screen (see plan Phase 5 for its full visual redesign;
           this is just promoted from an anchored popup so the top bar's ferry
