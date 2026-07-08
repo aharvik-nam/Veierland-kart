@@ -537,6 +537,12 @@ export function VeierlandApp() {
   const [selectedTrail, setSelectedTrail] = useState<Trail | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [autoSheetH, setAutoSheetH] = useState<number | null>(null);
+  // New-map-screen dock ("Hva vil du i dag?") state — deliberately separate
+  // from sheetOpen/view/tab, which stay reserved for the POI/trail detail
+  // sheet and the menu-driven browse lists, so the dock's own open/expand
+  // state doesn't fight with those.
+  const [activityTile, setActivityTile] = useState<'bade' | 'spise' | null>(null);
+  const [dockExpanded, setDockExpanded] = useState(false);
   const [currentLayer, setCurrentLayer] = useState<string>(() => {
     try { return localStorage.getItem('vl-layer') || 'soleng'; } catch { return 'soleng'; }
   });
@@ -940,7 +946,6 @@ export function VeierlandApp() {
     });
 
     const sz = markerSize(mapZoom);
-    const half = Math.round(sz / 2);
     const dimByTrail = mode === 'trails' && view === 'detail' && !!selectedTrail && trailPoiFilter === 'along';
 
     filteredPOIs.forEach(poi => {
@@ -948,10 +953,21 @@ export function VeierlandApp() {
       const sel = selectedPOI?.id === poi.id;
       const faded = dimByTrail && !!poi.coordinates &&
         pointToPolylineDistM(poi.coordinates as [number, number], selectedTrail!.path) > 20;
-      const html = faded
-        ? `<div style="opacity:0.3">${makeIconHtml(cat.icon, cat.color, sel, sz)}</div>`
-        : makeIconHtml(cat.icon, cat.color, sel, sz);
-      const icon = L.divIcon({ className: '', iconSize: [sz, sz], iconAnchor: [half, half], html });
+      let html: string, pinSz: number;
+      if (activityTile) {
+        // Activity-mode map view: bigger pins with the name always visible —
+        // tapping to find out what something is isn't realistic for young
+        // or elderly users on a crowded island map.
+        pinSz = sel ? 50 : 44;
+        html = makeLabeledIconHtml(cat.icon, cat.color, sel, pinSz, poi.navn);
+      } else {
+        pinSz = sz;
+        html = faded
+          ? `<div style="opacity:0.3">${makeIconHtml(cat.icon, cat.color, sel, sz)}</div>`
+          : makeIconHtml(cat.icon, cat.color, sel, sz);
+      }
+      const half = Math.round(pinSz / 2);
+      const icon = L.divIcon({ className: '', iconSize: [pinSz, pinSz], iconAnchor: [half, half], html });
       L.marker(poi.coordinates as [number, number], { icon, zIndexOffset: sel ? 1000 : 0 }).on('click', () => selectPOI(poi)).addTo(cg);
     });
 
@@ -960,7 +976,7 @@ export function VeierlandApp() {
 
     return () => { if (map) map.removeLayer(cg); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapReady, mode, filteredPOIs, selectedPOI?.id, view, mapZoom, selectedTrail, trailPoiFilter, tab]);
+  }, [mapReady, mode, filteredPOIs, selectedPOI?.id, view, mapZoom, selectedTrail, trailPoiFilter, tab, activityTile]);
 
   useEffect(() => {
     if ((mode !== 'nature' && !(mode === 'trails' && trailCatFilter === 'natur')) || natureFetched) return;
@@ -1121,6 +1137,33 @@ export function VeierlandApp() {
     }
     if (t === 'nature') { setNatureHlN(10); setNatureTopN(15); }
     setSheetOpen(t !== 'map');
+  }
+
+  // The dock's 4 activity tiles are the new entry points for "what do you
+  // want today" on the map screen. Bade/Spise filter the map to that POI
+  // category (the dock swaps to a compact summary + expandable list — see
+  // the dock JSX). Gå tur/Historie route straight to the existing, richer
+  // Turer/Historie tabs instead of a lesser POI-filtered view — those
+  // features are already built and better than anything a quick filter
+  // could offer, so this reuses them wholesale rather than duplicating.
+  function applyActivityTile(tile: 'bade' | 'gatur' | 'historie' | 'spise') {
+    if (tile === 'gatur') { selectTab('trails'); return; }
+    if (tile === 'historie') { selectTab('history'); return; }
+    setActivityTile(tile);
+    setDockExpanded(false);
+    setActiveCats(new Set([tile === 'bade' ? 'bad' : 'mat']));
+    setSelectedPOI(null);
+    setSelectedTrail(null);
+    setView('browse');
+    setSheetOpen(false);
+    setTab('map');
+    if (mode !== 'places') setMode('places');
+  }
+
+  function exitActivityTile() {
+    setActivityTile(null);
+    setDockExpanded(false);
+    setActiveCats(new Set());
   }
 
   function closeSheet() {
@@ -2601,10 +2644,21 @@ export function VeierlandApp() {
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
+  // How much space to reserve at the bottom of the map for the dock (mobile
+  // only — desktop overrides --dock-h to `auto` via CSS). The dock's own
+  // rendered height differs by state (tile grid vs. compact summary), and a
+  // mismatch here leaves a blank gap between the map and the dock, so this
+  // tracks the dock's actual collapsed height rather than a single constant.
+  // The expanded list is intentionally NOT accounted for here — it overlays
+  // on top of the already-rendered map instead of resizing it, to avoid
+  // needing a Leaflet invalidateSize() pass on every expand/collapse.
+  const dockShown = tab === 'map' && !sheetOpen && !selectedPOI && !selectedTrail;
+  const dockReservedH = dockShown ? (activityTile ? 84 : 176) : 12;
+
   return (
     <div className="vl-app">
       {/* Map area */}
-      <div className="vl-map-area">
+      <div className="vl-map-area" style={{ '--dock-h': `${dockReservedH}px` } as React.CSSProperties}>
       <MapContainer
         center={MAP_CENTER}
         zoom={MAP_ZOOM}
@@ -3167,28 +3221,67 @@ export function VeierlandApp() {
       })()}
       </div>{/* end vl-map-area */}
 
-      {/* Fixed bottom tab bar (mobile) */}
-      <nav className="vl-tabbar vl-tabbar-mobile">
-        <button className={`vl-tabbtn${tab === 'map' ? ' on' : ''}`} onClick={() => selectTab('map')}>
-          <MapTabSvg /><span>{T.map}</span>
-        </button>
-        <button className={`vl-tabbtn${tab === 'places' ? ' on' : ''}`} onClick={() => selectTab('places')}>
-          <PlacesTabSvg /><span>{T.places}</span>
-        </button>
-        <button className={`vl-tabbtn${tab === 'trails' ? ' on' : ''}`} onClick={() => selectTab('trails')}>
-          <TrailsTabSvg /><span>{T.trails}</span>
-        </button>
-        <button className={`vl-tabbtn${tab === 'nature' ? ' on' : ''}`} onClick={() => selectTab('nature')}>
-          <NatureTabSvg /><span>{T.nature}</span>
-        </button>
-        <button className={`vl-tabbtn${tab === 'history' ? ' on' : ''}`} onClick={() => selectTab('history')}>
-          <HistoryTabSvg /><span>{T.history}</span>
-        </button>
-        <button className={`vl-tabbtn${tab === 'saved' ? ' on' : ''}`} onClick={() => selectTab('saved')}>
-          <HeartSvg /><span>{T.saved}</span>
-          {savedIds.size > 0 && <span className="vl-tabbadge">{savedIds.size}</span>}
-        </button>
-      </nav>
+      {/* Bottom dock (mobile): activity tiles by default, or a compact
+          summary + expandable list once a tile is active. Replaces the old
+          fixed tab bar — Steder/Turer/Natur/Historie/Lagret move to a menu
+          (Phase 6 of the redesign); this only shows while browsing the map
+          with nothing selected (the mini-card takes over once a POI/trail
+          is tapped, and this is hidden on desktop via CSS). */}
+      {tab === 'map' && !sheetOpen && !selectedPOI && !selectedTrail && (
+        <div className={`vl-dock${dockExpanded ? ' expanded' : ''}`}>
+          <div className="vl-dock-grab" onClick={() => setDockExpanded(e => !e)}><div className="bar" /></div>
+          {!activityTile ? (
+            <>
+              <div className="vl-dock-title">{lang === 'no' ? 'Hva vil du i dag?' : 'What do you want today?'}</div>
+              <div className="vl-dock-tiles">
+                <button className="vl-dock-tile" style={{ color: catCfg.bad?.color ?? '#2f9e8f' } as React.CSSProperties} onClick={() => applyActivityTile('bade')}>
+                  <span dangerouslySetInnerHTML={{ __html: iconSvg('bade') }} />
+                  <span className="lbl">{lang === 'no' ? 'Bade' : 'Swim'}</span>
+                </button>
+                <button className="vl-dock-tile" style={{ color: catCfg.friluft?.color ?? '#5f9438' } as React.CSSProperties} onClick={() => applyActivityTile('gatur')}>
+                  <span dangerouslySetInnerHTML={{ __html: iconSvg('tur') }} />
+                  <span className="lbl">{lang === 'no' ? 'Gå tur' : 'Walk'}</span>
+                </button>
+                <button className="vl-dock-tile" style={{ color: catCfg.kultur?.color ?? '#b5673e' } as React.CSSProperties} onClick={() => applyActivityTile('historie')}>
+                  <span dangerouslySetInnerHTML={{ __html: iconSvg('kultur') }} />
+                  <span className="lbl">{lang === 'no' ? 'Historie' : 'History'}</span>
+                </button>
+                <button className="vl-dock-tile" style={{ color: catCfg.mat?.color ?? '#e0823c' } as React.CSSProperties} onClick={() => applyActivityTile('spise')}>
+                  <span dangerouslySetInnerHTML={{ __html: iconSvg('mat') }} />
+                  <span className="lbl">{lang === 'no' ? 'Spise' : 'Eat'}</span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="vl-dock-summary">
+              <button className="back" onClick={exitActivityTile} aria-label={lang === 'no' ? 'Tilbake' : 'Back'}><BackSvg /></button>
+              <div className="txt">
+                {lang === 'no'
+                  ? `${filteredPOIs.length} ${activityTile === 'bade' ? 'badeplasser' : 'spisesteder'}`
+                  : `${filteredPOIs.length} ${activityTile === 'bade' ? 'beaches' : 'places to eat'}`}
+              </div>
+              <button className="showlist" onClick={() => setDockExpanded(e => !e)}>
+                {dockExpanded ? (lang === 'no' ? 'Skjul' : 'Hide') : (lang === 'no' ? 'Vis liste' : 'Show list')}
+              </button>
+            </div>
+          )}
+          {activityTile && dockExpanded && (
+            <div className="vl-dock-list">
+              {filteredPOIs.map(poi => (
+                <div key={poi.id} className="vl-dock-row" onClick={() => { showOnMap(poi); setDockExpanded(false); }}>
+                  <div className="nm">{poi.navn}</div>
+                  <div className="sub">{walkShort(poi.coordinates)}</div>
+                </div>
+              ))}
+              {filteredPOIs.length === 0 && (
+                <p style={{ fontSize: 13, color: 'var(--muted)', textAlign: 'center', padding: '8px 0' }}>
+                  {lang === 'no' ? 'Ingen steder funnet.' : 'No places found.'}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Sheet / Desktop sidebar */}
       <div
