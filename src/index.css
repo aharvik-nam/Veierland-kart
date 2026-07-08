@@ -61,22 +61,34 @@ body { display: grid; place-items: center; }
 /* ── Markers ───────────────────────────────────────────────────────────────── */
 .vl-pin {
   width: 32px; height: 32px; border-radius: 50%;
-  background: var(--card);
-  border: 1px solid var(--line);
-  color: var(--ink);
-  box-shadow: 0 1px 3px rgba(28,38,30,.16);
+  background: var(--pc, var(--card));
+  border: 2px solid #fff;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(28,38,30,.28);
   display: grid; place-items: center;
   transition: transform .16s, box-shadow .16s;
   cursor: pointer;
 }
 .vl-pin svg { width: 18px; height: 18px; }
 .vl-pin.sel {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--ink);
+  border-color: #fff;
   color: #fff;
   transform: scale(1.18);
   z-index: 1000;
-  box-shadow: 0 4px 12px rgba(28,38,30,.22);
+  box-shadow: 0 4px 12px rgba(28,38,30,.32);
+}
+.vl-pin-lg { border-width: 3px; }
+.vl-pin-labeled-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.vl-pin-label {
+  background: rgba(251,249,243,.94);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12.5px; font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(28,38,30,.14);
+  color: var(--ink);
 }
 
 .vl-me {

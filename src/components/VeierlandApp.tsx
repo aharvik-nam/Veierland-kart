@@ -190,10 +190,20 @@ function markerSize(zoom: number): number {
   return Math.round(Math.max(14, Math.min(34, 14 + (zoom - 11) * 5)));
 }
 
-function makeIconHtml(icon: string, selected: boolean, sz: number): string {
+function makeIconHtml(icon: string, color: string, selected: boolean, sz: number): string {
   const svgSz = Math.round(sz * 0.59);
   const svg = `<svg viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="${svgSz}" height="${svgSz}">${ICONS[icon] ?? ICONS.wc}</svg>`;
-  return `<div class="vl-pin${selected ? ' sel' : ''}" style="width:${sz}px;height:${sz}px">${svg}</div>`;
+  return `<div class="vl-pin${selected ? ' sel' : ''}" style="--pc:${color};width:${sz}px;height:${sz}px">${svg}</div>`;
+}
+
+// Bigger pin with the place name shown directly beneath it, for activity-mode
+// map views (e.g. "Bade") where tapping to see a name isn't realistic for
+// young or elderly users. Kept separate from makeIconHtml so the hot default
+// per-marker render path (called for every POI, every render) stays untouched.
+function makeLabeledIconHtml(icon: string, color: string, selected: boolean, sz: number, label: string): string {
+  const svgSz = Math.round(sz * 0.55);
+  const svg = `<svg viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" width="${svgSz}" height="${svgSz}">${ICONS[icon] ?? ICONS.wc}</svg>`;
+  return `<div class="vl-pin-labeled-wrap"><div class="vl-pin vl-pin-lg${selected ? ' sel' : ''}" style="--pc:${color};width:${sz}px;height:${sz}px">${svg}</div><div class="vl-pin-label">${label}</div></div>`;
 }
 
 function iconSvg(icon: string): string {
@@ -908,8 +918,8 @@ export function VeierlandApp() {
       const faded = dimByTrail && !!poi.coordinates &&
         pointToPolylineDistM(poi.coordinates as [number, number], selectedTrail!.path) > 20;
       const html = faded
-        ? `<div style="opacity:0.3">${makeIconHtml(cat.icon, sel, sz)}</div>`
-        : makeIconHtml(cat.icon, sel, sz);
+        ? `<div style="opacity:0.3">${makeIconHtml(cat.icon, cat.color, sel, sz)}</div>`
+        : makeIconHtml(cat.icon, cat.color, sel, sz);
       const icon = L.divIcon({ className: '', iconSize: [sz, sz], iconAnchor: [half, half], html });
       L.marker(poi.coordinates as [number, number], { icon, zIndexOffset: sel ? 1000 : 0 }).on('click', () => selectPOI(poi)).addTo(cg);
     });
