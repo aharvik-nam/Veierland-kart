@@ -560,3 +560,31 @@ export function windDirLabel(deg: number, lang: 'no' | 'en'): string {
   const i = Math.round(((deg % 360) + 360) % 360 / 45) % 8;
   return (lang === 'no' ? no : en)[i];
 }
+
+// A single human sentence for "what's it like outside right now" — e.g.
+// "18° og sol · lett bris fra SV" — for the glass top bar. Thresholds are
+// deliberately simple (a handful of buckets), not a meteorological standard.
+export function weatherOneLiner(w: WeatherNow | null, lang: 'no' | 'en'): string {
+  if (!w) return lang === 'no' ? 'Henter vær…' : 'Loading weather…';
+  const temp = Math.round(w.airTemp);
+  const sky = w.cloudFraction < 20
+    ? (lang === 'no' ? 'sol' : 'sun')
+    : w.cloudFraction < 60
+    ? (lang === 'no' ? 'delvis skyet' : 'partly cloudy')
+    : (lang === 'no' ? 'skyet' : 'cloudy');
+  const windDesc = w.windSpeed < 0.5
+    ? (lang === 'no' ? 'stille' : 'calm')
+    : w.windSpeed < 3.4
+    ? (lang === 'no' ? 'svak bris' : 'light breeze')
+    : w.windSpeed < 7.9
+    ? (lang === 'no' ? 'lett bris' : 'moderate breeze')
+    : w.windSpeed < 13.8
+    ? (lang === 'no' ? 'frisk bris' : 'fresh breeze')
+    : (lang === 'no' ? 'kuling' : 'strong wind');
+  const windPart = w.windSpeed < 0.5
+    ? windDesc
+    : `${windDesc} ${lang === 'no' ? 'fra' : 'from'} ${windDirLabel(w.windFromDeg, lang)}`;
+  return lang === 'no'
+    ? `${temp}° og ${sky} · ${windPart}`
+    : `${temp}° and ${sky} · ${windPart}`;
+}

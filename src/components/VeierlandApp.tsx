@@ -17,7 +17,7 @@ import { fetchFerryDepartures, fetchQuaySailings, nearestQuay, FerryBoard, FERRY
 import {
   hasDomGrid, sunPosition, sunlitAt, shelterAt,
   makeSunShadowOverlay, makeShelterOverlay, makeEffectiveTempOverlay,
-  fetchWeatherNow, fetchSeaTemp, WeatherNow, windDirLabel,
+  fetchWeatherNow, fetchSeaTemp, WeatherNow, windDirLabel, weatherOneLiner,
   windColor, ORKAN_MS, effectiveTemp, effectiveTempColor,
 } from '../lib/conditions';
 import losmassData from '../data/losmasser.geojson';
@@ -383,6 +383,35 @@ function ElevationChart({ profile, minEl, maxEl }: { profile: [number, number][]
     </div>
   );
 }
+// Circular countdown to the next ferry departure, for the glass top bar.
+// Fill fraction is relative to an arbitrary 60-minute reference window (the
+// app has no "typical gap between sailings" constant to anchor to) — the
+// ring simply fills up as the departure gets closer, capped at 60 min out.
+function FerryRing({ minsUntil, size = 62 }: { minsUntil: number | null; size?: number }) {
+  const REF_MIN = 60;
+  const r = (size - 5) / 2;
+  const circumference = 2 * Math.PI * r;
+  const frac = minsUntil === null ? 0 : 1 - Math.min(Math.max(minsUntil, 0), REF_MIN) / REF_MIN;
+  const dash = `${circumference * frac} ${circumference}`;
+  return (
+    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--line)" strokeWidth={5} />
+        <circle
+          cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--accent)" strokeWidth={5}
+          strokeLinecap="round" strokeDasharray={dash}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: 15, fontWeight: 800, lineHeight: 1, color: 'var(--ink)' }}>
+          {minsUntil === null ? '–' : Math.max(0, minsUntil)}
+        </span>
+        <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted)', letterSpacing: '.04em' }}>MIN</span>
+      </div>
+    </div>
+  );
+}
 function ChevSvg() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -646,13 +675,15 @@ export function VeierlandApp() {
   const condOverlayRef = useRef<L.ImageOverlay | null>(null);
   const isBeachPOI = !!selectedPOI && (selectedPOI.kategorier ?? [selectedPOI.kategori]).includes('bad');
 
+  // Weather is needed unconditionally now (the glass top bar's one-liner),
+  // not just for the beach card — fetch once on mount; fetchWeatherNow/
+  // fetchSeaTemp already cache for 30 min so this doesn't add extra load.
   useEffect(() => {
-    if (!isBeachPOI) return;
     let alive = true;
     fetchWeatherNow().then(w => { if (alive && w) setWeatherNow(w); });
     fetchSeaTemp().then(t => { if (alive && t !== null) setSeaTemp(t); });
     return () => { alive = false; };
-  }, [isBeachPOI]);
+  }, []);
 
 
   const mapRef = useRef<L.Map | null>(null);
@@ -2793,27 +2824,39 @@ export function VeierlandApp() {
         </button>
       )}
 
-      {/* Top overlay: lang toggle + ferry pill */}
-      <div className="vl-top">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div className="vl-lang">
-            <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>NO</button>
-            <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')} title="Some content is only available in Norwegian">EN</button>
-          </div>
-          <button className={`vl-ferrypill${showFerryPop ? ' on' : ''}`}
-            onClick={e => { e.stopPropagation(); toggleFerryPop(); }}
-            title={lang === 'no' ? 'Fergetider' : 'Ferry times'}>
-            <span className="fi" dangerouslySetInnerHTML={{ __html: iconSvg('ferge') }} />
-            {nextFromIsland
-              ? <>{fmtDepTime(nextFromIsland.time)} <span className="fq">{nextFromIsland.fromName}{ferryTomorrow ? (lang === 'no' ? ' · i morgen' : ' · tomorrow') : ''}</span></>
-              : (lang === 'no' ? 'Fergetider' : 'Ferry')}
-          </button>
+      {/* Glass top bar: place name + weather one-liner, lang toggle, ferry countdown ring */}
+      <div className="vl-topbar2">
+        <div className="vl-topbar2-info">
+          <div className="vl-topbar2-title">Veierland</div>
+          <div className="vl-topbar2-weather">{weatherOneLiner(weatherNow, lang)}</div>
         </div>
+        <div className="vl-lang vl-lang-sm">
+          <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>NO</button>
+          <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')} title="Some content is only available in Norwegian">EN</button>
+        </div>
+        <button className={`vl-ferryring-btn${showFerryPop ? ' on' : ''}`}
+          onClick={e => { e.stopPropagation(); toggleFerryPop(); }}
+          title={lang === 'no' ? 'Fergetider' : 'Ferry times'}>
+          <FerryRing minsUntil={nextFromIsland ? minsUntil(nextFromIsland.time) : null} />
+          <div className="vl-ferryring-text">
+            <div className="lbl">{lang === 'no' ? 'Ferge' : 'Ferry'} {nextFromIsland ? fmtDepTime(nextFromIsland.time) : '–'}</div>
+            <div className="from">
+              {nextFromIsland
+                ? `${lang === 'no' ? 'fra' : 'from'} ${nextFromIsland.fromName}${ferryTomorrow ? (lang === 'no' ? ' · i morgen' : ' · tomorrow') : ''} →`
+                : (lang === 'no' ? 'Fergetider' : 'Ferry times')}
+            </div>
+          </div>
+        </button>
       </div>
 
-      {/* Ferry departures popup */}
+      {/* Ferry board — full-screen (see plan Phase 5 for its full visual redesign;
+          this is just promoted from an anchored popup so the top bar's ferry
+          ring always has somewhere real to go) */}
       {showFerryPop && (
-        <div className="vl-ferrypop" onClick={e => e.stopPropagation()}>
+        <div className="vl-ferrypop vl-ferrypop-full" onClick={e => e.stopPropagation()}>
+          <button className="vl-ferrypop-close" onClick={() => setShowFerryPop(false)} aria-label={lang === 'no' ? 'Lukk' : 'Close'}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
           {/* Weather info header */}
           {(weatherNow || seaTemp !== null) && (
             <div className="vl-ferry-weather">
