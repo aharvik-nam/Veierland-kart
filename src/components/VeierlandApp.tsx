@@ -538,6 +538,14 @@ export function VeierlandApp() {
   const [selectedTrail, setSelectedTrail] = useState<Trail | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [autoSheetH, setAutoSheetH] = useState<number | null>(null);
+  // Drag-to-resize on the sheet's grab handle: sheetPeeked is the settled
+  // "pulled down, only the top sliver showing" state; dragH is the live
+  // height while a finger/mouse is actively dragging (overrides everything
+  // else until released, when it snaps to peeked or fully open).
+  const [sheetPeeked, setSheetPeeked] = useState(false);
+  const [dragH, setDragH] = useState<number | null>(null);
+  const [isDraggingSheet, setIsDraggingSheet] = useState(false);
+  const dragStartRef = useRef<{ y: number; h: number; moved: boolean; cur: number | null } | null>(null);
   // New-map-screen dock ("Hva vil du i dag?") state — deliberately separate
   // from sheetOpen/view/tab, which stay reserved for the POI/trail detail
   // sheet and the menu-driven browse lists, so the dock's own open/expand
@@ -1415,10 +1423,15 @@ export function VeierlandApp() {
   ), 720);
   const TAB_BAR_H = 62; // keep in sync with --tab-h in index.css
   const MINI_CARD_H = 68;
+  const SHEET_PEEK_H = 110; // grab handle + a sliver of the header, map stays mostly visible
 
   // After content renders, shrink sheet to fit actual content (avoids excess white space)
   useEffect(() => {
     if (!sheetOpen) { setAutoSheetH(null); return; }
+    // Fresh content (a new selection, or the sheet just opened) always
+    // starts fully open, not stuck peeked from whatever was shown before.
+    setSheetPeeked(false);
+    setDragH(null);
     const frame = requestAnimationFrame(() => {
       if (bodyRef.current) {
         const grabH = 30;
@@ -1430,7 +1443,62 @@ export function VeierlandApp() {
   }, [sheetOpen, view, selectedPOI, selectedTrail, selectedNature, selectedEra, selectedFarm, historyView, tab]);
 
   const SHEET_OPEN_H = autoSheetH ?? SHEET_MAX_H;
-  const sheetCurrentH = sheetOpen ? SHEET_OPEN_H : SHEET_MAX_H;
+  const sheetCurrentH = sheetOpen
+    ? (dragH ?? (sheetPeeked ? SHEET_PEEK_H : SHEET_OPEN_H))
+    : SHEET_MAX_H;
+
+  // Drag-to-resize on the grab handle — follows the finger/mouse 1:1 while
+  // active, then snaps to peeked or fully open on release. A tap (near-zero
+  // movement) toggles peeked/open instead; a tap while already peeked closes
+  // the sheet entirely, so the handle still offers a full "back to map" path.
+  //
+  // Move/up listeners are on `document`, not the small grab handle itself —
+  // relying only on element-scoped pointer events (even with
+  // setPointerCapture) drops the drag the moment a fast finger movement
+  // exits that ~40px-tall strip, which is the normal case for a real drag.
+  function onGrabPointerDown(e: React.PointerEvent) {
+    if (!sheetOpen) return;
+    dragStartRef.current = { y: e.clientY, h: dragH ?? (sheetPeeked ? SHEET_PEEK_H : SHEET_OPEN_H), moved: false, cur: null };
+    setIsDraggingSheet(true);
+  }
+  useEffect(() => {
+    if (!isDraggingSheet) return;
+    const handleMove = (e: PointerEvent) => {
+      const start = dragStartRef.current;
+      if (!start) return;
+      const dy = e.clientY - start.y;
+      if (Math.abs(dy) > 4) start.moved = true;
+      const newH = Math.min(SHEET_OPEN_H, Math.max(SHEET_PEEK_H, start.h - dy));
+      start.cur = newH;
+      setDragH(newH);
+    };
+    const handleUp = () => {
+      const start = dragStartRef.current;
+      dragStartRef.current = null;
+      setIsDraggingSheet(false);
+      if (!start) return;
+      if (!start.moved) {
+        // Plain tap: peek -> close, open -> peek.
+        if (sheetPeeked) { closeSheet(); return; }
+        setSheetPeeked(true);
+        setDragH(null);
+        return;
+      }
+      const settled = start.cur ?? start.h;
+      const mid = (SHEET_PEEK_H + SHEET_OPEN_H) / 2;
+      setSheetPeeked(settled < mid);
+      setDragH(null);
+    };
+    document.addEventListener('pointermove', handleMove);
+    document.addEventListener('pointerup', handleUp);
+    document.addEventListener('pointercancel', handleUp);
+    return () => {
+      document.removeEventListener('pointermove', handleMove);
+      document.removeEventListener('pointerup', handleUp);
+      document.removeEventListener('pointercancel', handleUp);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDraggingSheet]);
   // Kart tab, nothing open: a selected POI shows as a compact mini-card above the tab bar
   // instead of pushing the full sheet up over the map.
   const showMiniCard = tab === 'map' && !sheetOpen && view === 'browse' && !!(selectedPOI || selectedTrail);
@@ -3373,7 +3441,7 @@ export function VeierlandApp() {
       <div
         ref={sheetRef}
         className={`vl-sheet${sheetOpen ? '' : ' closed'}`}
-        style={{ height: sheetCurrentH + 'px' }}
+        style={{ height: sheetCurrentH + 'px', transition: isDraggingSheet ? 'none' : undefined }}
         onClick={() => setShowLayerPop(false)}
       >
         {/* Same tab bar, repositioned to the top of the sidebar on desktop */}
@@ -3398,7 +3466,7 @@ export function VeierlandApp() {
             {savedIds.size > 0 && <span className="vl-tabbadge">{savedIds.size}</span>}
           </button>
         </nav>
-        <div className="vl-grab" onClick={closeSheet}>
+        <div className="vl-grab" onPointerDown={onGrabPointerDown}>
           <div className="bar" />
         </div>
         <div className="vl-body" ref={bodyRef}>
