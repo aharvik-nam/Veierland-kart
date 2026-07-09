@@ -1036,10 +1036,13 @@ body { display: grid; place-items: center; }
   .vl-tabbtn.on::before { display: none; }
   .vl-tabbtn.on { background: var(--card2); border-radius: 10px; }
   .vl-minicard { display: none; }
-  /* Desktop's activity-tile treatment lives in the sidebar itself (Phase 3b
-     of the map redesign, not yet built) — hide the floating mobile dock
-     here rather than have it overlap the sidebar layout. */
-  .vl-dock { display: none; }
+  /* The dock still works on desktop as a quick map-filter shortcut — the
+     sidebar already shows the full place list at all times regardless
+     (unaffected by activityTile), so this is additive, not a replacement.
+     It's a sibling of .vl-map-area, not a child, so on the flex desktop
+     layout it needs its own left offset to sit over the map instead of
+     spanning the full viewport width including the sidebar. */
+  .vl-dock { left: 436px; max-width: 480px; }
   /* The sheet is a sidebar here, not a bottom sheet — pin the rail (and its
      popups) to the bottom of the map instead of tracking the sheet height. */
   .vl-rail { bottom: 18px !important; }
