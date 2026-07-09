@@ -908,7 +908,16 @@ export function VeierlandApp() {
         if (point) img = makeEffectiveTempOverlay(point.airTemp, point.windSpeed, point.windFromDeg, point.humidity);
       }
       if (cancelled) return;
-      if (!img) { setCondLayer(null); return; }
+      if (!img) {
+        // Sun layer with the sun below the horizon: nothing to draw, but the
+        // layer must stay active — the legend explains why the map is bare,
+        // and the hour chips let the user scrub to a daylight hour (the whole
+        // point of planning ahead). Deactivating here would make "Sol og
+        // skygge" appear dead every evening.
+        if (condLayer === 'sun') { setTempRange(null); return; }
+        setCondLayer(null);
+        return;
+      }
       setTempRange(img.tempRange ?? null);
       clear();
       condOverlayRef.current = L.imageOverlay(img.dataUrl, img.bounds, { opacity: 0.8, interactive: false }).addTo(map);
@@ -3334,7 +3343,9 @@ export function VeierlandApp() {
                   </div>
                 </>
               ) : (
-                <span className="vl-cond-note">{lang === 'no' ? 'Sola er under horisonten.' : 'Sun is below the horizon.'}</span>
+                <span className="vl-cond-note">{lang === 'no'
+                  ? 'Sola er under horisonten — velg et senere tidspunkt for å se morgensola.'
+                  : 'The sun is below the horizon — pick a later hour to see morning sun.'}</span>
               );
             })() : condLayer === 'wind' ? (
               condPoint ? (
