@@ -374,6 +374,13 @@ export interface WeatherNow {
   symbolCode: string;     // MET Yr symbol code, e.g. "partlycloudy_day" — see weatherIconKind()
 }
 
+// A single point in the hourly forecast — same fields as WeatherNow plus the
+// timestamp it applies to, so the Forhold panel can let people scrub forward
+// through the day instead of only ever seeing "right now".
+export interface WeatherPoint extends WeatherNow {
+  time: string; // ISO timestamp
+}
+
 interface CacheEntry<T> { at: number; val: T }
 
 function readCache<T>(key: string, ttlMs: number): T | null {
@@ -390,8 +397,10 @@ function writeCache<T>(key: string, val: T): void {
   try { localStorage.setItem(key, JSON.stringify({ at: Date.now(), val })); } catch { /* ignore */ }
 }
 
-export async function fetchWeatherNow(): Promise<WeatherNow | null> {
-  const cached = readCache<WeatherNow>('vl-weather-v3', 30 * 60 * 1000);
+// Next ~24 hours, one point per hour, so the Forhold panel can show what
+// sun/wind/temperature will look like later today — not just right now.
+export async function fetchWeatherSeries(): Promise<WeatherPoint[] | null> {
+  const cached = readCache<WeatherPoint[]>('vl-weather-series-v1', 30 * 60 * 1000);
   if (cached) return cached;
   try {
     const res = await fetch(
@@ -400,22 +409,40 @@ export async function fetchWeatherNow(): Promise<WeatherNow | null> {
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    const entry = data?.properties?.timeseries?.[0];
-    const det = entry?.data?.instant?.details;
-    if (!det) return null;
-    const w: WeatherNow = {
-      windFromDeg: det.wind_from_direction ?? 0,
-      windSpeed: det.wind_speed ?? 0,
-      airTemp: det.air_temperature ?? 0,
-      cloudFraction: det.cloud_area_fraction ?? 0,
-      humidity: det.relative_humidity ?? 50,
-      symbolCode: entry?.data?.next_1_hours?.summary?.symbol_code ?? 'cloudy',
-    };
-    writeCache('vl-weather-v3', w);
-    return w;
+    const series = data?.properties?.timeseries;
+    if (!Array.isArray(series) || !series.length) return null;
+    const points: WeatherPoint[] = series.slice(0, 25).map((entry: any) => {
+      const det = entry?.data?.instant?.details ?? {};
+      return {
+        time: entry.time,
+        windFromDeg: det.wind_from_direction ?? 0,
+        windSpeed: det.wind_speed ?? 0,
+        airTemp: det.air_temperature ?? 0,
+        cloudFraction: det.cloud_area_fraction ?? 0,
+        humidity: det.relative_humidity ?? 50,
+        symbolCode: entry?.data?.next_1_hours?.summary?.symbol_code
+          ?? entry?.data?.next_6_hours?.summary?.symbol_code ?? 'cloudy',
+      };
+    });
+    writeCache('vl-weather-series-v1', points);
+    return points;
   } catch {
     return null;
   }
+}
+
+export async function fetchWeatherNow(): Promise<WeatherNow | null> {
+  const cached = readCache<WeatherNow>('vl-weather-v3', 30 * 60 * 1000);
+  if (cached) return cached;
+  const series = await fetchWeatherSeries();
+  const first = series?.[0];
+  if (!first) return null;
+  const w: WeatherNow = {
+    windFromDeg: first.windFromDeg, windSpeed: first.windSpeed, airTemp: first.airTemp,
+    cloudFraction: first.cloudFraction, humidity: first.humidity, symbolCode: first.symbolCode,
+  };
+  writeCache('vl-weather-v3', w);
+  return w;
 }
 
 export async function fetchSeaTemp(): Promise<number | null> {

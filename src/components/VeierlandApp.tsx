@@ -17,7 +17,7 @@ import { fetchFerryDepartures, fetchQuaySailings, nearestQuay, FerryBoard, FERRY
 import {
   hasDomGrid, sunPosition, sunlitAt, shelterAt,
   makeSunShadowOverlay, makeShelterOverlay, makeEffectiveTempOverlay,
-  fetchWeatherNow, fetchSeaTemp, WeatherNow, windDirLabel, weatherIconKind, WeatherIconKind,
+  fetchWeatherNow, fetchWeatherSeries, fetchSeaTemp, WeatherNow, WeatherPoint, windDirLabel, weatherIconKind, WeatherIconKind,
   windColor, ORKAN_MS, effectiveTemp, effectiveTempColor,
   rankBeaches, dailyRecommendation, BeachConditionScore,
 } from '../lib/conditions';
@@ -723,6 +723,12 @@ export function VeierlandApp() {
   const [seaTemp, setSeaTemp] = useState<number | null>(null);
   const [tempRange, setTempRange] = useState<[number, number] | null>(null);
   const condOverlayRef = useRef<L.ImageOverlay | null>(null);
+  // Forhold ("conditions") can be scrubbed forward through the next ~24h so
+  // people can plan ahead, not just see the current moment. condHourOffset is
+  // an index into weatherSeries (0 = now); it's shared across all three
+  // condLayer types so switching sun/wind/temp keeps the same planning hour.
+  const [weatherSeries, setWeatherSeries] = useState<WeatherPoint[] | null>(null);
+  const [condHourOffset, setCondHourOffset] = useState(0);
   const isBeachPOI = !!selectedPOI && (selectedPOI.kategorier ?? [selectedPOI.kategori]).includes('bad');
 
   // Weather is needed unconditionally now (the glass top bar's one-liner),
@@ -873,6 +879,10 @@ export function VeierlandApp() {
   const [mapReady, setMapReady] = useState(false);
   const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
 
+  // Fresh activation of Forhold always starts at "now", not wherever the
+  // user last scrubbed to.
+  useEffect(() => { if (condLayer === null) setCondHourOffset(0); }, [condLayer]);
+
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
@@ -883,21 +893,19 @@ export function VeierlandApp() {
     clear();
     if (!condLayer || !hasDomGrid) return;
     (async () => {
+      const series = weatherSeries ?? await fetchWeatherSeries();
+      if (cancelled) return;
+      if (series && !weatherSeries) setWeatherSeries(series);
+      const point = series?.[Math.min(condHourOffset, series.length - 1)] ?? null;
+      const date = point ? new Date(point.time) : new Date();
+
       let img: { dataUrl: string; bounds: [[number, number], [number, number]]; tempRange?: [number, number] } | null = null;
       if (condLayer === 'sun') {
-        img = makeSunShadowOverlay(new Date());
+        img = makeSunShadowOverlay(date);
       } else if (condLayer === 'wind') {
-        const w = weatherNow ?? await fetchWeatherNow();
-        if (w) {
-          if (!weatherNow) setWeatherNow(w);
-          img = makeShelterOverlay(w.windFromDeg, w.windSpeed);
-        }
+        if (point) img = makeShelterOverlay(point.windFromDeg, point.windSpeed);
       } else if (condLayer === 'effectiveTemp') {
-        const w = weatherNow ?? await fetchWeatherNow();
-        if (w) {
-          if (!weatherNow) setWeatherNow(w);
-          img = makeEffectiveTempOverlay(w.airTemp, w.windSpeed, w.windFromDeg, w.humidity);
-        }
+        if (point) img = makeEffectiveTempOverlay(point.airTemp, point.windSpeed, point.windFromDeg, point.humidity);
       }
       if (cancelled) return;
       if (!img) { setCondLayer(null); return; }
@@ -906,9 +914,9 @@ export function VeierlandApp() {
       condOverlayRef.current = L.imageOverlay(img.dataUrl, img.bounds, { opacity: 0.8, interactive: false }).addTo(map);
     })();
     return () => { cancelled = true; clear(); };
-  // weatherNow is read once at activation; re-running on its change would flicker
+  // weatherSeries is read once at activation; re-running on its change would flicker
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [condLayer, mapReady]);
+  }, [condLayer, mapReady, condHourOffset]);
 
   // Load POIs and trails from Firestore (or local JSON fallback)
   useEffect(() => {
@@ -3263,102 +3271,121 @@ export function VeierlandApp() {
       </div>
 
       {/* Legend for the active conditions overlay */}
-      {condLayer && hasDomGrid && (
-        <div className="vl-condlegend" onClick={e => e.stopPropagation()}>
-          {condLayer === 'sun' ? (() => {
-            const sun = sunPosition(new Date(), 59.155, 10.351);
-            return (
+      {condLayer && hasDomGrid && (() => {
+        const condPoint = weatherSeries?.[Math.min(condHourOffset, weatherSeries.length - 1)] ?? null;
+        const condDate = condPoint ? new Date(condPoint.time) : new Date();
+        const condTimeLabel = condHourOffset === 0
+          ? (lang === 'no' ? 'nå' : 'now')
+          : `${lang === 'no' ? 'kl.' : 'at'} ${String(condDate.getHours()).padStart(2, '0')}:${String(condDate.getMinutes()).padStart(2, '0')}`;
+        const HOUR_STEPS = [0, 3, 6, 12, 24];
+
+        return (
+          <div className="vl-condlegend" onClick={e => e.stopPropagation()}>
+            {weatherSeries && (
+              <div className="vl-condhours">
+                {HOUR_STEPS.filter(h => h < weatherSeries.length).map(h => (
+                  <button key={h} className={condHourOffset === h ? 'on' : ''} onClick={() => setCondHourOffset(h)}>
+                    {h === 0 ? (lang === 'no' ? 'Nå' : 'Now') : `+${h}t`}
+                  </button>
+                ))}
+              </div>
+            )}
+            {condLayer === 'sun' ? (() => {
+              const sun = sunPosition(condDate, 59.155, 10.351);
+              return (
+                <>
+                  <b>{lang === 'no' ? `Sol og skygge ${condTimeLabel}` : `Sun & shade ${condTimeLabel}`}</b>
+                  {sun.elevation > 0 ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
+                      <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
+                        style={{ transform: `rotate(${sun.azimuth}deg)`, flexShrink: 0, color: '#f5b120' }}>
+                        <path d="M12 2 L12 20 M12 2 L6 9 M12 2 L18 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>{Math.round(sun.elevation)}°</span>
+                    </div>
+                  ) : (
+                    <span>{lang === 'no' ? 'Sola er under horisonten.' : 'Sun is below the horizon.'}</span>
+                  )}
+                </>
+              );
+            })() : condLayer === 'wind' ? (
               <>
-                <b>{lang === 'no' ? 'Sol og skygge nå' : 'Sun & shade now'}</b>
-                {sun.elevation > 0 ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  {condPoint && (
+                    // windFromDeg is meteorological convention (direction the wind
+                    // blows FROM); the arrow itself should point where it's blowing
+                    // TO, hence the +180.
                     <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
-                      style={{ transform: `rotate(${sun.azimuth}deg)`, flexShrink: 0, color: '#f5b120' }}>
+                      style={{ transform: `rotate(${condPoint.windFromDeg + 180}deg)`, flexShrink: 0 }}>
                       <path d="M12 2 L12 20 M12 2 L6 9 M12 2 L18 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>{Math.round(sun.elevation)}°</span>
+                  )}
+                  <div>
+                    <b>{lang === 'no' ? `Vindeksponering ${condTimeLabel}` : `Wind exposure ${condTimeLabel}`}</b>
+                    <br />
+                    <span>{condPoint
+                      ? (lang === 'no'
+                          ? `Vind fra ${windDirLabel(condPoint.windFromDeg, 'no')} ${Math.round(condPoint.windSpeed)} m/s.`
+                          : `Wind from ${windDirLabel(condPoint.windFromDeg, 'en')} ${Math.round(condPoint.windSpeed)} m/s.`)
+                      : (lang === 'no' ? 'Henter vind…' : 'Loading wind…')}</span>
+                  </div>
+                </div>
+                {condPoint && (() => {
+                  const windStops = [0, ORKAN_MS / 4, ORKAN_MS / 2, ORKAN_MS * 3 / 4, ORKAN_MS].map(s => windColor(s));
+                  const windT = Math.min(1, condPoint.windSpeed / ORKAN_MS);
+                  return (
+                    <>
+                      <GradientBar stops={windStops} posT={windT} />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--muted)' }}>
+                        <span>{lang === 'no' ? 'Stille' : 'Calm'}</span><span>{lang === 'no' ? 'Orkan' : 'Hurricane'}</span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </>
+            ) : (
+              <>
+                <b>{lang === 'no' ? `Effektiv temperatur ${condTimeLabel}` : `Effective temperature ${condTimeLabel}`}</b>
+                {condPoint ? (
+                  <div style={{ marginTop: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>
+                        {Math.round(effectiveTemp(condPoint.airTemp, condPoint.windSpeed, condPoint.humidity))}°C
+                      </span>
+                      <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                        {lang === 'no' ? `(luft: ${Math.round(condPoint.airTemp)}°C)` : `(air: ${Math.round(condPoint.airTemp)}°C)`}
+                      </span>
+                    </div>
+                    {(() => {
+                      // The overlay's colour scale is stretched to the actual spread of
+                      // effective temperature across the island at the selected hour
+                      // (see makeEffectiveTempOverlay), so the legend mirrors that same
+                      // range instead of a fixed -20..40°C — otherwise a 1-2°C wind
+                      // effect would never register as a visible position on a
+                      // 60°-wide bar.
+                      const [MIN_T, MAX_T] = tempRange ?? [-20, 40];
+                      const tempStops = [MIN_T, MIN_T + (MAX_T - MIN_T) / 4, (MIN_T + MAX_T) / 2, MAX_T - (MAX_T - MIN_T) / 4, MAX_T]
+                        .map(t => effectiveTempColor(t, MIN_T, MAX_T));
+                      const effTemp = effectiveTemp(condPoint.airTemp, condPoint.windSpeed, condPoint.humidity);
+                      const tempT = Math.min(1, Math.max(0, (effTemp - MIN_T) / (MAX_T - MIN_T)));
+                      return (
+                        <>
+                          <GradientBar stops={tempStops} posT={tempT} />
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--muted)' }}>
+                            <span>{Math.round(MIN_T)}°C</span><span>{Math.round(MAX_T)}°C</span>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 ) : (
-                  <span>{lang === 'no' ? 'Sola er under horisonten.' : 'Sun is below the horizon.'}</span>
+                  <span>{lang === 'no' ? 'Henter temperatur…' : 'Loading temperature…'}</span>
                 )}
               </>
-            );
-          })() : condLayer === 'wind' ? (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                {weatherNow && (
-                  // windFromDeg is meteorological convention (direction the wind
-                  // blows FROM); the arrow itself should point where it's blowing
-                  // TO, hence the +180.
-                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
-                    style={{ transform: `rotate(${weatherNow.windFromDeg + 180}deg)`, flexShrink: 0 }}>
-                    <path d="M12 2 L12 20 M12 2 L6 9 M12 2 L18 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-                <div>
-                  <b>{lang === 'no' ? 'Vindeksponering nå' : 'Wind exposure now'}</b>
-                  <br />
-                  <span>{weatherNow
-                    ? (lang === 'no'
-                        ? `Vind fra ${windDirLabel(weatherNow.windFromDeg, 'no')} ${Math.round(weatherNow.windSpeed)} m/s.`
-                        : `Wind from ${windDirLabel(weatherNow.windFromDeg, 'en')} ${Math.round(weatherNow.windSpeed)} m/s.`)
-                    : (lang === 'no' ? 'Henter vind…' : 'Loading wind…')}</span>
-                </div>
-              </div>
-              {weatherNow && (() => {
-                const windStops = [0, ORKAN_MS / 4, ORKAN_MS / 2, ORKAN_MS * 3 / 4, ORKAN_MS].map(s => windColor(s));
-                const windT = Math.min(1, weatherNow.windSpeed / ORKAN_MS);
-                return (
-                  <>
-                    <GradientBar stops={windStops} posT={windT} />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--muted)' }}>
-                      <span>{lang === 'no' ? 'Stille' : 'Calm'}</span><span>{lang === 'no' ? 'Orkan' : 'Hurricane'}</span>
-                    </div>
-                  </>
-                );
-              })()}
-            </>
-          ) : (
-            <>
-              <b>{lang === 'no' ? 'Effektiv temperatur nå' : 'Effective temperature now'}</b>
-              {weatherNow ? (
-                <div style={{ marginTop: 8 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                    <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>
-                      {Math.round(effectiveTemp(weatherNow.airTemp, weatherNow.windSpeed, weatherNow.humidity))}°C
-                    </span>
-                    <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-                      {lang === 'no' ? `(luft: ${Math.round(weatherNow.airTemp)}°C)` : `(air: ${Math.round(weatherNow.airTemp)}°C)`}
-                    </span>
-                  </div>
-                  {(() => {
-                    // The overlay's colour scale is stretched to the actual spread of
-                    // effective temperature across the island right now (see
-                    // makeEffectiveTempOverlay), so the legend mirrors that same range
-                    // instead of a fixed -20..40°C — otherwise a 1-2°C wind effect would
-                    // never register as a visible position on a 60°-wide bar.
-                    const [MIN_T, MAX_T] = tempRange ?? [-20, 40];
-                    const tempStops = [MIN_T, MIN_T + (MAX_T - MIN_T) / 4, (MIN_T + MAX_T) / 2, MAX_T - (MAX_T - MIN_T) / 4, MAX_T]
-                      .map(t => effectiveTempColor(t, MIN_T, MAX_T));
-                    const effTemp = effectiveTemp(weatherNow.airTemp, weatherNow.windSpeed, weatherNow.humidity);
-                    const tempT = Math.min(1, Math.max(0, (effTemp - MIN_T) / (MAX_T - MIN_T)));
-                    return (
-                      <>
-                        <GradientBar stops={tempStops} posT={tempT} />
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--muted)' }}>
-                          <span>{Math.round(MIN_T)}°C</span><span>{Math.round(MAX_T)}°C</span>
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
-              ) : (
-                <span>{lang === 'no' ? 'Henter temperatur…' : 'Loading temperature…'}</span>
-              )}
-            </>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        );
+      })()}
 
       {/* Compact mini-card: shown for a map-tapped POI when nothing else is open */}
       {showMiniCard && selectedPOI && (() => {

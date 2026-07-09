@@ -496,6 +496,13 @@ body { display: grid; place-items: center; }
   background: var(--card); border: 1px solid var(--line); border-radius: 12px;
   box-shadow: 0 8px 24px rgba(28,38,30,.16); padding: 10px 13px;
 }
+.vl-condhours { display: flex; gap: 4px; margin-bottom: 10px; }
+.vl-condhours button {
+  flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--card2);
+  border-radius: 7px; padding: 5px 0; font: inherit; font-size: 10px; font-weight: 700;
+  color: var(--muted); cursor: pointer;
+}
+.vl-condhours button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
 .vl-condlegend b { display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px; }
 .vl-condlegend span { font-size: 12px; color: var(--muted); line-height: 1.4; }
 
