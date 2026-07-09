@@ -588,3 +588,69 @@ export function weatherOneLiner(w: WeatherNow | null, lang: 'no' | 'en'): string
     ? `${temp}° og ${sky} · ${windPart}`
     : `${temp}° and ${sky} · ${windPart}`;
 }
+
+// ── Beach ranking, for the dock's "Bade" list and daily recommendation ────
+
+export interface BeachLike { id: string; navn: string; coordinates: [number, number] }
+export interface BeachConditionScore {
+  poi: BeachLike;
+  sunlit: boolean | null;
+  shelter: number | null; // 0–1
+  score: number; // higher = better; sun + shelter, sea temp is island-wide so doesn't discriminate between beaches
+}
+
+// Ranks beaches by current sun + wind shelter at each one specifically (sea
+// temperature is fetched once for the whole island, so it doesn't help rank
+// individual beaches against each other — sun and lee are what actually
+// differ from one beach to the next). Generalizes the single-beach sun/
+// shelter lookup already used on the POI detail card (sunlitAt/shelterAt)
+// across every beach at once.
+export function rankBeaches(beaches: BeachLike[], windFromDeg: number | null, date: Date): BeachConditionScore[] {
+  return beaches
+    .map(poi => {
+      const [lat, lng] = poi.coordinates;
+      const sunlit = sunlitAt(lat, lng, date);
+      const shelter = windFromDeg === null ? null : shelterAt(lat, lng, windFromDeg);
+      const score = (sunlit ? 1 : 0) + (shelter ?? 0);
+      return { poi, sunlit, shelter, score };
+    })
+    .sort((a, b) => b.score - a.score);
+}
+
+// Sunset time by stepping sunPosition() forward until elevation crosses
+// zero — sunPosition is a cheap trig calc (not grid-based), so this is fine
+// to run interactively. Returns null if the sun is already down or DOM data
+// (needed for horizon shadowing elsewhere, not here) isn't the blocker —
+// this only needs lat/lng, not the terrain grid.
+export function sunsetTime(lat: number, lng: number, from: Date): Date | null {
+  if (sunPosition(from, lat, lng).elevation <= 0) return null;
+  const stepMs = 5 * 60 * 1000;
+  let t = from.getTime();
+  for (let i = 0; i < 12 * 12; i++) { // up to 12h ahead, 5-min steps
+    t += stepMs;
+    if (sunPosition(new Date(t), lat, lng).elevation <= 0) return new Date(t);
+  }
+  return null;
+}
+
+// The dock's default-state "what's good today" line, built from whichever
+// beach currently ranks best. Returns null when there's nothing to say
+// (no DOM grid, or no beaches at all).
+export function dailyRecommendation(ranked: BeachConditionScore[], seaTemp: number | null, lang: 'no' | 'en'): string | null {
+  const best = ranked[0];
+  if (!best || best.sunlit === null) return null;
+  const [lat, lng] = best.poi.coordinates;
+  const sunset = best.sunlit ? sunsetTime(lat, lng, new Date()) : null;
+  const parts: string[] = [];
+  if (seaTemp !== null) parts.push(`${Math.round(seaTemp)}°${lang === 'no' ? ' i vannet' : ' in the water'}`);
+  if (best.sunlit && sunset) {
+    const t = `${String(sunset.getHours()).padStart(2, '0')}:${String(sunset.getMinutes()).padStart(2, '0')}`;
+    parts.push(lang === 'no' ? `sol til ${t}` : `sun until ${t}`);
+  } else {
+    parts.push(best.sunlit ? (lang === 'no' ? 'sol nå' : 'sun now') : (lang === 'no' ? 'skyet nå' : 'cloudy now'));
+  }
+  if ((best.shelter ?? 0) > 0.5) parts.push(lang === 'no' ? 'god le' : 'good shelter');
+  const lede = lang === 'no' ? 'Fin badedag' : 'Good day for a swim';
+  const at = lang === 'no' ? 'på' : 'at';
+  return `${lede}: ${parts.join(', ')} ${at} ${best.poi.navn}`;
+}

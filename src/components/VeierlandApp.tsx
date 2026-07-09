@@ -19,6 +19,7 @@ import {
   makeSunShadowOverlay, makeShelterOverlay, makeEffectiveTempOverlay,
   fetchWeatherNow, fetchSeaTemp, WeatherNow, windDirLabel, weatherOneLiner,
   windColor, ORKAN_MS, effectiveTemp, effectiveTempColor,
+  rankBeaches, dailyRecommendation, BeachConditionScore,
 } from '../lib/conditions';
 import losmassData from '../data/losmasser.geojson';
 import berggrunData from '../data/berggrunn.geojson';
@@ -755,6 +756,20 @@ export function VeierlandApp() {
       return true;
     });
   }, [allPOIs, activeCats, searchQ]);
+
+  // Ranks every beach by current sun + wind shelter, for the dock's "Bade"
+  // list and daily-recommendation line. Memoized since sunlitAt/shelterAt
+  // do real terrain-horizon raycasting, not free to recompute every render.
+  const beachRanking = useMemo<BeachConditionScore[]>(() => {
+    if (!hasDomGrid) return [];
+    const beaches = allPOIs.filter(p => (p.kategorier ?? [p.kategori]).includes('bad'));
+    return rankBeaches(beaches, weatherNow?.windFromDeg ?? null, new Date());
+  }, [allPOIs, weatherNow]);
+
+  const recoText = useMemo(
+    () => dailyRecommendation(beachRanking, seaTemp, lang),
+    [beachRanking, seaTemp, lang]
+  );
 
   const groupedPOIs = useMemo(() => {
     const catOrder = Object.keys(catCfg);
@@ -3280,6 +3295,13 @@ export function VeierlandApp() {
                   <span className="lbl">{lang === 'no' ? 'Spise' : 'Eat'}</span>
                 </button>
               </div>
+              {recoText && (
+                <div className="vl-dock-reco" onClick={() => applyActivityTile('bade')}>
+                  <span className="em">☀️</span>
+                  <div style={{ flex: 1 }}><b>{recoText}</b></div>
+                  <ChevSvg />
+                </div>
+              )}
             </>
           ) : (
             <div className="vl-dock-summary">
@@ -3294,7 +3316,34 @@ export function VeierlandApp() {
               </button>
             </div>
           )}
-          {activityTile && dockExpanded && (
+          {activityTile === 'bade' && dockExpanded && (
+            <div className="vl-dock-list">
+              {beachRanking.map((b, i) => (
+                <div key={b.poi.id} className={`vl-dock-row beach${i === 0 ? ' best' : ''}`}
+                  onClick={() => { const poi = allPOIs.find(p => p.id === b.poi.id); if (poi) showOnMap(poi); setDockExpanded(false); }}>
+                  <div className="temp">
+                    <span className="v">{seaTemp !== null ? Math.round(seaTemp) + '°' : '—'}</span>
+                    <span className="k">{lang === 'no' ? 'I VANNET' : 'IN WATER'}</span>
+                  </div>
+                  <div className="mid">
+                    <div className="nm">{b.poi.navn}</div>
+                    <div className="chips">
+                      {b.sunlit && <span className="chip sun">☀️ {lang === 'no' ? 'Sol' : 'Sun'}</span>}
+                      {(b.shelter ?? 0) > 0.5 && <span className="chip lee">🍃 {lang === 'no' ? 'God le' : 'Sheltered'}</span>}
+                      <span className="chip walk">{walkShort(b.poi.coordinates)}</span>
+                    </div>
+                  </div>
+                  <ChevSvg />
+                </div>
+              ))}
+              {beachRanking.length === 0 && (
+                <p style={{ fontSize: 13, color: 'var(--muted)', textAlign: 'center', padding: '8px 0' }}>
+                  {lang === 'no' ? 'Ingen badeplasser funnet.' : 'No beaches found.'}
+                </p>
+              )}
+            </div>
+          )}
+          {activityTile === 'spise' && dockExpanded && (
             <div className="vl-dock-list">
               {filteredPOIs.map(poi => (
                 <div key={poi.id} className="vl-dock-row" onClick={() => { showOnMap(poi); setDockExpanded(false); }}>

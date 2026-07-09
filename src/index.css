@@ -735,6 +735,21 @@ body { display: grid; place-items: center; }
 }
 .vl-dock-row .nm { font-size: 14.5px; font-weight: 700; color: var(--ink); }
 .vl-dock-row .sub { font-size: 12.5px; font-weight: 600; color: var(--muted); flex: 0 0 auto; }
+.vl-dock-row.beach { align-items: center; gap: 13px; }
+.vl-dock-row.beach.best { border: 2px solid var(--accent); padding: 10px 12px; }
+.vl-dock-row.beach .temp { flex: 0 0 auto; text-align: center; width: 50px; }
+.vl-dock-row.beach .temp .v { display: block; font-size: 21px; font-weight: 800; color: var(--accent); line-height: 1; }
+.vl-dock-row.beach .temp .k { display: block; font-size: 9.5px; font-weight: 700; color: var(--muted); margin-top: 2px; }
+.vl-dock-row.beach .mid { flex: 1; min-width: 0; }
+.vl-dock-row.beach .mid .nm { font-size: 15.5px; }
+.vl-dock-row.beach .chips { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
+.vl-dock-row.beach .chip {
+  font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 9px;
+  background: var(--card2); color: var(--muted);
+}
+.vl-dock-row.beach .chip.sun { background: rgba(245,177,32,.16); color: #8a6a10; }
+.vl-dock-row.beach .chip.lee { background: rgba(95,148,56,.14); color: #4c7a2c; }
+.vl-dock-row.beach svg { width: 18px; height: 18px; flex: 0 0 auto; color: var(--muted); }
 
 /* ── Bottom sheet ───────────────────────────────────────────────────────────── */
 .vl-map-area { position: absolute; top: 0; left: 0; right: 0; bottom: var(--dock-h); }
