@@ -3083,6 +3083,9 @@ export function VeierlandApp() {
             <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>Norsk</button>
             <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>English</button>
           </div>
+          <a className="vl-menu-privacy" href="/personvern" target="_blank" rel="noreferrer">
+            {lang === 'no' ? 'Personvernerklæring' : 'Privacy policy'}
+          </a>
         </div>
       )}
 
