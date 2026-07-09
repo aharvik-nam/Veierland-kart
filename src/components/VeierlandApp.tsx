@@ -2976,11 +2976,15 @@ export function VeierlandApp() {
             <>
               <h5>{(lang === 'no' ? 'Fra Veierland' : 'From Veierland') + (ferryTomorrow ? (lang === 'no' ? ' · i morgen' : ' · tomorrow') : '')}</h5>
               {ferrySailings.filter(d => d.fromIsland).map((d, i) => (
-                <div key={`i${i}`} className="vl-fdep">
+                <div key={`i${i}`} className={`vl-fdep${i === 0 && !ferryTomorrow ? ' next' : ''}`}>
                   <div className="hd">
                     <b>{fmtDepTime(d.time)}</b>
                     <span className="fq">{lang === 'no' ? 'fra' : 'from'} {d.fromName}</span>
-                    {!ferryTomorrow && <span className="in">{minsUntil(d.time)} min</span>}
+                    {!ferryTomorrow && (
+                      i === 0
+                        ? <span className="in pill">{lang === 'no' ? 'om' : 'in'} {minsUntil(d.time)} min</span>
+                        : <span className="in">{minsUntil(d.time)} min</span>
+                    )}
                   </div>
                   <div className="ds">
                     → {d.calls.map(c => `${c.name} ${fmtDepTime(c.time)}`).join(' · ')}
@@ -2989,11 +2993,15 @@ export function VeierlandApp() {
               ))}
               <h5 style={{ marginTop: 10 }}>{(lang === 'no' ? 'Til Veierland' : 'To Veierland') + (ferryTomorrow ? (lang === 'no' ? ' · i morgen' : ' · tomorrow') : '')}</h5>
               {ferrySailings.filter(d => !d.fromIsland).map((d, i) => (
-                <div key={`m${i}`} className="vl-fdep">
+                <div key={`m${i}`} className={`vl-fdep${i === 0 && !ferryTomorrow ? ' next' : ''}`}>
                   <div className="hd">
                     <b>{fmtDepTime(d.time)}</b>
                     <span className="fq">{lang === 'no' ? 'fra' : 'from'} {d.fromName}</span>
-                    {!ferryTomorrow && <span className="in">{minsUntil(d.time)} min</span>}
+                    {!ferryTomorrow && (
+                      i === 0
+                        ? <span className="in pill">{lang === 'no' ? 'om' : 'in'} {minsUntil(d.time)} min</span>
+                        : <span className="in">{minsUntil(d.time)} min</span>
+                    )}
                   </div>
                   <div className="ds">
                     → {d.calls.map(c => `${c.name} ${fmtDepTime(c.time)}`).join(' · ')}
