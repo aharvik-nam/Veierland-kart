@@ -490,19 +490,54 @@ body { display: grid; place-items: center; }
   /* Same slot the ferry-times popup uses (top-left), since Forhold and
      ferry times are never open at the same time. Sits below the glass
      top bar — top bar height varies (weather row, ferry ring), so this
-     needs enough clearance to never sit underneath it. Narrower and
-     taller than before so it reads as a slim card, not a wide banner. */
-  position: absolute; left: 14px; top: 112px; z-index: 500; width: 168px;
-  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(28,38,30,.16); padding: 10px 13px;
+     needs enough clearance to never sit underneath it. Glass treatment
+     matches the top bar so the two read as one family of map chrome. */
+  position: absolute; left: 14px; top: 112px; z-index: 500; width: 196px;
+  background: rgba(251,249,243,.88);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(229,226,216,.9);
+  border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(28,38,30,.14);
+  padding: 12px 14px 13px;
 }
-.vl-condhours { display: flex; gap: 4px; margin-bottom: 10px; }
+.vl-condlegend-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; margin-bottom: 9px;
+}
+.vl-condlegend-hd .t {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vl-condlegend-close {
+  flex: 0 0 auto; border: none; background: none; padding: 3px; margin: -3px;
+  color: var(--muted); cursor: pointer; display: flex; border-radius: 8px;
+}
+.vl-condlegend-close:hover { color: var(--ink); }
+.vl-condhours { display: flex; gap: 4px; margin-bottom: 11px; }
 .vl-condhours button {
-  flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--card2);
-  border-radius: 7px; padding: 5px 0; font: inherit; font-size: 10px; font-weight: 700;
+  flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--card);
+  border-radius: 999px; padding: 5px 0; font: inherit; font-size: 10.5px; font-weight: 700;
   color: var(--muted); cursor: pointer;
 }
 .vl-condhours button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.vl-cond-main { display: flex; align-items: center; gap: 9px; margin-bottom: 4px; }
+.vl-cond-main .big {
+  font-size: 21px; font-weight: 700; color: var(--ink);
+  font-variant-numeric: tabular-nums; letter-spacing: -.01em; white-space: nowrap;
+}
+.vl-cond-main .sub { font-size: 11.5px; font-weight: 600; color: var(--muted); line-height: 1.25; }
+.vl-cond-keys { display: flex; gap: 12px; margin-top: 7px; }
+.vl-cond-keys .k {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600; color: var(--muted);
+}
+.vl-cond-keys .k i { width: 10px; height: 10px; border-radius: 3px; opacity: .85; }
+.vl-cond-scale {
+  display: flex; justify-content: space-between;
+  font-size: 10px; font-weight: 600; color: var(--muted); margin-top: 3px;
+}
+.vl-cond-note { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
 .vl-condlegend b { display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px; }
 .vl-condlegend span { font-size: 12px; color: var(--muted); line-height: 1.4; }
 
@@ -624,22 +659,32 @@ body { display: grid; place-items: center; }
 .vl-rbtn.active .rl { color: inherit; }
 .vl-rbtn:active { transform: scale(.94); }
 
+/* Styled to match the hamburger menu (.vl-menu) so the two popover menus in
+   the app read as the same component, not two different designs. */
 .vl-condpop-menu {
-  position: absolute; right: 62px; top: 0; z-index: 520; width: 200px;
-  background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
-  box-shadow: 0 14px 40px rgba(28,38,30,.18); padding: 6px;
+  position: absolute; right: 62px; top: 0; z-index: 520; width: 238px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: 0 14px 40px rgba(28,38,30,.20); padding: 8px;
   display: flex; flex-direction: column; gap: 2px;
 }
+.vl-condpop-title {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted); padding: 6px 10px 4px;
+}
 .vl-condpop-menu button {
-  display: flex; align-items: center; gap: 10px;
-  border: none; background: none; border-radius: 9px; padding: 9px 10px;
-  font: inherit; font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer;
+  display: flex; align-items: center; gap: 12px;
+  border: none; background: none; border-radius: 10px; padding: 10px;
+  font: inherit; color: var(--ink); cursor: pointer;
   text-align: left;
 }
 .vl-condpop-menu button:hover { background: var(--card2); }
-.vl-condpop-menu button svg { color: var(--muted); flex: 0 0 auto; }
-.vl-condpop-menu button.on { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); }
-.vl-condpop-menu button.on svg { color: var(--accent); }
+.vl-condpop-menu button > svg { color: var(--muted); flex: 0 0 auto; }
+.vl-condpop-menu button .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.vl-condpop-menu button .txt { font-size: 14px; font-weight: 600; }
+.vl-condpop-menu button .txt small { font-size: 11.5px; font-weight: 500; color: var(--muted); }
+.vl-condpop-menu button.on { background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent); }
+.vl-condpop-menu button.on > svg { color: var(--accent); }
+.vl-condpop-menu button.on .txt small { color: color-mix(in srgb, var(--accent) 70%, var(--muted)); }
 
 /* ── Layer popup ────────────────────────────────────────────────────────────── */
 .vl-pop {

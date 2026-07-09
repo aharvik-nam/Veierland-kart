@@ -3249,20 +3249,33 @@ export function VeierlandApp() {
             </button>
             {showCondPop && (
               <div className="vl-condpop-menu" onClick={e => e.stopPropagation()}>
+                <div className="vl-condpop-title">{lang === 'no' ? 'Forhold på øya' : 'Island conditions'}</div>
                 <button className={condLayer === 'sun' ? 'on' : ''}
                   onClick={() => { setCondLayer(c => c === 'sun' ? null : 'sun'); setShowCondPop(false); }}>
-                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/></svg>
-                  <span>{lang === 'no' ? 'Sol og skygge' : 'Sun and shade'}</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/></svg>
+                  <span className="txt">
+                    {lang === 'no' ? 'Sol og skygge' : 'Sun and shade'}
+                    <small>{lang === 'no' ? 'Hvor sola når fram' : 'Where the sun reaches'}</small>
+                  </span>
+                  {condLayer === 'sun' && <CheckSvg />}
                 </button>
                 <button className={condLayer === 'wind' ? 'on' : ''}
                   onClick={() => { setCondLayer(c => c === 'wind' ? null : 'wind'); setShowCondPop(false); }}>
-                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h11a2.5 2.5 0 1 0-2.5-2.5"/><path d="M3 12h15a2.5 2.5 0 1 1-2.5 2.5"/><path d="M3 16h8a2 2 0 1 1-2 2"/></svg>
-                  <span>{lang === 'no' ? 'Vind og le' : 'Wind and shelter'}</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h11a2.5 2.5 0 1 0-2.5-2.5"/><path d="M3 12h15a2.5 2.5 0 1 1-2.5 2.5"/><path d="M3 16h8a2 2 0 1 1-2 2"/></svg>
+                  <span className="txt">
+                    {lang === 'no' ? 'Vind og le' : 'Wind and shelter'}
+                    <small>{lang === 'no' ? 'Vindutsatt og skjermet' : 'Exposed and sheltered spots'}</small>
+                  </span>
+                  {condLayer === 'wind' && <CheckSvg />}
                 </button>
                 <button className={condLayer === 'effectiveTemp' ? 'on' : ''}
                   onClick={() => { setCondLayer(c => c === 'effectiveTemp' ? null : 'effectiveTemp'); setShowCondPop(false); }}>
-                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v16M9 20h6a2 2 0 0 0 2-2v-2H7v2a2 2 0 0 0 2 2z"/><path d="M10 8h4" strokeWidth="2.5"/></svg>
-                  <span>{lang === 'no' ? 'Effektiv temperatur' : 'Effective temperature'}</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v16M9 20h6a2 2 0 0 0 2-2v-2H7v2a2 2 0 0 0 2 2z"/><path d="M10 8h4" strokeWidth="2.5"/></svg>
+                  <span className="txt">
+                    {lang === 'no' ? 'Effektiv temperatur' : 'Effective temperature'}
+                    <small>{lang === 'no' ? 'Slik føles det ute' : 'How it actually feels'}</small>
+                  </span>
+                  {condLayer === 'effectiveTemp' && <CheckSvg />}
                 </button>
               </div>
             )}
@@ -3279,8 +3292,21 @@ export function VeierlandApp() {
           : `${lang === 'no' ? 'kl.' : 'at'} ${String(condDate.getHours()).padStart(2, '0')}:${String(condDate.getMinutes()).padStart(2, '0')}`;
         const HOUR_STEPS = [0, 3, 6, 12, 24];
 
+        const condTitle = condLayer === 'sun'
+          ? (lang === 'no' ? 'Sol og skygge' : 'Sun & shade')
+          : condLayer === 'wind'
+            ? (lang === 'no' ? 'Vindeksponering' : 'Wind exposure')
+            : (lang === 'no' ? 'Effektiv temperatur' : 'Feels like');
+
         return (
           <div className="vl-condlegend" onClick={e => e.stopPropagation()}>
+            <div className="vl-condlegend-hd">
+              <span className="t">{condTitle} · {condTimeLabel}</span>
+              <button className="vl-condlegend-close" aria-label={lang === 'no' ? 'Lukk' : 'Close'}
+                onClick={() => setCondLayer(null)}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              </button>
+            </div>
             {weatherSeries && (
               <div className="vl-condhours">
                 {HOUR_STEPS.filter(h => h < weatherSeries.length).map(h => (
@@ -3292,96 +3318,86 @@ export function VeierlandApp() {
             )}
             {condLayer === 'sun' ? (() => {
               const sun = sunPosition(condDate, 59.155, 10.351);
-              return (
+              return sun.elevation > 0 ? (
                 <>
-                  <b>{lang === 'no' ? `Sol og skygge ${condTimeLabel}` : `Sun & shade ${condTimeLabel}`}</b>
-                  {sun.elevation > 0 ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
-                      <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
-                        style={{ transform: `rotate(${sun.azimuth}deg)`, flexShrink: 0, color: '#f5b120' }}>
-                        <path d="M12 2 L12 20 M12 2 L6 9 M12 2 L18 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>{Math.round(sun.elevation)}°</span>
-                    </div>
-                  ) : (
-                    <span>{lang === 'no' ? 'Sola er under horisonten.' : 'Sun is below the horizon.'}</span>
-                  )}
-                </>
-              );
-            })() : condLayer === 'wind' ? (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  {condPoint && (
-                    // windFromDeg is meteorological convention (direction the wind
-                    // blows FROM); the arrow itself should point where it's blowing
-                    // TO, hence the +180.
-                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
-                      style={{ transform: `rotate(${condPoint.windFromDeg + 180}deg)`, flexShrink: 0 }}>
+                  <div className="vl-cond-main">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none"
+                      style={{ transform: `rotate(${sun.azimuth}deg)`, flexShrink: 0, color: '#f5b120' }}>
                       <path d="M12 2 L12 20 M12 2 L6 9 M12 2 L18 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                  )}
-                  <div>
-                    <b>{lang === 'no' ? `Vindeksponering ${condTimeLabel}` : `Wind exposure ${condTimeLabel}`}</b>
-                    <br />
-                    <span>{condPoint
-                      ? (lang === 'no'
-                          ? `Vind fra ${windDirLabel(condPoint.windFromDeg, 'no')} ${Math.round(condPoint.windSpeed)} m/s.`
-                          : `Wind from ${windDirLabel(condPoint.windFromDeg, 'en')} ${Math.round(condPoint.windSpeed)} m/s.`)
-                      : (lang === 'no' ? 'Henter vind…' : 'Loading wind…')}</span>
+                    <span className="big">{Math.round(sun.elevation)}°</span>
+                    <span className="sub">{lang === 'no' ? 'over horisonten' : 'above horizon'}</span>
                   </div>
-                </div>
-                {condPoint && (() => {
-                  const windStops = [0, ORKAN_MS / 4, ORKAN_MS / 2, ORKAN_MS * 3 / 4, ORKAN_MS].map(s => windColor(s));
-                  const windT = Math.min(1, condPoint.windSpeed / ORKAN_MS);
-                  return (
-                    <>
-                      <GradientBar stops={windStops} posT={windT} />
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--muted)' }}>
-                        <span>{lang === 'no' ? 'Stille' : 'Calm'}</span><span>{lang === 'no' ? 'Orkan' : 'Hurricane'}</span>
-                      </div>
-                    </>
-                  );
-                })()}
-              </>
+                  <div className="vl-cond-keys">
+                    <span className="k"><i style={{ background: '#fabf24' }} />{lang === 'no' ? 'Sol' : 'Sun'}</span>
+                    <span className="k"><i style={{ background: '#3a4250' }} />{lang === 'no' ? 'Skygge' : 'Shade'}</span>
+                  </div>
+                </>
+              ) : (
+                <span className="vl-cond-note">{lang === 'no' ? 'Sola er under horisonten.' : 'Sun is below the horizon.'}</span>
+              );
+            })() : condLayer === 'wind' ? (
+              condPoint ? (
+                <>
+                  <div className="vl-cond-main">
+                    {/* windFromDeg is meteorological convention (direction the wind
+                        blows FROM); the arrow itself should point where it's blowing
+                        TO, hence the +180. */}
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none"
+                      style={{ transform: `rotate(${condPoint.windFromDeg + 180}deg)`, flexShrink: 0, color: 'var(--accent)' }}>
+                      <path d="M12 2 L12 20 M12 2 L6 9 M12 2 L18 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <span className="big">{Math.round(condPoint.windSpeed)} m/s</span>
+                    <span className="sub">{lang === 'no' ? `fra ${windDirLabel(condPoint.windFromDeg, 'no')}` : `from ${windDirLabel(condPoint.windFromDeg, 'en')}`}</span>
+                  </div>
+                  {(() => {
+                    const windStops = [0, ORKAN_MS / 4, ORKAN_MS / 2, ORKAN_MS * 3 / 4, ORKAN_MS].map(s => windColor(s));
+                    const windT = Math.min(1, condPoint.windSpeed / ORKAN_MS);
+                    return (
+                      <>
+                        <GradientBar stops={windStops} posT={windT} />
+                        <div className="vl-cond-scale">
+                          <span>{lang === 'no' ? 'Stille' : 'Calm'}</span><span>{lang === 'no' ? 'Orkan' : 'Hurricane'}</span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </>
+              ) : (
+                <span className="vl-cond-note">{lang === 'no' ? 'Henter vind…' : 'Loading wind…'}</span>
+              )
             ) : (
-              <>
-                <b>{lang === 'no' ? `Effektiv temperatur ${condTimeLabel}` : `Effective temperature ${condTimeLabel}`}</b>
-                {condPoint ? (
-                  <div style={{ marginTop: 8 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                      <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>
-                        {Math.round(effectiveTemp(condPoint.airTemp, condPoint.windSpeed, condPoint.humidity))}°C
-                      </span>
-                      <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-                        {lang === 'no' ? `(luft: ${Math.round(condPoint.airTemp)}°C)` : `(air: ${Math.round(condPoint.airTemp)}°C)`}
-                      </span>
-                    </div>
-                    {(() => {
-                      // The overlay's colour scale is stretched to the actual spread of
-                      // effective temperature across the island at the selected hour
-                      // (see makeEffectiveTempOverlay), so the legend mirrors that same
-                      // range instead of a fixed -20..40°C — otherwise a 1-2°C wind
-                      // effect would never register as a visible position on a
-                      // 60°-wide bar.
-                      const [MIN_T, MAX_T] = tempRange ?? [-20, 40];
-                      const tempStops = [MIN_T, MIN_T + (MAX_T - MIN_T) / 4, (MIN_T + MAX_T) / 2, MAX_T - (MAX_T - MIN_T) / 4, MAX_T]
-                        .map(t => effectiveTempColor(t, MIN_T, MAX_T));
-                      const effTemp = effectiveTemp(condPoint.airTemp, condPoint.windSpeed, condPoint.humidity);
-                      const tempT = Math.min(1, Math.max(0, (effTemp - MIN_T) / (MAX_T - MIN_T)));
-                      return (
-                        <>
-                          <GradientBar stops={tempStops} posT={tempT} />
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--muted)' }}>
-                            <span>{Math.round(MIN_T)}°C</span><span>{Math.round(MAX_T)}°C</span>
-                          </div>
-                        </>
-                      );
-                    })()}
+              condPoint ? (
+                <>
+                  <div className="vl-cond-main">
+                    <span className="big">{Math.round(effectiveTemp(condPoint.airTemp, condPoint.windSpeed, condPoint.humidity))}°</span>
+                    <span className="sub">{lang === 'no' ? `luft ${Math.round(condPoint.airTemp)}°` : `air ${Math.round(condPoint.airTemp)}°`}</span>
                   </div>
-                ) : (
-                  <span>{lang === 'no' ? 'Henter temperatur…' : 'Loading temperature…'}</span>
-                )}
-              </>
+                  {(() => {
+                    // The overlay's colour scale is stretched to the actual spread of
+                    // effective temperature across the island at the selected hour
+                    // (see makeEffectiveTempOverlay), so the legend mirrors that same
+                    // range instead of a fixed -20..40°C — otherwise a 1-2°C wind
+                    // effect would never register as a visible position on a
+                    // 60°-wide bar.
+                    const [MIN_T, MAX_T] = tempRange ?? [-20, 40];
+                    const tempStops = [MIN_T, MIN_T + (MAX_T - MIN_T) / 4, (MIN_T + MAX_T) / 2, MAX_T - (MAX_T - MIN_T) / 4, MAX_T]
+                      .map(t => effectiveTempColor(t, MIN_T, MAX_T));
+                    const effTemp = effectiveTemp(condPoint.airTemp, condPoint.windSpeed, condPoint.humidity);
+                    const tempT = Math.min(1, Math.max(0, (effTemp - MIN_T) / (MAX_T - MIN_T)));
+                    return (
+                      <>
+                        <GradientBar stops={tempStops} posT={tempT} />
+                        <div className="vl-cond-scale">
+                          <span>{Math.round(MIN_T)}°</span><span>{Math.round(MAX_T)}°</span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </>
+              ) : (
+                <span className="vl-cond-note">{lang === 'no' ? 'Henter temperatur…' : 'Loading temperature…'}</span>
+              )
             )}
           </div>
         );
