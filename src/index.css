@@ -402,7 +402,7 @@ body { display: grid; place-items: center; }
 
 /* ── Ferry board popup / full-screen ────────────────────────────────────────── */
 .vl-ferrypop {
-  position: absolute; top: 58px; left: 14px; z-index: 520; width: 264px;
+  position: absolute; top: 112px; left: 14px; z-index: 520; width: 264px;
   background: var(--card); border: 1px solid var(--line); border-radius: 14px;
   box-shadow: 0 14px 40px rgba(28,38,30,.18); padding: 12px 14px 10px;
 }
@@ -487,9 +487,12 @@ body { display: grid; place-items: center; }
 
 /* ── Conditions overlay legend + beach card ────────────────────────────────── */
 .vl-condlegend {
-  /* Same slot the ferry-times popup uses (top-left, under the top bar),
-     since Forhold and ferry times are never open at the same time. */
-  position: absolute; left: 14px; top: 58px; z-index: 500; max-width: 220px;
+  /* Same slot the ferry-times popup uses (top-left), since Forhold and
+     ferry times are never open at the same time. Sits below the glass
+     top bar — top bar height varies (weather row, ferry ring), so this
+     needs enough clearance to never sit underneath it. Narrower and
+     taller than before so it reads as a slim card, not a wide banner. */
+  position: absolute; left: 14px; top: 112px; z-index: 500; width: 168px;
   background: var(--card); border: 1px solid var(--line); border-radius: 12px;
   box-shadow: 0 8px 24px rgba(28,38,30,.16); padding: 10px 13px;
 }
