@@ -1553,7 +1553,10 @@ export function VeierlandApp() {
     ? sheetCurrentH + 16
     : showMiniCard
       ? MINI_CARD_H + 28
-      : TAB_BAR_H + 14;
+      // Resting state (dock closed, nothing selected): sit well above the
+      // dock instead of hugging it, so the cluster reads as map controls
+      // rather than part of the dock.
+      : Math.max(TAB_BAR_H + 14, window.innerHeight * 0.32);
 
   // Text strings
   const T = lang === 'no' ? {
@@ -3284,8 +3287,11 @@ export function VeierlandApp() {
             <>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 {weatherNow && (
+                  // windFromDeg is meteorological convention (direction the wind
+                  // blows FROM); the arrow itself should point where it's blowing
+                  // TO, hence the +180.
                   <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
-                    style={{ transform: `rotate(${weatherNow.windFromDeg}deg)`, flexShrink: 0 }}>
+                    style={{ transform: `rotate(${weatherNow.windFromDeg + 180}deg)`, flexShrink: 0 }}>
                     <path d="M12 2 L12 20 M12 2 L6 9 M12 2 L18 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 )}
