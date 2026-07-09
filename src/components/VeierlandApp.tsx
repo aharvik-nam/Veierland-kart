@@ -207,6 +207,14 @@ function makeLabeledIconHtml(icon: string, color: string, selected: boolean, sz:
   return `<div class="vl-pin-labeled-wrap"><div class="vl-pin vl-pin-lg${selected ? ' sel' : ''}" style="--pc:${color};width:${sz}px;height:${sz}px">${svg}</div><div class="vl-pin-label">${label}</div></div>`;
 }
 
+// Place names (stedsnavn): a plain text label with no icon circle, kept
+// visually lighter than real POI pins since it's a map annotation, not a
+// tappable place. Only rendered once zoomed in — see STEDSNAVN_MIN_ZOOM.
+const STEDSNAVN_MIN_ZOOM = 15;
+function makeStedsnavnHtml(name: string, selected: boolean): string {
+  return `<div class="vl-stedsnavn${selected ? ' sel' : ''}">${name}</div>`;
+}
+
 function iconSvg(icon: string): string {
   return `<svg viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">${ICONS[icon] ?? ICONS.wc}</svg>`;
 }
@@ -1001,10 +1009,23 @@ export function VeierlandApp() {
     filteredPOIs.forEach(poi => {
       const cat = getCat(poi.kategori);
       const sel = selectedPOI?.id === poi.id;
+
+      // Place names (stedsnavn) are map annotations, not real POIs — they'd
+      // clutter the overview at full-island zoom, so they only render once
+      // the user has zoomed in enough for individual names to be useful
+      // (unless a search is actively matching one, which is explicit intent).
+      if (poi.kategori === 'stedsnavn' && mapZoom < STEDSNAVN_MIN_ZOOM && !searchQ) return;
+
       const faded = dimByTrail && !!poi.coordinates &&
         pointToPolylineDistM(poi.coordinates as [number, number], selectedTrail!.path) > 20;
       let html: string, pinSz: number;
-      if (activityTile) {
+      if (poi.kategori === 'stedsnavn') {
+        // Lightweight text-only label — no icon circle, so it reads as a
+        // map annotation rather than a tappable place, and doesn't compete
+        // visually with real POI pins even when both are visible.
+        html = makeStedsnavnHtml(poi.navn, sel);
+        pinSz = 22;
+      } else if (activityTile) {
         // Activity-mode map view: bigger pins with the name always visible —
         // tapping to find out what something is isn't realistic for young
         // or elderly users on a crowded island map.
@@ -1026,7 +1047,7 @@ export function VeierlandApp() {
 
     return () => { if (map) map.removeLayer(cg); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapReady, mode, filteredPOIs, selectedPOI?.id, view, mapZoom, selectedTrail, trailPoiFilter, tab, activityTile]);
+  }, [mapReady, mode, filteredPOIs, selectedPOI?.id, view, mapZoom, selectedTrail, trailPoiFilter, tab, activityTile, searchQ]);
 
   useEffect(() => {
     if ((mode !== 'nature' && !(mode === 'trails' && trailCatFilter === 'natur')) || natureFetched) return;
