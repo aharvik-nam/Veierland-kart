@@ -550,6 +550,7 @@ export function VeierlandApp() {
   const [geoLayer, setGeoLayer] = useState<string | null>(null);
   const [showLayerPop, setShowLayerPop] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showCondPop, setShowCondPop] = useState(false);
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
   const [userAccuracy, setUserAccuracy] = useState<number>(0);
   const [locating, setLocating] = useState(false);
@@ -798,7 +799,7 @@ export function VeierlandApp() {
 
   // Close layer popup on document click
   useEffect(() => {
-    const handle = () => { setShowLayerPop(false); setShowFerryPop(false); setShowMenu(false); };
+    const handle = () => { setShowLayerPop(false); setShowFerryPop(false); setShowMenu(false); setShowCondPop(false); };
     document.addEventListener('click', handle);
     return () => document.removeEventListener('click', handle);
   }, []);
@@ -3089,38 +3090,37 @@ export function VeierlandApp() {
           <span className="rl">{lang === 'no' ? 'Posisjon' : 'Locate'}</span>
         </button>
         {hasDomGrid && (
-          <>
+          <div style={{ position: 'relative' }}>
             <button
-              className={`vl-rbtn${condLayer === 'sun' ? ' active' : ''}`}
-              aria-label={lang === 'no' ? 'Sol og skygge nå' : 'Sun and shade now'}
-              title={lang === 'no' ? 'Sol og skygge nå' : 'Sun and shade now'}
-              onClick={e => { e.stopPropagation(); setCondLayer(c => c === 'sun' ? null : 'sun'); }}
-              style={condLayer === 'sun' ? { background: 'var(--accent)', color: '#fff' } : undefined}
+              className={`vl-rbtn${condLayer ? ' active' : ''}`}
+              aria-label={lang === 'no' ? 'Forhold nå (sol, vind, temperatur)' : 'Conditions now (sun, wind, temperature)'}
+              title={lang === 'no' ? 'Forhold nå' : 'Conditions now'}
+              onClick={e => { e.stopPropagation(); setShowCondPop(v => !v); }}
+              style={condLayer ? { background: 'var(--accent)', color: '#fff' } : undefined}
             >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/></svg>
-              <span className="rl">{lang === 'no' ? 'Sol' : 'Sun'}</span>
+              <span className="rl">{lang === 'no' ? 'Forhold' : 'Conditions'}</span>
             </button>
-            <button
-              className={`vl-rbtn${condLayer === 'wind' ? ' active' : ''}`}
-              aria-label={lang === 'no' ? 'Vind og le nå' : 'Wind and shelter now'}
-              title={lang === 'no' ? 'Vind og le nå' : 'Wind and shelter now'}
-              onClick={e => { e.stopPropagation(); setCondLayer(c => c === 'wind' ? null : 'wind'); }}
-              style={condLayer === 'wind' ? { background: 'var(--accent)', color: '#fff' } : undefined}
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h11a2.5 2.5 0 1 0-2.5-2.5"/><path d="M3 12h15a2.5 2.5 0 1 1-2.5 2.5"/><path d="M3 16h8a2 2 0 1 1-2 2"/></svg>
-              <span className="rl">{lang === 'no' ? 'Vind' : 'Wind'}</span>
-            </button>
-            <button
-              className={`vl-rbtn${condLayer === 'effectiveTemp' ? ' active' : ''}`}
-              aria-label={lang === 'no' ? 'Effektiv temperatur nå' : 'Effective temperature now'}
-              title={lang === 'no' ? 'Effektiv temperatur nå' : 'Effective temperature now'}
-              onClick={e => { e.stopPropagation(); setCondLayer(c => c === 'effectiveTemp' ? null : 'effectiveTemp'); }}
-              style={condLayer === 'effectiveTemp' ? { background: 'var(--accent)', color: '#fff' } : undefined}
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v16M9 20h6a2 2 0 0 0 2-2v-2H7v2a2 2 0 0 0 2 2z"/><path d="M10 8h4" strokeWidth="2.5"/></svg>
-              <span className="rl">{lang === 'no' ? 'Temp' : 'Temp'}</span>
-            </button>
-          </>
+            {showCondPop && (
+              <div className="vl-condpop-menu" onClick={e => e.stopPropagation()}>
+                <button className={condLayer === 'sun' ? 'on' : ''}
+                  onClick={() => { setCondLayer(c => c === 'sun' ? null : 'sun'); setShowCondPop(false); }}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/></svg>
+                  <span>{lang === 'no' ? 'Sol og skygge' : 'Sun and shade'}</span>
+                </button>
+                <button className={condLayer === 'wind' ? 'on' : ''}
+                  onClick={() => { setCondLayer(c => c === 'wind' ? null : 'wind'); setShowCondPop(false); }}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h11a2.5 2.5 0 1 0-2.5-2.5"/><path d="M3 12h15a2.5 2.5 0 1 1-2.5 2.5"/><path d="M3 16h8a2 2 0 1 1-2 2"/></svg>
+                  <span>{lang === 'no' ? 'Vind og le' : 'Wind and shelter'}</span>
+                </button>
+                <button className={condLayer === 'effectiveTemp' ? 'on' : ''}
+                  onClick={() => { setCondLayer(c => c === 'effectiveTemp' ? null : 'effectiveTemp'); setShowCondPop(false); }}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v16M9 20h6a2 2 0 0 0 2-2v-2H7v2a2 2 0 0 0 2 2z"/><path d="M10 8h4" strokeWidth="2.5"/></svg>
+                  <span>{lang === 'no' ? 'Effektiv temperatur' : 'Effective temperature'}</span>
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 

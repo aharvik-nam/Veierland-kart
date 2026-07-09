@@ -601,6 +601,23 @@ body { display: grid; place-items: center; }
 .vl-rbtn.active .rl { color: inherit; }
 .vl-rbtn:active { transform: scale(.94); }
 
+.vl-condpop-menu {
+  position: absolute; right: 62px; top: 0; z-index: 520; width: 200px;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+  box-shadow: 0 14px 40px rgba(28,38,30,.18); padding: 6px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.vl-condpop-menu button {
+  display: flex; align-items: center; gap: 10px;
+  border: none; background: none; border-radius: 9px; padding: 9px 10px;
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer;
+  text-align: left;
+}
+.vl-condpop-menu button:hover { background: var(--card2); }
+.vl-condpop-menu button svg { color: var(--muted); flex: 0 0 auto; }
+.vl-condpop-menu button.on { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); }
+.vl-condpop-menu button.on svg { color: var(--accent); }
+
 /* ── Layer popup ────────────────────────────────────────────────────────────── */
 .vl-pop {
   position: absolute; right: calc(var(--pad) + 64px); z-index: 520; width: 208px;
