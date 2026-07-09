@@ -17,7 +17,7 @@ import { fetchFerryDepartures, fetchQuaySailings, nearestQuay, FerryBoard, FERRY
 import {
   hasDomGrid, sunPosition, sunlitAt, shelterAt,
   makeSunShadowOverlay, makeShelterOverlay, makeEffectiveTempOverlay,
-  fetchWeatherNow, fetchSeaTemp, WeatherNow, windDirLabel, weatherOneLiner,
+  fetchWeatherNow, fetchSeaTemp, WeatherNow, windDirLabel, weatherIconKind, WeatherIconKind,
   windColor, ORKAN_MS, effectiveTemp, effectiveTempColor,
   rankBeaches, dailyRecommendation, BeachConditionScore,
 } from '../lib/conditions';
@@ -384,6 +384,31 @@ function ElevationChart({ profile, minEl, maxEl }: { profile: [number, number][]
     </div>
   );
 }
+// Compact sky-condition glyph for the top bar — one of a handful of icon
+// buckets (see weatherIconKind()), not the ~50 distinct MET Yr symbols.
+function WeatherIcon({ kind, size = 19 }: { kind: WeatherIconKind; size?: number }) {
+  const p = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  const cloud = <path d="M6 15h11a3.5 3.5 0 0 0 .4-7A6 6 0 0 0 6 10.5A3.5 3.5 0 0 0 6 15z" />;
+  switch (kind) {
+    case 'clear':
+      return <svg {...p}><circle cx="12" cy="12" r="4.5" /><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8" /></svg>;
+    case 'partly':
+      return <svg {...p}><circle cx="8" cy="8" r="3" /><path d="M8 2.5v1.3M3.3 8h1.3M4.5 5l1 1M11.5 5l-1 1" /><path d="M8.5 17h9a3.2 3.2 0 0 0 .3-6.4A5 5 0 0 0 8.7 13" /></svg>;
+    case 'cloudy':
+      return <svg {...p}>{cloud}</svg>;
+    case 'fog':
+      return <svg {...p}>{cloud}<path d="M4 19h16M6 21.5h12" /></svg>;
+    case 'rain':
+      return <svg {...p}>{cloud}<path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3" /></svg>;
+    case 'sleet':
+      return <svg {...p}>{cloud}<path d="M8 18l-1 3M16 18l-1 3M12 18v1.5M11 21l2 1.5M13 21l-2 1.5" /></svg>;
+    case 'snow':
+      return <svg {...p}>{cloud}<path d="M8 18v3.5M6.7 19.2l2.6 1.6M9.3 19.2l-2.6 1.6M16 18v3.5M14.7 19.2l2.6 1.6M17.3 19.2l-2.6 1.6" /></svg>;
+    case 'thunder':
+      return <svg {...p}>{cloud}<path d="M12.5 15l-2.5 4.5h2.5l-1 4 3.5-5h-2.5l1-3.5z" fill="currentColor" stroke="none" /></svg>;
+  }
+}
+
 // Circular countdown to the next ferry departure, for the glass top bar.
 // Fill fraction is relative to an arbitrary 60-minute reference window (the
 // app has no "typical gap between sailings" constant to anchor to) — the
@@ -2263,9 +2288,15 @@ export function VeierlandApp() {
   function renderPOIDetail(poi: POI) {
     const cat = getCat(poi.kategori);
     const saved = savedIds.has(poi.id);
+    // Opened straight from a map tap (not from a list): dragging the sheet
+    // down to peek (or tapping again to close) already gets back to the
+    // map, so a dedicated button here would be redundant. Opened from a
+    // list (Steder etc. via the menu), "back" is real navigation — it
+    // returns to that list — which the peek gesture can't replicate.
+    const backRedundant = tab === 'map' && !isDesktopView();
     return (
       <>
-        <button className="vl-back" onClick={goBack}><BackSvg />{T.back}</button>
+        {!backRedundant && <button className="vl-back" onClick={goBack}><BackSvg />{T.back}</button>}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {(poi.kategorier ?? [poi.kategori]).map(k => {
             const c = getCat(k);
@@ -2501,9 +2532,12 @@ export function VeierlandApp() {
   function renderTrailDetail(trail: Trail) {
     const cat = getCat('friluft');
     const saved = savedIds.has(trail.id);
+    // See renderPOIDetail's identical check: redundant once opened from a
+    // map tap, since drag-to-peek/close already gets back to the map.
+    const backRedundant = tab === 'map' && !isDesktopView();
     return (
       <>
-        <button className="vl-back" onClick={goBack}><BackSvg />{T.back}</button>
+        {!backRedundant && <button className="vl-back" onClick={goBack}><BackSvg />{T.back}</button>}
         <div><span className="vl-catpill">{lang === 'no' ? 'Tursti' : 'Trail'}</span></div>
         <div className="vl-h2">{lang === 'no' ? trail.name : trail.en}</div>
         <div className="vl-sub">{lang === 'no' ? trail.en : trail.name}</div>
@@ -2963,7 +2997,8 @@ export function VeierlandApp() {
         </button>
       )}
 
-      {/* Glass top bar: menu, place name + weather one-liner, lang toggle, ferry countdown ring */}
+      {/* Glass top bar: menu, place name + compact weather icons, ferry countdown ring.
+          NO/EN moved into the menu — low-frequency, didn't need a permanent spot here. */}
       <div className="vl-topbar2">
         <button className="vl-menubtn" onClick={e => { e.stopPropagation(); setShowMenu(m => !m); }}
           aria-label={lang === 'no' ? 'Meny' : 'Menu'} title={lang === 'no' ? 'Meny' : 'Menu'}>
@@ -2971,11 +3006,17 @@ export function VeierlandApp() {
         </button>
         <div className="vl-topbar2-info">
           <div className="vl-topbar2-title">Veierland</div>
-          <div className="vl-topbar2-weather">{weatherOneLiner(weatherNow, lang)}</div>
-        </div>
-        <div className="vl-lang vl-lang-sm">
-          <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>NO</button>
-          <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')} title="Some content is only available in Norwegian">EN</button>
+          <div className="vl-topbar2-weather">
+            {weatherNow ? (
+              <>
+                <span className="wico"><WeatherIcon kind={weatherIconKind(weatherNow.symbolCode)} /></span>
+                <span className="wval">{Math.round(weatherNow.airTemp)}°</span>
+                <span className="wsep">·</span>
+                <span className="wico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h11a2.5 2.5 0 1 0-2.5-2.5"/><path d="M3 12h15a2.5 2.5 0 1 1-2.5 2.5"/><path d="M3 16h8a2 2 0 1 1-2 2"/></svg></span>
+                <span className="wval">{Math.round(weatherNow.windSpeed)} m/s</span>
+              </>
+            ) : (lang === 'no' ? 'Henter vær…' : 'Loading weather…')}
+          </div>
         </div>
         <button className={`vl-ferryring-btn${showFerryPop ? ' on' : ''}`}
           onClick={e => { e.stopPropagation(); toggleFerryPop(); }}
@@ -3013,6 +3054,11 @@ export function VeierlandApp() {
             <HeartSvg /><span>{T.saved}</span>
             {savedIds.size > 0 && <span className="vl-menu-badge">{savedIds.size}</span>}
           </button>
+          <div className="vl-menu-divider" />
+          <div className="vl-menu-lang">
+            <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>Norsk</button>
+            <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>English</button>
+          </div>
         </div>
       )}
 

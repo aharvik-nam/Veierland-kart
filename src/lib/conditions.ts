@@ -371,6 +371,7 @@ export interface WeatherNow {
   airTemp: number;        // °C
   cloudFraction: number;  // 0–100
   humidity: number;       // relative humidity, 0–100
+  symbolCode: string;     // MET Yr symbol code, e.g. "partlycloudy_day" — see weatherIconKind()
 }
 
 interface CacheEntry<T> { at: number; val: T }
@@ -390,7 +391,7 @@ function writeCache<T>(key: string, val: T): void {
 }
 
 export async function fetchWeatherNow(): Promise<WeatherNow | null> {
-  const cached = readCache<WeatherNow>('vl-weather-v2', 30 * 60 * 1000);
+  const cached = readCache<WeatherNow>('vl-weather-v3', 30 * 60 * 1000);
   if (cached) return cached;
   try {
     const res = await fetch(
@@ -399,7 +400,8 @@ export async function fetchWeatherNow(): Promise<WeatherNow | null> {
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    const det = data?.properties?.timeseries?.[0]?.data?.instant?.details;
+    const entry = data?.properties?.timeseries?.[0];
+    const det = entry?.data?.instant?.details;
     if (!det) return null;
     const w: WeatherNow = {
       windFromDeg: det.wind_from_direction ?? 0,
@@ -407,8 +409,9 @@ export async function fetchWeatherNow(): Promise<WeatherNow | null> {
       airTemp: det.air_temperature ?? 0,
       cloudFraction: det.cloud_area_fraction ?? 0,
       humidity: det.relative_humidity ?? 50,
+      symbolCode: entry?.data?.next_1_hours?.summary?.symbol_code ?? 'cloudy',
     };
-    writeCache('vl-weather-v2', w);
+    writeCache('vl-weather-v3', w);
     return w;
   } catch {
     return null;
@@ -553,40 +556,29 @@ export function makeEffectiveTempOverlay(airTempC: number, windSpeedMs: number, 
   };
 }
 
+// Buckets MET Yr's ~50 symbol codes (e.g. "partlycloudy_day",
+// "lightrainshowers_night") into the handful of icon kinds the top bar
+// actually draws — day/night variants and shower/continuous variants of
+// the same precipitation type collapse to one icon.
+export type WeatherIconKind = 'clear' | 'partly' | 'cloudy' | 'fog' | 'rain' | 'sleet' | 'snow' | 'thunder';
+export function weatherIconKind(symbolCode: string): WeatherIconKind {
+  const s = symbolCode.toLowerCase();
+  if (s.includes('thunder')) return 'thunder';
+  if (s.includes('sleet')) return 'sleet';
+  if (s.includes('snow')) return 'snow';
+  if (s.includes('rain') || s.includes('drizzle')) return 'rain';
+  if (s.includes('fog')) return 'fog';
+  if (s.startsWith('cloudy')) return 'cloudy';
+  if (s.startsWith('partlycloudy') || s.startsWith('fair')) return 'partly';
+  return 'clear';
+}
+
 // Compass direction label for a "wind from" bearing
 export function windDirLabel(deg: number, lang: 'no' | 'en'): string {
   const no = ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV'];
   const en = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
   const i = Math.round(((deg % 360) + 360) % 360 / 45) % 8;
   return (lang === 'no' ? no : en)[i];
-}
-
-// A single human sentence for "what's it like outside right now" — e.g.
-// "18° og sol · lett bris fra SV" — for the glass top bar. Thresholds are
-// deliberately simple (a handful of buckets), not a meteorological standard.
-export function weatherOneLiner(w: WeatherNow | null, lang: 'no' | 'en'): string {
-  if (!w) return lang === 'no' ? 'Henter vær…' : 'Loading weather…';
-  const temp = Math.round(w.airTemp);
-  const sky = w.cloudFraction < 20
-    ? (lang === 'no' ? 'sol' : 'sun')
-    : w.cloudFraction < 60
-    ? (lang === 'no' ? 'delvis skyet' : 'partly cloudy')
-    : (lang === 'no' ? 'skyet' : 'cloudy');
-  const windDesc = w.windSpeed < 0.5
-    ? (lang === 'no' ? 'stille' : 'calm')
-    : w.windSpeed < 3.4
-    ? (lang === 'no' ? 'svak bris' : 'light breeze')
-    : w.windSpeed < 7.9
-    ? (lang === 'no' ? 'lett bris' : 'moderate breeze')
-    : w.windSpeed < 13.8
-    ? (lang === 'no' ? 'frisk bris' : 'fresh breeze')
-    : (lang === 'no' ? 'kuling' : 'strong wind');
-  const windPart = w.windSpeed < 0.5
-    ? windDesc
-    : `${windDesc} ${lang === 'no' ? 'fra' : 'from'} ${windDirLabel(w.windFromDeg, lang)}`;
-  return lang === 'no'
-    ? `${temp}° og ${sky} · ${windPart}`
-    : `${temp}° and ${sky} · ${windPart}`;
 }
 
 // ── Beach ranking, for the dock's "Bade" list and daily recommendation ────
