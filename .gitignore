@@ -8,3 +8,9 @@ coverage/
 !.env.example
 __pycache__/
 *.pyc
+
+# iOS (Capacitor / Xcode)
+ios/App/Pods/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/App.xcodeproj/xcuserdata/
+ios/App/App/public/
