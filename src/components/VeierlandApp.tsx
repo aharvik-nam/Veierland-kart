@@ -1391,16 +1391,19 @@ export function VeierlandApp() {
     return `${walkShort(coords)} ${suffix}`;
   }
 
-  // Draw the walking route to whichever POI is currently open, from the
-  // user's live position when tracking or from Vestgården quay otherwise —
-  // recomputed whenever either changes, so it follows along as you walk.
+  // Draw the walking route to whichever POI is currently selected — both in
+  // the full detail view and in the map's mini-card state (a place tapped
+  // straight on the map), from the user's live position when tracking or
+  // from Vestgården quay otherwise — recomputed whenever either changes, so
+  // it follows along as you walk.
   useEffect(() => {
-    if (!selectedPOI || view !== 'detail') { setWalkRoutePath(null); return; }
+    const wantRoute = !!selectedPOI && (view === 'detail' || (tab === 'map' && !sheetOpen));
+    if (!wantRoute) { setWalkRoutePath(null); return; }
     const from = userPos ?? [WALK_BASIS_QUAY.lat, WALK_BASIS_QUAY.lng];
-    const route = networkWalkRoute(from, selectedPOI.coordinates);
+    const route = networkWalkRoute(from, selectedPOI!.coordinates);
     setWalkRoutePath(route?.path ?? null);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPOI, view, userPos]);
+  }, [selectedPOI, view, tab, sheetOpen, userPos]);
 
   function pointInPolygon(lat: number, lng: number): boolean {
     const poly = (boundaryData as unknown as { coordinates: [number, number][][] }).coordinates[0];
@@ -3609,6 +3612,21 @@ export function VeierlandApp() {
               </p>
             </div>
             <div className="acts">
+              {walkRoutePath && (
+                <button className="ab" aria-label={T.directions} title={T.directions}
+                  onClick={e => {
+                    e.stopPropagation();
+                    // Zoom out to show the whole walking route (drawn on the
+                    // map already), start to destination, clear of the top
+                    // bar and this mini-card.
+                    const map = mapRef.current;
+                    if (!map) return;
+                    const b = L.latLngBounds(walkRoutePath.map(p => [p[0], p[1]] as [number, number]));
+                    map.fitBounds(b.pad(0.15), { paddingTopLeft: [20, 110], paddingBottomRight: [20, 100], animate: true });
+                  }}>
+                  <RouteSvg />
+                </button>
+              )}
               <button className={`ab${saved ? ' on' : ''}`} aria-label={saved ? (lang === 'no' ? 'Fjern fra lagret' : 'Remove saved') : (lang === 'no' ? 'Lagre' : 'Save')}
                 onClick={e => { e.stopPropagation(); toggleSaved(selectedPOI.id); }}>
                 <HeartSvg />
