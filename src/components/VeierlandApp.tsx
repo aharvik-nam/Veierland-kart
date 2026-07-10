@@ -651,6 +651,10 @@ export function VeierlandApp() {
   // split) — people pick one of these hand-written categories, not a taxon filter.
   const [artsKategoriId, setArtsKategoriId] = useState<string>(ARTS_KATEGORIER[0]?.id ?? '');
   const [natureListN, setNatureListN] = useState(20);
+  // Free-text species search across BOTH the curated lists and the full live
+  // GBIF-backed observation set — the curated categories are a shop window,
+  // but people who look for a specific species shouldn't be limited to it.
+  const [natureSearchQ, setNatureSearchQ] = useState('');
   const selectedKategori: ArtsKategori | undefined =
     ARTS_KATEGORIER.find(k => k.id === artsKategoriId) ?? ARTS_KATEGORIER[0];
   // Curated species are matched against the live GBIF-backed observations by
@@ -1305,7 +1309,7 @@ export function VeierlandApp() {
       setSeaLevelA(0);
       setSeaLevelB(0);
     }
-    if (t === 'nature') { setArtsKategoriId(ARTS_KATEGORIER[0]?.id ?? ''); setNatureListN(20); }
+    if (t === 'nature') { setArtsKategoriId(ARTS_KATEGORIER[0]?.id ?? ''); setNatureListN(20); setNatureSearchQ(''); }
     setSheetOpen(t !== 'map');
   }
 
@@ -1881,8 +1885,107 @@ export function VeierlandApp() {
       );
     };
 
+    // Row for a live GBIF-backed species with no curated entry — same visual
+    // shape as artRow, opens the rich detail directly.
+    const liveRow = (obs: NatureObs) => {
+      const cfg = NATURE_GROUPS[obs.group];
+      return (
+        <div key={`live-${obs.gbifKey}`} className="vl-sp-row flat" onClick={() => selectNatureSpecies(obs)}>
+          <span className="vl-sp-ico" style={{ background: `${cfg.color}1a`, color: cfg.color }}
+            dangerouslySetInnerHTML={{ __html: iconSvg(cfg.icon) }} />
+          <div className="vl-sp-main">
+            <span className="vl-sp-name">{obs.popularName || obs.scientificName}</span>
+            <span className="vl-sp-sci">{obs.popularName ? obs.scientificName : (lang === 'no' ? cfg.no : cfg.en)}</span>
+          </div>
+          <div className="vl-sp-right">
+            {obs.redListCategory && RED_LIST_CATS.test(obs.redListCategory) && (
+              <span className="vl-rlbadge" title={RL_LABEL[obs.redListCategory]}>{obs.redListCategory}</span>
+            )}
+            {obs.alienCategory && <span className="vl-albadge" title="Fremmedart">FA</span>}
+            <span className="vl-sp-cnt">{obs.obsCount}</span>
+            <span className="vl-chev"><ChevSvg /></span>
+          </div>
+        </div>
+      );
+    };
+
+    const natQ = natureSearchQ.trim().toLowerCase();
+
+    const searchField = (
+      <div className="vl-panel-search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
+          <circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>
+        </svg>
+        <input
+          type="search"
+          placeholder={lang === 'no' ? 'Søk etter art' : 'Search species'}
+          value={natureSearchQ}
+          onChange={e => setNatureSearchQ(e.target.value)}
+          autoComplete="off"
+        />
+        {natureSearchQ && (
+          <button className="vl-search-close" onClick={() => setNatureSearchQ('')}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        )}
+      </div>
+    );
+
+    // Active search: results across BOTH the curated lists and the full live
+    // observation set replace the category browsing entirely.
+    if (natQ) {
+      const curatedHits: CuratedArt[] = [];
+      const seenSci = new Set<string>();
+      for (const k of ARTS_KATEGORIER) {
+        for (const art of k.arter) {
+          const sci = art.vitenskapelig.toLowerCase().trim();
+          if (seenSci.has(sci)) continue;
+          if ((art.norsk ?? '').toLowerCase().includes(natQ) || sci.includes(natQ)) {
+            seenSci.add(sci);
+            curatedHits.push(art);
+          }
+        }
+      }
+      const liveHits = natureObs.filter(o =>
+        !seenSci.has(o.scientificName.toLowerCase().trim()) &&
+        (o.popularName.toLowerCase().includes(natQ) || o.scientificName.toLowerCase().includes(natQ))
+      ).slice(0, 50);
+
+      return (
+        <>
+          {searchField}
+          {curatedHits.length === 0 && liveHits.length === 0 ? (
+            <p className="vl-nat-sec-sub" style={{ marginTop: 10 }}>
+              {natureLoading
+                ? (lang === 'no' ? 'Henter observasjoner…' : 'Fetching observations…')
+                : (lang === 'no' ? `Ingen arter funnet for «${natureSearchQ}».` : `No species found for “${natureSearchQ}”.`)}
+            </p>
+          ) : (
+            <>
+              {curatedHits.length > 0 && (
+                <>
+                  <div className="vl-nat-sec">{lang === 'no' ? 'Utvalgte arter' : 'Curated species'}</div>
+                  {curatedHits.map(artRow)}
+                </>
+              )}
+              {liveHits.length > 0 && (
+                <>
+                  <div className="vl-nat-sec">{lang === 'no' ? 'Alle observasjoner' : 'All observations'}</div>
+                  {liveHits.map(liveRow)}
+                </>
+              )}
+            </>
+          )}
+          <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 12 }}>
+            Kilde: GBIF (CC BY 4.0)
+          </p>
+        </>
+      );
+    }
+
     return (
       <>
+        {searchField}
         {(['Artsmangfold', 'Kulturhistorie'] as const).map(seksjon => {
           const kats = ARTS_KATEGORIER.filter(k => k.seksjon === seksjon);
           if (kats.length === 0) return null;
