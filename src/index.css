@@ -210,6 +210,10 @@ body { display: grid; place-items: center; }
 .vl-nat-curated-note {
   font-size: 13.5px; line-height: 1.5; color: var(--ink2);
   border-left: 3px solid var(--accent); padding: 2px 0 2px 10px;
+  margin: 0 0 12px;
+}
+.vl-nat-curated-body {
+  font-size: 14px; line-height: 1.6; color: var(--ink);
   margin: 0 0 14px;
 }
 .vl-showmore {

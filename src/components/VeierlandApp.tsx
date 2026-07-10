@@ -1644,6 +1644,9 @@ export function VeierlandApp() {
           {selectedCuratedArt?.note && (
             <p className="vl-nat-curated-note">{selectedCuratedArt.note}</p>
           )}
+          {selectedCuratedArt?.beskrivelse && (
+            <p className="vl-nat-curated-body">{selectedCuratedArt.beskrivelse}</p>
+          )}
           <div className="vl-trailmeta">
             <div className="vl-tm">
               <div className="k">{lang === 'no' ? 'Observasjoner' : 'Observations'}</div>
@@ -1725,6 +1728,7 @@ export function VeierlandApp() {
           <div className="vl-h2">{art.norsk || art.vitenskapelig}</div>
           {art.norsk && <div className="vl-sub" style={{ marginBottom: 14 }}><em>{art.vitenskapelig}</em></div>}
           <p className="vl-nat-curated-note">{art.note}</p>
+          {art.beskrivelse && <p className="vl-nat-curated-body">{art.beskrivelse}</p>}
           <div className="vl-trailmeta">
             <div className="vl-tm">
               <div className="k">{lang === 'no' ? 'Funn (kuratert)' : 'Records (curated)'}</div>

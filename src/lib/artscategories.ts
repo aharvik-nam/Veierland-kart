@@ -15,7 +15,8 @@ export interface CuratedArt {
   kategori: string; // red-list/alien code, or 'Unknown' for un-assessed taxa
   antallFunn: number;
   aarSpenn: string;
-  note: string;
+  note: string;       // short one-line hook, shown as the accent quote
+  beskrivelse: string; // fuller written paragraph, shown as the main body text
 }
 
 export interface ArtsKategori {
