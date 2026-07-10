@@ -202,10 +202,18 @@ function makeIconHtml(icon: string, color: string, selected: boolean, sz: number
 // map views (e.g. "Bade") where tapping to see a name isn't realistic for
 // young or elderly users. Kept separate from makeIconHtml so the hot default
 // per-marker render path (called for every POI, every render) stays untouched.
-function makeLabeledIconHtml(icon: string, color: string, selected: boolean, sz: number, label: string): string {
+function makeLabeledIconHtml(icon: string, color: string, selected: boolean, sz: number, label: string, labelAbove = false): string {
   const svgSz = Math.round(sz * 0.55);
   const svg = `<svg viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" width="${svgSz}" height="${svgSz}">${ICONS[icon] ?? ICONS.wc}</svg>`;
-  return `<div class="vl-pin-labeled-wrap"><div class="vl-pin vl-pin-lg${selected ? ' sel' : ''}" style="--pc:${color};width:${sz}px;height:${sz}px">${svg}</div><div class="vl-pin-label">${label}</div></div>`;
+  return `<div class="vl-pin-labeled-wrap${labelAbove ? ' above' : ''}"><div class="vl-pin vl-pin-lg${selected ? ' sel' : ''}" style="--pc:${color};width:${sz}px;height:${sz}px">${svg}</div><div class="vl-pin-label">${label}</div></div>`;
+}
+
+// Activity-mode labels drop the word that's already implied by the active
+// tile (e.g. "badeplass" while browsing Bade) — shorter text collides with
+// neighbouring labels less often when two spots sit close together.
+function tileLabel(navn: string, tile: 'bade' | 'gatur' | 'historie' | 'spise' | null): string {
+  if (tile === 'bade') return navn.replace(/\s*badeplass$/i, '');
+  return navn;
 }
 
 // Place names (stedsnavn): a plain text label with no icon circle, kept
@@ -1031,6 +1039,25 @@ export function VeierlandApp() {
     const sz = markerSize(mapZoom);
     const dimByTrail = mode === 'trails' && view === 'detail' && !!selectedTrail && trailPoiFilter === 'along';
 
+    // Activity-mode labels are always-on (see makeLabeledIconHtml above), so
+    // two spots that sit close together geographically can have overlapping
+    // name labels even though their pins don't touch. Do a cheap pairwise
+    // pass first — in practice this is a handful of markers (one activity
+    // category), so O(n²) is fine — and flip a colliding label to sit above
+    // its pin instead of below, which resolves the common two-neighbour case.
+    const labelAboveIds = new Set<string>();
+    if (activityTile) {
+      const placed: { x: number; y: number; halfW: number }[] = [];
+      for (const poi of filteredPOIs) {
+        if (poi.kategori === 'stedsnavn' || !poi.coordinates) continue;
+        const pt = map.latLngToContainerPoint(poi.coordinates as [number, number]);
+        const halfW = (tileLabel(poi.navn, activityTile).length * 3.4 + 12);
+        const collides = placed.some(p => Math.abs(p.x - pt.x) < p.halfW + halfW && Math.abs(p.y - pt.y) < 34);
+        if (collides) labelAboveIds.add(poi.id);
+        placed.push({ x: pt.x, y: pt.y, halfW });
+      }
+    }
+
     filteredPOIs.forEach(poi => {
       const cat = getCat(poi.kategori);
       const sel = selectedPOI?.id === poi.id;
@@ -1055,7 +1082,7 @@ export function VeierlandApp() {
         // tapping to find out what something is isn't realistic for young
         // or elderly users on a crowded island map.
         pinSz = sel ? 50 : 44;
-        html = makeLabeledIconHtml(cat.icon, cat.color, sel, pinSz, poi.navn);
+        html = makeLabeledIconHtml(cat.icon, cat.color, sel, pinSz, tileLabel(poi.navn, activityTile), labelAboveIds.has(poi.id));
       } else {
         pinSz = sz;
         html = faded
@@ -1592,7 +1619,7 @@ export function VeierlandApp() {
   // instead of pushing the full sheet up over the map.
   const showMiniCard = tab === 'map' && !sheetOpen && view === 'browse' && !!(selectedPOI || selectedTrail);
   // Offsets are measured within .vl-map-area, which already ends at the tab bar
-  const railBottom = sheetOpen
+  const rawRailBottom = sheetOpen
     ? sheetCurrentH + 16
     : showMiniCard
       ? MINI_CARD_H + 28
@@ -1600,6 +1627,16 @@ export function VeierlandApp() {
       // dock instead of hugging it, so the cluster reads as map controls
       // rather than part of the dock.
       : Math.max(TAB_BAR_H + 14, window.innerHeight * 0.32);
+  // A tall open sheet (e.g. Historie) pushes the rail's "bottom" offset up so
+  // far that the 3-button cluster's top edge climbs above the glass top bar
+  // and overlaps it. Cap how high the rail can go so its top edge always
+  // stays clear of the top bar, regardless of how tall the sheet gets.
+  const RAIL_HEIGHT_ESTIMATE = 200; // 3 buttons + gaps, generous
+  const TOPBAR_CLEARANCE = 130;     // top bar's usual bottom edge + a margin
+  const railBottom = Math.min(
+    rawRailBottom,
+    Math.max(TAB_BAR_H + 14, window.innerHeight - TOPBAR_CLEARANCE - RAIL_HEIGHT_ESTIMATE)
+  );
 
   // Text strings
   const T = lang === 'no' ? {
@@ -3600,7 +3637,10 @@ export function VeierlandApp() {
               {recoText && (
                 <div className="vl-dock-reco" onClick={() => applyActivityTile('bade')}>
                   <span className="em">☀️</span>
-                  <div style={{ flex: 1 }}><b>{recoText}</b></div>
+                  {/* min-width:0 lets this flex child actually wrap instead of
+                      being clipped by the row — flex items default to
+                      min-width:auto, which blocks wrapping */}
+                  <div style={{ flex: 1, minWidth: 0 }}><b>{recoText}</b></div>
                   <ChevSvg />
                 </div>
               )}

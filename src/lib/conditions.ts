@@ -69,6 +69,19 @@ function underCanopy(g: DomGrid, row: number, col: number): boolean {
   return cellH(g, row, col) - cellGround(g, row, col) > CANOPY_M;
 }
 
+// The source DTM/DOM rasters have no explicit sea mask — nodata over open
+// water gets zeroed at generation time (see generate_dom_grid.py), so a cell
+// at ~sea level reads identically to a real 0 m clearing. In practice actual
+// dry land on the island rises above this within a cell or two of the
+// shoreline, so a small threshold is a good enough proxy for "this is the
+// fjord, not a place to stand" — without it, the conditions overlays tint
+// the water the same as land, which reads as if the whole fjord were solid
+// ground.
+const WATER_LEVEL_M = 0.3;
+function isWaterCell(g: DomGrid, row: number, col: number): boolean {
+  return cellGround(g, row, col) <= WATER_LEVEL_M;
+}
+
 function toCell(g: DomGrid, lat: number, lng: number): { row: number; col: number } {
   const col = Math.round(((lng - g.minLng) / (g.maxLng - g.minLng)) * (g.cols - 1));
   const row = Math.round(((g.maxLat - lat) / (g.maxLat - g.minLat)) * (g.rows - 1));
@@ -301,7 +314,10 @@ export function makeSunShadowOverlay(date: Date): OverlayImage | null {
       d[i] = Math.round(SUNLIT.r + t * (SHADED.r - SUNLIT.r));
       d[i + 1] = Math.round(SUNLIT.g + t * (SHADED.g - SUNLIT.g));
       d[i + 2] = Math.round(SUNLIT.b + t * (SHADED.b - SUNLIT.b));
-      d[i + 3] = ALPHA;
+      // Fjord water reads identically to flat land in the raw height grid
+      // (see isWaterCell) — without this the sea gets tinted the same as
+      // the island, which reads as solid ground.
+      d[i + 3] = isWaterCell(g, r, c) ? 0 : ALPHA;
     }
   }
   ctx.putImageData(img, 0, 0);
@@ -347,7 +363,7 @@ export function makeShelterOverlay(windFromDeg: number, windSpeed: number): Over
   for (let r = 0; r < g.rows; r++) {
     for (let c = 0; c < g.cols; c++) {
       const e = smooth[r * g.cols + c];
-      if (e <= 0.02) continue; // effectively invisible: skip
+      if (e <= 0.02 || isWaterCell(g, r, c)) continue; // invisible, or fjord water (see isWaterCell)
       const i = (r * g.cols + c) * 4;
       d[i] = col.r; d[i + 1] = col.g; d[i + 2] = col.b;
       d[i + 3] = Math.round(255 * col.alpha * e);
@@ -554,10 +570,17 @@ export function makeEffectiveTempOverlay(airTempC: number, windSpeedMs: number, 
   }
   const smooth = boxBlur(rawTemp, g.cols, g.rows, 1);
 
+  // Water cells are excluded from the range too — otherwise a fjord that
+  // happens to compute a different "feels like" value than the land could
+  // skew the colour scale's stretch (see isWaterCell).
   let minT = Infinity, maxT = -Infinity;
-  for (let i = 0; i < smooth.length; i++) {
-    if (smooth[i] < minT) minT = smooth[i];
-    if (smooth[i] > maxT) maxT = smooth[i];
+  for (let r = 0; r < g.rows; r++) {
+    for (let c = 0; c < g.cols; c++) {
+      if (isWaterCell(g, r, c)) continue;
+      const t = smooth[r * g.cols + c];
+      if (t < minT) minT = t;
+      if (t > maxT) maxT = t;
+    }
   }
   if (maxT - minT < MIN_SPAN) {
     const mid = (minT + maxT) / 2;
@@ -567,8 +590,9 @@ export function makeEffectiveTempOverlay(airTempC: number, windSpeedMs: number, 
 
   for (let r = 0; r < g.rows; r++) {
     for (let c = 0; c < g.cols; c++) {
-      const col = effectiveTempColor(smooth[r * g.cols + c], minT, maxT);
       const i = (r * g.cols + c) * 4;
+      if (isWaterCell(g, r, c)) { d[i + 3] = 0; continue; }
+      const col = effectiveTempColor(smooth[r * g.cols + c], minT, maxT);
       d[i] = col.r;
       d[i + 1] = col.g;
       d[i + 2] = col.b;

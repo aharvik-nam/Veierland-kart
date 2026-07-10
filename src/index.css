@@ -81,6 +81,9 @@ body { display: grid; place-items: center; }
 }
 .vl-pin-lg { border-width: 3px; }
 .vl-pin-labeled-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+/* Flipped when two nearby pins' labels would otherwise overlap (see the
+   collision pass in the marker-creation effect) */
+.vl-pin-labeled-wrap.above { flex-direction: column-reverse; }
 .vl-pin-label {
   background: rgba(251,249,243,.94);
   border: 1px solid var(--line);
