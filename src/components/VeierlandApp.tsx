@@ -17,7 +17,7 @@ import floodData from '../data/sea_level_flood.geojson';
 import { fetchFerryDepartures, fetchQuaySailings, nearestQuay, FerryBoard, FERRY_QUAYS, fmtDepTime, minsUntil } from '../lib/ferrydata';
 import {
   hasDomGrid, sunPosition, sunlitAt, shelterAt,
-  makeSunShadowOverlay, makeShelterOverlay, makeEffectiveTempOverlay,
+  makeSunShadowOverlay, makeShelterOverlay, makeEffectiveTempOverlay, makeBestSpotsOverlay, BestSpotsInfo,
   fetchWeatherNow, fetchWeatherSeries, fetchSeaTemp, WeatherNow, WeatherPoint, windDirLabel, weatherIconKind, WeatherIconKind,
   windColor, ORKAN_MS, effectiveTemp, effectiveTempColor,
   rankBeaches, dailyRecommendation, BeachConditionScore,
@@ -610,7 +610,6 @@ export function VeierlandApp() {
   const [geoLayer, setGeoLayer] = useState<string | null>(null);
   const [showLayerPop, setShowLayerPop] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [showCondPop, setShowCondPop] = useState(false);
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
   const [userAccuracy, setUserAccuracy] = useState<number>(0);
   const [locating, setLocating] = useState(false);
@@ -739,19 +738,32 @@ export function VeierlandApp() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedQuay?.key]);
 
-  // Conditions: sun-shadow / wind-shelter / effective-temp overlays (needs the DOM grid) and
-  // current weather + sea temperature from MET (for the beach card)
-  const [condLayer, setCondLayer] = useState<'sun' | 'wind' | 'effectiveTemp' | null>(null);
+  // Conditions overlays (needs the DOM grid) and current weather + sea
+  // temperature from MET (for the beach card). Tapping Forhold goes straight
+  // to the combined "Beste steder" view; the three expert layers (sun, wind,
+  // feels-like) are reached by swiping/paging the legend card — answer first,
+  // explanation on demand.
+  const COND_VIEWS = ['best', 'sun', 'wind', 'effectiveTemp'] as const;
+  const [condLayer, setCondLayer] = useState<'best' | 'sun' | 'wind' | 'effectiveTemp' | null>(null);
   const [weatherNow, setWeatherNow] = useState<WeatherNow | null>(null);
   const [seaTemp, setSeaTemp] = useState<number | null>(null);
   const [tempRange, setTempRange] = useState<[number, number] | null>(null);
+  const [bestInfo, setBestInfo] = useState<BestSpotsInfo | null>(null);
   const condOverlayRef = useRef<L.ImageOverlay | null>(null);
+  const condSwipeX = useRef<number | null>(null);
   // Forhold ("conditions") can be scrubbed forward through the next ~24h so
   // people can plan ahead, not just see the current moment. condHourOffset is
-  // an index into weatherSeries (0 = now); it's shared across all three
-  // condLayer types so switching sun/wind/temp keeps the same planning hour.
+  // an index into weatherSeries (0 = now); it's shared across all the
+  // condLayer views so paging between them keeps the same planning hour.
   const [weatherSeries, setWeatherSeries] = useState<WeatherPoint[] | null>(null);
   const [condHourOffset, setCondHourOffset] = useState(0);
+  function stepCondView(dir: 1 | -1) {
+    setCondLayer(cur => {
+      if (!cur) return cur;
+      const i = COND_VIEWS.indexOf(cur);
+      return COND_VIEWS[(i + dir + COND_VIEWS.length) % COND_VIEWS.length];
+    });
+  }
   const isBeachPOI = !!selectedPOI && (selectedPOI.kategorier ?? [selectedPOI.kategori]).includes('bad');
 
   // Weather is needed unconditionally now (the glass top bar's one-liner),
@@ -871,7 +883,7 @@ export function VeierlandApp() {
 
   // Close layer popup on document click
   useEffect(() => {
-    const handle = () => { setShowLayerPop(false); setShowFerryPop(false); setShowMenu(false); setShowCondPop(false); };
+    const handle = () => { setShowLayerPop(false); setShowFerryPop(false); setShowMenu(false); };
     document.addEventListener('click', handle);
     return () => document.removeEventListener('click', handle);
   }, []);
@@ -924,8 +936,10 @@ export function VeierlandApp() {
       const point = series?.[Math.min(condHourOffset, series.length - 1)] ?? null;
       const date = point ? new Date(point.time) : new Date();
 
-      let img: { dataUrl: string; bounds: [[number, number], [number, number]]; tempRange?: [number, number] } | null = null;
-      if (condLayer === 'sun') {
+      let img: { dataUrl: string; bounds: [[number, number], [number, number]]; tempRange?: [number, number]; best?: BestSpotsInfo } | null = null;
+      if (condLayer === 'best') {
+        if (point) img = makeBestSpotsOverlay(point, date);
+      } else if (condLayer === 'sun') {
         img = makeSunShadowOverlay(date);
       } else if (condLayer === 'wind') {
         if (point) img = makeShelterOverlay(point.windFromDeg, point.windSpeed);
@@ -944,6 +958,7 @@ export function VeierlandApp() {
         return;
       }
       setTempRange(img.tempRange ?? null);
+      setBestInfo(img.best ?? null);
       clear();
       condOverlayRef.current = L.imageOverlay(img.dataUrl, img.bounds, { opacity: 0.8, interactive: false }).addTo(map);
     })();
@@ -3398,50 +3413,16 @@ export function VeierlandApp() {
           <span className="rl">{lang === 'no' ? 'Posisjon' : 'Locate'}</span>
         </button>
         {hasDomGrid && (
-          <div style={{ position: 'relative' }}>
-            <button
-              className={`vl-rbtn${condLayer ? ' active' : ''}`}
-              aria-label={lang === 'no' ? 'Forhold nå (sol, vind, temperatur)' : 'Conditions now (sun, wind, temperature)'}
-              title={lang === 'no' ? 'Forhold nå' : 'Conditions now'}
-              onClick={e => { e.stopPropagation(); setShowCondPop(v => !v); }}
-              style={condLayer ? { background: 'var(--accent)', color: '#fff' } : undefined}
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/></svg>
-              <span className="rl">{lang === 'no' ? 'Forhold' : 'Conditions'}</span>
-            </button>
-            {showCondPop && (
-              <div className="vl-condpop-menu" onClick={e => e.stopPropagation()}>
-                <div className="vl-condpop-title">{lang === 'no' ? 'Forhold på øya' : 'Island conditions'}</div>
-                <button className={condLayer === 'sun' ? 'on' : ''}
-                  onClick={() => { setCondLayer(c => c === 'sun' ? null : 'sun'); setShowCondPop(false); }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/></svg>
-                  <span className="txt">
-                    {lang === 'no' ? 'Sol og skygge' : 'Sun and shade'}
-                    <small>{lang === 'no' ? 'Hvor sola når fram' : 'Where the sun reaches'}</small>
-                  </span>
-                  {condLayer === 'sun' && <CheckSvg />}
-                </button>
-                <button className={condLayer === 'wind' ? 'on' : ''}
-                  onClick={() => { setCondLayer(c => c === 'wind' ? null : 'wind'); setShowCondPop(false); }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h11a2.5 2.5 0 1 0-2.5-2.5"/><path d="M3 12h15a2.5 2.5 0 1 1-2.5 2.5"/><path d="M3 16h8a2 2 0 1 1-2 2"/></svg>
-                  <span className="txt">
-                    {lang === 'no' ? 'Vind og le' : 'Wind and shelter'}
-                    <small>{lang === 'no' ? 'Vindutsatt og skjermet' : 'Exposed and sheltered spots'}</small>
-                  </span>
-                  {condLayer === 'wind' && <CheckSvg />}
-                </button>
-                <button className={condLayer === 'effectiveTemp' ? 'on' : ''}
-                  onClick={() => { setCondLayer(c => c === 'effectiveTemp' ? null : 'effectiveTemp'); setShowCondPop(false); }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v16M9 20h6a2 2 0 0 0 2-2v-2H7v2a2 2 0 0 0 2 2z"/><path d="M10 8h4" strokeWidth="2.5"/></svg>
-                  <span className="txt">
-                    {lang === 'no' ? 'Effektiv temperatur' : 'Effective temperature'}
-                    <small>{lang === 'no' ? 'Slik føles det ute' : 'How it actually feels'}</small>
-                  </span>
-                  {condLayer === 'effectiveTemp' && <CheckSvg />}
-                </button>
-              </div>
-            )}
-          </div>
+          <button
+            className={`vl-rbtn${condLayer ? ' active' : ''}`}
+            aria-label={lang === 'no' ? 'Forhold nå (beste steder, sol, vind, temperatur)' : 'Conditions now (best spots, sun, wind, temperature)'}
+            title={lang === 'no' ? 'Forhold nå' : 'Conditions now'}
+            onClick={e => { e.stopPropagation(); setCondLayer(c => c ? null : 'best'); }}
+            style={condLayer ? { background: 'var(--accent)', color: '#fff' } : undefined}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/></svg>
+            <span className="rl">{lang === 'no' ? 'Forhold' : 'Conditions'}</span>
+          </button>
         )}
       </div>
 
@@ -3454,14 +3435,24 @@ export function VeierlandApp() {
           : `${lang === 'no' ? 'kl.' : 'at'} ${String(condDate.getHours()).padStart(2, '0')}:${String(condDate.getMinutes()).padStart(2, '0')}`;
         const HOUR_STEPS = [0, 3, 6, 12, 24];
 
-        const condTitle = condLayer === 'sun'
-          ? (lang === 'no' ? 'Sol og skygge' : 'Sun & shade')
-          : condLayer === 'wind'
-            ? (lang === 'no' ? 'Vindeksponering' : 'Wind exposure')
-            : (lang === 'no' ? 'Effektiv temperatur' : 'Feels like');
+        const COND_TITLES: Record<string, [string, string]> = {
+          best: ['Beste steder', 'Best spots'],
+          sun: ['Sol og skygge', 'Sun & shade'],
+          wind: ['Vindeksponering', 'Wind exposure'],
+          effectiveTemp: ['Effektiv temperatur', 'Feels like'],
+        };
+        const condTitle = COND_TITLES[condLayer][lang === 'no' ? 0 : 1];
 
         return (
-          <div className="vl-condlegend" onClick={e => e.stopPropagation()}>
+          <div className="vl-condlegend" onClick={e => e.stopPropagation()}
+            onPointerDown={e => { condSwipeX.current = e.clientX; }}
+            onPointerUp={e => {
+              const sx = condSwipeX.current;
+              condSwipeX.current = null;
+              if (sx === null) return;
+              const dx = e.clientX - sx;
+              if (Math.abs(dx) > 45) stepCondView(dx < 0 ? 1 : -1);
+            }}>
             <div className="vl-condlegend-hd">
               <span className="t">{condTitle} · {condTimeLabel}</span>
               <button className="vl-condlegend-close" aria-label={lang === 'no' ? 'Lukk' : 'Close'}
@@ -3478,7 +3469,28 @@ export function VeierlandApp() {
                 ))}
               </div>
             )}
-            {condLayer === 'sun' ? (() => {
+            {condLayer === 'best' ? (
+              condPoint && bestInfo ? (
+                <>
+                  <div className="vl-cond-main">
+                    <span className="big">{Math.round(bestInfo.perceivedC)}°</span>
+                    <span className="sub">{lang === 'no' ? 'føles som, på beste sted' : 'feels like, at the best spot'}</span>
+                  </div>
+                  <div className="vl-cond-keys">
+                    {bestInfo.sunlit && <span className="k"><i style={{ background: '#fabf24' }} />{lang === 'no' ? 'Sol' : 'Sun'}</span>}
+                    {bestInfo.sheltered && <span className="k"><i style={{ background: '#5f9438' }} />{lang === 'no' ? 'God le' : 'Sheltered'}</span>}
+                    {!bestInfo.sunlit && !bestInfo.sheltered && (
+                      <span className="k"><i style={{ background: '#f6b23c' }} />{lang === 'no' ? 'Mildest' : 'Mildest'}</span>
+                    )}
+                  </div>
+                  <span className="vl-cond-note" style={{ marginTop: 7, display: 'block' }}>
+                    {lang === 'no' ? 'Gyllent på kartet = fint å være.' : 'Golden on the map = pleasant to be.'}
+                  </span>
+                </>
+              ) : (
+                <span className="vl-cond-note">{lang === 'no' ? 'Henter vær…' : 'Loading weather…'}</span>
+              )
+            ) : condLayer === 'sun' ? (() => {
               const sun = sunPosition(condDate, 59.155, 10.351);
               return sun.elevation > 0 ? (
                 <>
@@ -3563,6 +3575,19 @@ export function VeierlandApp() {
                 <span className="vl-cond-note">{lang === 'no' ? 'Henter temperatur…' : 'Loading temperature…'}</span>
               )
             )}
+            <div className="vl-cond-pager">
+              <button className="pg" aria-label={lang === 'no' ? 'Forrige visning' : 'Previous view'} onClick={() => stepCondView(-1)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+              </button>
+              {COND_VIEWS.map(v => (
+                <button key={v} className={`dot${condLayer === v ? ' on' : ''}`}
+                  aria-label={COND_TITLES[v][lang === 'no' ? 0 : 1]}
+                  onClick={() => setCondLayer(v)} />
+              ))}
+              <button className="pg" aria-label={lang === 'no' ? 'Neste visning' : 'Next view'} onClick={() => stepCondView(1)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+              </button>
+            </div>
           </div>
         );
       })()}

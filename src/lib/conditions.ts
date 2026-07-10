@@ -607,6 +607,110 @@ export function makeEffectiveTempOverlay(airTempC: number, windSpeedMs: number, 
   };
 }
 
+// ── "Best spots" combined overlay ────────────────────────────────────────────
+// One layer answering the question the three expert layers (sun, wind,
+// feels-like) only answer fragments of: where is it actually pleasant to BE
+// right now? Per cell: perceived temperature = effective temp with the local
+// (lee-adjusted) wind, plus a solar-radiation bonus when the cell is sunlit
+// (scaled by cloud cover and sun height). Cells scoring near a comfort ideal
+// get a soft golden glow; everything else stays untinted so the map keeps
+// its map-first calm. Same physical model as the beach ranking, generalized
+// to the whole island.
+
+export interface BestSpotsInfo {
+  perceivedC: number; // perceived temp at the best-scoring cell
+  sunlit: boolean;
+  sheltered: boolean;
+}
+
+// Standing in full sun reads several degrees warmer than shade — up to this
+// many °C at high sun and clear sky, scaled down by cloud cover / low sun.
+const SUN_GAIN_MAX_C = 7;
+const COMFORT_IDEAL_C = 22.5;
+const COMFORT_SIGMA_C = 6;
+const GLOW = { r: 246, g: 178, b: 60 };
+
+export function makeBestSpotsOverlay(
+  w: { airTemp: number; windSpeed: number; windFromDeg: number; humidity: number; cloudFraction: number },
+  date: Date,
+): (OverlayImage & { best: BestSpotsInfo }) | null {
+  if (!DOM_GRID) return null;
+  const g = DOM_GRID;
+  const ctx = makeCanvas(g);
+  if (!ctx) return null;
+
+  const midLat = (g.minLat + g.maxLat) / 2;
+  const midLng = (g.minLng + g.maxLng) / 2;
+  const sun = sunPosition(date, midLat, midLng);
+  const sunUp = sun.elevation > 0;
+  // Cloud cover and low sun both cut the radiant warmth of "being in the sun"
+  const sunGain = sunUp
+    ? SUN_GAIN_MAX_C * (1 - w.cloudFraction / 100) * Math.min(1, sun.elevation / 40)
+    : 0;
+
+  const exposure = windExposureField(g, w.windFromDeg);
+
+  const score = new Float32Array(g.cols * g.rows);
+  const sunlitCells = new Uint8Array(g.cols * g.rows);
+  for (let r = 0; r < g.rows; r++) {
+    for (let c = 0; c < g.cols; c++) {
+      const i = r * g.cols + c;
+      if (isWaterCell(g, r, c)) continue; // stays 0 → never glows
+      const sunlit = sunUp && !underCanopy(g, r, c)
+        && horizonAngleCells(g, r, c, sun.azimuth, 400) < sun.elevation;
+      if (sunlit) sunlitCells[i] = 1;
+      const localWind = w.windSpeed * exposure[i];
+      const perceived = effectiveTemp(w.airTemp, localWind, w.humidity) + (sunlit ? sunGain : 0);
+      const d = perceived - COMFORT_IDEAL_C;
+      score[i] = Math.exp(-(d * d) / (2 * COMFORT_SIGMA_C * COMFORT_SIGMA_C));
+    }
+  }
+  const smooth = boxBlur(score, g.cols, g.rows, 1);
+
+  // Find the best cell (for the legend's "føles som X°, sol, god le" readout)
+  // and the score range. The glow threshold is relative to the day's best —
+  // "best spots" is inherently a relative question; even on a raw day the
+  // most sheltered sunny corner is worth pointing at.
+  let maxScore = 0, bestIdx = -1;
+  for (let r = 0; r < g.rows; r++) {
+    for (let c = 0; c < g.cols; c++) {
+      const i = r * g.cols + c;
+      if (isWaterCell(g, r, c)) continue;
+      if (smooth[i] > maxScore) { maxScore = smooth[i]; bestIdx = i; }
+    }
+  }
+  if (bestIdx < 0 || maxScore <= 0) return null;
+
+  const img = ctx.createImageData(g.cols, g.rows);
+  const d = img.data;
+  const THRESHOLD = 0.82; // fraction of maxScore below which a cell stays untinted
+  for (let r = 0; r < g.rows; r++) {
+    for (let c = 0; c < g.cols; c++) {
+      const i = r * g.cols + c;
+      const rel = smooth[i] / maxScore;
+      if (rel < THRESHOLD || isWaterCell(g, r, c)) continue;
+      const t = (rel - THRESHOLD) / (1 - THRESHOLD); // 0..1 within the glow band
+      const px = i * 4;
+      d[px] = GLOW.r; d[px + 1] = GLOW.g; d[px + 2] = GLOW.b;
+      d[px + 3] = Math.round(150 * t);
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+
+  const bestSunlit = sunlitCells[bestIdx] === 1;
+  const bestPerceived = effectiveTemp(w.airTemp, w.windSpeed * exposure[bestIdx], w.humidity)
+    + (bestSunlit ? sunGain : 0);
+  return {
+    dataUrl: toSmoothDataUrl(ctx.canvas),
+    bounds: [[g.minLat, g.minLng], [g.maxLat, g.maxLng]],
+    best: {
+      perceivedC: bestPerceived,
+      sunlit: bestSunlit,
+      sheltered: exposure[bestIdx] < 0.4,
+    },
+  };
+}
+
 // Buckets MET Yr's ~50 symbol codes (e.g. "partlycloudy_day",
 // "lightrainshowers_night") into the handful of icon kinds the top bar
 // actually draws — day/night variants and shower/continuous variants of
