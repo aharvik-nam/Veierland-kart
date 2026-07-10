@@ -8,7 +8,8 @@ import 'leaflet.markercluster';
 import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, WikipediaData } from '../lib/types';
 import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages, fetchWikipediaSpecies } from '../lib/api';
 import { loadCatCfg, DEFAULT_CAT_CFG, CatCfgMap } from '../lib/catcfg';
-import { NATURE_GROUPS, NatureGroup, NatureObs, GBIF_POLYGON, STATIC_NATURE_CACHE, loadNatureObs, applyAssessments } from '../lib/naturedata';
+import { NATURE_GROUPS, NatureObs, GBIF_POLYGON, STATIC_NATURE_CACHE, loadNatureObs, applyAssessments } from '../lib/naturedata';
+import { ARTS_KATEGORIER, ArtsKategori, CuratedArt, artsgruppeMeta } from '../lib/artscategories';
 import { loadFarmData, DEFAULT_FARM_DATA, Farm } from '../lib/farmdata';
 import { loadTimelineSections, DEFAULT_TIMELINE_SECTIONS, TimelineSection } from '../lib/timelinedata';
 import { ICONS } from '../lib/icons';
@@ -128,9 +129,9 @@ function geoOnEach(feature: { properties?: { type_no?: string; label?: string } 
 // ─── Nature (Artsdatabanken) ──────────────────────────────────────────────────
 
 const RED_LIST_CATS = /^(NT|VU|EN|CR|RE|DD)$/;
-
-// Severity order for sorting highlights: most threatened first
-const RL_RANK: Record<string, number> = { CR: 0, RE: 1, EN: 2, VU: 3, NT: 4, DD: 5 };
+// Fremmedartslista risk codes (LO/PH/HI/SE) — curated `kategori` values that
+// mark a species as alien rather than red-listed.
+const ALIEN_CATS = /^(LO|PH|HI|SE)$/;
 
 const RL_LABEL: Record<string, string> = {
   NT: 'Nær truet (NT)', VU: 'Sårbar (VU)', EN: 'Sterkt truet (EN)',
@@ -629,33 +630,38 @@ export function VeierlandApp() {
   const [natureObs, setNatureObs] = useState<NatureObs[]>([]);
   const [natureLoading, setNatureLoading] = useState(false);
   const [natureFetched, setNatureFetched] = useState(false);
-  const [natureFilter, setNatureFilter] = useState<NatureGroup | null>(null);
-  // Curated list: highlights (red-listed/alien) + most-observed, paged
-  const [natureHlN, setNatureHlN] = useState(10);
-  const [natureTopN, setNatureTopN] = useState(15);
-  const filteredNatureObs = natureFilter
-    ? natureObs.filter(o => o.group === natureFilter)
-    : natureObs;
-  const isHighlight = (o: NatureObs) =>
-    RED_LIST_CATS.test(o.redListCategory ?? '') || !!o.alienCategory;
-  const natureHighlights = useMemo(
-    () => filteredNatureObs.filter(isHighlight).sort((a, b) => {
-      const rank = (o: NatureObs) => RL_RANK[o.redListCategory ?? ''] ?? 10;
-      return rank(a) - rank(b) || b.obsCount - a.obsCount;
-    }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [natureObs, natureFilter]);
-  const natureCommon = useMemo(
-    () => filteredNatureObs.filter(o => !isHighlight(o)).sort((a, b) => b.obsCount - a.obsCount),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [natureObs, natureFilter]);
-  // The map mirrors exactly what the list shows — not all 500 species
-  const natureVisible = useMemo(
-    () => [...natureHighlights.slice(0, natureHlN), ...natureCommon.slice(0, natureTopN)],
-    [natureHighlights, natureCommon, natureHlN, natureTopN]);
+  // Curated categories (replacing the old auto-generated highlights/most-observed
+  // split) — people pick one of these hand-written categories, not a taxon filter.
+  const [artsKategoriId, setArtsKategoriId] = useState<string>(ARTS_KATEGORIER[0]?.id ?? '');
+  const [natureListN, setNatureListN] = useState(20);
+  const selectedKategori: ArtsKategori | undefined =
+    ARTS_KATEGORIER.find(k => k.id === artsKategoriId) ?? ARTS_KATEGORIER[0];
+  // Curated species are matched against the live GBIF-backed observations by
+  // scientific name, so a curated row can open the same rich detail (photo,
+  // live count, map occurrences) as before when we actually have a hit.
+  const obsByName = useMemo(() => {
+    const m = new Map<string, NatureObs>();
+    for (const o of natureObs) m.set(o.scientificName.toLowerCase().trim(), o);
+    return m;
+  }, [natureObs]);
+  // The map mirrors exactly what the list shows — only curated species with a
+  // live match have coordinates to plot.
+  const natureVisible = useMemo(() => {
+    if (!selectedKategori) return [];
+    const seen = new Set<number>();
+    const out: NatureObs[] = [];
+    for (const art of selectedKategori.arter) {
+      const obs = obsByName.get(art.vitenskapelig.toLowerCase().trim());
+      if (obs && !seen.has(obs.gbifKey)) { seen.add(obs.gbifKey); out.push(obs); }
+    }
+    return out;
+  }, [selectedKategori, obsByName]);
   const [selectedNatureObs, setSelectedNatureObs] = useState<NatureObs[]>([]);
   const [speciesObsLoading, setSpeciesObsLoading] = useState(false);
   const [selectedNature, setSelectedNature] = useState<NatureObs | null>(null);
+  // Set when a curated species has no live GBIF match — a lighter detail view
+  // (no photo/map/live count) built from the curated JSON alone.
+  const [selectedCuratedArt, setSelectedCuratedArt] = useState<CuratedArt | null>(null);
   const [speciesWiki, setSpeciesWiki] = useState<WikipediaData | null>(null);
   const [speciesWikiLoading, setSpeciesWikiLoading] = useState(false);
 
@@ -832,17 +838,19 @@ export function VeierlandApp() {
     });
   }, [filteredPOIs, catCfg]);
 
-  // Fetch Wikipedia when a nature obs is selected
+  // Fetch Wikipedia when a nature obs or a (unmatched) curated species is selected
   useEffect(() => {
-    if (!selectedNature) { setSpeciesWiki(null); return; }
+    const sci = selectedNature?.scientificName ?? selectedCuratedArt?.vitenskapelig;
+    const pop = selectedNature?.popularName ?? selectedCuratedArt?.norsk ?? '';
+    if (!sci) { setSpeciesWiki(null); return; }
     let alive = true;
     setSpeciesWiki(null);
     setSpeciesWikiLoading(true);
-    fetchWikipediaSpecies(selectedNature.scientificName, selectedNature.popularName, lang)
+    fetchWikipediaSpecies(sci, pop, lang)
       .then(r => { if (alive) { setSpeciesWiki(r); setSpeciesWikiLoading(false); } })
       .catch(() => { if (alive) setSpeciesWikiLoading(false); });
     return () => { alive = false; };
-  }, [selectedNature, lang]);
+  }, [selectedNature, selectedCuratedArt, lang]);
 
   // Close layer popup on document click
   useEffect(() => {
@@ -985,14 +993,14 @@ export function VeierlandApp() {
   const onMapClick = useCallback(() => {
     setShowLayerPop(false);
     setShowFerryPop(false);
-    if (selectedNature) { setSelectedNature(null); setSelectedNatureObs([]); }
+    if (selectedNature || selectedCuratedArt) { setSelectedNature(null); setSelectedNatureObs([]); setSelectedCuratedArt(null); }
     // Tapping empty map while a mini-card is showing dismisses it
     if (tab === 'map' && !sheetOpen && (selectedPOI || selectedTrail)) {
       setSelectedPOI(null);
       setSelectedTrail(null);
       setTrailPath(null);
     }
-  }, [selectedNature, tab, sheetOpen, selectedPOI, selectedTrail]);
+  }, [selectedNature, selectedCuratedArt, tab, sheetOpen, selectedPOI, selectedTrail]);
   const onZoom = useCallback((z: number) => setMapZoom(z), []);
 
   // Cluster group — rebuild whenever filtered POIs, zoom, or selection changes
@@ -1088,6 +1096,22 @@ export function VeierlandApp() {
     const offsetPx = expandedH / 2;
     const targetPoint = map.project(L.latLng(coordinates), zoom).add(L.point(0, offsetPx));
     map.flyTo(map.unproject(targetPoint, zoom), zoom, { duration: 0.7 });
+  }
+
+  // Entry point from the curated category list: link the curated species up
+  // against whatever live GBIF-backed observation we have for it (matched by
+  // scientific name, see obsByName) — a hit reuses the existing rich detail
+  // flow unchanged; no hit falls back to a lighter, curated-only detail view.
+  function openArt(art: CuratedArt) {
+    setSelectedCuratedArt(art);
+    const obs = obsByName.get(art.vitenskapelig.toLowerCase().trim());
+    if (obs) {
+      selectNatureSpecies(obs);
+    } else {
+      setSelectedNature(null);
+      setSelectedNatureObs([]);
+      setSheetOpen(true);
+    }
   }
 
   async function selectNatureSpecies(obs: NatureObs) {
@@ -1205,6 +1229,7 @@ export function VeierlandApp() {
     setSelectedTrail(null);
     setSelectedNature(null);
     setSelectedNatureObs([]);
+    setSelectedCuratedArt(null);
     setTrailPath(null);
     setView('browse');
     setTab(t);
@@ -1223,7 +1248,7 @@ export function VeierlandApp() {
       setSeaLevelA(0);
       setSeaLevelB(0);
     }
-    if (t === 'nature') { setNatureHlN(10); setNatureTopN(15); }
+    if (t === 'nature') { setArtsKategoriId(ARTS_KATEGORIER[0]?.id ?? ''); setNatureListN(20); }
     setSheetOpen(t !== 'map');
   }
 
@@ -1261,6 +1286,7 @@ export function VeierlandApp() {
     setSelectedTrail(null);
     setSelectedNature(null);
     setSelectedNatureObs([]);
+    setSelectedCuratedArt(null);
     setTrailPath(null);
     setTab('map');
     // Return the map to place pins if something else (trails/nature/history)
@@ -1482,7 +1508,7 @@ export function VeierlandApp() {
   // (interactions like the sea-level slider have a visible effect). Natur is
   // capped lower still — its content is about the map.
   const SHEET_MAX_H = Math.min(window.innerHeight * (
-    view === 'detail' || selectedNature ? 0.82 : tab === 'nature' ? 0.45 : 0.62
+    view === 'detail' || selectedNature || selectedCuratedArt ? 0.82 : tab === 'nature' ? 0.45 : 0.62
   ), 720);
   const TAB_BAR_H = 62; // keep in sync with --tab-h in index.css
   const MINI_CARD_H = 68;
@@ -1503,7 +1529,7 @@ export function VeierlandApp() {
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [sheetOpen, view, selectedPOI, selectedTrail, selectedNature, selectedEra, selectedFarm, historyView, tab]);
+  }, [sheetOpen, view, selectedPOI, selectedTrail, selectedNature, selectedCuratedArt, selectedEra, selectedFarm, historyView, tab]);
 
   const SHEET_OPEN_H = autoSheetH ?? SHEET_MAX_H;
   const sheetCurrentH = sheetOpen
@@ -1603,16 +1629,20 @@ export function VeierlandApp() {
   // ── Render: nature ──────────────────────────────────────────────────────────
 
   function renderNature() {
+    // Rich detail: a curated species matched to a live GBIF-backed observation.
     if (selectedNature) {
       const cfg = NATURE_GROUPS[selectedNature.group];
       const dateStr = selectedNature.date.slice(0, 10).replace(/-/g, '.');
       return (
         <>
-          <button className="vl-back" onClick={() => { setSelectedNature(null); setSelectedNatureObs([]); }}><BackSvg />{T.back}</button>
+          <button className="vl-back" onClick={() => { setSelectedNature(null); setSelectedNatureObs([]); setSelectedCuratedArt(null); }}><BackSvg />{T.back}</button>
           <div><span className="vl-catpill">{lang === 'no' ? cfg.no : cfg.en}</span></div>
           <div className="vl-h2">{selectedNature.popularName || selectedNature.scientificName}</div>
           {selectedNature.popularName && (
             <div className="vl-sub" style={{ marginBottom: 14 }}><em>{selectedNature.scientificName}</em></div>
+          )}
+          {selectedCuratedArt?.note && (
+            <p className="vl-nat-curated-note">{selectedCuratedArt.note}</p>
           )}
           <div className="vl-trailmeta">
             <div className="vl-tm">
@@ -1681,22 +1711,95 @@ export function VeierlandApp() {
       );
     }
 
-    const natRow = (obs: NatureObs) => {
-      const cfg = NATURE_GROUPS[obs.group];
+    // Lighter detail: a curated species with no live GBIF match yet — static
+    // curated data only (no photo, no map occurrences, no live count).
+    if (selectedCuratedArt) {
+      const art = selectedCuratedArt;
+      const meta = artsgruppeMeta(art.gruppe);
+      const isRedList = RED_LIST_CATS.test(art.kategori);
+      const isAlien = ALIEN_CATS.test(art.kategori);
       return (
-        <div key={obs.gbifKey} className="vl-sp-row flat" onClick={() => selectNatureSpecies(obs)}>
-          <span className="vl-sp-ico" style={{ background: `${cfg.color}1a`, color: cfg.color }}
-            dangerouslySetInnerHTML={{ __html: iconSvg(cfg.icon) }} />
+        <>
+          <button className="vl-back" onClick={() => setSelectedCuratedArt(null)}><BackSvg />{T.back}</button>
+          <div><span className="vl-catpill" style={{ background: `${meta.color}1a`, color: meta.color }}>{art.gruppe}</span></div>
+          <div className="vl-h2">{art.norsk || art.vitenskapelig}</div>
+          {art.norsk && <div className="vl-sub" style={{ marginBottom: 14 }}><em>{art.vitenskapelig}</em></div>}
+          <p className="vl-nat-curated-note">{art.note}</p>
+          <div className="vl-trailmeta">
+            <div className="vl-tm">
+              <div className="k">{lang === 'no' ? 'Funn (kuratert)' : 'Records (curated)'}</div>
+              <div className="v">{art.antallFunn}</div>
+            </div>
+            <div className="vl-tm">
+              <div className="k">{lang === 'no' ? 'Årsspenn' : 'Year range'}</div>
+              <div className="v" style={{ fontSize: 14 }}>{art.aarSpenn}</div>
+            </div>
+          </div>
+
+          {isRedList && (
+            <div className="vl-assess-box vl-rl-box">
+              <div><span className="vl-rlbadge">{art.kategori}</span> <strong>{RL_LABEL[art.kategori]}</strong></div>
+              <p>{RL_DESC[art.kategori]}</p>
+              <a href="https://artsdatabanken.no/rodliste" target="_blank" rel="noreferrer">Norsk rødliste ↗</a>
+            </div>
+          )}
+          {isAlien && (
+            <div className="vl-assess-box vl-al-box">
+              <div><span className="vl-albadge">FA</span> <strong>Fremmedart i Norge</strong></div>
+              <p>Arten er registrert som fremmed art i Norge og kan ha negativ effekt på hjemlige arter og naturmiljøer.</p>
+              <a href="https://artsdatabanken.no/fremmedartslista" target="_blank" rel="noreferrer">Fremmedartslista ↗</a>
+            </div>
+          )}
+
+          {speciesWikiLoading && (
+            <p style={{ color: 'var(--muted)', fontSize: 13, margin: '8px 0' }}>
+              {lang === 'no' ? 'Henter artsinformasjon…' : 'Loading species info…'}
+            </p>
+          )}
+
+          {speciesWiki && (
+            <div className="vl-api-section">
+              {speciesWiki.imageUrl && (
+                <img src={speciesWiki.imageUrl} alt={speciesWiki.title} className="vl-api-img" onError={hideBrokenImg} />
+              )}
+              <p className="vl-api-text">{speciesWiki.extract}</p>
+              <a href={speciesWiki.pageUrl} target="_blank" rel="noreferrer" className="vl-api-link">
+                {lang === 'no' ? 'Les mer på Wikipedia ↗' : 'Read more on Wikipedia ↗'}
+              </a>
+            </div>
+          )}
+
+          <a
+            href={`https://www.gbif.org/species/search?q=${encodeURIComponent(art.vitenskapelig)}`}
+            target="_blank" rel="noreferrer" className="vl-btn pri"
+            style={{ textDecoration: 'none', marginBottom: 10 }}
+          >
+            {lang === 'no' ? 'Søk art på GBIF ↗' : 'Search species on GBIF ↗'}
+          </a>
+          <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 10 }}>
+            {lang === 'no' ? 'Kilde: kuratert utvalg · Wikipedia (CC BY-SA)' : 'Source: curated selection · Wikipedia (CC BY-SA)'}
+          </p>
+        </>
+      );
+    }
+
+    const artRow = (art: CuratedArt) => {
+      const meta = artsgruppeMeta(art.gruppe);
+      const obs = obsByName.get(art.vitenskapelig.toLowerCase().trim());
+      const isRedList = RED_LIST_CATS.test(art.kategori);
+      const isAlien = ALIEN_CATS.test(art.kategori);
+      return (
+        <div key={art.vitenskapelig} className="vl-sp-row flat" onClick={() => openArt(art)}>
+          <span className="vl-sp-ico" style={{ background: `${meta.color}1a`, color: meta.color }}
+            dangerouslySetInnerHTML={{ __html: iconSvg(meta.icon) }} />
           <div className="vl-sp-main">
-            <span className="vl-sp-name">{obs.popularName || obs.scientificName}</span>
-            <span className="vl-sp-sci">{obs.popularName ? obs.scientificName : (lang === 'no' ? cfg.no : cfg.en)}</span>
+            <span className="vl-sp-name">{art.norsk || art.vitenskapelig}</span>
+            <span className="vl-sp-sci">{art.norsk ? art.vitenskapelig : art.gruppe}</span>
           </div>
           <div className="vl-sp-right">
-            {obs.redListCategory && RED_LIST_CATS.test(obs.redListCategory) && (
-              <span className="vl-rlbadge" title={RL_LABEL[obs.redListCategory]}>{obs.redListCategory}</span>
-            )}
-            {obs.alienCategory && <span className="vl-albadge" title="Fremmedart">FA</span>}
-            <span className="vl-sp-cnt">{obs.obsCount}</span>
+            {isRedList && <span className="vl-rlbadge" title={RL_LABEL[art.kategori]}>{art.kategori}</span>}
+            {isAlien && <span className="vl-albadge" title="Fremmedart">FA</span>}
+            <span className="vl-sp-cnt">{obs?.obsCount ?? art.antallFunn}</span>
             <span className="vl-chev"><ChevSvg /></span>
           </div>
         </div>
@@ -1705,56 +1808,48 @@ export function VeierlandApp() {
 
     return (
       <>
-        <div className="vl-chips vl-panel-chips">
-          <div className={`vl-chip lbl${!natureFilter ? ' on' : ''}`}
-            onClick={() => { setNatureFilter(null); setNatureHlN(10); setNatureTopN(15); }} title={T.all}>
-            <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
-            <span className="cl">{T.all}</span>
-          </div>
-          {(Object.entries(NATURE_GROUPS) as [NatureGroup, typeof NATURE_GROUPS[NatureGroup]][]).map(([g, cfg]) => {
-            const count = natureObs.filter(o => o.group === g).length;
-            if (count === 0) return null;
-            const label = `${lang === 'no' ? cfg.no : cfg.en} ${count}`;
-            return (
-              <div key={g} className={`vl-chip${natureFilter === g ? ' on' : ''}`}
-                onClick={() => { setNatureFilter(natureFilter === g ? null : g); setNatureHlN(10); setNatureTopN(15); }} title={label}>
-                <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg(cfg.icon) }} />
-                <span className="cl">{label}</span>
+        {(['Artsmangfold', 'Kulturhistorie'] as const).map(seksjon => {
+          const kats = ARTS_KATEGORIER.filter(k => k.seksjon === seksjon);
+          if (kats.length === 0) return null;
+          return (
+            <div key={seksjon} style={{ marginBottom: 4 }}>
+              <div className="vl-nat-sec">
+                {seksjon === 'Artsmangfold'
+                  ? (lang === 'no' ? 'Artsmangfold' : 'Biodiversity')
+                  : (lang === 'no' ? 'Kulturhistorie' : 'Cultural history')}
               </div>
-            );
-          })}
-        </div>
+              <div className="vl-chips">
+                {kats.map(k => (
+                  <div key={k.id} className={`vl-chip lbl${artsKategoriId === k.id ? ' on' : ''}`}
+                    onClick={() => { setArtsKategoriId(k.id); setNatureListN(20); }} title={k.beskrivelse}>
+                    <span className="cl">{k.tittel}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+
         {natureLoading && (
           <p className="vl-loading-blink" style={{ fontSize: 13, margin: '8px 0' }}>
             {lang === 'no' ? 'Henter siste observasjoner fra Artsdatabanken…' : 'Fetching latest observations from Artsdatabanken…'}
           </p>
         )}
 
-        {natureHighlights.length > 0 && (
+        {selectedKategori && (
           <>
-            <div className="vl-nat-sec">{lang === 'no' ? 'Høydepunkter' : 'Highlights'}</div>
-            <p className="vl-nat-sec-sub">
-              {lang === 'no' ? 'Rødlistede og fremmede arter observert på øya' : 'Red-listed and alien species observed on the island'}
-            </p>
-            {natureHighlights.slice(0, natureHlN).map(natRow)}
-            {natureHighlights.length > natureHlN && (
-              <button className="vl-showmore" onClick={() => setNatureHlN(n => n + 20)}>
-                {lang === 'no' ? 'Vis flere' : 'Show more'} ({natureHighlights.length - natureHlN})
+            <p className="vl-nat-sec-sub">{selectedKategori.beskrivelse}</p>
+            {selectedKategori.arter.slice(0, natureListN).map(artRow)}
+            {selectedKategori.arter.length > natureListN && (
+              <button className="vl-showmore" onClick={() => setNatureListN(n => n + 20)}>
+                {lang === 'no' ? 'Vis flere' : 'Show more'} ({selectedKategori.arter.length - natureListN})
               </button>
             )}
           </>
         )}
 
-        <div className="vl-nat-sec">{lang === 'no' ? 'Mest observert' : 'Most observed'}</div>
-        {natureCommon.slice(0, natureTopN).map(natRow)}
-        {natureCommon.length > natureTopN && (
-          <button className="vl-showmore" onClick={() => setNatureTopN(n => n + 20)}>
-            {lang === 'no' ? 'Vis flere' : 'Show more'} ({natureCommon.length - natureTopN})
-          </button>
-        )}
-
         <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 12 }}>
-          {T.natObs(filteredNatureObs.length)} · Kilde: GBIF (CC BY 4.0)
+          {lang === 'no' ? 'Kilde: kuratert utvalg · GBIF (CC BY 4.0)' : 'Source: curated selection · GBIF (CC BY 4.0)'}
         </p>
       </>
     );

@@ -36,6 +36,7 @@ export const ICONS: Record<string, string> = {
   kart:       '<rect x="-8" y="-7" width="16" height="14" rx="1.5" fill="none"/><path d="M-3,-7 V7"/><path d="M3,-7 V7"/><path d="M-8,-1 H8"/>',
   info:       '<circle cx="0" cy="-5" r="1.8" fill="currentColor" stroke="none"/><path d="M-2.5,0 H0 V7 M-2.5,7 H2.5"/>',
   hval:       '<path d="M-9,2 C-6,-4 2,-5 6,-2 C8,-1 9,1 7,3 C5,5 2,4 0,3 C-2,2 -4,1 -6,4 Z"/><path d="M-9,2 C-10,-1 -10,-3 -8,-5"/>',
+  reptil:     '<path d="M-8,5 Q-5,-7 -1,0 Q3,7 8,-4"/><circle cx="8" cy="-4" r="1.3" fill="currentColor" stroke="none"/>',
 };
 
 export const ICON_LABELS: Record<string, string> = {
@@ -46,7 +47,7 @@ export const ICON_LABELS: Record<string, string> = {
   kirke: 'Kirke', fyr: 'Fyrtårn', hus: 'Hus/gård', bat: 'Båt',
   fisk: 'Fisk', sykkel: 'Sykkel', baal: 'Bål', kors: 'Kors',
   parkering: 'Parkering', overnatting: 'Overnatting', attraksjon: 'Attraksjon',
-  kart: 'Kart', info: 'Info', hval: 'Hval',
+  kart: 'Kart', info: 'Info', hval: 'Hval', reptil: 'Reptil',
 };
 
 export function iconSvg(key: string): string {

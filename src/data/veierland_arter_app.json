@@ -1,0 +1,203 @@
+{
+  "meta": {
+    "tittel": "Veierland – arter og kulturhistorie",
+    "omraade": "Veierland, Færder kommune, Vestfold",
+    "kilde": "Artsdatabanken / GBIF – artsfunn innenfor Veierland",
+    "antallArterTotalt": 814,
+    "antallTaksaTotalt": 853,
+    "antallRegistreringer": 3434,
+    "aarSpennData": "1855–2026",
+    "merknad": "Utvalget er kuratert. Enkelte arter går igjen i flere kategorier med ulik vinkling – det er tilsiktet.",
+    "kategoriKoder": {
+      "LC": { "navn": "Livskraftig", "liste": "Norsk rødliste for arter (2021)" },
+      "NT": { "navn": "Nær truet", "liste": "Norsk rødliste for arter (2021)" },
+      "VU": { "navn": "Sårbar", "liste": "Norsk rødliste for arter (2021)" },
+      "EN": { "navn": "Sterkt truet", "liste": "Norsk rødliste for arter (2021)" },
+      "CR": { "navn": "Kritisk truet", "liste": "Norsk rødliste for arter (2021)" },
+      "LO": { "navn": "Lav risiko", "liste": "Fremmedartslista (2023)" },
+      "PH": { "navn": "Potensielt høy risiko", "liste": "Fremmedartslista (2023)" },
+      "HI": { "navn": "Høy risiko", "liste": "Fremmedartslista (2023)" },
+      "SE": { "navn": "Svært høy risiko", "liste": "Fremmedartslista (2023)" }
+    }
+  },
+  "kategorier": [
+    {
+      "id": "typiske",
+      "tittel": "Typiske arter",
+      "seksjon": "Artsmangfold",
+      "beskrivelse": "De mest registrerte artene på øya – det en besøkende faktisk får se på en tur.",
+      "antallArter": 10,
+      "arter": [
+        { "norsk": "flaggspett", "vitenskapelig": "Dendrocopos major", "gruppe": "Fugler", "kategori": "LC", "antallFunn": 75, "aarSpenn": "1982-2026", "note": "Trommende standfugl i skogholtene hele året" },
+        { "norsk": "stokkand", "vitenskapelig": "Anas platyrhynchos", "gruppe": "Fugler", "kategori": "LC", "antallFunn": 73, "aarSpenn": "1990-2026", "note": "Vanligste anda i viker og dammer" },
+        { "norsk": "kjøttmeis", "vitenskapelig": "Parus major", "gruppe": "Fugler", "kategori": "LC", "antallFunn": 72, "aarSpenn": "1981-2026", "note": "Fast gjest ved hus og fôrbrett" },
+        { "norsk": "blåmeis", "vitenskapelig": "Cyanistes caeruleus", "gruppe": "Fugler", "kategori": "LC", "antallFunn": 68, "aarSpenn": "1982-2026", "note": "Tallrik i løvskog og hager" },
+        { "norsk": "grågås", "vitenskapelig": "Anser anser", "gruppe": "Fugler", "kategori": "LC", "antallFunn": 55, "aarSpenn": "2008-2025", "note": "Beiter i flokk på strandenger" },
+        { "norsk": "spettmeis", "vitenskapelig": "Sitta europaea", "gruppe": "Fugler", "kategori": "LC", "antallFunn": 55, "aarSpenn": "1982-2026", "note": "Klatrer hodestups nedover eikestammer" },
+        { "norsk": "skjære", "vitenskapelig": "Pica pica", "gruppe": "Fugler", "kategori": "LC", "antallFunn": 51, "aarSpenn": "1981-2026", "note": "Karakterfugl i kulturlandskapet" },
+        { "norsk": "svarttrost", "vitenskapelig": "Turdus merula", "gruppe": "Fugler", "kategori": "LC", "antallFunn": 41, "aarSpenn": "1986-2026", "note": "Synger fra hustak i skumringen" },
+        { "norsk": "rødstrupe", "vitenskapelig": "Erithacus rubecula", "gruppe": "Fugler", "kategori": "LC", "antallFunn": 30, "aarSpenn": "1982-2026", "note": "Nærgående i hagene høst og vinter" },
+        { "norsk": "ekorn", "vitenskapelig": "Sciurus vulgaris", "gruppe": "Pattedyr", "kategori": "LC", "antallFunn": 10, "aarSpenn": "2015-2026", "note": "Øyas mest synlige pattedyr i eikeskogen" }
+      ]
+    },
+    {
+      "id": "uvanlige",
+      "tittel": "Uvanlige arter",
+      "seksjon": "Artsmangfold",
+      "beskrivelse": "Arter med svært få funn, eller fra uvanlige artsgrupper – sjeldne å komme over.",
+      "antallArter": 10,
+      "arter": [
+        { "norsk": "hesteskoormer", "vitenskapelig": "Phoronida", "gruppe": "Hesteskoormer", "kategori": "Unknown", "antallFunn": 1, "aarSpenn": "2024-2024", "note": "Marin hesteskoorm – en hel dyrerekke med ett eneste funn" },
+        { "norsk": "lyresjømus", "vitenskapelig": "Brissopsis lyrifera", "gruppe": "Armfotinger, pigghuder, kappedyr", "kategori": "LC", "antallFunn": 1, "aarSpenn": "2024-2024", "note": "Lyresjømus – gravende sjøpinnsvin fra bløtbunn, funnet 2024" },
+        { "norsk": "grov mudderslangestjerne", "vitenskapelig": "Amphiura chiajei", "gruppe": "Armfotinger, pigghuder, kappedyr", "kategori": "LC", "antallFunn": 1, "aarSpenn": "2024-2024", "note": "Slangestjerne fra dypere mudderbunn, ett funn" },
+        { "norsk": "sørgekåpe", "vitenskapelig": "Nymphalis antiopa", "gruppe": "Sommerfugler", "kategori": "LC", "antallFunn": 1, "aarSpenn": "2022-2022", "note": "Sørgekåpe – praktfull, uregelmessig sommerfugl, ett funn" },
+        { "norsk": "steinkobbe", "vitenskapelig": "Phoca vitulina", "gruppe": "Pattedyr", "kategori": "LC", "antallFunn": 1, "aarSpenn": "2009-2009", "note": "Steinkobbe – bare ett registrert funn ved øya" },
+        { "norsk": "skimmelflaggermus", "vitenskapelig": "Vespertilio murinus", "gruppe": "Pattedyr", "kategori": "NT", "antallFunn": 1, "aarSpenn": "2007-2007", "note": "Skimmelflaggermus – sjelden, rødlistet flaggermus" },
+        { "norsk": "huldrenøkkel", "vitenskapelig": "Botrychium matricariifolium", "gruppe": "Karplanter", "kategori": "CR", "antallFunn": 1, "aarSpenn": "1995-1995", "note": "Huldrenøkkel – liten bregne, kun funnet i 1995" },
+        { "norsk": "slettsnok", "vitenskapelig": "Coronella austriaca", "gruppe": "Amfibier, reptiler", "kategori": "NT", "antallFunn": 7, "aarSpenn": "2011-2023", "note": "Slettsnok – Norges sjeldneste slange" },
+        { "norsk": null, "vitenskapelig": "Deuterosminthurus sulphureus", "gruppe": "Spretthaler", "kategori": "LC", "antallFunn": 3, "aarSpenn": "1984-1984", "note": "Gul kulespretthale – bittelite jordbunnsdyr" },
+        { "norsk": "svartkutling", "vitenskapelig": "Gobius niger", "gruppe": "Fisker", "kategori": "LC", "antallFunn": 1, "aarSpenn": "2025-2025", "note": "Svartkutling – liten bunnfisk, ett funn (2025)" }
+      ]
+    },
+    {
+      "id": "spennende",
+      "tittel": "Spennende arter",
+      "seksjon": "Artsmangfold",
+      "beskrivelse": "Karismatiske arter det er verdt å se etter.",
+      "antallArter": 10,
+      "arter": [
+        { "norsk": "hubro", "vitenskapelig": "Bubo bubo", "gruppe": "Fugler", "kategori": "EN", "antallFunn": 1, "aarSpenn": "2012-2012", "note": "Hubro – Europas største ugle" },
+        { "norsk": "fiskeørn", "vitenskapelig": "Pandion haliaetus", "gruppe": "Fugler", "kategori": "VU", "antallFunn": 3, "aarSpenn": "2017-2021", "note": "Fiskeørn – stuper etter fisk i fjorden" },
+        { "norsk": "svalestjert", "vitenskapelig": "Papilio machaon", "gruppe": "Sommerfugler", "kategori": "LC", "antallFunn": 1, "aarSpenn": "2024-2024", "note": "Svalestjert – Norges mest spektakulære dagsommerfugl" },
+        { "norsk": "nise", "vitenskapelig": "Phocoena phocoena", "gruppe": "Pattedyr", "kategori": "LC", "antallFunn": 6, "aarSpenn": "2024-2024", "note": "Nise – småhval som dukker opp i fjorden" },
+        { "norsk": "hoggorm", "vitenskapelig": "Vipera berus", "gruppe": "Amfibier, reptiler", "kategori": "LC", "antallFunn": 5, "aarSpenn": "2008-2021", "note": "Hoggorm – øyas eneste giftslange" },
+        { "norsk": "lerkefalk", "vitenskapelig": "Falco subbuteo", "gruppe": "Fugler", "kategori": "NT", "antallFunn": 7, "aarSpenn": "2017-2026", "note": "Lerkefalk – elegant jeger som tar bytte i lufta" },
+        { "norsk": "brennmanet", "vitenskapelig": "Cyanea capillata", "gruppe": "svamper, nesledyr, kammaneter", "kategori": "LC", "antallFunn": 3, "aarSpenn": "1993-1995", "note": "Brennmanet – kan bli meterstor med lange nesletråder" },
+        { "norsk": "nordflaggermus", "vitenskapelig": "Eptesicus nilssonii", "gruppe": "Pattedyr", "kategori": "VU", "antallFunn": 30, "aarSpenn": "2004-2018", "note": "Nordflaggermus – jakter over vann i sommernatten" },
+        { "norsk": "myrhauk", "vitenskapelig": "Circus cyaneus", "gruppe": "Fugler", "kategori": "EN", "antallFunn": 3, "aarSpenn": "2018-2025", "note": "Myrhauk – lavtflyvende, sjelden rovfugl" },
+        { "norsk": "buorm", "vitenskapelig": "Natrix natrix", "gruppe": "Amfibier, reptiler", "kategori": "LC", "antallFunn": 5, "aarSpenn": "2008-2023", "note": "Buorm – ufarlig svømmeslange med gule nakkeflekker" }
+      ]
+    },
+    {
+      "id": "truet",
+      "tittel": "Truede arter",
+      "seksjon": "Artsmangfold",
+      "beskrivelse": "Rødlistede arter (nær truet til kritisk truet) etter Norsk rødliste for arter.",
+      "antallArter": 10,
+      "arter": [
+        { "norsk": "hettemåke", "vitenskapelig": "Chroicocephalus ridibundus", "gruppe": "Fugler", "kategori": "CR", "antallFunn": 44, "aarSpenn": "1956-2024", "note": "Hettemåke – kritisk truet (CR) tross at den virker vanlig" },
+        { "norsk": "vipe", "vitenskapelig": "Vanellus vanellus", "gruppe": "Fugler", "kategori": "CR", "antallFunn": 12, "aarSpenn": "1981-2025", "note": "Vipe – kritisk truet (CR), sterk tilbakegang i kulturlandskapet" },
+        { "norsk": "makrellterne", "vitenskapelig": "Sterna hirundo", "gruppe": "Fugler", "kategori": "EN", "antallFunn": 46, "aarSpenn": "1952-2023", "note": "Makrellterne – sterkt truet (EN), hekker på holmer" },
+        { "norsk": "ask", "vitenskapelig": "Fraxinus excelsior", "gruppe": "Karplanter", "kategori": "EN", "antallFunn": 10, "aarSpenn": "2008-2023", "note": "Ask – sterkt truet (EN) pga. askeskuddsyke" },
+        { "norsk": "alm", "vitenskapelig": "Ulmus glabra", "gruppe": "Karplanter", "kategori": "EN", "antallFunn": 2, "aarSpenn": "2018-2023", "note": "Alm – sterkt truet (EN), ranket løvtre" },
+        { "norsk": "fiskemåke", "vitenskapelig": "Larus canus", "gruppe": "Fugler", "kategori": "VU", "antallFunn": 102, "aarSpenn": "1952-2024", "note": "Fiskemåke – sårbar (VU), øyas mest registrerte måke" },
+        { "norsk": "ærfugl", "vitenskapelig": "Somateria mollissima", "gruppe": "Fugler", "kategori": "VU", "antallFunn": 37, "aarSpenn": "1978-2025", "note": "Ærfugl – sårbar (VU) dykkand langs kysten" },
+        { "norsk": "barlind", "vitenskapelig": "Taxus baccata", "gruppe": "Karplanter", "kategori": "VU", "antallFunn": 1, "aarSpenn": "2018-2018", "note": "Barlind – sårbar (VU), giftig og svært langlevd bartre" },
+        { "norsk": "slettsnok", "vitenskapelig": "Coronella austriaca", "gruppe": "Amfibier, reptiler", "kategori": "NT", "antallFunn": 7, "aarSpenn": "2011-2023", "note": "Slettsnok – nær truet (NT), fredet slange" },
+        { "norsk": "piggsvin", "vitenskapelig": "Erinaceus europaeus", "gruppe": "Pattedyr", "kategori": "NT", "antallFunn": 1, "aarSpenn": "1998-1998", "note": "Piggsvin – nær truet (NT)" }
+      ]
+    },
+    {
+      "id": "ikke_hjemmehorende",
+      "tittel": "Arter som ikke hører hjemme",
+      "seksjon": "Artsmangfold",
+      "beskrivelse": "Fremmede arter etter Fremmedartslista – innførte arter som ikke hører naturlig hjemme her.",
+      "antallArter": 10,
+      "arter": [
+        { "norsk": "rynkerose", "vitenskapelig": "Rosa rugosa", "gruppe": "Karplanter", "kategori": "SE", "antallFunn": 31, "aarSpenn": "2009-2023", "note": "Rynkerose – svært høy risiko (SE), danner tette kratt på strender" },
+        { "norsk": "parkslirekne", "vitenskapelig": "Reynoutria japonica", "gruppe": "Karplanter", "kategori": "SE", "antallFunn": 8, "aarSpenn": "2018-2023", "note": "Parkslirekne – svært høy risiko (SE), nesten umulig å bli kvitt" },
+        { "norsk": "kjempespringfrø", "vitenskapelig": "Impatiens glandulifera", "gruppe": "Karplanter", "kategori": "SE", "antallFunn": 1, "aarSpenn": "2009-2009", "note": "Kjempespringfrø – svært høy risiko (SE), fortrenger stedegen flora" },
+        { "norsk": "stillehavsøsters", "vitenskapelig": "Crassostrea gigas", "gruppe": "Bløtdyr", "kategori": "SE", "antallFunn": 3, "aarSpenn": "2017-2025", "note": "Stillehavsøsters – svært høy risiko (SE), sprer seg i fjæra" },
+        { "norsk": "brunskogsnegl", "vitenskapelig": "Arion vulgaris", "gruppe": "Bløtdyr", "kategori": "SE", "antallFunn": 2, "aarSpenn": "2015-2024", "note": "Brunskogsnegl – svært høy risiko (SE), «mordersneglen»" },
+        { "norsk": "hagelupin", "vitenskapelig": "Lupinus polyphyllus", "gruppe": "Karplanter", "kategori": "SE", "antallFunn": 2, "aarSpenn": "2018-2023", "note": "Hagelupin – svært høy risiko (SE), farger veikanter blå" },
+        { "norsk": "japansk drivtang", "vitenskapelig": "Sargassum muticum", "gruppe": "Alger", "kategori": "SE", "antallFunn": 2, "aarSpenn": "1993-1995", "note": "Japansk drivtang – svært høy risiko (SE) marin alge" },
+        { "norsk": "kanadagullris", "vitenskapelig": "Solidago canadensis", "gruppe": "Karplanter", "kategori": "SE", "antallFunn": 1, "aarSpenn": "2009-2009", "note": "Kanadagullris – svært høy risiko (SE) hagerømling" },
+        { "norsk": "kanadagås", "vitenskapelig": "Branta canadensis", "gruppe": "Fugler", "kategori": "HI", "antallFunn": 18, "aarSpenn": "2009-2025", "note": "Kanadagås – høy risiko (HI), innført gås" },
+        { "norsk": "fasan", "vitenskapelig": "Phasianus colchicus", "gruppe": "Fugler", "kategori": "LO", "antallFunn": 13, "aarSpenn": "1982-2018", "note": "Fasan – lav risiko (LO), utsatt jaktfugl" }
+      ]
+    },
+    {
+      "id": "skutebyggerens_skog",
+      "tittel": "Skutebyggerens skog",
+      "seksjon": "Kulturhistorie",
+      "beskrivelse": "Treslagene skipsbyggerne på Oslebakke bygde skutene av – de fleste står fortsatt i skogen på øya.",
+      "antallArter": 10,
+      "arter": [
+        { "norsk": "sommereik", "vitenskapelig": "Quercus robur", "gruppe": "Karplanter", "kategori": "LC", "antallFunn": 8, "aarSpenn": "2011-2024", "note": "Eik var selve skrogtreet: kjøl, spant og bordganger. Det var eika som gjorde Veierland til skuteøy." },
+        { "norsk": "vintereik", "vitenskapelig": "Quercus petraea", "gruppe": "Karplanter", "kategori": "LC", "antallFunn": 5, "aarSpenn": "2008-2011", "note": "Vintereik – like ettertraktet som sommereik til krumme skrogdeler («krokvirke»)." },
+        { "norsk": "alm", "vitenskapelig": "Ulmus glabra", "gruppe": "Karplanter", "kategori": "EN", "antallFunn": 2, "aarSpenn": "2018-2023", "note": "Alm til kjøl, stavn og blokker – råtner sakte under vann. I dag sterkt truet (EN)." },
+        { "norsk": "ask", "vitenskapelig": "Fraxinus excelsior", "gruppe": "Karplanter", "kategori": "EN", "antallFunn": 10, "aarSpenn": "2008-2023", "note": "Ask til årer, rorkult og redskapsskaft – seig og fjærende. I dag sterkt truet (EN)." },
+        { "norsk": "barlind", "vitenskapelig": "Taxus baccata", "gruppe": "Karplanter", "kategori": "VU", "antallFunn": 1, "aarSpenn": "2018-2018", "note": "Barlind til trenagler og små, harde deler. Svært langlevd; i dag sårbar (VU)." },
+        { "norsk": "svartor", "vitenskapelig": "Alnus glutinosa", "gruppe": "Karplanter", "kategori": "LC", "antallFunn": 2, "aarSpenn": "2018-2024", "note": "Svartor til pæler og bryggeverk – nærmest uforgjengelig under vann." },
+        { "norsk": "gran", "vitenskapelig": "Picea abies", "gruppe": "Karplanter", "kategori": "LC", "antallFunn": 1, "aarSpenn": "2018-2018", "note": "Gran til master og rundholt – lett og rettvokst." },
+        { "norsk": "einer", "vitenskapelig": "Juniperus communis", "gruppe": "Karplanter", "kategori": "LC", "antallFunn": 1, "aarSpenn": "2018-2018", "note": "Einer bøyd til spant i småbåter, og til seige skaft." },
+        { "norsk": "hassel", "vitenskapelig": "Corylus avellana", "gruppe": "Karplanter", "kategori": "LC", "antallFunn": 3, "aarSpenn": "2011-2012", "note": "Hassel til tønnebånd, tinevidjer og flettverk." },
+        { "norsk": "lind", "vitenskapelig": "Tilia cordata", "gruppe": "Karplanter", "kategori": "NT", "antallFunn": 6, "aarSpenn": "1978-2022", "note": "Lind – bastet (innerbarken) ble tvinnet til tau og brukt til utskjæring. I dag nær truet (NT)." }
+      ]
+    },
+    {
+      "id": "tjaere_tetning_tauverk",
+      "tittel": "Tjære, tetning og tauverk",
+      "seksjon": "Kulturhistorie",
+      "beskrivelse": "Å holde skroget tett og rigget smurt – tjære, bark og fiber.",
+      "antallArter": 5,
+      "arter": [
+        { "norsk": "bjørk", "vitenskapelig": "Betula pubescens", "gruppe": "Karplanter", "kategori": "LC", "antallFunn": 3, "aarSpenn": "2001-2018", "note": "Bjørkebark til tetning; never og bjørketjære til impregnering." },
+        { "norsk": "lind", "vitenskapelig": "Tilia cordata", "gruppe": "Karplanter", "kategori": "NT", "antallFunn": 6, "aarSpenn": "1978-2022", "note": "Bast til tauverk og surringer." },
+        { "norsk": "stornesle", "vitenskapelig": "Urtica dioica", "gruppe": "Karplanter", "kategori": "LC", "antallFunn": 3, "aarSpenn": "2008-2023", "note": "Stornesle ga sterk plantefiber til tråd, garn og enkelt tauverk." },
+        { "norsk": "tjærebevre", "vitenskapelig": "Exidia pithya", "gruppe": "Sopper", "kategori": "LC", "antallFunn": 4, "aarSpenn": "1975-2012", "note": "Tjærebevre – sopp hvis navn røper furuveden den lever på; furu ga tjæra som tettet skrog og rigg." },
+        { "norsk": "edeltjærekjuke", "vitenskapelig": "Ischnoderma resinosum", "gruppe": "Sopper", "kategori": "VU", "antallFunn": 1, "aarSpenn": "1974-1974", "note": "Edeltjærekjuke (VU) – en sjelden gammelskog-sopp med samme «tjære»-signatur på gammel ved." }
+      ]
+    },
+    {
+      "id": "havets_host",
+      "tittel": "Havets høst",
+      "seksjon": "Kulturhistorie",
+      "beskrivelse": "Kystøkonomien levde like mye av fjæra som av skogen.",
+      "antallArter": 6,
+      "arter": [
+        { "norsk": "grisetang", "vitenskapelig": "Ascophyllum nodosum", "gruppe": "Alger", "kategori": "LC", "antallFunn": 2, "aarSpenn": "1993-1995", "note": "Grisetang – kjørt på jordene som gjødsel; brent ga tang-aske til såpe og glass." },
+        { "norsk": "blæretang", "vitenskapelig": "Fucus vesiculosus", "gruppe": "Alger", "kategori": "LC", "antallFunn": 4, "aarSpenn": "1993-2002", "note": "Blæretang – gjødsel og dyrefôr; boblene sprakk barna på." },
+        { "norsk": "sagtang", "vitenskapelig": "Fucus serratus", "gruppe": "Alger", "kategori": "LC", "antallFunn": 4, "aarSpenn": "1993-1995", "note": "Sagtang – lagt over fisk og skjell for å holde fangsten fuktig." },
+        { "norsk": "villeple", "vitenskapelig": "Malus sylvestris", "gruppe": "Karplanter", "kategori": "VU", "antallFunn": 9, "aarSpenn": "2021-2022", "note": "Villeple til mat og sider. I dag sårbar (VU)." },
+        { "norsk": "vill-løk", "vitenskapelig": "Allium oleraceum", "gruppe": "Karplanter", "kategori": "LC", "antallFunn": 2, "aarSpenn": "1920-2023", "note": "Vill-løk – krydder og C-vitamin fra strandbergene." },
+        { "norsk": "taskekrabbe", "vitenskapelig": "Cancer pagurus", "gruppe": "Krepsdyr", "kategori": "LC", "antallFunn": 1, "aarSpenn": "2015-2015", "note": "Taskekrabbe – mat rett fra fjæresteinene." }
+      ]
+    },
+    {
+      "id": "legeurter_husflid",
+      "tittel": "Legeurter og husflid",
+      "seksjon": "Kulturhistorie",
+      "beskrivelse": "Folkemedisin, husflid og farge fra øyas enger – urter en sjømann kjente.",
+      "antallArter": 7,
+      "arter": [
+        { "norsk": "ryllik", "vitenskapelig": "Achillea millefolium", "gruppe": "Karplanter", "kategori": "LC", "antallFunn": 3, "aarSpenn": "2008-2023", "note": "Ryllik – blodstillende sårurt, god å ha i skipskista." },
+        { "norsk": "groblad", "vitenskapelig": "Plantago major", "gruppe": "Karplanter", "kategori": "LC", "antallFunn": 2, "aarSpenn": "2018-2023", "note": "Groblad – «legeblad», lagt på sår og gnagsår." },
+        { "norsk": "prikkperikum", "vitenskapelig": "Hypericum perforatum", "gruppe": "Karplanter", "kategori": "LC", "antallFunn": 2, "aarSpenn": "2008-2023", "note": "Prikkperikum – sårolje og rød farge («Jonsokblod»)." },
+        { "norsk": "reinfann", "vitenskapelig": "Tanacetum vulgare", "gruppe": "Karplanter", "kategori": "LC", "antallFunn": 1, "aarSpenn": "2018-2018", "note": "Reinfann – la mott og skadedyr i fred; strødd i køyer og matbod." },
+        { "norsk": "mjødurt", "vitenskapelig": "Filipendula ulmaria", "gruppe": "Karplanter", "kategori": "LC", "antallFunn": 3, "aarSpenn": "2018-2024", "note": "Mjødurt – smakssatte mjød og øl; smertestillende (salisylsyre)." },
+        { "norsk": "røsslyng", "vitenskapelig": "Calluna vulgaris", "gruppe": "Karplanter", "kategori": "LC", "antallFunn": 1, "aarSpenn": "2018-2018", "note": "Røsslyng – lyngkoster, taktekking, ølkrydder og ullfarge." },
+        { "norsk": "tepperot", "vitenskapelig": "Potentilla erecta", "gruppe": "Karplanter", "kategori": "LC", "antallFunn": 1, "aarSpenn": "2018-2018", "note": "Tepperot – rot til garving av skinn og rødbrun farge." }
+      ]
+    },
+    {
+      "id": "opplevelsesarter_for_gjester",
+      "tittel": "Opplevelsesarter for gjester",
+      "seksjon": "Kulturhistorie",
+      "beskrivelse": "Arter som gjør en tur ekstra minneverdig i dag – flere knyttet til de gamle skuteeikene.",
+      "antallArter": 10,
+      "arter": [
+        { "norsk": "eikestjertvinge", "vitenskapelig": "Favonius quercus", "gruppe": "Sommerfugler", "kategori": "LC", "antallFunn": 4, "aarSpenn": "1984-1984", "note": "Eikestjertvinge – blå sommerfugl som svermer i eiketoppene; lever av de samme eikene skutene ble bygd av." },
+        { "norsk": "eikemusling", "vitenskapelig": "Daedalea quercina", "gruppe": "Sopper", "kategori": "LC", "antallFunn": 11, "aarSpenn": "1975-2023", "note": "Eikemusling – labyrint-kjuke som pryder gamle eikestammer." },
+        { "norsk": "oksetungesopp", "vitenskapelig": "Fistulina hepatica", "gruppe": "Sopper", "kategori": "LC", "antallFunn": 8, "aarSpenn": "2007-2021", "note": "Oksetungesopp – rødflekket «biffsopp» på veteraneik." },
+        { "norsk": "grønnspett", "vitenskapelig": "Picus viridis", "gruppe": "Fugler", "kategori": "LC", "antallFunn": 46, "aarSpenn": "2005-2026", "note": "Grønnspett – ler høyt gjennom skogen og hakker i gamle trær." },
+        { "norsk": "nise", "vitenskapelig": "Phocoena phocoena", "gruppe": "Pattedyr", "kategori": "LC", "antallFunn": 6, "aarSpenn": "2024-2024", "note": "Nise – småhvalen som binder øyas hvalfangsthistorie til nåtida i fjorden." },
+        { "norsk": "svalestjert", "vitenskapelig": "Papilio machaon", "gruppe": "Sommerfugler", "kategori": "LC", "antallFunn": 1, "aarSpenn": "2024-2024", "note": "Svalestjert – Norges mest praktfulle dagsommerfugl." },
+        { "norsk": "hoggorm", "vitenskapelig": "Vipera berus", "gruppe": "Amfibier, reptiler", "kategori": "LC", "antallFunn": 5, "aarSpenn": "2008-2021", "note": "Hoggorm – øyas eneste giftslange, ofte på solvarme berg." },
+        { "norsk": "nordflaggermus", "vitenskapelig": "Eptesicus nilssonii", "gruppe": "Pattedyr", "kategori": "VU", "antallFunn": 30, "aarSpenn": "2004-2018", "note": "Nordflaggermus – jakter over vann i lyse sommernetter." },
+        { "norsk": "hubro", "vitenskapelig": "Bubo bubo", "gruppe": "Fugler", "kategori": "EN", "antallFunn": 1, "aarSpenn": "2012-2012", "note": "Hubro – Europas største ugle, en drøm å høre i skumringen." },
+        { "norsk": "tjeld", "vitenskapelig": "Haematopus ostralegus", "gruppe": "Fugler", "kategori": "NT", "antallFunn": 39, "aarSpenn": "1953-2023", "note": "Tjeld – kvekker høylytt langs strendene hele sommeren." }
+      ]
+    }
+  ]
+}
