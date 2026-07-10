@@ -314,17 +314,24 @@ function trailsFromGeoJSON(geo: any): Trail[] {
 
 // ─── Map sub-components ───────────────────────────────────────────────────────
 
-function MapSetup({ onReady, onMapClick, onZoom }: { onReady: (m: L.Map) => void; onMapClick: () => void; onZoom: (z: number) => void }) {
+function MapSetup({ onReady, onMapClick, onZoom, onDragStart }: { onReady: (m: L.Map) => void; onMapClick: () => void; onZoom: (z: number) => void; onDragStart: () => void }) {
   const map = useMap();
   const onMapClickRef = useRef(onMapClick);
   onMapClickRef.current = onMapClick;
+  const onDragStartRef = useRef(onDragStart);
+  onDragStartRef.current = onDragStart;
   useEffect(() => {
     onReady(map);
     const handleClick = () => onMapClickRef.current();
     map.on('click', handleClick);
     const zoomHandler = () => onZoom(map.getZoom());
     map.on('zoomend', zoomHandler);
-    return () => { map.off('click', handleClick); map.off('zoomend', zoomHandler); };
+    // 'dragstart' fires only for user-initiated panning (mouse/touch drag),
+    // not for the app's own programmatic flyTo/panTo calls — exactly the
+    // signal for "the user wants to look at the map", not "we moved it for them".
+    const dragHandler = () => onDragStartRef.current();
+    map.on('dragstart', dragHandler);
+    return () => { map.off('click', handleClick); map.off('zoomend', zoomHandler); map.off('dragstart', dragHandler); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, onReady, onZoom]);
   return null;
@@ -594,6 +601,10 @@ export function VeierlandApp() {
   // state doesn't fight with those.
   const [activityTile, setActivityTile] = useState<'bade' | 'spise' | null>(null);
   const [dockExpanded, setDockExpanded] = useState(false);
+  // Collapsed to just the grab handle while the user pans the map — there was
+  // previously no way to see the map without the dock permanently occupying
+  // the bottom of the screen. Restored by tapping the handle again.
+  const [dockPeeked, setDockPeeked] = useState(false);
   const [currentLayer, setCurrentLayer] = useState<string>(() => {
     try { return localStorage.getItem('vl-layer') || 'soleng'; } catch { return 'soleng'; }
   });
@@ -1010,6 +1021,13 @@ export function VeierlandApp() {
     }
   }, [selectedNature, selectedCuratedArt, tab, sheetOpen, selectedPOI, selectedTrail]);
   const onZoom = useCallback((z: number) => setMapZoom(z), []);
+  // Panning the map means the user wants to see it, not the dock — collapse
+  // to just the grab handle so there's a real "map only" state, restored by
+  // tapping the handle again (see dockPeeked).
+  const onMapDragStart = useCallback(() => {
+    setDockExpanded(false);
+    setDockPeeked(true);
+  }, []);
 
   // Cluster group — rebuild whenever filtered POIs, zoom, or selection changes
   useEffect(() => {
@@ -1260,6 +1278,7 @@ export function VeierlandApp() {
     setTrailPath(null);
     setView('browse');
     setTab(t);
+    setDockPeeked(false);
     // Each tab browses its own mode (Kart/Lagret browse places). Only touch
     // the map layer when the mode actually changes, so a manually chosen
     // layer survives plain tab-hopping.
@@ -1291,6 +1310,7 @@ export function VeierlandApp() {
     if (tile === 'historie') { selectTab('history'); return; }
     setActivityTile(tile);
     setDockExpanded(false);
+    setDockPeeked(false);
     setActiveCats(new Set([tile === 'bade' ? 'bad' : 'mat']));
     setSelectedPOI(null);
     setSelectedTrail(null);
@@ -1303,6 +1323,7 @@ export function VeierlandApp() {
   function exitActivityTile() {
     setActivityTile(null);
     setDockExpanded(false);
+    setDockPeeked(false);
     setActiveCats(new Set());
   }
 
@@ -1316,6 +1337,7 @@ export function VeierlandApp() {
     setSelectedCuratedArt(null);
     setTrailPath(null);
     setTab('map');
+    setDockPeeked(false);
     // Return the map to place pins if something else (trails/nature/history)
     // was being browsed — but leave a manually chosen layer alone otherwise.
     if (mode !== 'places') {
@@ -2949,7 +2971,8 @@ export function VeierlandApp() {
   // on top of the already-rendered map instead of resizing it, to avoid
   // needing a Leaflet invalidateSize() pass on every expand/collapse.
   const dockShown = tab === 'map' && !sheetOpen && !selectedPOI && !selectedTrail;
-  const dockReservedH = dockShown ? (activityTile ? 84 : 176) : 12;
+  const DOCK_PEEK_H = 40; // just the grab handle
+  const dockReservedH = dockShown ? (dockPeeked ? DOCK_PEEK_H : activityTile ? 84 : 176) : 12;
 
   return (
     <div className="vl-app">
@@ -2965,7 +2988,7 @@ export function VeierlandApp() {
         attributionControl
         style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
       >
-        <MapSetup onReady={onMapReady} onMapClick={onMapClick} onZoom={onZoom} />
+        <MapSetup onReady={onMapReady} onMapClick={onMapClick} onZoom={onZoom} onDragStart={onMapDragStart} />
         <TileController layer={currentLayer} />
         {geoLayer && GEO_DATA[geoLayer]?.features?.length > 0 && (
           <GeoJSON
@@ -3611,8 +3634,11 @@ export function VeierlandApp() {
           with nothing selected (the mini-card takes over once a POI/trail
           is tapped, and this is hidden on desktop via CSS). */}
       {tab === 'map' && !sheetOpen && !selectedPOI && !selectedTrail && (
-        <div className={`vl-dock${dockExpanded ? ' expanded' : ''}`}>
-          <div className="vl-dock-grab" onClick={() => setDockExpanded(e => !e)}><div className="bar" /></div>
+        <div className={`vl-dock${dockExpanded ? ' expanded' : ''}${dockPeeked ? ' peeked' : ''}`}>
+          <div className="vl-dock-grab"
+            onClick={() => dockPeeked ? setDockPeeked(false) : setDockExpanded(e => !e)}>
+            <div className="bar" />
+          </div>
           {!activityTile ? (
             <>
               <div className="vl-dock-title">{lang === 'no' ? 'Hva vil du i dag?' : 'What do you want today?'}</div>

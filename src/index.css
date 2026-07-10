@@ -814,6 +814,10 @@ body { display: grid; place-items: center; }
   overflow: hidden;
 }
 .vl-dock.expanded { max-height: 70vh; overflow-y: auto; }
+/* Collapsed to just the grab handle while the user pans the map (see
+   dockPeeked) — a real "map only" state instead of the dock permanently
+   occupying the bottom of the screen. */
+.vl-dock.peeked { max-height: 26px; padding-bottom: 8px; }
 .vl-dock-grab { padding: 4px 0 8px; cursor: pointer; touch-action: none; }
 .vl-dock-grab .bar { width: 40px; height: 4px; border-radius: 99px; background: var(--line); margin: 0 auto; }
 .vl-dock-title {
