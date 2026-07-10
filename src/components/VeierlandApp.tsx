@@ -152,7 +152,6 @@ const RL_DESC: Record<string, string> = {
 
 
 // Pre-index flood features by threshold so lookup is O(1), not O(n) per render
-// Pre-index flood features by threshold so lookup is O(1), not O(n) per render
 const FLOOD_BY_THRESHOLD = new Map<number, object>(
   (floodData as any).features?.map((f: any) => [f.properties.threshold_m, f]) ?? []
 );
@@ -676,7 +675,6 @@ export function VeierlandApp() {
     return out;
   }, [selectedKategori, obsByName]);
   const [selectedNatureObs, setSelectedNatureObs] = useState<NatureObs[]>([]);
-  const [speciesObsLoading, setSpeciesObsLoading] = useState(false);
   const [selectedNature, setSelectedNature] = useState<NatureObs | null>(null);
   // Set when a curated species has no live GBIF match — a lighter detail view
   // (no photo/map/live count) built from the curated JSON alone.
@@ -1163,7 +1161,6 @@ export function VeierlandApp() {
     setSelectedNature(obs);
     setSelectedNatureObs([obs]);
     setSheetOpen(true);
-    setSpeciesObsLoading(true);
     try {
       const url = `https://api.gbif.org/v1/occurrence/search?geometry=${GBIF_POLYGON}&speciesKey=${obs.gbifKey}&limit=300`;
       const res = await fetch(url);
@@ -1190,7 +1187,6 @@ export function VeierlandApp() {
     } catch {
       flyToAboveSheet([obs.lat, obs.lng], Math.max(mapRef.current?.getZoom() ?? 13, 14));
     }
-    setSpeciesObsLoading(false);
   }
 
   // Actions
@@ -1559,7 +1555,7 @@ export function VeierlandApp() {
   const SHEET_MAX_H = Math.min(window.innerHeight * (
     view === 'detail' || selectedNature || selectedCuratedArt ? 0.82 : tab === 'nature' ? 0.45 : 0.62
   ), 720);
-  const TAB_BAR_H = 62; // keep in sync with --tab-h in index.css
+  const TAB_BAR_H = 62; // floor for the rail's resting offset (the mobile tab bar itself is gone)
   const MINI_CARD_H = 68;
   const SHEET_PEEK_H = 110; // grab handle + a sliver of the header, map stays mostly visible
 
@@ -1667,7 +1663,6 @@ export function VeierlandApp() {
     places: 'Steder', trails: 'Turer', nature: 'Natur', history: 'Historie', back: 'Tilbake',
     directions: 'Veibeskrivelse', length: 'Lengde', duration: 'Tid', diff: 'Vanskelighet', climb: 'Stigning',
     layers: 'Kartlag', nohit: 'Ingen treff', easy: 'Lett', showRoute: 'Vis rute',
-    natObs: (n: number) => `${n} ${n === 1 ? 'art' : 'arter'} observert`,
     np: (n: number) => `${n} ${n === 1 ? 'sted' : 'steder'}`,
     nt: (n: number) => `${n} ${n === 1 ? 'tur' : 'turer'}`,
     tidslinje: 'Tidslinje', garder: 'Gårder',
@@ -1678,7 +1673,6 @@ export function VeierlandApp() {
     places: 'Places', trails: 'Trails', nature: 'Nature', history: 'History', back: 'Back',
     directions: 'Directions', length: 'Length', duration: 'Time', diff: 'Difficulty', climb: 'Climb',
     layers: 'Map layer', nohit: 'No matches', easy: 'Easy', showRoute: 'Show route',
-    natObs: (n: number) => `${n} ${n === 1 ? 'species' : 'species'} observed`,
     np: (n: number) => `${n} ${n === 1 ? 'place' : 'places'}`,
     nt: (n: number) => `${n} ${n === 1 ? 'trail' : 'trails'}`,
     tidslinje: 'Timeline', garder: 'Farms',

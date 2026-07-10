@@ -1,8 +1,6 @@
 import { POI } from "../lib/types";
 import { loadPoiGeoJSON, loadStedsnavnGeoJSON } from "../lib/geodata";
 
-export const VEIERLAND_POLYGON_UTM33 = 'POLYGON((233837.25 6568293.26,233098.62 6565865.34,233105.46 6565024.12,233632.08 6564271.81,234767.38 6564093.99,235574.41 6564935.21,235423.95 6565899.54,235150.38 6567527.27,234999.92 6568279.58,234445.94 6568204.35,233837.25 6568293.26))';
-
 const poiEnrichment: Record<string, any> = {
   "Veierland kirke": {
     lokalhistoriewiki: "Veierland_kirke",

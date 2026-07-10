@@ -1,8 +1,3 @@
-export interface TideWater {
-  time: string;
-  value: string;
-}
-
 export interface POI {
   id: string;
   navn: string;
@@ -16,27 +11,6 @@ export interface POI {
   dimu_søk?: string;
   dimu_eier?: string;
   [key: string]: any;
-}
-
-export interface WeatherData {
-  temperatur: number;
-  vind: number;
-  vindretning: number;
-  nedbør: number;
-  symbolKode: string;
-  ikonUrl: string;
-  oppdatert: string;
-}
-
-export interface ArtskartObservation {
-  PreferredPopularName: string;
-  ScientificName: string;
-  ValidScientificName: string;
-  Latitude: string;
-  Longitude: string;
-  CollectedDate: string;
-  TaxonId: number;
-  Locality: string;
 }
 
 export interface SNLData {
@@ -80,11 +54,4 @@ export interface WikimediaImage {
   author: string;
   license: string;
   pageUrl: string;
-}
-
-export interface RouteCache {
-  id: number;
-  name: string;
-  timestamp: number;
-  coordinates: [number, number][]; // Array of [lat, lng]
 }

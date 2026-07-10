@@ -17,7 +17,6 @@
   --display: 'Newsreader', Georgia, 'Times New Roman', serif;
   --r: 12px;
   --pad: 18px;
-  --tab-h: 62px;
   --dock-h: 176px;
 }
 
@@ -729,13 +728,11 @@ body { display: grid; place-items: center; }
 .vl-opt-dim { opacity: 0.5; cursor: default; }
 .vl-geo-tip { background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; font-size: 13px; font-weight: 600; padding: 4px 8px; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
 
-/* ── Bottom tab bar ─────────────────────────────────────────────────────────── */
+/* ── Tab bar (desktop sidebar only — the mobile tab bar was replaced by the
+   dock + hamburger menu in the map-screen redesign) ─────────────────────────── */
 .vl-tabbar {
   background: var(--card); border-top: 1px solid var(--line);
   display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
-}
-.vl-tabbar-mobile {
-  position: absolute; left: 0; right: 0; bottom: 0; height: var(--tab-h); z-index: 700;
 }
 .vl-tabbar-desktop { display: none; }
 .vl-tabbtn {
@@ -1172,7 +1169,6 @@ body { display: grid; place-items: center; }
   .vl-sheet.closed { transform: none !important; opacity: 1 !important; pointer-events: auto !important; }
   .vl-grab { display: none; }
   .vl-body { padding: 22px 24px 28px; }
-  .vl-tabbar-mobile { display: none; }
   .vl-tabbar-desktop {
     display: grid; border-top: none; border-bottom: 1px solid var(--line);
     padding: 10px 10px 4px;

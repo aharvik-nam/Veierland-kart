@@ -1,77 +1,6 @@
-import { WeatherData, ArtskartObservation, SNLData, LokalhistorieData, MuseumPhoto, TideWater, WikimediaImage, WikipediaData } from "./types";
-import { VEIERLAND_POLYGON_UTM33 } from "../data/veierland";
+import { SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, WikipediaData } from "./types";
 
-// 1. Weather (Via our local proxy to MET)
-export async function fetchTidevann(lat: number, lon: number): Promise<TideWater | null> {
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const url = `https://api.sehavniva.no/tideapi.php?lat=${lat}&lon=${lon}&fromtime=${today}T00:00&totime=${today}T23:59&datatype=tab&refcode=cd&place=&file=&lang=nb&interval=60&dst=1&tzone=&tide_request=locationdata`;
-    const res = await fetch(url);
-    const xmlText = await res.text();
-    
-    // Simple naive regex xml parser to find the current/next tide
-    // Real implementation should use DOMParser, but doing quick extraction for now:
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-    const levels = xmlDoc.getElementsByTagName("waterlevel");
-    
-    if (levels.length > 0) {
-      // Return the first reading today for simplicity, or iterate
-      return {
-        time: levels[0].getAttribute("time") || "",
-        value: levels[0].getAttribute("value") || ""
-      };
-    }
-  } catch(e) {}
-  return null;
-}
-
-export async function fetchWeather(lat: number, lon: number): Promise<WeatherData | null> {
-  try {
-    const url = `/api/weather?lat=${lat}&lon=${lon}&altitude=30`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("Weather fetch failed");
-    
-    const data = await res.json();
-    const now = data.properties.timeseries[0];
-    const details = now.data.instant.details;
-    const next = now.data.next_1_hours || now.data.next_6_hours;
-
-    return {
-      temperatur: Math.round(details.air_temperature),
-      vind: Math.round(details.wind_speed),
-      vindretning: details.wind_from_direction,
-      nedbør: next?.details?.precipitation_amount ?? 0,
-      symbolKode: next?.summary?.symbol_code ?? "cloudy",
-      ikonUrl: `https://raw.githubusercontent.com/metno/weathericons/main/weather/png/${next?.summary?.symbol_code ?? "cloudy"}.png`,
-      oppdatert: now.time
-    };
-  } catch (err) {
-    console.error("MET API Error:", err);
-    return null;
-  }
-}
-
-// 2. Artsdatabanken
-export async function fetchWildlife(taxonGroup: string): Promise<ArtskartObservation[]> {
-  try {
-    const url = new URL('https://artskart.artsdatabanken.no/publicapi/api/Observations/list/');
-    url.searchParams.set('gmWktPolygon', VEIERLAND_POLYGON_UTM33);
-    url.searchParams.append('taxonGroups[]', taxonGroup);
-    url.searchParams.set('pageSize', '500'); // Up to 500
-
-    const res = await fetch(url.toString());
-    if (!res.ok) return [];
-    
-    const data = await res.json();
-    return Array.isArray(data) ? data : (data.observations || data.Observations || []);
-  } catch (err) {
-    console.warn("API Artskart failed", err);
-    return [];
-  }
-}
-
-// 3. Store norske leksikon (SNL)
+// Store norske leksikon (SNL)
 export async function fetchSNL(query: string): Promise<SNLData | null> {
   try {
     const url = `https://snl.no/api/v1/search?query=${encodeURIComponent(query)}&limit=1`;
@@ -94,7 +23,7 @@ export async function fetchSNL(query: string): Promise<SNLData | null> {
   }
 }
 
-// 4. Lokalhistoriewiki
+// Lokalhistoriewiki
 export async function fetchLokalhistorie(title: string): Promise<LokalhistorieData | null> {
   try {
     const params = new URLSearchParams({
@@ -127,7 +56,7 @@ export async function fetchLokalhistorie(title: string): Promise<LokalhistorieDa
   }
 }
 
-// 5. Wikimedia Commons (geo-tagged images near coordinates)
+// Wikimedia Commons (geo-tagged images near coordinates)
 export async function fetchWikimediaImages(lat: number, lng: number, radius = 300): Promise<WikimediaImage[]> {
   try {
     const params = new URLSearchParams({
@@ -165,7 +94,7 @@ export async function fetchWikimediaImages(lat: number, lng: number, radius = 30
   }
 }
 
-// 6. Wikipedia species lookup
+// Wikipedia species lookup
 async function tryWikipedia(wiki: string, title: string): Promise<WikipediaData | null> {
   try {
     const res = await fetch(`https://${wiki}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
@@ -190,7 +119,7 @@ export async function fetchWikipediaSpecies(scientificName: string, popularName:
   return null;
 }
 
-// 7. Species assessment: Norwegian Red List (GBIF checklists) + GRIIS Norway (alien species)
+// Species assessment: Norwegian Red List (GBIF checklists) + GRIIS Norway (alien species)
 const _RL2015   = '4f1047ac-a19d-41a8-98eb-d968b2548b53'; // Norwegian Red List 2015
 const _RL_PLANT = '02b69283-72f8-4406-81ac-5cae93e18846'; // Red List Vascular Plants 2021
 const _GRIIS_NO = '38de3b7a-5af3-4b6f-a1c5-4c0aa6abf010'; // GRIIS Norway (alien species)
@@ -243,7 +172,7 @@ export async function fetchArtsdatabankenAssessment(scientificName: string): Pro
   return { redListCategory, alienCategory: alien.found ? 'FREMMED' : undefined };
 }
 
-// 8. DigitaltMuseum
+// DigitaltMuseum
 const DIMU_API_KEY = 'demo'; 
 export async function fetchDigitalMuseum(query: string, ownerCode?: string): Promise<MuseumPhoto[]> {
   try {
