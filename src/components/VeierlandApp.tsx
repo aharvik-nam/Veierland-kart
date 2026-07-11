@@ -207,10 +207,24 @@ function makeLabeledIconHtml(icon: string, color: string, selected: boolean, sz:
   return `<div class="vl-pin-labeled-wrap${labelAbove ? ' above' : ''}"><div class="vl-pin vl-pin-lg${selected ? ' sel' : ''}" style="--pc:${color};width:${sz}px;height:${sz}px">${svg}</div><div class="vl-pin-label">${label}</div></div>`;
 }
 
+// The dock's "Hva vil du i dag?" tiles come in two kinds. Filter tiles
+// (below) narrow the map to a set of POI categories and swap the dock to a
+// compact summary + list; route tiles (Gå tur/Historie/Dyreliv) jump straight
+// to the existing richer Turer/Historie/Natur tabs instead of a lesser
+// filtered view. FILTER_TILES is the single source of truth for the filter
+// kind — categories + the counted-noun label — so adding one is one entry.
+type FilterTile = 'bade' | 'spise' | 'fornminner' | 'praktisk';
+const FILTER_TILES: Record<FilterTile, { cats: string[]; noun: [string, string] }> = {
+  bade:       { cats: ['bad'],                   noun: ['badeplasser', 'beaches'] },
+  spise:      { cats: ['mat'],                   noun: ['spisesteder', 'places to eat'] },
+  fornminner: { cats: ['arkeologi'],             noun: ['fornminner', 'ancient sites'] },
+  praktisk:   { cats: ['ferge', 'havn', 'info'], noun: ['praktiske steder', 'practical spots'] },
+};
+
 // Activity-mode labels drop the word that's already implied by the active
 // tile (e.g. "badeplass" while browsing Bade) — shorter text collides with
 // neighbouring labels less often when two spots sit close together.
-function tileLabel(navn: string, tile: 'bade' | 'gatur' | 'historie' | 'spise' | null): string {
+function tileLabel(navn: string, tile: FilterTile | null): string {
   if (tile === 'bade') return navn.replace(/\s*badeplass$/i, '');
   return navn;
 }
@@ -598,7 +612,7 @@ export function VeierlandApp() {
   // from sheetOpen/view/tab, which stay reserved for the POI/trail detail
   // sheet and the menu-driven browse lists, so the dock's own open/expand
   // state doesn't fight with those.
-  const [activityTile, setActivityTile] = useState<'bade' | 'spise' | null>(null);
+  const [activityTile, setActivityTile] = useState<FilterTile | null>(null);
   const [dockExpanded, setDockExpanded] = useState(false);
   // Collapsed to just the grab handle while the user pans the map — there was
   // previously no way to see the map without the dock permanently occupying
@@ -1294,6 +1308,10 @@ export function VeierlandApp() {
     setView('browse');
     setTab(t);
     setDockPeeked(false);
+    // Leaving via a tab clears any active dock filter tile so it doesn't
+    // linger over the map when you come back to Kart. (Only fires for dock
+    // filters — the Steder category chips run with activityTile === null.)
+    if (activityTile) { setActivityTile(null); setActiveCats(new Set()); }
     // Each tab browses its own mode (Kart/Lagret browse places). Only touch
     // the map layer when the mode actually changes, so a manually chosen
     // layer survives plain tab-hopping.
@@ -1313,20 +1331,21 @@ export function VeierlandApp() {
     setSheetOpen(t !== 'map');
   }
 
-  // The dock's 4 activity tiles are the new entry points for "what do you
-  // want today" on the map screen. Bade/Spise filter the map to that POI
-  // category (the dock swaps to a compact summary + expandable list — see
-  // the dock JSX). Gå tur/Historie route straight to the existing, richer
-  // Turer/Historie tabs instead of a lesser POI-filtered view — those
-  // features are already built and better than anything a quick filter
-  // could offer, so this reuses them wholesale rather than duplicating.
-  function applyActivityTile(tile: 'bade' | 'gatur' | 'historie' | 'spise') {
+  // The dock's activity tiles are the entry points for "what do you want
+  // today" on the map screen. Filter tiles (see FILTER_TILES) narrow the map
+  // to a set of POI categories and swap the dock to a compact summary +
+  // expandable list. Route tiles (Gå tur/Historie/Dyreliv) jump straight to
+  // the existing, richer Turer/Historie/Natur tabs instead of a lesser
+  // filtered view — those features are already built and better than anything
+  // a quick filter could offer, so this reuses them wholesale.
+  function applyActivityTile(tile: FilterTile | 'gatur' | 'historie' | 'natur') {
     if (tile === 'gatur') { selectTab('trails'); return; }
     if (tile === 'historie') { selectTab('history'); return; }
+    if (tile === 'natur') { selectTab('nature'); return; }
     setActivityTile(tile);
     setDockExpanded(false);
     setDockPeeked(false);
-    setActiveCats(new Set([tile === 'bade' ? 'bad' : 'mat']));
+    setActiveCats(new Set(FILTER_TILES[tile].cats));
     setSelectedPOI(null);
     setSelectedTrail(null);
     setView('browse');
@@ -3087,7 +3106,7 @@ export function VeierlandApp() {
   // needing a Leaflet invalidateSize() pass on every expand/collapse.
   const dockShown = tab === 'map' && !sheetOpen && !selectedPOI && !selectedTrail;
   const DOCK_PEEK_H = 40; // just the grab handle
-  const dockReservedH = dockShown ? (dockPeeked ? DOCK_PEEK_H : activityTile ? 84 : 176) : 12;
+  const dockReservedH = dockShown ? (dockPeeked ? DOCK_PEEK_H : activityTile ? 84 : 268) : 12;
 
   return (
     <div className="vl-app">
@@ -3799,6 +3818,18 @@ export function VeierlandApp() {
                   <span dangerouslySetInnerHTML={{ __html: iconSvg('mat') }} />
                   <span className="lbl">{lang === 'no' ? 'Spise' : 'Eat'}</span>
                 </button>
+                <button className="vl-dock-tile" style={{ color: NATURE_GROUPS.Fugler.color } as React.CSSProperties} onClick={() => applyActivityTile('natur')}>
+                  <span dangerouslySetInnerHTML={{ __html: iconSvg('blad') }} />
+                  <span className="lbl">{lang === 'no' ? 'Dyreliv' : 'Wildlife'}</span>
+                </button>
+                <button className="vl-dock-tile" style={{ color: catCfg.arkeologi?.color ?? '#b5673e' } as React.CSSProperties} onClick={() => applyActivityTile('fornminner')}>
+                  <span dangerouslySetInnerHTML={{ __html: iconSvg('kultur') }} />
+                  <span className="lbl">{lang === 'no' ? 'Fornminner' : 'Heritage'}</span>
+                </button>
+                <button className="vl-dock-tile" style={{ color: catCfg.havn?.color ?? '#3d6ea5' } as React.CSSProperties} onClick={() => applyActivityTile('praktisk')}>
+                  <span dangerouslySetInnerHTML={{ __html: iconSvg('anker') }} />
+                  <span className="lbl">{lang === 'no' ? 'Praktisk' : 'Practical'}</span>
+                </button>
               </div>
               {recoText && (
                 <div className="vl-dock-reco" onClick={() => applyActivityTile('bade')}>
@@ -3815,9 +3846,7 @@ export function VeierlandApp() {
             <div className="vl-dock-summary">
               <button className="back" onClick={exitActivityTile} aria-label={lang === 'no' ? 'Tilbake' : 'Back'}><BackSvg /></button>
               <div className="txt">
-                {lang === 'no'
-                  ? `${filteredPOIs.length} ${activityTile === 'bade' ? 'badeplasser' : 'spisesteder'}`
-                  : `${filteredPOIs.length} ${activityTile === 'bade' ? 'beaches' : 'places to eat'}`}
+                {`${filteredPOIs.length} ${FILTER_TILES[activityTile].noun[lang === 'no' ? 0 : 1]}`}
               </div>
               <button className="showlist" onClick={() => setDockExpanded(e => !e)}>
                 {dockExpanded ? (lang === 'no' ? 'Skjul' : 'Hide') : (lang === 'no' ? 'Vis liste' : 'Show list')}
@@ -3851,7 +3880,7 @@ export function VeierlandApp() {
               )}
             </div>
           )}
-          {activityTile === 'spise' && dockExpanded && (
+          {activityTile && activityTile !== 'bade' && dockExpanded && (
             <div className="vl-dock-list">
               {filteredPOIs.map(poi => (
                 <div key={poi.id} className="vl-dock-row" onClick={() => { showOnMap(poi); setDockExpanded(false); }}>

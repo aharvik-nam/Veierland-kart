@@ -802,7 +802,10 @@ body { display: grid; place-items: center; }
   box-shadow: 0 -8px 30px rgba(28,38,30,.12);
   padding: 8px 16px calc(14px + env(safe-area-inset-bottom, 0px));
   transition: max-height .3s cubic-bezier(.3,.8,.3,1);
-  max-height: var(--dock-h);
+  /* Generous cap so the default state (2 rows of tiles + reco line) is never
+     clipped; the dock sizes to its content, and the map reserves the matching
+     space via dockReservedH. Activity/peeked/expanded set their own heights. */
+  max-height: 340px;
   overflow: hidden;
 }
 .vl-dock.expanded { max-height: 70vh; overflow-y: auto; }
