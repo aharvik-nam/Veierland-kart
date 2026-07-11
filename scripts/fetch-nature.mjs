@@ -28,16 +28,29 @@ const GROUPS = {
 };
 
 async function fetchGroup(group, taxonKey) {
-  const url = `https://api.gbif.org/v1/occurrence/search?geometry=${POLYGON}&taxonKey=${taxonKey}&limit=300`;
-  const res = await fetch(url, { headers: { Accept: 'application/json' } });
-  const text = await res.text();
-  try {
-    const data = JSON.parse(text);
-    return { group, obs: data.results ?? [] };
-  } catch {
-    console.error(`  GBIF error for ${group}:`, text.slice(0, 200));
-    return { group, obs: [] };
+  // Paginate through ALL occurrences — a single limit=300 page only captured
+  // the most-recorded species per group and dropped every rarer one, so the
+  // bundle held ~500 of the island's ~814 species. GBIF caps paging at
+  // offset 9000 (< the ~3400 total records here, so this reaches everything).
+  const all = [];
+  const limit = 300;
+  let offset = 0;
+  while (true) {
+    const url = `https://api.gbif.org/v1/occurrence/search?geometry=${POLYGON}&taxonKey=${taxonKey}&limit=${limit}&offset=${offset}`;
+    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error(`  GBIF error for ${group}:`, text.slice(0, 200));
+      break;
+    }
+    all.push(...(data.results ?? []));
+    if (data.endOfRecords || offset >= 9000) break;
+    offset += limit;
   }
+  return { group, obs: all };
 }
 
 function processRaw(rawGroups) {
