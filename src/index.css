@@ -820,6 +820,17 @@ body { display: grid; place-items: center; }
   letter-spacing: .07em; color: var(--muted); margin: 0 2px 10px;
 }
 .vl-dock-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+/* Secondary activities: one compact pill row under the four headline tiles,
+   so the extra entries don't double the dock's height. */
+.vl-dock-tiles-sec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 9px; }
+.vl-dock-tile-sm {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  border: 1px solid var(--line); background: var(--card);
+  border-radius: 12px; padding: 9px 6px; min-height: 40px;
+  font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
+}
+.vl-dock-tile-sm svg { width: 17px; height: 17px; flex: 0 0 auto; }
+.vl-dock-tile-sm .lbl { color: var(--ink); white-space: nowrap; }
 .vl-dock-tile {
   display: flex; flex-direction: column; align-items: center; gap: 7px;
   border: 1px solid var(--line); background: var(--card);

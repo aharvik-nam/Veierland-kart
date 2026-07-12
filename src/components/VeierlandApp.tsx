@@ -629,6 +629,10 @@ export function VeierlandApp() {
   const [locating, setLocating] = useState(false);
   const [offIsland, setOffIsland] = useState(false);
   const [nearbyPoi, setNearbyPoi] = useState<POI | null>(null);
+  // User-visible explanation when locating fails — without it the Posisjon
+  // button just silently does nothing on denied permission / GPS failure.
+  const [locateError, setLocateError] = useState<string | null>(null);
+  const locateErrorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const watchRef = useRef<number | null>(null);
   const notifiedPoisRef = useRef<Set<string>>(new Set());
   const offIslandShownRef = useRef(false);
@@ -1484,6 +1488,18 @@ export function VeierlandApp() {
 
     const handleErr = (err: GeolocationPositionError) => {
       console.error('Geolocation error', err);
+      // Tell the user WHY nothing happened — a silently dead button reads as
+      // a broken app. One toast at a time; auto-dismissed below.
+      const msg = err.code === err.PERMISSION_DENIED
+        ? (lang === 'no'
+            ? 'Fikk ikke tilgang til posisjonen din — sjekk stedstilgang i innstillingene.'
+            : 'Location access was denied — check location permissions in settings.')
+        : (lang === 'no'
+            ? 'Fant ikke posisjonen din — prøv igjen om litt.'
+            : 'Couldn’t find your position — try again in a moment.');
+      setLocateError(cur => cur ?? msg);
+      if (locateErrorTimer.current) clearTimeout(locateErrorTimer.current);
+      locateErrorTimer.current = setTimeout(() => setLocateError(null), 5000);
       // Permission denied or unavailable: stop tracking so the button doesn't stay stuck on
       if (err.code === err.PERMISSION_DENIED) {
         if (watchRef.current !== null) {
@@ -3298,6 +3314,21 @@ export function VeierlandApp() {
         </div>
       )}
 
+      {/* Locate-failure toast: same slot/style as the off-island toast (the
+          two can't appear together — no position means no island check).
+          Wraps to two lines since the permission message is long. */}
+      {locateError && !offIsland && (
+        <div style={{
+          position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)',
+          background: 'var(--ink)', color: '#fff', borderRadius: 12,
+          padding: '10px 18px', fontSize: 13, fontWeight: 600, lineHeight: 1.45,
+          zIndex: 1100, maxWidth: 'min(320px, calc(100% - 32px))', textAlign: 'center',
+          boxShadow: '0 4px 16px rgba(0,0,0,.25)', pointerEvents: 'none',
+        }}>
+          {locateError}
+        </div>
+      )}
+
       {/* Nearby POI banner */}
       {nearbyPoi && !offIsland && (
         <button
@@ -3372,6 +3403,12 @@ export function VeierlandApp() {
           adds a new entry point without any new list/browse logic. */}
       {showMenu && (
         <div className="vl-menu" onClick={e => e.stopPropagation()}>
+          {/* "Kart" first: the only other way back to the map from an open
+              list is dragging the sheet down — a gesture first-time users
+              don't know about. This gives them an always-visible exit. */}
+          <button className="vl-menu-item" onClick={() => { setShowMenu(false); exitActivityTile(); selectTab('map'); }}>
+            <MapTabSvg /><span>{T.map}</span>
+          </button>
           <button className="vl-menu-item" onClick={() => { setShowMenu(false); exitActivityTile(); selectTab('places'); }}>
             <PlacesTabSvg /><span>{T.places}</span>
           </button>
@@ -3818,15 +3855,19 @@ export function VeierlandApp() {
                   <span dangerouslySetInnerHTML={{ __html: iconSvg('mat') }} />
                   <span className="lbl">{lang === 'no' ? 'Spise' : 'Eat'}</span>
                 </button>
-                <button className="vl-dock-tile" style={{ color: NATURE_GROUPS.Fugler.color } as React.CSSProperties} onClick={() => applyActivityTile('natur')}>
+              </div>
+              {/* Secondary activities: compact pill row so the dock doesn't
+                  eat the map — the four tiles above are the headline acts. */}
+              <div className="vl-dock-tiles-sec">
+                <button className="vl-dock-tile-sm" style={{ color: NATURE_GROUPS.Fugler.color } as React.CSSProperties} onClick={() => applyActivityTile('natur')}>
                   <span dangerouslySetInnerHTML={{ __html: iconSvg('blad') }} />
                   <span className="lbl">{lang === 'no' ? 'Dyreliv' : 'Wildlife'}</span>
                 </button>
-                <button className="vl-dock-tile" style={{ color: catCfg.arkeologi?.color ?? '#b5673e' } as React.CSSProperties} onClick={() => applyActivityTile('fornminner')}>
+                <button className="vl-dock-tile-sm" style={{ color: catCfg.arkeologi?.color ?? '#b5673e' } as React.CSSProperties} onClick={() => applyActivityTile('fornminner')}>
                   <span dangerouslySetInnerHTML={{ __html: iconSvg('kultur') }} />
                   <span className="lbl">{lang === 'no' ? 'Fornminner' : 'Heritage'}</span>
                 </button>
-                <button className="vl-dock-tile" style={{ color: catCfg.havn?.color ?? '#3d6ea5' } as React.CSSProperties} onClick={() => applyActivityTile('praktisk')}>
+                <button className="vl-dock-tile-sm" style={{ color: catCfg.havn?.color ?? '#3d6ea5' } as React.CSSProperties} onClick={() => applyActivityTile('praktisk')}>
                   <span dangerouslySetInnerHTML={{ __html: iconSvg('anker') }} />
                   <span className="lbl">{lang === 'no' ? 'Praktisk' : 'Practical'}</span>
                 </button>
