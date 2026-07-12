@@ -3371,14 +3371,14 @@ export function VeierlandApp() {
         </button>
         <div className="vl-topbar2-info">
           <div className="vl-topbar2-title">Veierland</div>
+          {/* Sky + temperature only. Wind was here too, but it clipped on
+              small screens and reads better where it has context: the
+              Forhold card and the ferry board, both one tap away. */}
           <div className="vl-topbar2-weather">
             {weatherNow ? (
               <>
                 <span className="wico"><WeatherIcon kind={weatherIconKind(weatherNow.symbolCode)} /></span>
                 <span className="wval">{Math.round(weatherNow.airTemp)}°</span>
-                <span className="wsep">·</span>
-                <span className="wico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h11a2.5 2.5 0 1 0-2.5-2.5"/><path d="M3 12h15a2.5 2.5 0 1 1-2.5 2.5"/><path d="M3 16h8a2 2 0 1 1-2 2"/></svg></span>
-                <span className="wval">{Math.round(weatherNow.windSpeed)} m/s</span>
               </>
             ) : (lang === 'no' ? 'Henter vær…' : 'Loading weather…')}
           </div>
@@ -3387,11 +3387,12 @@ export function VeierlandApp() {
           onClick={e => { e.stopPropagation(); toggleFerryPop(); }}
           title={lang === 'no' ? 'Fergetider' : 'Ferry times'}>
           <FerryRing minsUntil={nextFromIsland ? minsUntil(nextFromIsland.time) : null} />
+          {/* One calm line — the counting ring already says "ferry", so the
+              old uppercase FERGE label + two-line block was just noise. */}
           <div className="vl-ferryring-text">
-            <div className="lbl">{lang === 'no' ? 'Ferge' : 'Ferry'} {nextFromIsland ? fmtDepTime(nextFromIsland.time) : '–'}</div>
             <div className="from">
               {nextFromIsland
-                ? `${lang === 'no' ? 'fra' : 'from'} ${nextFromIsland.fromName}${ferryTomorrow ? (lang === 'no' ? ' · i morgen' : ' · tomorrow') : ''} →`
+                ? `${fmtDepTime(nextFromIsland.time)} ${ferryTomorrow ? (lang === 'no' ? 'i morgen' : 'tomorrow') : `${lang === 'no' ? 'fra' : 'from'} ${nextFromIsland.fromName}`} →`
                 : (lang === 'no' ? 'Fergetider' : 'Ferry times')}
             </div>
           </div>
