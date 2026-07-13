@@ -35,7 +35,9 @@
         "beskrivelse": "Fergeleie på fastlandet (Nøtterøy). Herfra går MF Jutøya til Veierland. Parkering og bussforbindelse.",
         "nettside": "https://jutoya.veierland.org/",
         "verifisert": true,
-        "koordinat_kilde": "Google Places API"
+        "koordinat_kilde": "Google Places API",
+        "apent": "Hele døgnet, utendørs",
+        "parkering": "Ja, ved fergeleiet"
       },
       "geometry": {
         "type": "Point",
@@ -103,7 +105,9 @@
         "kategori": "kultur",
         "beskrivelse": "Laftet trekirke fra 1905, en av de siste bygde i Vestfold. Alterbilde av Maria Vigeland (Kristus til sjøs). Gravlund ved siden av.",
         "verifisert": true,
-        "koordinat_kilde": "manuelt verifisert"
+        "koordinat_kilde": "manuelt verifisert",
+        "apent": "Hele året, utendørs",
+        "visste_du_at": "Kirken er en av de siste laftede trekirkene som ble bygget i Vestfold, og alterbildet «Kristus til sjøs» er malt av Maria Vigeland."
       },
       "geometry": {
         "type": "Point",

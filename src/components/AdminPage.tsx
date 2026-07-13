@@ -390,6 +390,9 @@ function PoiEditor({ feature, onChange, onDelete, categories }: {
       <Field label="Kortbeskrivelse" full><textarea style={S.textarea} value={p.beskrivelse ?? ''} onChange={e => setP('beskrivelse', e.target.value)} rows={3} /></Field>
       <Field label="Les mer (utvidet tekst)" full><textarea style={{ ...S.textarea, minHeight: 100 }} value={p.beskrivelse_lang ?? ''} onChange={e => setP('beskrivelse_lang', e.target.value)} rows={5} placeholder="Vises kun når brukeren trykker «Les mer»…" /></Field>
       <Field label="Nettside (URL)" full><input style={S.input} type="url" value={p.nettside ?? ''} onChange={e => setP('nettside', e.target.value)} placeholder="https://…" /></Field>
+      <Field label="Åpent"><input style={S.input} value={p.apent ?? ''} onChange={e => setP('apent', e.target.value)} placeholder="Hele året, utendørs" /></Field>
+      <Field label="Parkering"><input style={S.input} value={p.parkering ?? ''} onChange={e => setP('parkering', e.target.value)} placeholder="Ved fergeleiet" /></Field>
+      <Field label="Visste du at…" full><textarea style={S.textarea} value={p.visste_du_at ?? ''} onChange={e => setP('visste_du_at', e.target.value)} rows={3} placeholder="Et lite, konkret faktum om stedet." /></Field>
       {secDivider('Bilde')}
       <Field label="Bilde (URL)" full>
         <input style={S.input} type="url" value={p.bilde ?? ''} onChange={e => setP('bilde', e.target.value)} placeholder="https://…" />

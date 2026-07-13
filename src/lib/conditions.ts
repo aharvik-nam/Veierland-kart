@@ -88,6 +88,14 @@ function toCell(g: DomGrid, lat: number, lng: number): { row: number; col: numbe
   return { row, col };
 }
 
+// Inverse of toCell — used to name the winning cell in the "best spots"
+// overlay (nearest real place to point at, not just a bare temperature).
+function cellToLatLng(g: DomGrid, row: number, col: number): [number, number] {
+  const lng = g.minLng + (col / (g.cols - 1)) * (g.maxLng - g.minLng);
+  const lat = g.maxLat - (row / (g.rows - 1)) * (g.maxLat - g.minLat);
+  return [lat, lng];
+}
+
 export function elevationAt(lat: number, lng: number): number {
   if (!DOM_GRID) return 0;
   const { row, col } = toCell(DOM_GRID, lat, lng);
@@ -621,6 +629,8 @@ export interface BestSpotsInfo {
   perceivedC: number; // perceived temp at the best-scoring cell
   sunlit: boolean;
   sheltered: boolean;
+  lat: number; // best-scoring cell's location, for naming the nearest place
+  lng: number;
 }
 
 // Standing in full sun reads several degrees warmer than shade — up to this
@@ -700,6 +710,7 @@ export function makeBestSpotsOverlay(
   const bestSunlit = sunlitCells[bestIdx] === 1;
   const bestPerceived = effectiveTemp(w.airTemp, w.windSpeed * exposure[bestIdx], w.humidity)
     + (bestSunlit ? sunGain : 0);
+  const [bestLat, bestLng] = cellToLatLng(g, Math.floor(bestIdx / g.cols), bestIdx % g.cols);
   return {
     dataUrl: toSmoothDataUrl(ctx.canvas),
     bounds: [[g.minLat, g.minLng], [g.maxLat, g.maxLng]],
@@ -707,6 +718,7 @@ export function makeBestSpotsOverlay(
       perceivedC: bestPerceived,
       sunlit: bestSunlit,
       sheltered: exposure[bestIdx] < 0.4,
+      lat: bestLat, lng: bestLng,
     },
   };
 }

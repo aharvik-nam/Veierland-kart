@@ -446,35 +446,22 @@ function WeatherIcon({ kind, size = 19 }: { kind: WeatherIconKind; size?: number
   }
 }
 
-// Circular countdown to the next ferry departure, for the glass top bar.
-// Fill fraction is relative to an arbitrary 60-minute reference window (the
-// app has no "typical gap between sailings" constant to anchor to) — the
-// ring simply fills up as the departure gets closer, capped at 60 min out.
-function FerryRing({ minsUntil, size = 62 }: { minsUntil: number | null; size?: number }) {
-  const REF_MIN = 60;
-  const r = (size - 5) / 2;
-  const circumference = 2 * Math.PI * r;
-  const frac = minsUntil === null ? 0 : 1 - Math.min(Math.max(minsUntil, 0), REF_MIN) / REF_MIN;
-  const dash = `${circumference * frac} ${circumference}`;
-  return (
-    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--line)" strokeWidth={5} />
-        <circle
-          cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--accent)" strokeWidth={5}
-          strokeLinecap="round" strokeDasharray={dash}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
-      </svg>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: 15, fontWeight: 800, lineHeight: 1, color: 'var(--ink)' }}>
-          {minsUntil === null ? '–' : Math.max(0, minsUntil)}
-        </span>
-        <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted)', letterSpacing: '.04em' }}>MIN</span>
-      </div>
-    </div>
-  );
+// One-word human read of the sky, for the welcome overlay's weather chip
+// ("18° og Fint turvær") — weatherIconKind() only gives the icon bucket.
+function weatherKindLabel(kind: WeatherIconKind, lang: 'no' | 'en'): string {
+  const labels: Record<WeatherIconKind, [string, string]> = {
+    clear: ['Fint turvær', 'Clear skies'],
+    partly: ['Lettskyet', 'Partly cloudy'],
+    cloudy: ['Skyet', 'Cloudy'],
+    fog: ['Tåke', 'Foggy'],
+    rain: ['Regn', 'Rain'],
+    sleet: ['Sludd', 'Sleet'],
+    snow: ['Snø', 'Snow'],
+    thunder: ['Torden', 'Thunder'],
+  };
+  return labels[kind][lang === 'no' ? 0 : 1];
 }
+
 function ChevSvg() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -618,6 +605,17 @@ export function VeierlandApp() {
   // previously no way to see the map without the dock permanently occupying
   // the bottom of the screen. Restored by tapping the handle again.
   const [dockPeeked, setDockPeeked] = useState(false);
+  // First-open-of-the-day welcome overlay (from the Claude Design prototype):
+  // greets the visitor and offers the three most common "what do I do here"
+  // answers up front, instead of making them discover the dock themselves.
+  const [showWelcome, setShowWelcome] = useState(() => {
+    try { return localStorage.getItem('vl-welcome-seen') !== new Date().toISOString().slice(0, 10); }
+    catch { return true; }
+  });
+  function dismissWelcome() {
+    setShowWelcome(false);
+    try { localStorage.setItem('vl-welcome-seen', new Date().toISOString().slice(0, 10)); } catch { /* ignore */ }
+  }
   const [currentLayer, setCurrentLayer] = useState<string>(() => {
     try { return localStorage.getItem('vl-layer') || 'soleng'; } catch { return 'soleng'; }
   });
@@ -763,8 +761,8 @@ export function VeierlandApp() {
   // Conditions overlays (needs the DOM grid) and current weather + sea
   // temperature from MET (for the beach card). Tapping Forhold goes straight
   // to the combined "Beste steder" view; the three expert layers (sun, wind,
-  // feels-like) are reached by swiping/paging the legend card — answer first,
-  // explanation on demand.
+  // feels-like) are reached via the 4-icon tab row in the legend card —
+  // matches the Claude Design prototype's condCard (Best/Vind/Sol/Felt).
   const COND_VIEWS = ['best', 'sun', 'wind', 'effectiveTemp'] as const;
   const [condLayer, setCondLayer] = useState<'best' | 'sun' | 'wind' | 'effectiveTemp' | null>(null);
   const [weatherNow, setWeatherNow] = useState<WeatherNow | null>(null);
@@ -772,20 +770,12 @@ export function VeierlandApp() {
   const [tempRange, setTempRange] = useState<[number, number] | null>(null);
   const [bestInfo, setBestInfo] = useState<BestSpotsInfo | null>(null);
   const condOverlayRef = useRef<L.ImageOverlay | null>(null);
-  const condSwipeX = useRef<number | null>(null);
   // Forhold ("conditions") can be scrubbed forward through the next ~24h so
   // people can plan ahead, not just see the current moment. condHourOffset is
   // an index into weatherSeries (0 = now); it's shared across all the
-  // condLayer views so paging between them keeps the same planning hour.
+  // condLayer views so switching between them keeps the same planning hour.
   const [weatherSeries, setWeatherSeries] = useState<WeatherPoint[] | null>(null);
   const [condHourOffset, setCondHourOffset] = useState(0);
-  function stepCondView(dir: 1 | -1) {
-    setCondLayer(cur => {
-      if (!cur) return cur;
-      const i = COND_VIEWS.indexOf(cur);
-      return COND_VIEWS[(i + dir + COND_VIEWS.length) % COND_VIEWS.length];
-    });
-  }
   const isBeachPOI = !!selectedPOI && (selectedPOI.kategorier ?? [selectedPOI.kategori]).includes('bad');
 
   // Weather is needed unconditionally now (the glass top bar's one-liner),
@@ -1111,7 +1101,15 @@ export function VeierlandApp() {
       }
     }
 
-    filteredPOIs.forEach(poi => {
+    // Per the Claude Design prototype: an active dock filter (Bade/Spise/…)
+    // dims non-matching pins to 28% instead of removing them, so the map
+    // keeps spatial context of everything else. filteredPOIs already IS the
+    // matching set, so rendering allPOIs here and checking membership is
+    // enough — no separate query needed.
+    const activityMatches = activityTile ? new Set(filteredPOIs.map(p => p.id)) : null;
+    const activityPOIs = activityTile ? allPOIs : filteredPOIs;
+
+    activityPOIs.forEach(poi => {
       const cat = getCat(poi.kategori);
       const sel = selectedPOI?.id === poi.id;
 
@@ -1121,8 +1119,10 @@ export function VeierlandApp() {
       // (unless a search is actively matching one, which is explicit intent).
       if (poi.kategori === 'stedsnavn' && mapZoom < STEDSNAVN_MIN_ZOOM && !searchQ) return;
 
-      const faded = dimByTrail && !!poi.coordinates &&
-        pointToPolylineDistM(poi.coordinates as [number, number], selectedTrail!.path) > 20;
+      const matchesActivity = !activityMatches || activityMatches.has(poi.id);
+      const faded = (dimByTrail && !!poi.coordinates &&
+        pointToPolylineDistM(poi.coordinates as [number, number], selectedTrail!.path) > 20)
+        || (!!activityTile && !matchesActivity);
       let html: string, pinSz: number;
       if (poi.kategori === 'stedsnavn') {
         // Lightweight text-only label — no icon circle, so it reads as a
@@ -1130,7 +1130,7 @@ export function VeierlandApp() {
         // visually with real POI pins even when both are visible.
         html = makeStedsnavnHtml(poi.navn, sel);
         pinSz = 22;
-      } else if (activityTile) {
+      } else if (activityTile && matchesActivity) {
         // Activity-mode map view: bigger pins with the name always visible —
         // tapping to find out what something is isn't realistic for young
         // or elderly users on a crowded island map.
@@ -1139,7 +1139,7 @@ export function VeierlandApp() {
       } else {
         pinSz = sz;
         html = faded
-          ? `<div style="opacity:0.3">${makeIconHtml(cat.icon, cat.color, sel, sz)}</div>`
+          ? `<div style="opacity:0.28">${makeIconHtml(cat.icon, cat.color, sel, sz)}</div>`
           : makeIconHtml(cat.icon, cat.color, sel, sz);
       }
       const half = Math.round(pinSz / 2);
@@ -1152,7 +1152,7 @@ export function VeierlandApp() {
 
     return () => { if (map) map.removeLayer(cg); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapReady, mode, filteredPOIs, selectedPOI?.id, view, mapZoom, selectedTrail, trailPoiFilter, tab, activityTile, searchQ]);
+  }, [mapReady, mode, filteredPOIs, allPOIs, selectedPOI?.id, view, mapZoom, selectedTrail, trailPoiFilter, tab, activityTile, searchQ]);
 
   useEffect(() => {
     if ((mode !== 'nature' && !(mode === 'trails' && trailCatFilter === 'natur')) || natureFetched) return;
@@ -1393,6 +1393,21 @@ export function VeierlandApp() {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
+  // Names the "Best spots" overlay's winning cell for the legend's word
+  // conclusion ("Best nå: Kongshavn") — nearest named point (POI or place
+  // name) within a generous radius, since the winning cell is often just a
+  // patch of terrain rather than an actual POI.
+  function nearestPlaceName(lat: number, lng: number, maxM = 600): string | null {
+    let best: string | null = null;
+    let bestD = Infinity;
+    for (const poi of allPOIs) {
+      if (!poi.coordinates) continue;
+      const d = distanceM(lat, lng, poi.coordinates[0], poi.coordinates[1]);
+      if (d < bestD) { bestD = d; best = poi.navn; }
+    }
+    return bestD <= maxM ? best : null;
+  }
+
   // Walking estimate: from the user's position when tracking, otherwise from
   // Vestgården quay (where visitors arrive). 5 km/h. Uses the real path/road
   // network (src/data/road_network.json, see scripts/generate_road_network.mjs)
@@ -1606,19 +1621,28 @@ export function VeierlandApp() {
     });
   }
 
+  // Full-screen browse pages (Steder/Turer/Natur/Historie/Lagret), per the
+  // Claude Design prototype's tab views — a back-arrow + serif-title page
+  // instead of a partial sheet. POI/trail detail (and a selected nature
+  // species) stay a partial, draggable sheet, matching the same prototype's
+  // POI detail card and this app's own peek/drag feature.
+  const isFullScreenBrowse = tab !== 'map' && view === 'browse' && !selectedNature && !selectedCuratedArt && !isDesktopView();
+
   // Browse lists are capped lower than detail so the map always stays in view
   // (interactions like the sea-level slider have a visible effect). Natur is
   // capped lower still — its content is about the map.
-  const SHEET_MAX_H = Math.min(window.innerHeight * (
+  const SHEET_MAX_H = isFullScreenBrowse ? window.innerHeight : Math.min(window.innerHeight * (
     view === 'detail' || selectedNature || selectedCuratedArt ? 0.82 : tab === 'nature' ? 0.45 : 0.62
   ), 720);
   const TAB_BAR_H = 62; // floor for the rail's resting offset (the mobile tab bar itself is gone)
   const MINI_CARD_H = 68;
   const SHEET_PEEK_H = 110; // grab handle + a sliver of the header, map stays mostly visible
 
-  // After content renders, shrink sheet to fit actual content (avoids excess white space)
+  // After content renders, shrink sheet to fit actual content (avoids excess
+  // white space) — skipped for full-screen browse pages, which always want
+  // the full height regardless of how little content they hold.
   useEffect(() => {
-    if (!sheetOpen) { setAutoSheetH(null); return; }
+    if (!sheetOpen || isFullScreenBrowse) { setAutoSheetH(null); return; }
     // Fresh content (a new selection, or the sheet just opened) always
     // starts fully open, not stuck peeked from whatever was shown before.
     setSheetPeeked(false);
@@ -1631,7 +1655,7 @@ export function VeierlandApp() {
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [sheetOpen, view, selectedPOI, selectedTrail, selectedNature, selectedCuratedArt, selectedEra, selectedFarm, historyView, tab]);
+  }, [sheetOpen, view, selectedPOI, selectedTrail, selectedNature, selectedCuratedArt, selectedEra, selectedFarm, historyView, tab, isFullScreenBrowse]);
 
   const SHEET_OPEN_H = autoSheetH ?? SHEET_MAX_H;
   const sheetCurrentH = sheetOpen
@@ -2743,6 +2767,29 @@ export function VeierlandApp() {
           <p className="vl-desc" style={{ marginTop: -8 }}>{poi.beskrivelse_lang}</p>
         )}
 
+        {(poi.apent || poi.parkering) && (
+          <div className="vl-factcards">
+            {poi.apent && (
+              <div className="vl-factcard">
+                <div className="k">{lang === 'no' ? 'Åpent' : 'Open'}</div>
+                <div className="v">{poi.apent}</div>
+              </div>
+            )}
+            {poi.parkering && (
+              <div className="vl-factcard">
+                <div className="k">{lang === 'no' ? 'Parkering' : 'Parking'}</div>
+                <div className="v">{poi.parkering}</div>
+              </div>
+            )}
+          </div>
+        )}
+        {poi.visste_du_at && (
+          <div className="vl-fact">
+            <div className="vl-fact-label">{lang === 'no' ? 'Visste du at' : 'Did you know'}</div>
+            <p className="vl-fact-text">{poi.visste_du_at}</p>
+          </div>
+        )}
+
         {poi.bilde && (
           <div className="vl-poi-static-img">
             <img src={poi.bilde} alt={poi.navn} onError={hideBrokenImg} />
@@ -3128,6 +3175,63 @@ export function VeierlandApp() {
     <div className="vl-app">
       {/* Map area */}
       <div className="vl-map-area" style={{ '--dock-h': `${dockReservedH}px` } as React.CSSProperties}>
+      {/* First-open-of-the-day welcome overlay */}
+      {showWelcome && (() => {
+        const hour = new Date().getHours();
+        const greeting = hour < 10 ? (lang === 'no' ? 'God morgen!' : 'Good morning!')
+          : hour < 17 ? (lang === 'no' ? 'God dag!' : 'Good day!')
+          : (lang === 'no' ? 'God kveld!' : 'Good evening!');
+        const matCount = allPOIs.filter(p => (p.kategorier ?? [p.kategori]).includes('mat')).length;
+        return (
+          <div className="vl-welcome">
+            <div className="vl-welcome-scrim" onClick={dismissWelcome} />
+            <div className="vl-welcome-sheet">
+              <div className="vl-dock-grab"><div className="bar" /></div>
+              <div className="vl-welcome-chip">{lang === 'no' ? 'Veierland, Nøtterøy' : 'Veierland, Norway'}</div>
+              <h2 className="vl-welcome-h">{greeting}</h2>
+              <p className="vl-welcome-p">
+                {lang === 'no'
+                  ? 'Velkommen til øya. Her er tre gode måter å starte besøket på:'
+                  : 'Welcome to the island. Here are three good ways to start your visit:'}
+              </p>
+              <div className="vl-welcome-cards">
+                <button className="vl-welcome-card" onClick={() => { dismissWelcome(); applyActivityTile('gatur'); }}>
+                  <span className="ic" dangerouslySetInnerHTML={{ __html: iconSvg('gaatur') }} />
+                  <span className="t">{lang === 'no' ? 'Gå en tur' : 'Take a walk'}</span>
+                  <span className="sub">{lang === 'no' ? `${trails.length} turstier` : `${trails.length} trails`}</span>
+                </button>
+                <button className="vl-welcome-card" onClick={() => { dismissWelcome(); applyActivityTile('bade'); }}>
+                  <span className="ic" dangerouslySetInnerHTML={{ __html: iconSvg('bade') }} />
+                  <span className="t">{lang === 'no' ? 'Finn en strand' : 'Find a beach'}</span>
+                  <span className="sub">{seaTemp !== null ? `${Math.round(seaTemp)}° ${lang === 'no' ? 'i vannet' : 'in the water'}` : (lang === 'no' ? 'Se badeplasser' : 'See beaches')}</span>
+                </button>
+                <button className="vl-welcome-card" onClick={() => { dismissWelcome(); applyActivityTile('spise'); }}>
+                  <span className="ic" dangerouslySetInnerHTML={{ __html: iconSvg('mat') }} />
+                  <span className="t">{lang === 'no' ? 'Spis & rast' : 'Eat & rest'}</span>
+                  <span className="sub">{lang === 'no' ? `${matCount} steder` : `${matCount} places`}</span>
+                </button>
+              </div>
+              <div className="vl-welcome-info">
+                <button className="chip" onClick={() => { dismissWelcome(); toggleFerryPop(); }}>
+                  <span className="k">{nextFromIsland ? `${lang === 'no' ? 'Neste ferje' : 'Next ferry'} ${fmtDepTime(nextFromIsland.time)}` : (lang === 'no' ? 'Fergetider' : 'Ferry times')}</span>
+                  {nextFromIsland && <span className="v">{lang === 'no' ? `om ${minsUntil(nextFromIsland.time)} min` : `in ${minsUntil(nextFromIsland.time)} min`}</span>}
+                </button>
+                <button className="chip" onClick={() => { dismissWelcome(); if (hasDomGrid) setCondLayer('best'); }}>
+                  <span className="k">
+                    {weatherNow
+                      ? `${Math.round(weatherNow.airTemp)}° ${lang === 'no' ? 'og' : 'and'} ${weatherKindLabel(weatherIconKind(weatherNow.symbolCode), lang).toLowerCase()}`
+                      : (lang === 'no' ? 'Henter vær…' : 'Loading weather…')}
+                  </span>
+                  <span className="v">{lang === 'no' ? 'Forhold på kartet' : 'Conditions on the map'}</span>
+                </button>
+              </div>
+              <button className="vl-welcome-dismiss" onClick={dismissWelcome}>
+                {lang === 'no' ? 'Utforsk kartet selv →' : 'Explore the map yourself →'}
+              </button>
+            </div>
+          </div>
+        );
+      })()}
       <MapContainer
         center={MAP_CENTER}
         zoom={MAP_ZOOM}
@@ -3362,39 +3466,38 @@ export function VeierlandApp() {
         </button>
       )}
 
-      {/* Glass top bar: menu, place name + compact weather icons, ferry countdown ring.
-          NO/EN moved into the menu — low-frequency, didn't need a permanent spot here. */}
+      {/* Glass top bar — re-skinned per the "Veierland Prototype" Claude
+          Design file: human-language weather line instead of a bare number,
+          and the ferry as a plain countdown text instead of the ring (a
+          deliberate reversal of the earlier ring decision — the user's own
+          design mock calls for text here, so it wins). NO/EN lives in the menu. */}
       <div className="vl-topbar2">
         <button className="vl-menubtn" onClick={e => { e.stopPropagation(); setShowMenu(m => !m); }}
           aria-label={lang === 'no' ? 'Meny' : 'Menu'} title={lang === 'no' ? 'Meny' : 'Menu'}>
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
         <div className="vl-topbar2-info">
-          <div className="vl-topbar2-title">Veierland</div>
-          {/* Sky + temperature only. Wind was here too, but it clipped on
-              small screens and reads better where it has context: the
-              Forhold card and the ferry board, both one tap away. */}
           <div className="vl-topbar2-weather">
             {weatherNow ? (
               <>
                 <span className="wico"><WeatherIcon kind={weatherIconKind(weatherNow.symbolCode)} /></span>
                 <span className="wval">{Math.round(weatherNow.airTemp)}°</span>
+                <span className="wsep">·</span>
+                <span className="wphrase">{weatherKindLabel(weatherIconKind(weatherNow.symbolCode), lang)}</span>
               </>
             ) : (lang === 'no' ? 'Henter vær…' : 'Loading weather…')}
           </div>
         </div>
-        <button className={`vl-ferryring-btn${showFerryPop ? ' on' : ''}`}
+        <button className={`vl-ferrytext-btn${showFerryPop ? ' on' : ''}`}
           onClick={e => { e.stopPropagation(); toggleFerryPop(); }}
           title={lang === 'no' ? 'Fergetider' : 'Ferry times'}>
-          <FerryRing minsUntil={nextFromIsland ? minsUntil(nextFromIsland.time) : null} />
-          {/* One calm line — the counting ring already says "ferry", so the
-              old uppercase FERGE label + two-line block was just noise. */}
-          <div className="vl-ferryring-text">
-            <div className="from">
-              {nextFromIsland
-                ? `${fmtDepTime(nextFromIsland.time)} ${ferryTomorrow ? (lang === 'no' ? 'i morgen' : 'tomorrow') : `${lang === 'no' ? 'fra' : 'from'} ${nextFromIsland.fromName}`} →`
-                : (lang === 'no' ? 'Fergetider' : 'Ferry times')}
-            </div>
+          <div className="time">{nextFromIsland ? fmtDepTime(nextFromIsland.time) : '–'}</div>
+          <div className="cd">
+            {nextFromIsland
+              ? (ferryTomorrow
+                  ? (lang === 'no' ? 'I MORGEN' : 'TOMORROW')
+                  : (lang === 'no' ? `FERJE OM ${minsUntil(nextFromIsland.time)} MIN` : `FERRY IN ${minsUntil(nextFromIsland.time)} MIN`))
+              : (lang === 'no' ? 'FERGETIDER' : 'FERRY TIMES')}
           </div>
         </button>
       </div>
@@ -3605,23 +3708,33 @@ export function VeierlandApp() {
           effectiveTemp: ['Effektiv temperatur', 'Feels like'],
         };
         const condTitle = COND_TITLES[condLayer][lang === 'no' ? 0 : 1];
+        // Icon per view, matching the Claude Design prototype's 4-icon tab
+        // row (Best/Vind/Sol/Felt) — direct taps instead of swipe-only, which
+        // wasn't discoverable without the pager dots as a hint.
+        const CondIcon = ({ view }: { view: typeof COND_VIEWS[number] }) => {
+          const p = { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+          if (view === 'best') return <svg {...p}><path d="M12 21s-7-5.3-7-11a7 7 0 0 1 14 0c0 5.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>;
+          if (view === 'wind') return <svg {...p}><path d="M3 8h11a2.5 2.5 0 1 0-2.2-3.7"/><path d="M3 12.5h15a2.5 2.5 0 1 1-2.2 3.7"/><path d="M3 17h8"/></svg>;
+          if (view === 'sun') return <svg {...p}><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/></svg>;
+          return <svg {...p}><path d="M12 14.5V4.5a2 2 0 1 0-4 0v10a4 4 0 1 0 4 0z"/></svg>;
+        };
 
         return (
-          <div className="vl-condlegend" onClick={e => e.stopPropagation()}
-            onPointerDown={e => { condSwipeX.current = e.clientX; }}
-            onPointerUp={e => {
-              const sx = condSwipeX.current;
-              condSwipeX.current = null;
-              if (sx === null) return;
-              const dx = e.clientX - sx;
-              if (Math.abs(dx) > 45) stepCondView(dx < 0 ? 1 : -1);
-            }}>
+          <div className="vl-condlegend" onClick={e => e.stopPropagation()}>
             <div className="vl-condlegend-hd">
               <span className="t">{condTitle} · {condTimeLabel}</span>
               <button className="vl-condlegend-close" aria-label={lang === 'no' ? 'Lukk' : 'Close'}
                 onClick={() => setCondLayer(null)}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
               </button>
+            </div>
+            <div className="vl-cond-tabs">
+              {COND_VIEWS.map(v => (
+                <button key={v} className={condLayer === v ? 'on' : ''} title={COND_TITLES[v][lang === 'no' ? 0 : 1]}
+                  onClick={() => setCondLayer(v)}>
+                  <CondIcon view={v} />
+                </button>
+              ))}
             </div>
             {weatherSeries && (
               <div className="vl-condhours">
@@ -3633,24 +3746,38 @@ export function VeierlandApp() {
               </div>
             )}
             {condLayer === 'best' ? (
-              condPoint && bestInfo ? (
-                <>
-                  <div className="vl-cond-main">
-                    <span className="big">{Math.round(bestInfo.perceivedC)}°</span>
-                    <span className="sub">{lang === 'no' ? 'føles som, på beste sted' : 'feels like, at the best spot'}</span>
-                  </div>
-                  <div className="vl-cond-keys">
-                    {bestInfo.sunlit && <span className="k"><i style={{ background: '#fabf24' }} />{lang === 'no' ? 'Sol' : 'Sun'}</span>}
-                    {bestInfo.sheltered && <span className="k"><i style={{ background: '#5f9438' }} />{lang === 'no' ? 'God le' : 'Sheltered'}</span>}
-                    {!bestInfo.sunlit && !bestInfo.sheltered && (
-                      <span className="k"><i style={{ background: '#f6b23c' }} />{lang === 'no' ? 'Mildest' : 'Mildest'}</span>
-                    )}
-                  </div>
-                  <span className="vl-cond-note" style={{ marginTop: 7, display: 'block' }}>
-                    {lang === 'no' ? 'Gyllent på kartet = fint å være.' : 'Golden on the map = pleasant to be.'}
-                  </span>
-                </>
-              ) : (
+              condPoint && bestInfo ? (() => {
+                const place = nearestPlaceName(bestInfo.lat, bestInfo.lng);
+                const traits = [
+                  bestInfo.sunlit && (lang === 'no' ? 'sol' : 'sun'),
+                  bestInfo.sheltered && (lang === 'no' ? 'godt le for vind' : 'good shelter from wind'),
+                ].filter(Boolean).join(lang === 'no' ? ' og ' : ' and ');
+                return (
+                  <>
+                    <div className="vl-cond-conclusion">
+                      {place
+                        ? (lang === 'no' ? `Best nå: ${place}` : `Best now: ${place}`)
+                        : (lang === 'no' ? 'Best nå: i nærheten' : 'Best now: nearby')}
+                    </div>
+                    <p className="vl-cond-note" style={{ marginBottom: 8 }}>
+                      {traits
+                        ? (lang === 'no' ? `${traits.charAt(0).toUpperCase()}${traits.slice(1)} akkurat nå.` : `${traits.charAt(0).toUpperCase()}${traits.slice(1)} right now.`)
+                        : (lang === 'no' ? 'Mildest sted på øya akkurat nå.' : 'Mildest spot on the island right now.')}
+                    </p>
+                    <div className="vl-cond-main">
+                      <span className="big">{Math.round(bestInfo.perceivedC)}°</span>
+                      <span className="sub">{lang === 'no' ? 'føles som' : 'feels like'}</span>
+                    </div>
+                    <div className="vl-cond-keys">
+                      {bestInfo.sunlit && <span className="k"><i style={{ background: '#fabf24' }} />{lang === 'no' ? 'Sol' : 'Sun'}</span>}
+                      {bestInfo.sheltered && <span className="k"><i style={{ background: '#5f9438' }} />{lang === 'no' ? 'God le' : 'Sheltered'}</span>}
+                      {!bestInfo.sunlit && !bestInfo.sheltered && (
+                        <span className="k"><i style={{ background: '#f6b23c' }} />{lang === 'no' ? 'Mildest' : 'Mildest'}</span>
+                      )}
+                    </div>
+                  </>
+                );
+              })() : (
                 <span className="vl-cond-note">{lang === 'no' ? 'Henter vær…' : 'Loading weather…'}</span>
               )
             ) : condLayer === 'sun' ? (() => {
@@ -3738,19 +3865,6 @@ export function VeierlandApp() {
                 <span className="vl-cond-note">{lang === 'no' ? 'Henter temperatur…' : 'Loading temperature…'}</span>
               )
             )}
-            <div className="vl-cond-pager">
-              <button className="pg" aria-label={lang === 'no' ? 'Forrige visning' : 'Previous view'} onClick={() => stepCondView(-1)}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
-              </button>
-              {COND_VIEWS.map(v => (
-                <button key={v} className={`dot${condLayer === v ? ' on' : ''}`}
-                  aria-label={COND_TITLES[v][lang === 'no' ? 0 : 1]}
-                  onClick={() => setCondLayer(v)} />
-              ))}
-              <button className="pg" aria-label={lang === 'no' ? 'Neste visning' : 'Next view'} onClick={() => stepCondView(1)}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5l7 7-7 7"/></svg>
-              </button>
-            </div>
           </div>
         );
       })()}
@@ -3972,6 +4086,21 @@ export function VeierlandApp() {
         <div className="vl-grab" onPointerDown={onGrabPointerDown}>
           <div className="bar" />
         </div>
+        {/* Full-screen browse-page header (back-circle + serif title), per
+            the Claude Design prototype's tab views. The grab handle above
+            still works too — dragging down peeks at the map without going
+            all the way back. */}
+        {isFullScreenBrowse && (
+          <div className="vl-fsheader">
+            <button className="vl-fsheader-back" onClick={() => selectTab('map')} aria-label={T.back}>
+              <BackSvg />
+            </button>
+            <h2 className="vl-fsheader-title">
+              {tab === 'places' ? T.places : tab === 'trails' ? T.trails : tab === 'nature' ? T.nature
+                : tab === 'history' ? T.history : T.saved}
+            </h2>
+          </div>
+        )}
         <div className="vl-body" ref={bodyRef}>
           {view === 'browse' && tab === 'nature' && renderNature()}
           {view === 'browse' && tab === 'history' && renderHistory()}

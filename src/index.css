@@ -380,18 +380,16 @@ body { display: grid; place-items: center; }
   margin-left: auto; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700;
   border-radius: 999px; min-width: 18px; height: 18px; display: grid; place-items: center; padding: 0 5px;
 }
-.vl-topbar2-info { flex: 1; min-width: 0; }
-.vl-topbar2-title {
-  font-family: var(--display); font-size: 21px; font-weight: 500;
-  letter-spacing: -.01em; line-height: 1.05; color: var(--ink);
-}
+.vl-topbar2-info { flex: 1; min-width: 0; display: flex; align-items: center; }
 .vl-topbar2-weather {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 13px; color: var(--muted); font-weight: 600; margin-top: 3px;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 14.5px; color: var(--ink); font-weight: 700;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .vl-topbar2-weather .wico { display: flex; color: var(--ink); flex: 0 0 auto; }
 .vl-topbar2-weather .wval { color: var(--ink); }
+.vl-topbar2-weather .wsep { color: var(--line2); font-weight: 400; }
+.vl-topbar2-weather .wphrase { color: var(--ink); font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
 
 .vl-menu-divider { height: 1px; background: var(--line); margin: 6px 4px; }
 .vl-menu-lang {
@@ -404,12 +402,15 @@ body { display: grid; place-items: center; }
 }
 .vl-menu-lang button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
 
-.vl-ferryring-btn {
-  flex: 0 0 auto; display: flex; align-items: center; gap: 8px;
-  border: none; background: none; padding: 0; cursor: pointer; text-align: left;
+/* Ferry as plain countdown text (per the Claude Design prototype) instead of
+   the ring — bold departure time + small uppercase "FERJE OM X MIN" caption. */
+.vl-ferrytext-btn {
+  flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end;
+  border: none; background: none; padding: 0; cursor: pointer; text-align: right;
 }
-.vl-ferryring-text .from { font-size: 12.5px; font-weight: 700; color: var(--accent); white-space: nowrap; }
-.vl-ferryring-btn.on .vl-ferryring-text .from { color: var(--ink); }
+.vl-ferrytext-btn .time { font-size: 15px; font-weight: 800; color: var(--accent); line-height: 1.1; }
+.vl-ferrytext-btn.on .time { color: var(--ink); }
+.vl-ferrytext-btn .cd { font-size: 9.5px; font-weight: 700; color: var(--muted); letter-spacing: .04em; margin-top: 1px; }
 
 /* ── Ferry board popup / full-screen ────────────────────────────────────────── */
 .vl-ferrypop {
@@ -525,6 +526,16 @@ body { display: grid; place-items: center; }
   color: var(--muted); cursor: pointer; display: flex; border-radius: 8px;
 }
 .vl-condlegend-close:hover { color: var(--ink); }
+/* 4-icon tab row (Best/Vind/Sol/Felt) — the Claude Design prototype's
+   condCard navigation, replacing the earlier swipe-only carousel. */
+.vl-cond-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+.vl-cond-tabs button {
+  flex: 1; display: grid; place-items: center; border: 1px solid var(--line);
+  background: var(--card); border-radius: 9px; padding: 6px 0; color: var(--ink);
+  cursor: pointer;
+}
+.vl-cond-tabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.vl-cond-conclusion { font-size: 14.5px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
 .vl-condhours { display: flex; gap: 4px; margin-bottom: 11px; }
 .vl-condhours button {
   flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--card);
@@ -549,24 +560,6 @@ body { display: grid; place-items: center; }
   font-size: 10px; font-weight: 600; color: var(--muted); margin-top: 3px;
 }
 .vl-cond-note { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
-/* Carousel pager: dots for the four views (best/sun/wind/feels-like) plus
-   chevrons for desktop; the card itself is also horizontally swipeable
-   (pan-y keeps vertical page scroll working on touch). */
-.vl-condlegend { touch-action: pan-y; }
-.vl-cond-pager {
-  display: flex; align-items: center; justify-content: center; gap: 7px;
-  margin-top: 11px; padding-top: 9px; border-top: 1px solid var(--line2);
-}
-.vl-cond-pager .dot {
-  width: 7px; height: 7px; border-radius: 50%; padding: 0; border: none;
-  background: var(--line); cursor: pointer;
-}
-.vl-cond-pager .dot.on { background: var(--ink); }
-.vl-cond-pager .pg {
-  border: none; background: none; color: var(--muted); cursor: pointer;
-  display: flex; padding: 2px 4px;
-}
-.vl-cond-pager .pg:hover { color: var(--ink); }
 .vl-condlegend b { display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px; }
 .vl-condlegend span { font-size: 12px; color: var(--muted); line-height: 1.4; }
 
@@ -689,8 +682,8 @@ body { display: grid; place-items: center; }
 .vl-rbtn:active { transform: scale(.94); }
 
 /* (The old Forhold submenu popover is gone — tapping Forhold now goes
-   straight to the combined "Beste steder" view, and the legend card pages
-   between the views; see .vl-cond-pager.) */
+   straight to the combined "Beste steder" view; the legend card's own
+   4-icon tab row, .vl-cond-tabs, switches between the views.) */
 
 /* ── Layer popup ────────────────────────────────────────────────────────────── */
 .vl-pop {
@@ -884,6 +877,57 @@ body { display: grid; place-items: center; }
 .vl-dock-row.beach .chip.lee { background: rgba(95,148,56,.14); color: #4c7a2c; }
 .vl-dock-row.beach svg { width: 18px; height: 18px; flex: 0 0 auto; color: var(--muted); }
 
+/* ── Welcome overlay (first open of the day) ─────────────────────────────────── */
+.vl-welcome { position: fixed; inset: 0; z-index: 950; }
+.vl-welcome-scrim { position: absolute; inset: 0; background: rgba(20,28,20,.32); }
+.vl-welcome-sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; top: 26%;
+  background: var(--card); border-radius: 28px 28px 0 0;
+  box-shadow: 0 -20px 50px rgba(20,28,20,.25);
+  padding: 10px 22px 28px; display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+.vl-welcome-sheet .vl-dock-grab { align-self: center; }
+.vl-welcome-chip {
+  display: inline-flex; align-self: flex-start; align-items: center; gap: 6px;
+  background: var(--card2); border: 1px solid var(--line); color: var(--ink2);
+  font-size: 12px; font-weight: 700; padding: 5px 11px; border-radius: 999px;
+  margin: 10px 0 14px;
+}
+.vl-welcome-h {
+  font-family: var(--display); font-size: 30px; font-weight: 600;
+  color: var(--ink); margin: 0 0 6px; line-height: 1.1;
+}
+.vl-welcome-p { font-size: 14.5px; color: var(--ink2); line-height: 1.5; margin: 0 0 20px; max-width: 320px; }
+.vl-welcome-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+.vl-welcome-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  padding: 14px 6px; text-align: center; cursor: pointer; font: inherit;
+  display: flex; flex-direction: column; align-items: center;
+}
+.vl-welcome-card .ic {
+  width: 40px; height: 40px; border-radius: 12px; background: var(--card2);
+  display: grid; place-items: center; margin-bottom: 8px; color: var(--ink);
+}
+.vl-welcome-card .ic svg { width: 19px; height: 19px; }
+.vl-welcome-card .t { font-size: 12.5px; font-weight: 700; color: var(--ink); }
+.vl-welcome-card .sub { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+.vl-welcome-info { display: flex; gap: 8px; margin-bottom: 20px; }
+.vl-welcome-info .chip {
+  flex: 1; min-width: 0; text-align: left; background: var(--card2);
+  border: 1px solid var(--line); border-radius: 12px; padding: 9px 12px;
+  cursor: pointer; font: inherit;
+}
+.vl-welcome-info .chip .k {
+  display: block; font-size: 12px; font-weight: 700; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vl-welcome-info .chip .v { display: block; font-size: 10.5px; color: var(--muted); margin-top: 1px; }
+.vl-welcome-dismiss {
+  text-align: center; font-size: 13.5px; font-weight: 700; color: var(--accent);
+  background: none; border: none; cursor: pointer; font: inherit; padding: 0;
+}
+
 /* ── Bottom sheet ───────────────────────────────────────────────────────────── */
 .vl-map-area { position: absolute; top: 0; left: 0; right: 0; bottom: var(--dock-h); }
 
@@ -911,6 +955,21 @@ body { display: grid; place-items: center; }
   mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
 }
 .vl-body::-webkit-scrollbar { display: none; }
+/* Full-screen browse-page header (back-circle + serif title) — per the
+   Claude Design prototype's tab views. */
+.vl-fsheader {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 12px;
+  padding: 2px var(--pad) 14px;
+}
+.vl-fsheader-back {
+  width: 34px; height: 34px; border-radius: 50%; flex: 0 0 auto;
+  background: var(--card2); border: none; color: var(--ink);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.vl-fsheader-title {
+  font-family: var(--display); font-size: 22px; font-weight: 600;
+  color: var(--ink); margin: 0;
+}
 
 /* ── Browse: title + seg control ───────────────────────────────────────────── */
 .vl-title { margin: 2px 0 10px; font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
@@ -974,6 +1033,21 @@ body { display: grid; place-items: center; }
 }
 .vl-sub { font-size: 14px; color: var(--muted); }
 .vl-desc { font-size: 15.5px; line-height: 1.55; margin: 0 0 14px; }
+/* Åpent/Parkering fact cards + "Visste du at" — from the Claude Design
+   prototype's POI detail layout. Admin-editable, hidden when empty. */
+.vl-factcards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 16px; }
+.vl-factcard { background: var(--card2); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; }
+.vl-factcard .k { font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.vl-factcard .v { font-size: 14px; font-weight: 700; color: var(--ink); margin-top: 2px; }
+.vl-fact { margin: 0 0 16px; }
+.vl-fact-label {
+  font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;
+  letter-spacing: .06em; margin-bottom: 8px;
+}
+.vl-fact-text {
+  font-size: 13.5px; line-height: 1.55; color: var(--ink2);
+  border-left: 3px solid var(--accent); padding-left: 10px; margin: 0;
+}
 .vl-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
 .vl-tag {
   font-size: 12.5px; font-weight: 500; color: var(--ink);
