@@ -55,16 +55,28 @@ function useReportDirty(dirty: boolean) {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const S = {
   page: { minHeight: '100vh', background: 'var(--page)', color: 'var(--ink)', fontFamily: "'Hanken Grotesk', system-ui, sans-serif", fontSize: 14 } as React.CSSProperties,
-  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', height: 56, background: 'var(--card)', borderBottom: '1px solid var(--line)', position: 'sticky' as const, top: 0, zIndex: 100, boxShadow: '0 1px 4px rgba(0,0,0,.05)' },
-  h1: { margin: 0, fontSize: 15, fontWeight: 700, letterSpacing: '-.01em', display: 'flex', alignItems: 'center', gap: 8 },
-  tabs: { display: 'flex', padding: '0 24px', background: 'var(--card)', borderBottom: '1px solid var(--line)', gap: 2 },
-  tab: (active: boolean): React.CSSProperties => ({ padding: '13px 15px', border: 'none', background: 'none', cursor: 'pointer', fontWeight: active ? 600 : 400, fontSize: 13.5, color: active ? 'var(--accent)' : 'var(--ink2)', borderBottom: active ? '2px solid var(--accent)' : '2px solid transparent', marginBottom: -1, letterSpacing: '-.01em', whiteSpace: 'nowrap' }),
-  body: { padding: '24px', maxWidth: 860, margin: '0 auto' },
   pill: (v: 'primary' | 'secondary' | 'danger'): React.CSSProperties => ({ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, background: v === 'primary' ? 'var(--accent)' : v === 'danger' ? '#dc2626' : 'var(--card)', color: v === 'secondary' ? 'var(--ink)' : '#fff', boxShadow: v === 'secondary' ? 'inset 0 0 0 1px var(--line)' : v === 'primary' ? '0 1px 4px rgba(74,124,100,.25)' : '0 1px 3px rgba(220,38,38,.2)', letterSpacing: '-.01em' }),
-  featureRow: { background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12, marginBottom: 7, overflow: 'hidden' },
-  featureHdr: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', cursor: 'pointer', userSelect: 'none' as const, background: 'none', border: 'none', flex: 1, textAlign: 'left' as const, font: 'inherit', color: 'inherit', minWidth: 0 },
-  chev: (open: boolean): React.CSSProperties => ({ transition: 'transform .2s', transform: open ? 'rotate(180deg)' : 'none', color: 'var(--muted)', flexShrink: 0, display: 'block' }),
-  editGrid: { padding: '18px 18px 20px', borderTop: '1px solid var(--line)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 18px', background: 'var(--card2)' },
+  editGrid: { padding: '20px 24px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '14px 20px' } as React.CSSProperties,
+  // ── Master-detail split layout (Steder / Stedsnavn / Turer) ──
+  splitRoot: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } as React.CSSProperties,
+  splitToolbar: { padding: '16px 24px 0', flexShrink: 0 } as React.CSSProperties,
+  splitBody: { flex: 1, minHeight: 0, display: 'flex' } as React.CSSProperties,
+  listPane: { width: 'clamp(220px, 26vw, 360px)', flexShrink: 0, borderRight: '1px solid var(--line)', display: 'flex', flexDirection: 'column', minHeight: 0, background: 'var(--card)' } as React.CSSProperties,
+  listPaneHead: { padding: '14px 16px 10px', borderBottom: '1px solid var(--line)', flexShrink: 0 } as React.CSSProperties,
+  listScroll: { flex: 1, overflowY: 'auto' as const, minHeight: 0, padding: '6px 8px' },
+  listPaneFoot: { padding: '10px 12px', borderTop: '1px solid var(--line)', flexShrink: 0 } as React.CSSProperties,
+  detailPane: { flex: 1, overflowY: 'auto' as const, minHeight: 0, background: 'var(--card2)' },
+  emptyState: { height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 13.5, textAlign: 'center' as const, padding: 40 },
+  listRow: (active: boolean): React.CSSProperties => ({
+    display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '8px 10px',
+    borderRadius: 9, border: 'none', cursor: 'pointer', textAlign: 'left' as const, font: 'inherit',
+    marginBottom: 2, background: active ? 'color-mix(in srgb, var(--accent) 13%, transparent)' : 'transparent',
+  }),
+  listRowName: (active: boolean): React.CSSProperties => ({
+    flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+    fontSize: 13.5, fontWeight: active ? 600 : 400, color: active ? 'var(--accent)' : 'var(--ink)', letterSpacing: '-.01em',
+  }),
+  listRowMeta: { fontSize: 10.5, color: 'var(--muted)', flexShrink: 0, background: 'var(--line2)', borderRadius: 6, padding: '1px 6px', fontWeight: 500 } as React.CSSProperties,
   fullSpan: { gridColumn: '1 / -1' } as React.CSSProperties,
   label: { display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--muted)', marginBottom: 5, textTransform: 'uppercase' as const, letterSpacing: '.06em' },
   input: { width: '100%', boxSizing: 'border-box' as const, padding: '8px 11px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', fontSize: 13.5, font: 'inherit' },
@@ -471,39 +483,6 @@ function StedsnavnEditor({ feature, onChange, onDelete, onMoveToPoi, categories 
   );
 }
 
-// ─── Collapsible feature row ──────────────────────────────────────────────────
-function FeatureRow({ label, meta, children, onMoveUp, onMoveDown }: {
-  label: string; meta?: string; children: React.ReactNode;
-  onMoveUp?: () => void; onMoveDown?: () => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const showArrows = onMoveUp !== undefined || onMoveDown !== undefined;
-  return (
-    <div style={{ ...S.featureRow, boxShadow: open ? '0 2px 10px rgba(0,0,0,.06)' : 'none' }}>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <button style={S.featureHdr} onClick={() => setOpen(o => !o)}>
-          <span style={{ fontWeight: 500, fontSize: 14, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-.01em' }}>{label}</span>
-          {meta && (
-            <span style={{ fontSize: 11, color: 'var(--muted)', flexShrink: 0, background: 'var(--line2)', borderRadius: 6, padding: '2px 8px', fontWeight: 500 }}>
-              {meta}
-            </span>
-          )}
-          <svg style={S.chev(open)} viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="4,6 8,10 12,6" />
-          </svg>
-        </button>
-        {showArrows && (
-          <div style={{ display: 'flex', gap: 3, paddingRight: 12, flexShrink: 0 }}>
-            <button style={{ ...S.moveBtn, opacity: onMoveUp ? 1 : 0.25 }} onClick={onMoveUp} disabled={!onMoveUp} title="Flytt opp">↑</button>
-            <button style={{ ...S.moveBtn, opacity: onMoveDown ? 1 : 0.25 }} onClick={onMoveDown} disabled={!onMoveDown} title="Flytt ned">↓</button>
-          </div>
-        )}
-      </div>
-      {open && children}
-    </div>
-  );
-}
-
 // ─── File actions ─────────────────────────────────────────────────────────────
 function FileActions({ tab, data, onUpload, dirty, onSave, saving, seeded }: {
   tab: GeoTab; data: GeoCollection | null; onUpload: (d: GeoCollection) => void;
@@ -524,7 +503,7 @@ function FileActions({ tab, data, onUpload, dirty, onSave, saving, seeded }: {
     URL.revokeObjectURL(url);
   };
   return (
-    <div style={S.fileActions}>
+    <div style={{ ...S.fileActions, marginBottom: 12 }}>
       <button style={S.pill('secondary')} onClick={download}>
         <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="8,3 8,11"/><polyline points="5,8 8,11 11,8"/><polyline points="3,13 13,13"/></svg>
         Last ned JSON
@@ -552,6 +531,7 @@ function PoiTab() {
   const { cats, setCats, save: saveCats, saving: savingCats } = useCategories();
   const [searchQ, setSearchQ] = useState('');
   const [filterCat, setFilterCat] = useState('');
+  const [selected, setSelected] = useState<number | null>(null);
 
   const update = (i: number, f: any) => {
     if (!data) return;
@@ -561,6 +541,7 @@ function PoiTab() {
   const del = (i: number) => {
     if (!data || !confirm(`Slett "${data.features[i].properties.navn}"?`)) return;
     setData({ ...data, features: data.features.filter((_, j) => j !== i) });
+    setSelected(s => s === null ? s : s === i ? null : s > i ? s - 1 : s);
   };
   const addNew = () => {
     if (!data) return;
@@ -569,6 +550,7 @@ function PoiTab() {
       properties: { navn: 'Nytt punkt', kategori: cats[0] ?? 'info', beskrivelse: '', verifisert: false, koordinat_kilde: 'manuelt' },
       geometry: { type: 'Point', coordinates: [10.350, 59.160] },
     }]});
+    setSelected(data.features.length);
   };
 
   const moveInCat = (i: number, dir: -1 | 1) => {
@@ -607,66 +589,85 @@ function PoiTab() {
 
   const groups = groupByCat(filtered, ({ f }) => f.properties.kategori ?? 'ukjent');
   const presentCats = [...new Set(data.features.map(f => f.properties.kategori).filter(Boolean) as string[])].sort();
+  const selectedFeature = selected !== null ? data.features[selected] : null;
 
   return (
-    <>
-      <FileActions tab="poi" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} seeded={seeded} />
-      {err && <p style={{ color: '#e53e3e', marginBottom: 12 }}>{err}</p>}
-      {!seeded && (
-        <div style={{ ...S.infoBox, marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-          <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="#b45309" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><path d="M10 2L2 17h16L10 2z"/><line x1="10" y1="9" x2="10" y2="13"/><circle cx="10" cy="16" r=".5" fill="#b45309"/></svg>
-          <span style={{ color: '#92400e' }}>Ingen data i Firebase ennå — viser lokal JSON. Trykk «Last opp til Firebase» for å laste opp.</span>
-        </div>
-      )}
-
-      <CategoriesPanel cats={cats} onChange={setCats} onSave={saveCats} saving={savingCats} />
-
-      <div style={S.toolbar}>
-        <input
-          style={S.searchInput}
-          placeholder="Søk etter steder…"
-          value={searchQ}
-          onChange={e => setSearchQ(e.target.value)}
-        />
-        <select style={S.selectInput} value={filterCat} onChange={e => setFilterCat(e.target.value)}>
-          <option value="">Alle kategorier</option>
-          {presentCats.map(c => (
-            <option key={c} value={c}>
-              {c} ({data.features.filter(f => f.properties.kategori === c).length})
-            </option>
-          ))}
-        </select>
-        <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-          {filtered.length} / {data.features.length} steder
-        </span>
+    <div style={S.splitRoot}>
+      <div style={S.splitToolbar}>
+        <FileActions tab="poi" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} seeded={seeded} />
+        {err && <p style={{ color: '#e53e3e', marginBottom: 12 }}>{err}</p>}
+        {!seeded && (
+          <div style={{ ...S.infoBox, marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="#b45309" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><path d="M10 2L2 17h16L10 2z"/><line x1="10" y1="9" x2="10" y2="13"/><circle cx="10" cy="16" r=".5" fill="#b45309"/></svg>
+            <span style={{ color: '#92400e' }}>Ingen data i Firebase ennå — viser lokal JSON. Trykk «Last opp til Firebase» for å laste opp.</span>
+          </div>
+        )}
       </div>
 
-      {[...groups.entries()].map(([cat, items]) => (
-        <div key={cat}>
-          <div style={S.groupHeader}>
-            <span>{cat}</span>
-            <span style={S.groupBadge}>{items.length}</span>
+      <div style={S.splitBody}>
+        <div style={S.listPane}>
+          <div style={S.listPaneHead}>
+            <CategoriesPanel cats={cats} onChange={setCats} onSave={saveCats} saving={savingCats} />
+            <input
+              style={{ ...S.searchInput, width: '100%', boxSizing: 'border-box', marginTop: 10 }}
+              placeholder="Søk etter steder…"
+              value={searchQ}
+              onChange={e => setSearchQ(e.target.value)}
+            />
+            <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
+              <select style={{ ...S.selectInput, flex: 1 }} value={filterCat} onChange={e => setFilterCat(e.target.value)}>
+                <option value="">Alle kategorier</option>
+                {presentCats.map(c => (
+                  <option key={c} value={c}>
+                    {c} ({data.features.filter(f => f.properties.kategori === c).length})
+                  </option>
+                ))}
+              </select>
+              <span style={{ fontSize: 11.5, color: 'var(--muted)', flexShrink: 0 }}>{filtered.length}/{data.features.length}</span>
+            </div>
           </div>
-          {items.map(({ f, i }) => (
-            <FeatureRow
-              key={i}
-              label={f.properties.navn ?? `Punkt ${i + 1}`}
-              meta={(f.properties.kategorier as string[] | undefined)?.join(', ') ?? f.properties.kategori}
-              onMoveUp={hasSameCatNeighbor(i, -1) ? () => moveInCat(i, -1) : undefined}
-              onMoveDown={hasSameCatNeighbor(i, 1) ? () => moveInCat(i, 1) : undefined}
-            >
-              <PoiEditor feature={f} onChange={nf => update(i, nf)} onDelete={() => del(i)} categories={cats} />
-            </FeatureRow>
-          ))}
+
+          <div style={S.listScroll}>
+            {[...groups.entries()].map(([cat, items]) => (
+              <div key={cat}>
+                <div style={S.groupHeader}>
+                  <span>{cat}</span>
+                  <span style={S.groupBadge}>{items.length}</span>
+                </div>
+                {items.map(({ f, i }) => (
+                  <button key={i} style={S.listRow(selected === i)} onClick={() => setSelected(i)}>
+                    <span style={S.listRowName(selected === i)}>{f.properties.navn ?? `Punkt ${i + 1}`}</span>
+                    <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+                      {hasSameCatNeighbor(i, -1) && (
+                        <span style={S.moveBtn} onClick={e => { e.stopPropagation(); moveInCat(i, -1); }} title="Flytt opp">↑</span>
+                      )}
+                      {hasSameCatNeighbor(i, 1) && (
+                        <span style={S.moveBtn} onClick={e => { e.stopPropagation(); moveInCat(i, 1); }} title="Flytt ned">↓</span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ))}
+            {filtered.length === 0 && (
+              <p style={{ color: 'var(--muted)', textAlign: 'center', padding: '24px 0', fontSize: 13 }}>Ingen resultater for søket.</p>
+            )}
+          </div>
+
+          <div style={S.listPaneFoot}>
+            <button style={{ ...S.addBtn, marginTop: 0 }} onClick={addNew}>+ Legg til nytt punkt</button>
+          </div>
         </div>
-      ))}
 
-      {filtered.length === 0 && (
-        <p style={{ color: 'var(--muted)', textAlign: 'center', padding: '24px 0' }}>Ingen resultater for søket.</p>
-      )}
-
-      <button style={S.addBtn} onClick={addNew}>+ Legg til nytt punkt</button>
-    </>
+        <div style={S.detailPane}>
+          {selectedFeature ? (
+            <PoiEditor feature={selectedFeature} onChange={nf => update(selected!, nf)} onDelete={() => del(selected!)} categories={cats} />
+          ) : (
+            <div style={S.emptyState}>Velg et sted i listen til venstre, eller legg til et nytt.</div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -676,6 +677,7 @@ function StedsnavnTab() {
   const [searchQ, setSearchQ] = useState('');
   const [categories, setCategories] = useState<string[]>([]);
   const [moveMsg, setMoveMsg] = useState('');
+  const [selected, setSelected] = useState<number | null>(null);
 
   useEffect(() => {
     loadCatCfg().then(cfg => setCategories(Object.keys(cfg).filter(k => k !== '__groups__')));
@@ -689,6 +691,7 @@ function StedsnavnTab() {
   const del = (i: number) => {
     if (!data || !confirm(`Slett "${data.features[i].properties.navn}"?`)) return;
     setData({ ...data, features: data.features.filter((_, j) => j !== i) });
+    setSelected(s => s === null ? s : s === i ? null : s > i ? s - 1 : s);
   };
   const addNew = () => {
     if (!data) return;
@@ -733,6 +736,7 @@ function StedsnavnTab() {
     const nextData = { ...data, features: data.features.filter((_, j) => j !== i) };
     await setDoc(doc(db, COL, DOC['stedsnavn']), { json: JSON.stringify(nextData) });
     setData(nextData);
+    setSelected(s => s === null ? s : s === i ? null : s > i ? s - 1 : s);
     setMoveMsg(`«${navn}» ble flyttet til Steder som kategori «${category}».`);
     setTimeout(() => setMoveMsg(''), 4000);
   };
@@ -742,52 +746,65 @@ function StedsnavnTab() {
   const filtered = data.features
     .map((f, i) => ({ f, i }))
     .filter(({ f }) => !searchQ || (f.properties.navn ?? '').toLowerCase().includes(searchQ.toLowerCase()));
+  const selectedFeature = selected !== null ? data.features[selected] : null;
 
   return (
-    <>
-      <FileActions tab="stedsnavn" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} seeded={seeded} />
-      {err && <p style={{ color: '#e53e3e', marginBottom: 12 }}>{err}</p>}
-      {moveMsg && <div style={{ ...S.infoBox, marginBottom: 12, color: '#276749' }}>✓ {moveMsg}</div>}
-      {!seeded && (
-        <div style={{ ...S.infoBox, marginBottom: 16 }}>
-          ⚠️ Ingen data i Firebase ennå — viser lokal JSON. Trykk «Last opp til Firebase» for å laste opp.
-        </div>
-      )}
-
-      <div style={S.toolbar}>
-        <input
-          style={S.searchInput}
-          placeholder="Søk etter stedsnavn…"
-          value={searchQ}
-          onChange={e => setSearchQ(e.target.value)}
-        />
-        <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-          {filtered.length} / {data.features.length} stedsnavn
-        </span>
+    <div style={S.splitRoot}>
+      <div style={S.splitToolbar}>
+        <FileActions tab="stedsnavn" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} seeded={seeded} />
+        {err && <p style={{ color: '#e53e3e', marginBottom: 12 }}>{err}</p>}
+        {moveMsg && <div style={{ ...S.infoBox, marginBottom: 12, color: '#276749' }}>✓ {moveMsg}</div>}
+        {!seeded && (
+          <div style={{ ...S.infoBox, marginBottom: 16 }}>
+            ⚠️ Ingen data i Firebase ennå — viser lokal JSON. Trykk «Last opp til Firebase» for å laste opp.
+          </div>
+        )}
       </div>
 
-      {filtered.map(({ f, i }) => (
-        <FeatureRow
-          key={i}
-          label={f.properties.navn ?? `Stedsnavn ${i + 1}`}
-          meta={f.properties.visibility === false ? 'skjult' : undefined}
-        >
-          <StedsnavnEditor
-            feature={f}
-            onChange={nf => update(i, nf)}
-            onDelete={() => del(i)}
-            onMoveToPoi={category => moveToPoi(i, category)}
-            categories={categories}
-          />
-        </FeatureRow>
-      ))}
+      <div style={S.splitBody}>
+        <div style={S.listPane}>
+          <div style={S.listPaneHead}>
+            <input
+              style={{ ...S.searchInput, width: '100%', boxSizing: 'border-box' }}
+              placeholder="Søk etter stedsnavn…"
+              value={searchQ}
+              onChange={e => setSearchQ(e.target.value)}
+            />
+            <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 8 }}>
+              {filtered.length} / {data.features.length} stedsnavn
+            </div>
+          </div>
+          <div style={S.listScroll}>
+            {filtered.map(({ f, i }) => (
+              <button key={i} style={S.listRow(selected === i)} onClick={() => setSelected(i)}>
+                <span style={S.listRowName(selected === i)}>{f.properties.navn ?? `Stedsnavn ${i + 1}`}</span>
+                {f.properties.visibility === false && <span style={S.listRowMeta}>skjult</span>}
+              </button>
+            ))}
+            {filtered.length === 0 && (
+              <p style={{ color: 'var(--muted)', textAlign: 'center', padding: '24px 0', fontSize: 13 }}>Ingen resultater for søket.</p>
+            )}
+          </div>
+          <div style={S.listPaneFoot}>
+            <button style={{ ...S.addBtn, marginTop: 0 }} onClick={addNew}>+ Legg til nytt stedsnavn</button>
+          </div>
+        </div>
 
-      {filtered.length === 0 && (
-        <p style={{ color: 'var(--muted)', textAlign: 'center', padding: '24px 0' }}>Ingen resultater for søket.</p>
-      )}
-
-      <button style={S.addBtn} onClick={addNew}>+ Legg til nytt stedsnavn</button>
-    </>
+        <div style={S.detailPane}>
+          {selectedFeature ? (
+            <StedsnavnEditor
+              feature={selectedFeature}
+              onChange={nf => update(selected!, nf)}
+              onDelete={() => del(selected!)}
+              onMoveToPoi={category => moveToPoi(selected!, category)}
+              categories={categories}
+            />
+          ) : (
+            <div style={S.emptyState}>Velg et stedsnavn i listen til venstre, eller legg til et nytt.</div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -888,6 +905,7 @@ function TurerTab() {
   const { data, setData, dirty, saving, save, err, seeded } = useTabData('turer');
   const [builderFor, setBuilderFor] = useState<number | 'new' | null>(null);
   const [showOverview, setShowOverview] = useState(false);
+  const [selected, setSelected] = useState<number | null>(null);
 
   const update = (i: number, f: any) => {
     if (!data) return;
@@ -897,6 +915,7 @@ function TurerTab() {
   const del = (i: number) => {
     if (!data || !confirm(`Slett turen "${data.features[i].properties.navn}"?`)) return;
     setData({ ...data, features: data.features.filter((_, j) => j !== i) });
+    setSelected(s => s === null ? s : s === i ? null : s > i ? s - 1 : s);
   };
 
   if (!data) return <p style={{ color: 'var(--muted)' }}>{err || 'Laster…'}</p>;
@@ -924,6 +943,7 @@ function TurerTab() {
                 geometry: { type: 'LineString', coordinates: [] },
               }, built);
               setData({ ...data, features: [...data.features, newFeature] });
+              setSelected(data.features.length);
             }
             setBuilderFor(null);
           }}
@@ -932,45 +952,65 @@ function TurerTab() {
     );
   }
 
+  const selectedFeature = selected !== null ? data.features[selected] : null;
+
   return (
-    <>
-      <FileActions tab="turer" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} seeded={seeded} />
-      {err && <p style={{ color: '#e53e3e', marginBottom: 12 }}>{err}</p>}
-      {!seeded && (
-        <div style={{ ...S.infoBox, marginBottom: 16 }}>
-          ⚠️ Ingen data i Firebase ennå — viser lokal JSON. Trykk «Last opp til Firebase» for å laste opp.
+    <div style={S.splitRoot}>
+      <div style={S.splitToolbar}>
+        <FileActions tab="turer" data={data} onUpload={setData} dirty={dirty} onSave={save} saving={saving} seeded={seeded} />
+        {err && <p style={{ color: '#e53e3e', marginBottom: 12 }}>{err}</p>}
+        {!seeded && (
+          <div style={{ ...S.infoBox, marginBottom: 16 }}>
+            ⚠️ Ingen data i Firebase ennå — viser lokal JSON. Trykk «Last opp til Firebase» for å laste opp.
+          </div>
+        )}
+        <div style={{ ...S.toolbar, marginBottom: 12 }}>
+          <button type="button" style={S.pill('secondary')} onClick={() => setShowOverview(v => !v)}>
+            {showOverview ? 'Skjul kartoversikt' : '🗺️ Vis alle ruter på kart'}
+          </button>
+          <span style={{ fontSize: 12, color: 'var(--muted)' }}>{data.features.length} turrute(r)</span>
         </div>
-      )}
-      <div style={S.infoBox}>
-        {data.features.length} turrute(r). Navn, lengde, tid og beskrivelser redigeres her direkte; selve ruta bygges på kart —
-        klikk «Bygg rute på kart» inne på en tur, eller «Ny rute» under.
+        {showOverview && (
+          <div style={{ marginBottom: 14 }}>
+            <RouteOverviewMap routes={data.features.map((f, i) => ({
+              id: f.properties.id ?? String(i),
+              navn: f.properties.navn ?? `Rute ${i + 1}`,
+              path: (f.geometry.coordinates as [number, number][]).map(([lng, lat]) => [lat, lng] as [number, number]),
+            }))} />
+            <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 6 }}>
+              Grønt flagg = start, rødt flagg = mål, piler viser gåretningen for hver rute.
+            </div>
+          </div>
+        )}
       </div>
-      <div style={S.toolbar}>
-        <button type="button" style={S.pill('secondary')} onClick={() => setShowOverview(v => !v)}>
-          {showOverview ? 'Skjul kartoversikt' : '🗺️ Vis alle ruter på kart'}
-        </button>
-        <button type="button" style={S.pill('primary')} onClick={() => setBuilderFor('new')}>+ Ny rute</button>
-      </div>
-      {showOverview && (
-        <div style={{ marginBottom: 18 }}>
-          <RouteOverviewMap routes={data.features.map((f, i) => ({
-            id: f.properties.id ?? String(i),
-            navn: f.properties.navn ?? `Rute ${i + 1}`,
-            path: (f.geometry.coordinates as [number, number][]).map(([lng, lat]) => [lat, lng] as [number, number]),
-          }))} />
-          <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 6 }}>
-            Grønt flagg = start, rødt flagg = mål, piler viser gåretningen for hver rute.
+
+      <div style={S.splitBody}>
+        <div style={S.listPane}>
+          <div style={S.listScroll}>
+            {data.features.map((f, i) => (
+              <button key={i} style={S.listRow(selected === i)} onClick={() => setSelected(i)}>
+                <span style={S.listRowName(selected === i)}>{f.properties.navn ?? f.properties.id ?? `Rute ${i + 1}`}</span>
+                {f.properties.km && <span style={S.listRowMeta}>{f.properties.km}</span>}
+              </button>
+            ))}
+            {data.features.length === 0 && (
+              <p style={{ color: 'var(--muted)', textAlign: 'center', padding: '24px 0', fontSize: 13 }}>Ingen turruter ennå.</p>
+            )}
+          </div>
+          <div style={S.listPaneFoot}>
+            <button style={{ ...S.addBtn, marginTop: 0 }} onClick={() => setBuilderFor('new')}>+ Ny rute</button>
           </div>
         </div>
-      )}
-      {data.features.map((f, i) => (
-        <FeatureRow key={i}
-          label={f.properties.navn ?? f.properties.id ?? `Rute ${i + 1}`}
-          meta={[f.properties.km, f.properties.tid, f.properties.vanskelighet].filter(Boolean).join(' · ')}>
-          <TrailEditor feature={f} onChange={nf => update(i, nf)} onDelete={() => del(i)} onOpenBuilder={() => setBuilderFor(i)} />
-        </FeatureRow>
-      ))}
-    </>
+
+        <div style={S.detailPane}>
+          {selectedFeature ? (
+            <TrailEditor feature={selectedFeature} onChange={nf => update(selected!, nf)} onDelete={() => del(selected!)} onOpenBuilder={() => setBuilderFor(selected!)} />
+          ) : (
+            <div style={S.emptyState}>Velg en tur i listen til venstre, eller lag en ny rute på kart.</div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -2051,6 +2091,7 @@ export function AdminPage() {
   if (!user) return <LoginForm onLogin={setUser} />;
 
   const sideW = narrow ? 62 : 234;
+  const isSplitTab = tab === 'poi' || tab === 'stedsnavn' || tab === 'turer';
   const initial = (user.email ?? '?')[0].toUpperCase();
 
   return (
@@ -2153,17 +2194,22 @@ export function AdminPage() {
               </span>
             )}
           </div>
-          <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-            <div style={{ padding: '22px 24px 48px', maxWidth: 860 }}>
+          {isSplitTab ? (
+            <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               {tab === 'poi' && <PoiTab />}
               {tab === 'stedsnavn' && <StedsnavnTab />}
               {tab === 'turer' && <TurerTab />}
-              {tab === 'kategorier' && <CategoryConfigTab />}
-              {tab === 'garder' && <GarderTab />}
-              {tab === 'tidslinje' && <TidslinjeTab />}
-              {tab === 'natur' && <NaturTab />}
             </div>
-          </div>
+          ) : (
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+              <div style={{ padding: '22px 24px 48px', maxWidth: 1100 }}>
+                {tab === 'kategorier' && <CategoryConfigTab />}
+                {tab === 'garder' && <GarderTab />}
+                {tab === 'tidslinje' && <TidslinjeTab />}
+                {tab === 'natur' && <NaturTab />}
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </DirtyCtx.Provider>
