@@ -812,10 +812,24 @@ export function VeierlandApp() {
   // channel the sun/shelter/sea-level features already use (see
   // computeContours in conditions.ts) — no separate data source needed.
   const [mapAppearance, setMapAppearance] = useState<MapAppearance>(DEFAULT_MAP_APPEARANCE);
-  const contourSet = useMemo(
-    () => hasDomGrid ? computeContours(mapAppearance.contourIntervalM) : null,
-    [mapAppearance.contourIntervalM]
-  );
+  const contourSet = useMemo(() => {
+    if (!hasDomGrid) return null;
+    const raw = computeContours(mapAppearance.contourIntervalM);
+    if (!raw) return null;
+    // The DTM/DOM grid is a rectangular crop around Veierland, so it can
+    // include slivers of neighbouring skerries/mainland at the edges — the
+    // same reason sun/shadow only tints isWaterCell()-passing cells, not an
+    // exact coastline. Contour lines need the tighter, real boundary
+    // (pointInPolygon, also used for the off-island toast) since a stray
+    // line on someone else's island reads as a mapping error, not "coarse
+    // terrain data".
+    const segments = raw.segments.filter(([a, b]) => {
+      const midLat = (a[0] + b[0]) / 2, midLng = (a[1] + b[1]) / 2;
+      return pointInPolygon(midLat, midLng);
+    });
+    return { ...raw, segments };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapAppearance.contourIntervalM]);
 
   // Farm data (loaded from Firestore, falls back to veierland_history.json values)
   const [farmData, setFarmData] = useState<Farm[]>(DEFAULT_FARM_DATA);
