@@ -605,6 +605,13 @@ export function VeierlandApp() {
   // previously no way to see the map without the dock permanently occupying
   // the bottom of the screen. Restored by tapping the handle again.
   const [dockPeeked, setDockPeeked] = useState(false);
+  // Drag-to-pull-up on the dock's grab handle — mirrors the sheet's grab
+  // handle gesture (see onGrabPointerDown) but snaps between the dock's
+  // three discrete CSS states (peeked/default/expanded) instead of following
+  // the finger continuously, since the dock's height is content-driven
+  // (max-height per state) rather than an arbitrary pixel value.
+  const [isDraggingDock, setIsDraggingDock] = useState(false);
+  const dockDragStartRef = useRef<{ y: number; moved: boolean } | null>(null);
   // First-open-of-the-day welcome overlay (from the Claude Design prototype):
   // greets the visitor and offers the three most common "what do I do here"
   // answers up front, instead of making them discover the dock themselves.
@@ -1714,6 +1721,45 @@ export function VeierlandApp() {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDraggingSheet]);
+
+  function onDockGrabPointerDown(e: React.PointerEvent) {
+    dockDragStartRef.current = { y: e.clientY, moved: false };
+    setIsDraggingDock(true);
+  }
+  useEffect(() => {
+    if (!isDraggingDock) return;
+    const PULL = 24; // px of vertical movement before a drag counts as a pull, not a tap
+    const handleMove = (e: PointerEvent) => {
+      const start = dockDragStartRef.current;
+      if (start && Math.abs(e.clientY - start.y) > 4) start.moved = true;
+    };
+    const handleUp = (e: PointerEvent) => {
+      const start = dockDragStartRef.current;
+      dockDragStartRef.current = null;
+      setIsDraggingDock(false);
+      if (!start) return;
+      if (!start.moved) {
+        // Plain tap: same behaviour as before this gesture existed.
+        if (dockPeeked) setDockPeeked(false);
+        else setDockExpanded(v => !v);
+        return;
+      }
+      const dy = e.clientY - start.y;
+      if (dy < -PULL) { setDockPeeked(false); setDockExpanded(true); }
+      else if (dy > PULL) {
+        if (dockExpanded) setDockExpanded(false);
+        else setDockPeeked(true);
+      }
+    };
+    document.addEventListener('pointermove', handleMove);
+    document.addEventListener('pointerup', handleUp);
+    document.addEventListener('pointercancel', handleUp);
+    return () => {
+      document.removeEventListener('pointermove', handleMove);
+      document.removeEventListener('pointerup', handleUp);
+      document.removeEventListener('pointercancel', handleUp);
+    };
+  }, [isDraggingDock, dockExpanded, dockPeeked]);
   // Kart tab, nothing open: a selected POI shows as a compact mini-card above the tab bar
   // instead of pushing the full sheet up over the map.
   const showMiniCard = tab === 'map' && !sheetOpen && view === 'browse' && !!(selectedPOI || selectedTrail);
@@ -3946,8 +3992,7 @@ export function VeierlandApp() {
           is tapped, and this is hidden on desktop via CSS). */}
       {tab === 'map' && !sheetOpen && !selectedPOI && !selectedTrail && (
         <div className={`vl-dock${dockExpanded ? ' expanded' : ''}${dockPeeked ? ' peeked' : ''}`}>
-          <div className="vl-dock-grab"
-            onClick={() => dockPeeked ? setDockPeeked(false) : setDockExpanded(e => !e)}>
+          <div className="vl-dock-grab" onPointerDown={onDockGrabPointerDown}>
             <div className="bar" />
           </div>
           {!activityTile ? (
