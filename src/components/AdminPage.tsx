@@ -4,6 +4,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../lib/firebase';
 import { poiFallback, stedsnavnFallback, turkartFallback, GeoCollection } from '../lib/geodata';
 import { DEFAULT_CAT_CFG, CatCfgMap, CatEntry, loadCatCfg, saveCatCfg } from '../lib/catcfg';
+import { DEFAULT_MAP_APPEARANCE, MapAppearance, loadMapAppearance, saveMapAppearance } from '../lib/mapsettings';
 import { loadFarmData, saveFarmData, DEFAULT_FARM_DATA, Farm, FarmPerson, FarmShip } from '../lib/farmdata';
 import { loadTimelineSections, saveTimelineSections, DEFAULT_TIMELINE_SECTIONS, TimelineSection } from '../lib/timelinedata';
 import { ICONS, ICON_LABELS } from '../lib/icons';
@@ -16,7 +17,7 @@ import {
   applyAssessments,
 } from '../lib/naturedata';
 
-type Tab = 'poi' | 'stedsnavn' | 'turer' | 'kategorier' | 'garder' | 'tidslinje' | 'natur';
+type Tab = 'poi' | 'stedsnavn' | 'turer' | 'kategorier' | 'kartutseende' | 'garder' | 'tidslinje' | 'natur';
 type GeoTab = 'poi' | 'stedsnavn' | 'turer';
 
 const COL = 'geodata';
@@ -1961,6 +1962,92 @@ function NaturTab() {
   );
 }
 
+// ─── Kartutseende tab ─────────────────────────────────────────────────────────
+function MapAppearanceTab() {
+  const [cfg, setCfg] = useState<MapAppearance>(DEFAULT_MAP_APPEARANCE);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [dirtyLocal, setDirtyLocal] = useState(false);
+  useReportDirty(dirtyLocal);
+
+  useEffect(() => { loadMapAppearance().then(setCfg); }, []);
+
+  const set = <K extends keyof MapAppearance>(key: K, val: MapAppearance[K]) => {
+    setCfg(prev => ({ ...prev, [key]: val }));
+    setSaved(false); setDirtyLocal(true);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try { await saveMapAppearance(cfg); setSaved(true); setDirtyLocal(false); }
+    catch (e: any) { alert(e.message); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <div style={{ maxWidth: 640 }}>
+      <div style={S.infoBox}>
+        Høydekurvene beregnes direkte fra den samme terrengmodellen (DTM) som brukes til
+        sol/vind/sjøtemperatur-visningen — ingen egen nedlasting trengs. Bare grov terrengform
+        vises (15 m oppløsning), så et intervall på 5–10 m gir best resultat på en liten øy.
+        Lavere intervall enn dette gir mange flere linjer og kan gjøre kartet tregere.
+      </div>
+
+      <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12, padding: '16px 18px', marginBottom: 16 }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: cfg.contoursEnabled ? 16 : 0 }}>
+          <input type="checkbox" checked={cfg.contoursEnabled} onChange={e => set('contoursEnabled', e.target.checked)} />
+          <strong style={{ fontSize: 14 }}>Vis høydekurver på kartet</strong>
+        </label>
+
+        {cfg.contoursEnabled && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px 18px', paddingTop: 4, borderTop: '1px solid var(--line)' }}>
+            <Field label="Intervall (meter)">
+              <input style={S.input} type="number" min={1} max={50} step={1}
+                value={cfg.contourIntervalM}
+                onChange={e => set('contourIntervalM', Math.max(1, Number(e.target.value) || 1))} />
+            </Field>
+            <Field label="Farge">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input type="color" value={cfg.contourColor} onChange={e => set('contourColor', e.target.value)}
+                  style={{ width: 40, height: 32, border: '1px solid var(--line)', borderRadius: 6, cursor: 'pointer', padding: 2, background: 'var(--card)' }} />
+                <span style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'monospace' }}>{cfg.contourColor}</span>
+              </div>
+            </Field>
+            <Field label="Linjetykkelse">
+              <input style={S.input} type="number" min={0.5} max={5} step={0.5}
+                value={cfg.contourWeight}
+                onChange={e => set('contourWeight', Math.max(0.5, Number(e.target.value) || 1))} />
+            </Field>
+            <Field label="Gjennomsiktighet">
+              <input style={S.input} type="range" min={0.1} max={1} step={0.05}
+                value={cfg.contourOpacity}
+                onChange={e => set('contourOpacity', Number(e.target.value))} />
+            </Field>
+            <Field label="Vis fra zoomnivå">
+              <input style={S.input} type="number" min={10} max={19} step={1}
+                value={cfg.contourMinZoom}
+                onChange={e => set('contourMinZoom', Math.max(10, Math.min(19, Number(e.target.value) || 14)))} />
+            </Field>
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '16px 20px', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12 }}>
+        <button style={S.pill('primary')} onClick={save} disabled={saving}>
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M13 13H3V3h7l3 3v7z"/><path d="M10 13V9H6v4"/><path d="M6 3v3h5"/></svg>
+          {saving ? 'Lagrer…' : 'Lagre til Firebase'}
+        </button>
+        {saved && (
+          <span style={{ fontSize: 13, color: '#16a34a', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 500 }}>
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="2,8 6,12 14,4"/></svg>
+            Lagret! Endringer er aktive etter neste sideoppdatering.
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Shell ────────────────────────────────────────────────────────────────────
 
 const NAV_ICON: Record<Tab, React.ReactNode> = {
@@ -1968,6 +2055,7 @@ const NAV_ICON: Record<Tab, React.ReactNode> = {
   stedsnavn: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>,
   turer: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 21c-4-6 4-7 5-11 .8-3.2 5.5-2.8 3.5-7"/><circle cx="17" cy="3" r="1.4"/></svg>,
   kategorier: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.6"/><rect x="3" y="14" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/></svg>,
+  kartutseende: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2V6z"/><path d="M9 4v14M15 6v14"/></svg>,
   garder: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10l9-7 9 7"/><path d="M5 9v11h14V9"/><path d="M10 20v-6h4v6"/></svg>,
   tidslinje: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>,
   natur: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21Q4 13 12 3q8 10 0 18z"/><path d="M12 3q-2 9 0 18"/></svg>,
@@ -1981,6 +2069,7 @@ const NAV_GROUPS: { title: string; items: { key: Tab; label: string; sub: string
       { key: 'stedsnavn', label: 'Stedsnavn', sub: 'Navneoppslag med forklaringer' },
       { key: 'turer', label: 'Turer', sub: 'Turruter med lengde og beskrivelse' },
       { key: 'kategorier', label: 'Kategorier', sub: 'Farger, ikoner og filtergrupper' },
+      { key: 'kartutseende', label: 'Kartutseende', sub: 'Høydekurver og kartstil' },
     ],
   },
   {
@@ -2000,7 +2089,7 @@ const NAV_GROUPS: { title: string; items: { key: Tab; label: string; sub: string
 
 const SECTION_TITLE: Record<Tab, string> = {
   poi: 'Steder', stedsnavn: 'Stedsnavn', turer: 'Turer',
-  kategorier: 'Kategorier', garder: 'Gårder', tidslinje: 'Tidslinje', natur: 'Naturdata',
+  kategorier: 'Kategorier', kartutseende: 'Kartutseende', garder: 'Gårder', tidslinje: 'Tidslinje', natur: 'Naturdata',
 };
 
 function useIsNarrow(bp = 900): boolean {
@@ -2204,6 +2293,7 @@ export function AdminPage() {
             <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
               <div style={{ padding: '22px 24px 48px', maxWidth: 1100 }}>
                 {tab === 'kategorier' && <CategoryConfigTab />}
+                {tab === 'kartutseende' && <MapAppearanceTab />}
                 {tab === 'garder' && <GarderTab />}
                 {tab === 'tidslinje' && <TidslinjeTab />}
                 {tab === 'natur' && <NaturTab />}

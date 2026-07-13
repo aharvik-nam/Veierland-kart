@@ -102,6 +102,70 @@ export function elevationAt(lat: number, lng: number): number {
   return cellGround(DOM_GRID, row, col);
 }
 
+// ── Height contour lines ─────────────────────────────────────────────────────
+// Derives contour lines directly from the same DTM ground channel used for
+// sun/shelter/sea-level — no separate data source or download needed. Each
+// grid cell is split into two triangles (diagonal top-right→bottom-left) and
+// contoured with the standard triangle-interpolation method: an edge is
+// "crossed" when its two endpoint elevations straddle the threshold, and the
+// crossing point is a linear interpolation between them. Two triangles per
+// cell instead of a 16-case marching-squares table avoids the classic
+// saddle-point ambiguity entirely, at the cost of a very slightly coarser
+// diagonal bias — invisible at the 15 m cell size this grid uses.
+export interface ContourSet {
+  intervalM: number;
+  segments: [[number, number], [number, number]][]; // [lat,lng] pairs
+}
+
+function triangleCrossing(
+  va: { lat: number; lng: number; e: number },
+  vb: { lat: number; lng: number; e: number },
+  vc: { lat: number; lng: number; e: number },
+  level: number,
+): [[number, number], [number, number]] | null {
+  const pts: [number, number][] = [];
+  const edges: [typeof va, typeof va][] = [[va, vb], [vb, vc], [vc, va]];
+  for (const [p, q] of edges) {
+    const da = p.e - level, db = q.e - level;
+    if ((da > 0) === (db > 0)) continue; // both above or both below: no crossing
+    const t = da / (da - db);
+    pts.push([p.lat + (q.lat - p.lat) * t, p.lng + (q.lng - p.lng) * t]);
+  }
+  return pts.length === 2 ? [pts[0], pts[1]] : null;
+}
+
+// Skips any triangle touching a water/nodata cell (see WATER_LEVEL_M above)
+// so the shoreline doesn't read as a spurious 0 m contour band.
+export function computeContours(intervalM: number): ContourSet | null {
+  const g = DOM_GRID;
+  if (!g || intervalM <= 0) return null;
+
+  const segments: ContourSet['segments'] = [];
+  const node = (row: number, col: number) => {
+    const [lat, lng] = cellToLatLng(g, row, col);
+    return { lat, lng, e: cellGround(g, row, col) };
+  };
+
+  for (let r = 0; r < g.rows - 1; r++) {
+    for (let c = 0; c < g.cols - 1; c++) {
+      const tl = node(r, c), tr = node(r, c + 1), bl = node(r + 1, c), br = node(r + 1, c + 1);
+      if (tl.e <= WATER_LEVEL_M || tr.e <= WATER_LEVEL_M || bl.e <= WATER_LEVEL_M || br.e <= WATER_LEVEL_M) continue;
+      const cellMax = Math.max(tl.e, tr.e, bl.e, br.e);
+      const cellMin = Math.min(tl.e, tr.e, bl.e, br.e);
+      const firstLevel = Math.ceil(cellMin / intervalM) * intervalM;
+      for (let level = firstLevel; level <= cellMax; level += intervalM) {
+        if (level <= 0) continue;
+        const s1 = triangleCrossing(tl, tr, bl, level);
+        if (s1) segments.push(s1);
+        const s2 = triangleCrossing(tr, br, bl, level);
+        if (s2) segments.push(s2);
+      }
+    }
+  }
+
+  return { intervalM, segments };
+}
+
 // Max horizon angle (degrees) seen from a cell toward a bearing (deg from
 // north, clockwise), sampled out to maxDist metres. This is what decides both
 // "is the sun blocked" and "is there something upwind giving shelter".

@@ -8,6 +8,7 @@ import 'leaflet.markercluster';
 import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, WikipediaData } from '../lib/types';
 import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages, fetchWikipediaSpecies } from '../lib/api';
 import { loadCatCfg, DEFAULT_CAT_CFG, CatCfgMap } from '../lib/catcfg';
+import { loadMapAppearance, DEFAULT_MAP_APPEARANCE, MapAppearance } from '../lib/mapsettings';
 import { NATURE_GROUPS, NatureObs, GBIF_POLYGON, STATIC_NATURE_CACHE, loadNatureObs, applyAssessments } from '../lib/naturedata';
 import { ARTS_KATEGORIER, ArtsKategori, CuratedArt, artsgruppeMeta } from '../lib/artscategories';
 import { loadFarmData, DEFAULT_FARM_DATA, Farm } from '../lib/farmdata';
@@ -16,7 +17,7 @@ import { ICONS } from '../lib/icons';
 import floodData from '../data/sea_level_flood.geojson';
 import { fetchFerryDepartures, fetchQuaySailings, nearestQuay, FerryBoard, FERRY_QUAYS, fmtDepTime, minsUntil } from '../lib/ferrydata';
 import {
-  hasDomGrid, sunPosition, sunlitAt, shelterAt,
+  hasDomGrid, sunPosition, sunlitAt, shelterAt, computeContours,
   makeSunShadowOverlay, makeShelterOverlay, makeEffectiveTempOverlay, makeBestSpotsOverlay, BestSpotsInfo,
   fetchWeatherNow, fetchWeatherSeries, fetchSeaTemp, WeatherNow, WeatherPoint, windDirLabel, weatherIconKind, WeatherIconKind,
   windColor, ORKAN_MS, effectiveTemp, effectiveTempColor,
@@ -806,6 +807,16 @@ export function VeierlandApp() {
   // Dynamic category config (loaded from Firestore, falls back to defaults)
   const [catCfg, setCatCfg] = useState<CatCfgMap>(DEFAULT_CAT_CFG);
 
+  // Map appearance (height contours, admin-editable) — loaded from Firestore,
+  // falls back to defaults. Contours are recomputed from the same DTM ground
+  // channel the sun/shelter/sea-level features already use (see
+  // computeContours in conditions.ts) — no separate data source needed.
+  const [mapAppearance, setMapAppearance] = useState<MapAppearance>(DEFAULT_MAP_APPEARANCE);
+  const contourSet = useMemo(
+    () => hasDomGrid ? computeContours(mapAppearance.contourIntervalM) : null,
+    [mapAppearance.contourIntervalM]
+  );
+
   // Farm data (loaded from Firestore, falls back to veierland_history.json values)
   const [farmData, setFarmData] = useState<Farm[]>(DEFAULT_FARM_DATA);
 
@@ -994,6 +1005,7 @@ export function VeierlandApp() {
     loadAllPOIs().then(setAllPOIs);
     loadTurkartGeoJSON().then(geo => setTrails(trailsFromGeoJSON(geo)));
     loadCatCfg().then(setCatCfg);
+    loadMapAppearance().then(setMapAppearance);
     loadFarmData().then(setFarmData);
     loadTimelineSections().then(sections => {
       setTimelineSections(sections);
@@ -3303,6 +3315,7 @@ export function VeierlandApp() {
         maxBoundsViscosity={1.0}
         zoomControl={false}
         attributionControl
+        preferCanvas
         style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
       >
         <MapSetup onReady={onMapReady} onMapClick={onMapClick} onZoom={onZoom} onDragStart={onMapDragStart} />
@@ -3465,6 +3478,17 @@ export function VeierlandApp() {
               interactive={false}
             />
           </>
+        )}
+        {mapAppearance.contoursEnabled && contourSet && mapZoom >= mapAppearance.contourMinZoom && contourSet.segments.length > 0 && (
+          <Polyline
+            positions={contourSet.segments}
+            pathOptions={{
+              color: mapAppearance.contourColor,
+              weight: mapAppearance.contourWeight,
+              opacity: mapAppearance.contourOpacity,
+            }}
+            interactive={false}
+          />
         )}
       </MapContainer>
 
