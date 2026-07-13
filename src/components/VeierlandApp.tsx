@@ -934,6 +934,9 @@ export function VeierlandApp() {
 
   const [mapReady, setMapReady] = useState(false);
   const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
+  // Activity-mode pins (the big always-labeled ones) bypass clustering
+  // entirely — see the marker-building effect below for why.
+  const activityLayerRef = useRef<L.LayerGroup | null>(null);
 
   // Fresh activation of Forhold always starts at "now", not wherever the
   // user last scrubbed to.
@@ -1066,8 +1069,9 @@ export function VeierlandApp() {
     const map = mapRef.current;
     if (!map || !mapReady) return;
 
-    // Remove existing group
+    // Remove existing groups
     if (clusterRef.current) { map.removeLayer(clusterRef.current); clusterRef.current = null; }
+    if (activityLayerRef.current) { map.removeLayer(activityLayerRef.current); activityLayerRef.current = null; }
     if (mode === 'nature' || mode === 'history') return;
 
     const cg = L.markerClusterGroup({
@@ -1115,6 +1119,13 @@ export function VeierlandApp() {
     // enough — no separate query needed.
     const activityMatches = activityTile ? new Set(filteredPOIs.map(p => p.id)) : null;
     const activityPOIs = activityTile ? allPOIs : filteredPOIs;
+    // Matching activity pins (the big always-labeled ones) go on a plain,
+    // unclustered layer — clustering would merge nearby matches into a
+    // number bubble at low zoom, hiding exactly the pins the user just
+    // asked to see (e.g. "Bade" from the welcome screen with several
+    // beaches close together). Non-matching background pins still cluster
+    // normally since they're just dimmed context, not the point of the view.
+    const directLayer = activityTile ? L.layerGroup() : null;
 
     activityPOIs.forEach(poi => {
       const cat = getCat(poi.kategori);
@@ -1151,13 +1162,19 @@ export function VeierlandApp() {
       }
       const half = Math.round(pinSz / 2);
       const icon = L.divIcon({ className: '', iconSize: [pinSz, pinSz], iconAnchor: [half, half], html });
-      L.marker(poi.coordinates as [number, number], { icon, zIndexOffset: sel ? 1000 : 0 }).on('click', () => selectPOI(poi)).addTo(cg);
+      const marker = L.marker(poi.coordinates as [number, number], { icon, zIndexOffset: sel ? 1000 : 0 }).on('click', () => selectPOI(poi));
+      marker.addTo(activityTile && matchesActivity ? directLayer! : cg);
     });
 
     map.addLayer(cg);
     clusterRef.current = cg;
+    if (directLayer) { map.addLayer(directLayer); activityLayerRef.current = directLayer; }
 
-    return () => { if (map) map.removeLayer(cg); };
+    return () => {
+      if (!map) return;
+      map.removeLayer(cg);
+      if (directLayer) map.removeLayer(directLayer);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapReady, mode, filteredPOIs, allPOIs, selectedPOI?.id, view, mapZoom, selectedTrail, trailPoiFilter, tab, activityTile, searchQ]);
 
