@@ -3252,6 +3252,20 @@ export function VeierlandApp() {
         })}
       </div>
 
+      {/* Desktop-only zoom in/out — with the mobile tab bar gone there was no
+          visible zoom affordance at all on desktop (scroll-to-zoom works but
+          isn't discoverable without a trackpad), and the top-right of the
+          map is otherwise empty now that the top bar caps its width. Hidden
+          on mobile via CSS — pinch/the rail cover that there. */}
+      <div className="vl-zoomctl">
+        <button onClick={() => mapRef.current?.zoomIn()} aria-label={lang === 'no' ? 'Zoom inn' : 'Zoom in'} title={lang === 'no' ? 'Zoom inn' : 'Zoom in'}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button onClick={() => mapRef.current?.zoomOut()} aria-label={lang === 'no' ? 'Zoom ut' : 'Zoom out'} title={lang === 'no' ? 'Zoom ut' : 'Zoom out'}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M5 12h14"/></svg>
+        </button>
+      </div>
+
       {/* Right rail */}
       <div className="vl-rail" style={{ bottom: railBottom }}>
         <button

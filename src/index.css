@@ -665,6 +665,9 @@ body { display: grid; place-items: center; }
   color: var(--muted); display: flex; align-items: center;
 }
 
+/* ── Desktop-only zoom control (see JSX comment for why) ─────────────────────── */
+.vl-zoomctl { display: none; }
+
 /* ── Right rail ─────────────────────────────────────────────────────────────── */
 .vl-rail {
   position: absolute; right: var(--pad); z-index: 500;
@@ -1310,6 +1313,32 @@ body { display: grid; place-items: center; }
      popups) to the bottom of the map instead of tracking the sheet height. */
   .vl-rail { bottom: 18px !important; }
   .vl-pop { bottom: 76px !important; }
+
+  /* A hidden scrollbar makes sense on mobile (momentum scroll, no mouse) but
+     removes an expected desktop affordance — a visible list of 30+ places
+     with no scrollbar reads as "this might be everything", not "scroll for
+     more". Slim, unobtrusive, only appears on the desktop sidebar. */
+  .vl-body { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+  .vl-body::-webkit-scrollbar { display: block; width: 7px; }
+  .vl-body::-webkit-scrollbar-track { background: transparent; }
+  .vl-body::-webkit-scrollbar-thumb { background: var(--line); border-radius: 8px; }
+  .vl-body::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  /* Zoom in/out — see the JSX comment on .vl-zoomctl for why desktop needs
+     this when the mobile tab bar (and its implicit "there are controls
+     here" framing) is gone. Sits top-right, where the now-compact top bar
+     leaves the map genuinely empty. */
+  .vl-zoomctl {
+    display: flex; flex-direction: column;
+    position: absolute; top: 14px; right: var(--pad); z-index: 500;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+    box-shadow: 0 2px 10px rgba(28,38,30,.12); overflow: hidden;
+  }
+  .vl-zoomctl button {
+    width: 40px; height: 38px; display: grid; place-items: center;
+    border: none; background: none; color: var(--ink); cursor: pointer; font: inherit;
+  }
+  .vl-zoomctl button:first-child { border-bottom: 1px solid var(--line); }
 }
 
 /* ── Pointer-device hover states ─────────────────────────────────────────────
@@ -1325,4 +1354,8 @@ body { display: grid; place-items: center; }
   .vl-dock-tile-sm:hover { background: var(--card2); }
   .vl-menubtn:hover, .vl-ferrytext-btn:hover { background: var(--card2); }
   .vl-dock-row:hover { background: var(--card2); }
+  .vl-rbtn:hover { background: var(--card2); }
+  .vl-cond-tabs button:not(.on):hover { background: var(--card2); }
+  .vl-condhours button:not(.on):hover { background: var(--card2); }
+  .vl-zoomctl button:hover { background: var(--card2); }
 }
