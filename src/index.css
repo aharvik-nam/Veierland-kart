@@ -406,7 +406,10 @@ body { display: grid; place-items: center; }
    the ring — bold departure time + small uppercase "FERJE OM X MIN" caption. */
 .vl-ferrytext-btn {
   flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end;
-  border: none; background: none; padding: 0; cursor: pointer; text-align: right;
+  border: none; background: none; cursor: pointer; text-align: right;
+  /* Padding + matching negative margin so a hover background (desktop) has
+     room to breathe without nudging the button's actual layout position. */
+  padding: 6px 8px; margin: -6px -8px; border-radius: 10px;
 }
 .vl-ferrytext-btn .time { font-size: 15px; font-weight: 800; color: var(--accent); line-height: 1.1; }
 .vl-ferrytext-btn.on .time { color: var(--ink); }
@@ -721,6 +724,7 @@ body { display: grid; place-items: center; }
   display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
 }
 .vl-tabbar-desktop { display: none; }
+.vl-sidebar-brand { display: none; }
 .vl-tabbtn {
   border: none; background: transparent; font: inherit; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -1244,19 +1248,57 @@ body { display: grid; place-items: center; }
     height: 100dvh !important;
     border-radius: 0 !important; border-top: none;
     border-right: 1px solid var(--line);
+    /* A flat border reads as a leftover mobile panel bolted onto a desktop
+       screen — a soft shadow on the map-facing edge gives the sidebar real
+       depth, matching the floating glass treatment used on the top bar/dock. */
+    box-shadow: 3px 0 24px rgba(28,38,30,.06);
     transition: none !important;
     bottom: auto !important;
   }
   .vl-sheet.closed { transform: none !important; opacity: 1 !important; pointer-events: auto !important; }
   .vl-grab { display: none; }
   .vl-body { padding: 22px 24px 28px; }
-  .vl-tabbar-desktop {
-    display: grid; border-top: none; border-bottom: 1px solid var(--line);
-    padding: 10px 10px 4px;
+
+  /* Desktop-only brand header above the tab list — see the JSX comment for why. */
+  .vl-sidebar-brand {
+    display: flex; align-items: center; gap: 10px;
+    padding: 18px 16px 12px;
   }
-  .vl-tabbtn.on::before { display: none; }
-  .vl-tabbtn.on { background: var(--card2); border-radius: 10px; }
+  .vl-sidebar-brand-ic {
+    width: 30px; height: 30px; border-radius: 9px; flex: 0 0 auto;
+    background: var(--accent); display: grid; place-items: center;
+  }
+  .vl-sidebar-brand-name {
+    font-family: 'Newsreader', Georgia, serif; font-size: 18px; font-weight: 600;
+    letter-spacing: -.01em; color: var(--ink);
+  }
+
+  /* The tab list reads as a proper desktop sidebar nav (icon + label in a
+     row, one per line) instead of the mobile bottom-bar's tiny stacked
+     icon-over-9.5px-label columns. */
+  .vl-tabbar-desktop {
+    display: flex; flex-direction: column; gap: 1px;
+    border-top: none; border-bottom: 1px solid var(--line);
+    padding: 2px 10px 12px;
+  }
+  .vl-tabbar-desktop .vl-tabbtn {
+    flex-direction: row; justify-content: flex-start; gap: 11px;
+    width: 100%; padding: 9px 10px; border-radius: 10px;
+    transition: background .12s;
+  }
+  .vl-tabbar-desktop .vl-tabbtn svg { width: 19px; height: 19px; }
+  .vl-tabbar-desktop .vl-tabbtn span { font-size: 13.5px; }
+  .vl-tabbar-desktop .vl-tabbtn.on::before { display: none; }
+  .vl-tabbar-desktop .vl-tabbtn.on { background: color-mix(in srgb, var(--accent) 13%, transparent); border-radius: 10px; }
+  .vl-tabbar-desktop .vl-tabbadge { position: static; margin-left: auto; flex: 0 0 auto; }
   .vl-minicard { display: none; }
+
+  /* The glass top bar is sized (and centered) for a phone-width map — on a
+     desktop-wide map area, stretching it edge to edge left a huge stripe of
+     empty space between the weather text and the ferry button. Capping the
+     width keeps it a compact floating pill near the sidebar instead. */
+  .vl-topbar2 { right: auto; min-width: 340px; max-width: 480px; }
+
   /* The dock still works on desktop as a quick map-filter shortcut — the
      sidebar already shows the full place list at all times regardless
      (unaffected by activityTile), so this is additive, not a replacement.
@@ -1268,4 +1310,19 @@ body { display: grid; place-items: center; }
      popups) to the bottom of the map instead of tracking the sheet height. */
   .vl-rail { bottom: 18px !important; }
   .vl-pop { bottom: 76px !important; }
+}
+
+/* ── Pointer-device hover states ─────────────────────────────────────────────
+   Gated on (hover: hover) rather than a width breakpoint — a touchscreen
+   laptop at desktop width shouldn't get a sticky :hover state, but a mouse
+   user at any width should. None of this existed before; taps only had
+   an :active state, which a mouse pointer never triggers on hover-in. */
+@media (hover: hover) {
+  .vl-poi-zone:hover { background: var(--card2); }
+  .vl-poi-arr:hover { background: var(--card2); border-color: var(--muted); }
+  .vl-tabbar-desktop .vl-tabbtn:not(.on):hover { background: var(--card2); }
+  .vl-dock-tile:hover { border-color: var(--muted); box-shadow: 0 3px 10px rgba(28,38,30,.08); }
+  .vl-dock-tile-sm:hover { background: var(--card2); }
+  .vl-menubtn:hover, .vl-ferrytext-btn:hover { background: var(--card2); }
+  .vl-dock-row:hover { background: var(--card2); }
 }

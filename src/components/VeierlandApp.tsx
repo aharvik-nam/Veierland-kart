@@ -3659,6 +3659,19 @@ export function VeierlandApp() {
         style={{ height: sheetCurrentH + 'px', transition: isDraggingSheet ? 'none' : undefined }}
         onClick={() => setShowLayerPop(false)}
       >
+        {/* Desktop-only sidebar branding — the sidebar otherwise starts cold
+            with mobile-style tab icons and no sense of "this is Veierland",
+            unlike the admin shell which already has this. Hidden on mobile
+            via CSS (the tab bar there is the bottom nav, not a sidebar). */}
+        <div className="vl-sidebar-brand">
+          <span className="vl-sidebar-brand-ic">
+            <svg viewBox="0 0 16 16" width="17" height="17" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 1C5.2 1 3 3.2 3 6c0 3.8 5 9 5 9s5-5.2 5-9c0-2.8-2.2-5-5-5z"/>
+              <circle cx="8" cy="6" r="1.5"/>
+            </svg>
+          </span>
+          <span className="vl-sidebar-brand-name">Veierland</span>
+        </div>
         {/* Same tab bar, repositioned to the top of the sidebar on desktop */}
         <nav className="vl-tabbar vl-tabbar-desktop">
           <button className={`vl-tabbtn${tab === 'map' ? ' on' : ''}`} onClick={() => selectTab('map')}>
