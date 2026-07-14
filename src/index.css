@@ -642,11 +642,14 @@ body { display: grid; place-items: center; }
 }
 
 /* ── Panel: search input ─────────────────────────────────────────────────────── */
+/* Sticky — search was the first thing to scroll out of view in a long list,
+   which buries the one control most useful while scrolling ("find X"). */
 .vl-panel-search {
   display: flex; align-items: center; gap: 9px;
   padding: 8px 12px; border-radius: var(--r);
   background: var(--card2); border: 1px solid var(--line);
   margin-bottom: 6px;
+  position: sticky; top: 0; z-index: 6;
 }
 .vl-panel-search svg { color: var(--muted); flex: 0 0 auto; }
 .vl-panel-search input {
