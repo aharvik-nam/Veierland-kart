@@ -2039,22 +2039,26 @@ export function VeierlandApp() {
   function renderBrowse() {
     return (
       <>
-        {/* Filter chips — icon-only, expand to a labeled pill when active */}
+        {/* One consistent filter chip type — always-visible label + a small
+            colored dot, whether the chip represents a whole group ("Praktisk")
+            or a single category. Previously groups and individual categories
+            rendered as two visually different chip styles side by side
+            (labeled pills vs. icon-only pills that only grew a label once
+            active) — a single glance couldn't tell which chips were groups
+            of things and which were one specific thing. */}
         {mode === 'places' && (
           <div className="vl-chips vl-panel-chips">
             <div className={`vl-chip lbl${activeCats.size === 0 ? ' on' : ''}`} onClick={() => setActiveCats(new Set())} title={T.all}>
-              <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('all') }} />
               <span className="cl">{T.all}</span>
             </div>
             {[...catGroups.entries()].map(([groupName, groupCats]) => {
               const on = groupCats.some(k => activeCats.has(k));
               const groupColor = (catCfg as Record<string, {color?: string}>)[groupCats[0]]?.color ?? 'var(--muted)';
               return (
-                /* Group chips keep their label — the borrowed first-category icon
-                   alone reads as the wrong thing (a wave for "Praktisk") */
                 <div key={groupName} className={`vl-chip lbl${on ? ' on' : ''}`}
                   style={{ '--chip-color': groupColor } as React.CSSProperties}
                   onClick={() => toggleGroup(groupCats)} title={groupName}>
+                  <span className="cd" />
                   <span className="cl">{groupName}</span>
                 </div>
               );
@@ -2063,10 +2067,10 @@ export function VeierlandApp() {
               const cat = getCat(k);
               const on = activeCats.has(k);
               return (
-                <div key={k} className={`vl-chip${on ? ' on' : ''}`}
+                <div key={k} className={`vl-chip lbl${on ? ' on' : ''}`}
                   style={{ '--chip-color': cat.color } as React.CSSProperties}
                   onClick={() => toggleCat(k)} title={lang === 'no' ? cat.no : cat.en}>
-                  <span className="ci" style={{ color: on ? undefined : cat.color }} dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
+                  <span className="cd" />
                   <span className="cl">{lang === 'no' ? cat.no : cat.en}</span>
                 </div>
               );

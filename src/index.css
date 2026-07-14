@@ -788,7 +788,14 @@ body { display: grid; place-items: center; }
 .vl-minicard .ab.on { background: color-mix(in srgb, var(--accent) 14%, #fff); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, #fff); }
 .vl-minicard .ab:active { transform: scale(.94); }
 
-/* ── Compact icon-only filter chips (Steder categories, Natur groups) ────────── */
+/* ── Filter chips (Steder categories/groups, Natur groups) ───────────────────
+   Every chip in the Steder filter row now carries .lbl and always shows its
+   label with a small colored dot — group chips ("Praktisk") and individual
+   category chips used to be two visually different chip styles (labeled
+   pills vs. icon-only pills that only grew a label once active), which read
+   as two different filter systems stacked in one row. The base (non-.lbl)
+   collapsed/icon-only behavior below still exists for other chip usages
+   (e.g. Natur's group filter) that intentionally stay compact. */
 .vl-panel-chips .vl-chip {
   padding: 0; width: 38px; justify-content: center; gap: 0;
 }
@@ -800,8 +807,6 @@ body { display: grid; place-items: center; }
   width: auto; padding: 0 14px 0 12px; gap: 7px;
 }
 .vl-panel-chips .vl-chip.on .cl { max-width: 160px; opacity: 1; }
-/* .lbl chips always show their label (e.g. "Alle" and category groups, where
-   an inherited icon alone would be misleading) */
 .vl-panel-chips .vl-chip.lbl { width: auto; padding: 0 14px; gap: 7px; }
 .vl-panel-chips .vl-chip.lbl .cl { max-width: none; opacity: 1; }
 
