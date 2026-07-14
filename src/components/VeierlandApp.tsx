@@ -2097,13 +2097,20 @@ export function VeierlandApp() {
 
         {mode === 'places' ? (
           <>
-            {/* Place-name lookups (66 of ~98 entries) would drown the real count */}
-            <div className="vl-count">{(() => {
-              const sn = filteredPOIs.filter(p => p.kategori === 'stedsnavn').length;
-              const main = filteredPOIs.length - sn;
-              if (!filteredPOIs.length) return T.nohit;
-              return T.np(main) + (sn ? ` · ${sn} ${lang === 'no' ? 'stedsnavn' : 'place names'}` : '');
-            })()}</div>
+            {/* Place-name lookups (66 of ~98 entries) would drown the real count.
+                Only shown once the user is actually searching/filtering, where
+                a count is useful feedback ("3 treff") — as a raw baseline
+                ("40 steder · 61 stedsnavn") on the very first view it was just
+                noise before any real content, and the per-category badges
+                below already communicate volume. */}
+            {(searchQ || activeCats.size > 0) && (
+              <div className="vl-count">{(() => {
+                const sn = filteredPOIs.filter(p => p.kategori === 'stedsnavn').length;
+                const main = filteredPOIs.length - sn;
+                if (!filteredPOIs.length) return T.nohit;
+                return T.np(main) + (sn ? ` · ${sn} ${lang === 'no' ? 'stedsnavn' : 'place names'}` : '');
+              })()}</div>
+            )}
             {filteredPOIs.length === 0 && (searchQ || activeCats.size > 0) && (
               <div className="vl-empty">
                 <p>{lang === 'no' ? 'Ingen steder passer søket ditt.' : 'No places match your search.'}</p>
@@ -2799,17 +2806,17 @@ export function VeierlandApp() {
                 </button>
               </div>
               <div className="vl-welcome-info">
-                <button className="chip" onClick={() => { dismissWelcome(); toggleFerryPop(); }}>
-                  <span className="k">{nextFromIsland ? `${lang === 'no' ? 'Neste ferje' : 'Next ferry'} ${fmtDepTime(nextFromIsland.time)}` : (lang === 'no' ? 'Fergetider' : 'Ferry times')}</span>
-                  {nextFromIsland && <span className="v">{lang === 'no' ? `om ${minsUntil(nextFromIsland.time)} min` : `in ${minsUntil(nextFromIsland.time)} min`}</span>}
-                </button>
-                <button className="chip" onClick={() => { dismissWelcome(); if (hasDomGrid) setCondLayer('best'); }}>
+                <button className="half" onClick={() => { dismissWelcome(); if (hasDomGrid) setCondLayer('best'); }}>
                   <span className="k">
                     {weatherNow
                       ? `${Math.round(weatherNow.airTemp)}° ${lang === 'no' ? 'og' : 'and'} ${weatherKindLabel(weatherIconKind(weatherNow.symbolCode), lang).toLowerCase()}`
                       : (lang === 'no' ? 'Henter vær…' : 'Loading weather…')}
                   </span>
                   <span className="v">{lang === 'no' ? 'Forhold på kartet' : 'Conditions on the map'}</span>
+                </button>
+                <button className="half" onClick={() => { dismissWelcome(); toggleFerryPop(); }}>
+                  <span className="k">{nextFromIsland ? `${lang === 'no' ? 'Neste ferje' : 'Next ferry'} ${fmtDepTime(nextFromIsland.time)}` : (lang === 'no' ? 'Fergetider' : 'Ferry times')}</span>
+                  {nextFromIsland && <span className="v">{lang === 'no' ? `om ${minsUntil(nextFromIsland.time)} min` : `in ${minsUntil(nextFromIsland.time)} min`}</span>}
                 </button>
               </div>
               <button className="vl-welcome-dismiss" onClick={dismissWelcome}>
@@ -3218,6 +3225,33 @@ export function VeierlandApp() {
         style={{ bottom: railBottom }}
         onClick={e => e.stopPropagation()}
       >
+        {/* Mobile-only: Min posisjon + Forhold fold into this same popover
+            instead of their own rail buttons, so the mobile map screen has
+            one floating "map tools" entry point instead of three separate
+            icon buttons competing for thumb space. Desktop keeps its own
+            separate rail buttons (see .vl-rbtn.posisjon/.forhold CSS) since
+            there's room and no need to consolidate there. */}
+        <div className="vl-pop-mobileonly">
+          <div className={`vl-opt${locating ? ' on' : ''}`} onClick={() => { locate(); setShowLayerPop(false); }}>
+            <span className="sw vl-opt-ic" style={{ color: 'var(--ink)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3.4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>
+              </svg>
+            </span>
+            <span className="nm">{lang === 'no' ? (locating ? 'Stopp sporing' : 'Min posisjon') : (locating ? 'Stop tracking' : 'My location')}</span>
+            <span className="chk">{locating && <CheckSvg />}</span>
+          </div>
+          {hasDomGrid && (
+            <div className={`vl-opt${condLayer ? ' on' : ''}`} onClick={() => { setCondLayer(c => c ? null : 'best'); setShowLayerPop(false); }}>
+              <span className="sw vl-opt-ic" style={{ color: 'var(--ink)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/></svg>
+              </span>
+              <span className="nm">{lang === 'no' ? 'Forhold nå' : 'Conditions now'}</span>
+              <span className="chk">{condLayer && <CheckSvg />}</span>
+            </div>
+          )}
+          <div className="vl-pop-sep" />
+        </div>
         <h5>{T.layers}</h5>
         {LAYER_ORDER.map(k => {
           const cfg = LAYERS[k];
@@ -3277,10 +3311,10 @@ export function VeierlandApp() {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>
           </svg>
-          <span className="rl">{lang === 'no' ? 'Kartlag' : 'Layers'}</span>
+          <span className="rl">{isDesktopView() ? (lang === 'no' ? 'Kartlag' : 'Layers') : (lang === 'no' ? 'Kart' : 'Map')}</span>
         </button>
         <button
-          className={`vl-rbtn${locating ? ' active' : ''}`}
+          className={`vl-rbtn posisjon${locating ? ' active' : ''}`}
           aria-label="Min posisjon"
           title={lang === 'no' ? (locating ? 'Stopp sporing' : 'Min posisjon') : (locating ? 'Stop tracking' : 'My location')}
           onClick={locate}
@@ -3293,7 +3327,7 @@ export function VeierlandApp() {
         </button>
         {hasDomGrid && (
           <button
-            className={`vl-rbtn${condLayer ? ' active' : ''}`}
+            className={`vl-rbtn forhold${condLayer ? ' active' : ''}`}
             aria-label={lang === 'no' ? 'Forhold nå (beste steder, sol, vind, temperatur)' : 'Conditions now (best spots, sun, wind, temperature)'}
             title={lang === 'no' ? 'Forhold nå' : 'Conditions now'}
             onClick={e => { e.stopPropagation(); setCondLayer(c => c ? null : 'best'); }}

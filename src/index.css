@@ -686,6 +686,13 @@ body { display: grid; place-items: center; }
 .vl-rbtn .rl { font-size: 9px; font-weight: 600; color: var(--muted); letter-spacing: .01em; }
 .vl-rbtn.active .rl { color: inherit; }
 .vl-rbtn:active { transform: scale(.94); }
+/* Mobile: Min posisjon + Forhold fold into the map-tools popover (see
+   .vl-pop-mobileonly) instead of their own rail buttons — one floating
+   button instead of three competing for thumb space. Desktop has room to
+   keep them separate and visible at all times. */
+@media (max-width: 899px) {
+  .vl-rbtn.posisjon, .vl-rbtn.forhold { display: none; }
+}
 
 /* (The old Forhold submenu popover is gone — tapping Forhold now goes
    straight to the combined "Beste steder" view; the legend card's own
@@ -714,6 +721,14 @@ body { display: grid; place-items: center; }
 .vl-opt .sw { width: 38px; height: 38px; border-radius: calc(var(--r) - 5px); flex: 0 0 auto; border: 1px solid var(--line); }
 .vl-opt .nm { flex: 1; font-size: 15px; font-weight: 600; }
 .vl-opt .chk { color: var(--accent); opacity: 0; flex: 0 0 auto; }
+/* Action rows (Min posisjon / Forhold nå) folded into the mobile map-tools
+   popover share .vl-opt's row layout but need an icon glyph instead of a
+   plain color swatch. */
+.vl-opt-ic { background: var(--card2); display: flex; align-items: center; justify-content: center; }
+/* Hidden on desktop — Min posisjon/Forhold stay their own rail buttons there
+   (see .vl-rbtn.posisjon/.forhold below), so showing them here too would be
+   a confusing duplicate control. */
+@media (min-width: 900px) { .vl-pop-mobileonly { display: none; } }
 .vl-opt.on .chk { opacity: 1; }
 .vl-pop-sep { margin: 6px 8px; border: none; border-top: 1px solid var(--line); }
 .vl-pop-sub { margin: 4px 8px 3px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
@@ -919,17 +934,23 @@ body { display: grid; place-items: center; }
 .vl-welcome-card .ic svg { width: 19px; height: 19px; }
 .vl-welcome-card .t { font-size: 12.5px; font-weight: 700; color: var(--ink); }
 .vl-welcome-card .sub { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
-.vl-welcome-info { display: flex; gap: 8px; margin-bottom: 20px; }
-.vl-welcome-info .chip {
-  flex: 1; min-width: 0; text-align: left; background: var(--card2);
-  border: 1px solid var(--line); border-radius: 12px; padding: 9px 12px;
-  cursor: pointer; font: inherit;
+/* One combined status row (weather | ferry) instead of two separate chip
+   boxes — same information, half the visual weight competing with the
+   three action cards above. */
+.vl-welcome-info {
+  display: flex; margin-bottom: 20px; background: var(--card2);
+  border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
 }
-.vl-welcome-info .chip .k {
+.vl-welcome-info .half {
+  flex: 1; min-width: 0; text-align: left; background: none; border: none;
+  padding: 9px 12px; cursor: pointer; font: inherit;
+}
+.vl-welcome-info .half + .half { border-left: 1px solid var(--line); }
+.vl-welcome-info .half .k {
   display: block; font-size: 12px; font-weight: 700; color: var(--ink);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.vl-welcome-info .chip .v { display: block; font-size: 10.5px; color: var(--muted); margin-top: 1px; }
+.vl-welcome-info .half .v { display: block; font-size: 10.5px; color: var(--muted); margin-top: 1px; }
 .vl-welcome-dismiss {
   text-align: center; font-size: 13.5px; font-weight: 700; color: var(--accent);
   background: none; border: none; cursor: pointer; font: inherit; padding: 0;
