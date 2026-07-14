@@ -15,6 +15,24 @@ export const NATURE_GROUPS = {
 
 export type NatureGroup = keyof typeof NATURE_GROUPS;
 
+export const RED_LIST_CATS = /^(NT|VU|EN|CR|RE|DD)$/;
+// Fremmedartslista risk codes (LO/PH/HI/SE) — curated `kategori` values that
+// mark a species as alien rather than red-listed.
+export const ALIEN_CATS = /^(LO|PH|HI|SE)$/;
+
+export const RL_LABEL: Record<string, string> = {
+  NT: 'Nær truet (NT)', VU: 'Sårbar (VU)', EN: 'Sterkt truet (EN)',
+  CR: 'Kritisk truet (CR)', RE: 'Regionalt utdødd (RE)', DD: 'Datamangel (DD)',
+};
+export const RL_DESC: Record<string, string> = {
+  NT: 'Arten er nær å oppfylle kriteriene for en truet kategori, og kan bli sårbar dersom negative faktorer fortsetter.',
+  VU: 'Arten har høy risiko for å dø ut fra Norge i nær fremtid dersom påvirkningsfaktorene ikke reduseres.',
+  EN: 'Arten har svært høy risiko for å dø ut fra Norge og er strengt truet av negative påvirkninger.',
+  CR: 'Arten er kritisk truet og har ekstremt høy risiko for å dø ut fra Norge i nær fremtid.',
+  RE: 'Arten er trolig utdødd som reproduserende bestand i Norge.',
+  DD: 'Det finnes ikke nok data til å vurdere artens risiko for utdøing i Norge.',
+};
+
 export interface NatureObs {
   scientificName: string;
   popularName: string;

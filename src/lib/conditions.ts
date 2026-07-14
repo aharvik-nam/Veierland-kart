@@ -804,6 +804,22 @@ export function weatherIconKind(symbolCode: string): WeatherIconKind {
   return 'clear';
 }
 
+// One-word human read of the sky, for the welcome overlay's weather chip
+// ("18° og Fint turvær") — weatherIconKind() only gives the icon bucket.
+export function weatherKindLabel(kind: WeatherIconKind, lang: 'no' | 'en'): string {
+  const labels: Record<WeatherIconKind, [string, string]> = {
+    clear: ['Fint turvær', 'Clear skies'],
+    partly: ['Lettskyet', 'Partly cloudy'],
+    cloudy: ['Skyet', 'Cloudy'],
+    fog: ['Tåke', 'Foggy'],
+    rain: ['Regn', 'Rain'],
+    sleet: ['Sludd', 'Sleet'],
+    snow: ['Snø', 'Snow'],
+    thunder: ['Torden', 'Thunder'],
+  };
+  return labels[kind][lang === 'no' ? 0 : 1];
+}
+
 // Compass direction label for a "wind from" bearing
 export function windDirLabel(deg: number, lang: 'no' | 'en'): string {
   const no = ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV'];

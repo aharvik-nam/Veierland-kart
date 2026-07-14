@@ -55,3 +55,47 @@ export async function loadTurkartGeoJSON(): Promise<GeoCollection> {
 }
 
 export { poiFallback, stedsnavnFallback, turkartFallback };
+
+// ─── Trail data ───────────────────────────────────────────────────────────────
+
+export interface TrailMode {
+  mode: 'gaa' | 'lop' | 'sykkel';
+  tid: string;
+}
+
+export interface Trail {
+  id: string;
+  name: string;
+  en: string;
+  km: string;
+  time: string;
+  diff: string;
+  climb?: string;
+  profile?: [number, number][];
+  minEl?: number;
+  maxEl?: number;
+  modes?: TrailMode[];
+  no: string;
+  enT: string;
+  path: [number, number][];
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function trailsFromGeoJSON(geo: any): Trail[] {
+  return (geo as any).features.map((f: any) => ({
+    id: f.properties.id,
+    name: f.properties.navn,
+    en: f.properties.en,
+    km: f.properties.km,
+    time: f.properties.tid,
+    diff: f.properties.vanskelighet,
+    climb: f.properties.stigning,
+    profile: f.properties.hoydeprofil,
+    minEl: f.properties.minHoyde,
+    maxEl: f.properties.maxHoyde,
+    modes: f.properties.transportmodi,
+    no: f.properties.no,
+    enT: f.properties.enT,
+    path: f.geometry.coordinates.map((c: number[]) => [c[1], c[0]] as [number, number]),
+  }));
+}
