@@ -864,7 +864,30 @@ function TrailEditor({ feature, onChange, onDelete, onOpenBuilder }: {
       <Field label="Navn (norsk)"><input style={S.input} value={p.navn ?? ''} onChange={e => setP('navn', e.target.value)} /></Field>
       <Field label="Navn (engelsk)"><input style={S.input} value={p.en ?? ''} onChange={e => setP('en', e.target.value)} /></Field>
       <Field label="Lengde"><input style={S.input} value={p.km ?? ''} onChange={e => setP('km', e.target.value)} placeholder="8,5 km" /></Field>
-      <Field label="Tid"><input style={S.input} value={p.tid ?? ''} onChange={e => setP('tid', e.target.value)} placeholder="2 t 30 min" /></Field>
+      <Field label="Gåtid">
+        <div style={{ display: 'flex', gap: 6 }}>
+          <input style={S.input} value={p.tid ?? ''} onChange={e => setP('tid', e.target.value)} placeholder="2 t 30 min" />
+          <button
+            type="button"
+            title="Beregn gåtid og løpetid fra rutens lengde (12 min/km gange, 6,5 min/km løping) — ingen stoppeklokke nødvendig"
+            style={{ ...S.pill('secondary'), flexShrink: 0, padding: '6px 12px' }}
+            onClick={() => {
+              const m = pathLengthM(feature);
+              const gaaTid = fmtRouteTime(m, 12);
+              const lopTid = fmtRouteTime(m, 6.5);
+              const others = (p.transportmodi ?? []).filter((mo: any) => mo.mode !== 'gaa' && mo.mode !== 'lop');
+              onChange({ ...feature, properties: { ...p, tid: gaaTid, transportmodi: [{ mode: 'gaa', tid: gaaTid }, { mode: 'lop', tid: lopTid }, ...others] } });
+            }}
+          >
+            Beregn
+          </button>
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
+          Vises i hurtigvisningen (liste og minikort). «Beregn» regner ut gå- og løpetid fra rutens
+          faktiske lengde (samme metode som for nye ruter bygget på kart) — ingen stoppeklokke nødvendig.
+          Løpetid vises separat i turens detaljvisning.
+        </div>
+      </Field>
       <Field label="Vanskelighet">
         <select style={S.input} value={p.vanskelighet ?? 'Lett'} onChange={e => setP('vanskelighet', e.target.value)}>
           <option>Lett</option><option>Middels</option><option>Krevende</option>
