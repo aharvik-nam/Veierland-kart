@@ -3602,7 +3602,18 @@ export function VeierlandApp() {
           </div>
           {!activityTile ? (
             <>
-              <div className="vl-dock-title">{lang === 'no' ? 'Hva vil du i dag?' : 'What do you want today?'}</div>
+              <div className="vl-dock-titlerow">
+                <div className="vl-dock-title">{lang === 'no' ? 'Hva vil du i dag?' : 'What do you want today?'}</div>
+                {/* A clear, always-visible way to jump straight to the full
+                    place list without going through the hamburger menu — the
+                    map screen previously had no map/list toggle at all until
+                    an activity tile was already active (see .vl-dock-summary
+                    below, whose "Vis liste" only appears after that point). */}
+                <button className="vl-dock-listbtn" onClick={() => selectTab('places')}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+                  {lang === 'no' ? 'Liste' : 'List'}
+                </button>
+              </div>
               <div className="vl-dock-tiles">
                 <button className="vl-dock-tile" style={{ color: catCfg.bad?.color ?? '#2f9e8f' } as React.CSSProperties} onClick={() => applyActivityTile('bade')}>
                   <span dangerouslySetInnerHTML={{ __html: iconSvg('bade') }} />

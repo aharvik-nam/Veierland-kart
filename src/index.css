@@ -836,9 +836,19 @@ body { display: grid; place-items: center; }
 .vl-dock.peeked { max-height: 26px; padding-bottom: 8px; }
 .vl-dock-grab { padding: 4px 0 8px; cursor: pointer; touch-action: none; }
 .vl-dock-grab .bar { width: 40px; height: 4px; border-radius: 99px; background: var(--line); margin: 0 auto; }
+.vl-dock-titlerow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 2px 10px; }
 .vl-dock-title {
   font-size: 12px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .07em; color: var(--muted); margin: 0 2px 10px;
+  letter-spacing: .07em; color: var(--muted); margin: 0;
+}
+/* Always-visible Kart/Liste entry point — see JSX comment on
+   .vl-dock-listbtn for why this exists (there was previously no way to
+   reach the full place list from the default map screen without the menu). */
+.vl-dock-listbtn {
+  display: flex; align-items: center; gap: 5px; flex: 0 0 auto;
+  background: var(--card); border: 1px solid var(--line); border-radius: 20px;
+  padding: 5px 12px 5px 10px; font: inherit; font-size: 12.5px; font-weight: 700;
+  color: var(--ink); cursor: pointer;
 }
 .vl-dock-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
 /* Secondary activities: one compact pill row under the four headline tiles,
@@ -1387,4 +1397,5 @@ body { display: grid; place-items: center; }
   .vl-cond-tabs button:not(.on):hover { background: var(--card2); }
   .vl-condhours button:not(.on):hover { background: var(--card2); }
   .vl-zoomctl button:hover { background: var(--card2); }
+  .vl-dock-listbtn:hover { background: var(--card2); }
 }
