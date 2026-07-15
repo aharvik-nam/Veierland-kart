@@ -495,6 +495,11 @@ export function VeierlandApp() {
   // Activity-mode pins (the big always-labeled ones) bypass clustering
   // entirely — see the marker-building effect below for why.
   const activityLayerRef = useRef<L.LayerGroup | null>(null);
+  // Regular (zoom-scaled) pins from the last marker build, so the zoom
+  // restyle effect can resize them in place instead of rebuilding the whole
+  // cluster group on every zoom step. Stedsnavn labels and activity pins
+  // have fixed sizes and are deliberately not tracked here.
+  const pinMarkersRef = useRef<{ marker: L.Marker; cat: { icon: string; color: string }; sel: boolean; faded: boolean }[]>([]);
 
   // Fresh activation of Forhold always starts at "now", not wherever the
   // user last scrubbed to.
@@ -626,7 +631,13 @@ export function VeierlandApp() {
     setDockPeeked(true);
   }, []);
 
-  // Cluster group — rebuild whenever filtered POIs, zoom, or selection changes
+  // Whether place-name annotations render at all flips only when the zoom
+  // crosses STEDSNAVN_MIN_ZOOM — depending on this boolean instead of the raw
+  // zoom level keeps the expensive marker rebuild below from running on every
+  // single zoom step (the zoom-restyle effect further down handles pin sizing).
+  const stedsnavnVisible = mapZoom >= STEDSNAVN_MIN_ZOOM;
+
+  // Cluster group — rebuild whenever filtered POIs or selection change
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
@@ -634,6 +645,7 @@ export function VeierlandApp() {
     // Remove existing groups
     if (clusterRef.current) { map.removeLayer(clusterRef.current); clusterRef.current = null; }
     if (activityLayerRef.current) { map.removeLayer(activityLayerRef.current); activityLayerRef.current = null; }
+    pinMarkersRef.current = [];
     if (mode === 'nature' || mode === 'history') return;
 
     const cg = L.markerClusterGroup({
@@ -652,7 +664,10 @@ export function VeierlandApp() {
       },
     });
 
-    const sz = markerSize(mapZoom);
+    // Read zoom straight off the map: this effect no longer re-runs per zoom
+    // step (see stedsnavnVisible above), and the restyle effect below keeps
+    // pin sizes current as the user zooms.
+    const sz = markerSize(map.getZoom());
     const dimByTrail = mode === 'trails' && view === 'detail' && !!selectedTrail && trailPoiFilter === 'along';
 
     // Activity-mode labels are always-on (see makeLabeledIconHtml above), so
@@ -697,7 +712,7 @@ export function VeierlandApp() {
       // clutter the overview at full-island zoom, so they only render once
       // the user has zoomed in enough for individual names to be useful
       // (unless a search is actively matching one, which is explicit intent).
-      if (poi.kategori === 'stedsnavn' && mapZoom < STEDSNAVN_MIN_ZOOM && !searchQ) return;
+      if (poi.kategori === 'stedsnavn' && !stedsnavnVisible && !searchQ) return;
 
       const matchesActivity = !activityMatches || activityMatches.has(poi.id);
       const faded = (dimByTrail && !!poi.coordinates &&
@@ -726,6 +741,10 @@ export function VeierlandApp() {
       const icon = L.divIcon({ className: '', iconSize: [pinSz, pinSz], iconAnchor: [half, half], html });
       const marker = L.marker(poi.coordinates as [number, number], { icon, zIndexOffset: sel ? 1000 : 0 }).on('click', () => selectPOI(poi));
       marker.addTo(activityTile && matchesActivity ? directLayer! : cg);
+      // Only regular pins scale with zoom — track them for the restyle effect.
+      if (poi.kategori !== 'stedsnavn' && !(activityTile && matchesActivity)) {
+        pinMarkersRef.current.push({ marker, cat: { icon: cat.icon, color: cat.color }, sel, faded });
+      }
     });
 
     map.addLayer(cg);
@@ -738,7 +757,26 @@ export function VeierlandApp() {
       if (directLayer) map.removeLayer(directLayer);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapReady, mode, filteredPOIs, allPOIs, selectedPOI?.id, view, mapZoom, selectedTrail, trailPoiFilter, tab, activityTile, searchQ]);
+  }, [mapReady, mode, filteredPOIs, allPOIs, selectedPOI?.id, view, stedsnavnVisible, selectedTrail, trailPoiFilter, tab, activityTile, searchQ]);
+
+  // Zoom restyle — swap the regular pins' icons to the new zoom-appropriate
+  // size in place. Before this split, the whole cluster group (up to ~100
+  // markers incl. 66 stedsnavn labels) was torn down and recreated on every
+  // zoom step; now a pinch-zoom only re-renders icon HTML for the visible
+  // pins. Activity pins (fixed 44/50px) and stedsnavn labels (fixed 22px)
+  // don't scale, so they're untouched. Their label-above collision layout is
+  // computed at build zoom and deliberately not recomputed here — a slightly
+  // stale label side after zooming is invisible next to the rebuild cost.
+  useEffect(() => {
+    const sz = markerSize(mapZoom);
+    const half = Math.round(sz / 2);
+    for (const { marker, cat, sel, faded } of pinMarkersRef.current) {
+      const html = faded
+        ? `<div style="opacity:0.28">${makeIconHtml(cat.icon, cat.color, sel, sz)}</div>`
+        : makeIconHtml(cat.icon, cat.color, sel, sz);
+      marker.setIcon(L.divIcon({ className: '', iconSize: [sz, sz], iconAnchor: [half, half], html }));
+    }
+  }, [mapZoom]);
 
   useEffect(() => {
     if ((mode !== 'nature' && !(mode === 'trails' && trailCatFilter === 'natur')) || natureFetched) return;
