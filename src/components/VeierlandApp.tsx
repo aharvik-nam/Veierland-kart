@@ -3643,7 +3643,11 @@ export function VeierlandApp() {
                 </button>
                 <button className="vl-dock-tile-sm" style={{ color: catCfg.havn?.color ?? '#3d6ea5' } as React.CSSProperties} onClick={() => applyActivityTile('praktisk')}>
                   <span dangerouslySetInnerHTML={{ __html: iconSvg('anker') }} />
-                  <span className="lbl">{lang === 'no' ? 'Praktisk' : 'Practical'}</span>
+                  {/* Was "Praktisk" — collided with the Steder tab's "Praktisk"
+                      group chip, which covers a much broader set of categories
+                      (bad+ferge+havn+kultur+info+mat+friluft vs. this tile's
+                      ferge+havn+info). Same label, two different meanings. */}
+                  <span className="lbl">{lang === 'no' ? 'Tjenester' : 'Services'}</span>
                 </button>
               </div>
               {recoText && (

@@ -35,7 +35,10 @@ export const FILTER_TILES: Record<FilterTile, { cats: string[]; noun: [string, s
   bade:       { cats: ['bad'],                   noun: ['badeplasser', 'beaches'] },
   spise:      { cats: ['mat'],                   noun: ['spisesteder', 'places to eat'] },
   fornminner: { cats: ['arkeologi'],             noun: ['fornminner', 'ancient sites'] },
-  praktisk:   { cats: ['ferge', 'havn', 'info'], noun: ['praktiske steder', 'practical spots'] },
+  // Label is "Tjenester"/"Services" in the dock, not "Praktisk" — that name
+  // is already taken by the Steder tab's broader "Praktisk" group chip
+  // (bad+ferge+havn+kultur+info+mat+friluft), a different, larger set.
+  praktisk:   { cats: ['ferge', 'havn', 'info'], noun: ['tjenester', 'services'] },
 };
 
 // Activity-mode labels drop the word that's already implied by the active
