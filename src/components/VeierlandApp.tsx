@@ -9,6 +9,7 @@ import { POI, SNLData, LokalhistorieData, MuseumPhoto, WikimediaImage, Wikipedia
 import { fetchSNL, fetchLokalhistorie, fetchDigitalMuseum, fetchWikimediaImages, fetchWikipediaSpecies } from '../lib/api';
 import { loadCatCfg, DEFAULT_CAT_CFG, CatCfgMap } from '../lib/catcfg';
 import { loadMapAppearance, DEFAULT_MAP_APPEARANCE, MapAppearance } from '../lib/mapsettings';
+import { loadMapLayerCfg, DEFAULT_MAP_LAYER_CFG, MapLayerCfgMap, buildFilterString } from '../lib/maplayersettings';
 import { NATURE_GROUPS, NatureObs, GBIF_POLYGON, STATIC_NATURE_CACHE, loadNatureObs, applyAssessments, RED_LIST_CATS, ALIEN_CATS, RL_LABEL, RL_DESC } from '../lib/naturedata';
 import { ARTS_KATEGORIER, ArtsKategori, CuratedArt, artsgruppeMeta } from '../lib/artscategories';
 import { loadFarmData, DEFAULT_FARM_DATA, Farm } from '../lib/farmdata';
@@ -125,6 +126,21 @@ export function VeierlandApp() {
   const [currentLayer, setCurrentLayer] = useState<string>(() => {
     try { return localStorage.getItem('vl-layer') || 'soleng'; } catch { return 'soleng'; }
   });
+  // Admin-editable: which base map layers are offered, what they're called,
+  // and a color/appearance tweak (CSS filter) per layer (see
+  // lib/maplayersettings.ts) — loaded from Firestore, falls back to defaults.
+  const [mapLayerCfg, setMapLayerCfg] = useState<MapLayerCfgMap>(DEFAULT_MAP_LAYER_CFG);
+  const visibleLayerOrder = useMemo(
+    () => LAYER_ORDER.filter(k => mapLayerCfg[k]?.enabled !== false),
+    [mapLayerCfg]
+  );
+  // If the currently-selected layer gets disabled by admin, fall back to the
+  // first still-visible one rather than leaving the map on a hidden layer.
+  useEffect(() => {
+    if (visibleLayerOrder.length > 0 && !visibleLayerOrder.includes(currentLayer as typeof LAYER_ORDER[number])) {
+      setCurrentLayer(visibleLayerOrder[0]);
+    }
+  }, [visibleLayerOrder, currentLayer]);
   const [geoLayer, setGeoLayer] = useState<string | null>(null);
   const [showLayerPop, setShowLayerPop] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -518,6 +534,7 @@ export function VeierlandApp() {
     loadTurkartGeoJSON().then(geo => setTrails(trailsFromGeoJSON(geo)));
     loadCatCfg().then(setCatCfg);
     loadMapAppearance().then(setMapAppearance);
+    loadMapLayerCfg().then(setMapLayerCfg);
     loadFarmData().then(setFarmData);
     loadTimelineSections().then(sections => {
       setTimelineSections(sections);
@@ -2790,7 +2807,7 @@ export function VeierlandApp() {
         style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
       >
         <MapSetup onReady={onMapReady} onMapClick={onMapClick} onZoom={onZoom} onDragStart={onMapDragStart} />
-        <TileController layer={currentLayer} />
+        <TileController layer={currentLayer} filterOverride={mapLayerCfg[currentLayer] ? buildFilterString(mapLayerCfg[currentLayer]) : undefined} />
         {geoLayer && GEO_DATA[geoLayer]?.features?.length > 0 && (
           <GeoJSON
             key={geoLayer}
@@ -3205,17 +3222,19 @@ export function VeierlandApp() {
           <div className="vl-pop-sep" />
         </div>
         <h5>{T.layers}</h5>
-        {LAYER_ORDER.map(k => {
+        {visibleLayerOrder.map(k => {
           const cfg = LAYERS[k];
+          const custom = mapLayerCfg[k];
           const on = currentLayer === k;
+          const label = custom ? (lang === 'no' ? custom.label.no : custom.label.en) : (lang === 'no' ? cfg.label.no : cfg.label.en);
           return (
             <div
               key={k}
               className={`vl-opt${on ? ' on' : ''}`}
               onClick={() => { setCurrentLayer(k); setShowLayerPop(false); try { localStorage.setItem('vl-layer', k); } catch {} }}
             >
-              <span className="sw" style={{ background: cfg.sw }} />
-              <span className="nm">{lang === 'no' ? cfg.label.no : cfg.label.en}</span>
+              <span className="sw" style={{ background: cfg.sw, filter: custom ? buildFilterString(custom) : undefined }} />
+              <span className="nm">{label}</span>
               <span className="chk">{on && <CheckSvg />}</span>
             </div>
           );

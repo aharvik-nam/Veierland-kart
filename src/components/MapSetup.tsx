@@ -30,7 +30,7 @@ export function MapSetup({ onReady, onMapClick, onZoom, onDragStart }: { onReady
   return null;
 }
 
-export function TileController({ layer }: { layer: string }) {
+export function TileController({ layer, filterOverride }: { layer: string; filterOverride?: string }) {
   const map = useMap();
   const tileRef = useRef<L.TileLayer | null>(null);
 
@@ -44,11 +44,13 @@ export function TileController({ layer }: { layer: string }) {
     tile.addTo(map);
     tileRef.current = tile;
     const tp = document.querySelector('.leaflet-tile-pane') as HTMLElement | null;
-    if (tp) tp.style.filter = cfg.filter;
+    // filterOverride is the admin-editable version (see maplayersettings.ts) —
+    // falls back to the layer's own built-in default when not loaded yet.
+    if (tp) tp.style.filter = filterOverride ?? cfg.filter;
     return () => {
       if (tileRef.current) { map.removeLayer(tileRef.current); tileRef.current = null; }
     };
-  }, [layer, map]);
+  }, [layer, map, filterOverride]);
 
   return null;
 }

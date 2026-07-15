@@ -5,6 +5,8 @@ import { auth, db, isFirebaseConfigured } from '../lib/firebase';
 import { poiFallback, stedsnavnFallback, turkartFallback, GeoCollection } from '../lib/geodata';
 import { DEFAULT_CAT_CFG, CatCfgMap, CatEntry, loadCatCfg, saveCatCfg } from '../lib/catcfg';
 import { DEFAULT_MAP_APPEARANCE, MapAppearance, loadMapAppearance, saveMapAppearance } from '../lib/mapsettings';
+import { DEFAULT_MAP_LAYER_CFG, MapLayerCfgMap, MapLayerAppearance, buildFilterString, loadMapLayerCfg, saveMapLayerCfg } from '../lib/maplayersettings';
+import { LAYERS, LAYER_ORDER } from '../lib/maplayers';
 import { loadFarmData, saveFarmData, DEFAULT_FARM_DATA, Farm, FarmPerson, FarmShip } from '../lib/farmdata';
 import { loadTimelineSections, saveTimelineSections, DEFAULT_TIMELINE_SECTIONS, TimelineSection } from '../lib/timelinedata';
 import { ICONS, ICON_LABELS } from '../lib/icons';
@@ -1988,27 +1990,124 @@ function NaturTab() {
 // ─── Kartutseende tab ─────────────────────────────────────────────────────────
 function MapAppearanceTab() {
   const [cfg, setCfg] = useState<MapAppearance>(DEFAULT_MAP_APPEARANCE);
+  const [layerCfg, setLayerCfg] = useState<MapLayerCfgMap>(DEFAULT_MAP_LAYER_CFG);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [dirtyLocal, setDirtyLocal] = useState(false);
   useReportDirty(dirtyLocal);
 
-  useEffect(() => { loadMapAppearance().then(setCfg); }, []);
+  useEffect(() => {
+    loadMapAppearance().then(setCfg);
+    loadMapLayerCfg().then(setLayerCfg);
+  }, []);
 
   const set = <K extends keyof MapAppearance>(key: K, val: MapAppearance[K]) => {
     setCfg(prev => ({ ...prev, [key]: val }));
     setSaved(false); setDirtyLocal(true);
   };
 
+  const setLayer = (key: string, patch: Partial<MapLayerAppearance>) => {
+    setLayerCfg(prev => ({ ...prev, [key]: { ...prev[key], ...patch } }));
+    setSaved(false); setDirtyLocal(true);
+  };
+  const setLayerLabel = (key: string, lang: 'no' | 'en', val: string) => {
+    setLayerCfg(prev => ({ ...prev, [key]: { ...prev[key], label: { ...prev[key].label, [lang]: val } } }));
+    setSaved(false); setDirtyLocal(true);
+  };
+
   const save = async () => {
     setSaving(true);
-    try { await saveMapAppearance(cfg); setSaved(true); setDirtyLocal(false); }
+    try {
+      await saveMapAppearance(cfg);
+      await saveMapLayerCfg(layerCfg);
+      setSaved(true); setDirtyLocal(false);
+    }
     catch (e: any) { alert(e.message); }
     finally { setSaving(false); }
   };
 
+  const sliderRow: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8 };
+  const sliderNum: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', fontFamily: 'monospace', width: 34, textAlign: 'right', flexShrink: 0 };
+
   return (
-    <div style={{ maxWidth: 640 }}>
+    <div style={{ maxWidth: 720 }}>
+      <div style={{ ...S.infoBox, marginBottom: 16 }}>
+        Velg hvilke kartlag som skal tilbys i "Kartlag"-menyen på nettsiden, gi dem navn som er
+        lette å forstå, og juster fargeinntrykket (metning, lysstyrke, kontrast, sepia, fargetone).
+        Selve kartbildene kommer fra eksterne kartleverandører (CARTO/Kartverket/Esri) og kan ikke
+        fargelegges pixel for pixel — disse justeringene tonar/filtrerer bildet, samme teknikk som
+        "Historisk"-laget allerede bruker for sitt gulnede utseende.
+      </div>
+
+      <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12, padding: '4px 18px 18px', marginBottom: 16 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.06em', margin: '14px 0 4px' }}>
+          Kartlag
+        </div>
+        {LAYER_ORDER.map(key => {
+          const layer = layerCfg[key] ?? DEFAULT_MAP_LAYER_CFG[key];
+          const base = LAYERS[key];
+          return (
+            <div key={key} style={{ borderTop: '1px solid var(--line)', padding: '14px 0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: layer.enabled ? 14 : 0 }}>
+                <span
+                  style={{
+                    width: 44, height: 32, borderRadius: 8, flexShrink: 0,
+                    background: base.sw, border: '1px solid var(--line)',
+                    filter: buildFilterString(layer),
+                  }}
+                />
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', flex: 1 }}>
+                  <input type="checkbox" checked={layer.enabled} onChange={e => setLayer(key, { enabled: e.target.checked })} />
+                  <strong style={{ fontSize: 14 }}>{layer.label.no}</strong>
+                  <span style={{ fontSize: 11.5, color: 'var(--muted)', fontFamily: 'monospace' }}>({key})</span>
+                </label>
+              </div>
+
+              {layer.enabled && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px 18px' }}>
+                  <Field label="Navn (norsk)">
+                    <input style={S.input} value={layer.label.no} onChange={e => setLayerLabel(key, 'no', e.target.value)} />
+                  </Field>
+                  <Field label="Navn (engelsk)">
+                    <input style={S.input} value={layer.label.en} onChange={e => setLayerLabel(key, 'en', e.target.value)} />
+                  </Field>
+                  <Field label="Metning">
+                    <div style={sliderRow}>
+                      <input style={{ flex: 1 }} type="range" min={0} max={2} step={0.01} value={layer.saturate} onChange={e => setLayer(key, { saturate: Number(e.target.value) })} />
+                      <span style={sliderNum}>{layer.saturate.toFixed(2)}</span>
+                    </div>
+                  </Field>
+                  <Field label="Lysstyrke">
+                    <div style={sliderRow}>
+                      <input style={{ flex: 1 }} type="range" min={0} max={2} step={0.01} value={layer.brightness} onChange={e => setLayer(key, { brightness: Number(e.target.value) })} />
+                      <span style={sliderNum}>{layer.brightness.toFixed(2)}</span>
+                    </div>
+                  </Field>
+                  <Field label="Kontrast">
+                    <div style={sliderRow}>
+                      <input style={{ flex: 1 }} type="range" min={0} max={2} step={0.01} value={layer.contrast} onChange={e => setLayer(key, { contrast: Number(e.target.value) })} />
+                      <span style={sliderNum}>{layer.contrast.toFixed(2)}</span>
+                    </div>
+                  </Field>
+                  <Field label="Sepia">
+                    <div style={sliderRow}>
+                      <input style={{ flex: 1 }} type="range" min={0} max={1} step={0.01} value={layer.sepia} onChange={e => setLayer(key, { sepia: Number(e.target.value) })} />
+                      <span style={sliderNum}>{layer.sepia.toFixed(2)}</span>
+                    </div>
+                  </Field>
+                  <Field label="Fargetone">
+                    <div style={sliderRow}>
+                      <input style={{ flex: 1 }} type="range" min={0} max={360} step={1} value={layer.hueRotate} onChange={e => setLayer(key, { hueRotate: Number(e.target.value) })} />
+                      <span style={sliderNum}>{layer.hueRotate}°</span>
+                    </div>
+                  </Field>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
       <div style={S.infoBox}>
         Høydekurvene beregnes direkte fra den samme terrengmodellen (DTM) som brukes til
         sol/vind/sjøtemperatur-visningen — ingen egen nedlasting trengs. Bare grov terrengform
