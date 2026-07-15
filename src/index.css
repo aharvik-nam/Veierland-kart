@@ -82,6 +82,12 @@ body { display: grid; place-items: center; }
   transition: transform .16s, box-shadow .16s;
   cursor: pointer;
 }
+/* Cultural-heritage pins (categories with the admin showInHistory flag) are
+   rounded squares instead of circles — the experience/heritage distinction
+   stays readable without color vision and without opening a legend. */
+.vl-pin.hist {
+  border-radius: 26%;
+}
 .vl-pin svg { width: 18px; height: 18px; }
 .vl-pin.sel {
   background: var(--ink);
@@ -653,6 +659,16 @@ body { display: grid; place-items: center; }
 .vl-panel-chips {
   margin-top: 0; margin-bottom: 8px;
 }
+
+/* "Nærmest meg" sort toggle — only rendered while position tracking is on. */
+.vl-nearestbtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin: 2px 0 10px; padding: 7px 13px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--card);
+  font: inherit; font-size: 12.5px; font-weight: 700; color: var(--ink);
+  cursor: pointer;
+}
+.vl-nearestbtn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 
 /* ── Panel: search input ─────────────────────────────────────────────────────── */
 /* Sticky — search was the first thing to scroll out of view in a long list,

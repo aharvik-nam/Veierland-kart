@@ -101,6 +101,10 @@ export function VeierlandApp() {
   const [mode, setMode] = useState<'places' | 'trails' | 'nature' | 'history'>('places');
   const [tab, setTab] = useState<'map' | 'places' | 'trails' | 'nature' | 'history' | 'saved'>('map');
   const [searchQ, setSearchQ] = useState('');
+  // "Nærmest meg" sort in the Steder list — only offered while position
+  // tracking is on (it needs somewhere to measure from), and falls back to
+  // the grouped category view automatically if tracking stops.
+  const [sortByNearest, setSortByNearest] = useState(false);
   const [view, setView] = useState<'browse' | 'detail'>('browse');
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(null);
   const [selectedTrail, setSelectedTrail] = useState<Trail | null>(null);
@@ -499,7 +503,7 @@ export function VeierlandApp() {
   // restyle effect can resize them in place instead of rebuilding the whole
   // cluster group on every zoom step. Stedsnavn labels and activity pins
   // have fixed sizes and are deliberately not tracked here.
-  const pinMarkersRef = useRef<{ marker: L.Marker; cat: { icon: string; color: string }; sel: boolean; faded: boolean }[]>([]);
+  const pinMarkersRef = useRef<{ marker: L.Marker; cat: { icon: string; color: string }; sel: boolean; faded: boolean; historic: boolean }[]>([]);
 
   // Fresh activation of Forhold always starts at "now", not wherever the
   // user last scrubbed to.
@@ -718,6 +722,9 @@ export function VeierlandApp() {
       const faded = (dimByTrail && !!poi.coordinates &&
         pointToPolylineDistM(poi.coordinates as [number, number], selectedTrail!.path) > 20)
         || (!!activityTile && !matchesActivity);
+      // Heritage categories get a rounded-square pin (see .vl-pin.hist) —
+      // shape distinction, driven by the admin-editable showInHistory flag.
+      const historic = !!catCfg[poi.kategori]?.showInHistory;
       let html: string, pinSz: number;
       if (poi.kategori === 'stedsnavn') {
         // Lightweight text-only label — no icon circle, so it reads as a
@@ -730,12 +737,12 @@ export function VeierlandApp() {
         // tapping to find out what something is isn't realistic for young
         // or elderly users on a crowded island map.
         pinSz = sel ? 50 : 44;
-        html = makeLabeledIconHtml(cat.icon, cat.color, sel, pinSz, tileLabel(poi.navn, activityTile), labelAboveIds.has(poi.id));
+        html = makeLabeledIconHtml(cat.icon, cat.color, sel, pinSz, tileLabel(poi.navn, activityTile), labelAboveIds.has(poi.id), historic);
       } else {
         pinSz = sz;
         html = faded
-          ? `<div style="opacity:0.28">${makeIconHtml(cat.icon, cat.color, sel, sz)}</div>`
-          : makeIconHtml(cat.icon, cat.color, sel, sz);
+          ? `<div style="opacity:0.28">${makeIconHtml(cat.icon, cat.color, sel, sz, historic)}</div>`
+          : makeIconHtml(cat.icon, cat.color, sel, sz, historic);
       }
       const half = Math.round(pinSz / 2);
       const icon = L.divIcon({ className: '', iconSize: [pinSz, pinSz], iconAnchor: [half, half], html });
@@ -743,7 +750,7 @@ export function VeierlandApp() {
       marker.addTo(activityTile && matchesActivity ? directLayer! : cg);
       // Only regular pins scale with zoom — track them for the restyle effect.
       if (poi.kategori !== 'stedsnavn' && !(activityTile && matchesActivity)) {
-        pinMarkersRef.current.push({ marker, cat: { icon: cat.icon, color: cat.color }, sel, faded });
+        pinMarkersRef.current.push({ marker, cat: { icon: cat.icon, color: cat.color }, sel, faded, historic });
       }
     });
 
@@ -770,10 +777,10 @@ export function VeierlandApp() {
   useEffect(() => {
     const sz = markerSize(mapZoom);
     const half = Math.round(sz / 2);
-    for (const { marker, cat, sel, faded } of pinMarkersRef.current) {
+    for (const { marker, cat, sel, faded, historic } of pinMarkersRef.current) {
       const html = faded
-        ? `<div style="opacity:0.28">${makeIconHtml(cat.icon, cat.color, sel, sz)}</div>`
-        : makeIconHtml(cat.icon, cat.color, sel, sz);
+        ? `<div style="opacity:0.28">${makeIconHtml(cat.icon, cat.color, sel, sz, historic)}</div>`
+        : makeIconHtml(cat.icon, cat.color, sel, sz, historic);
       marker.setIcon(L.divIcon({ className: '', iconSize: [sz, sz], iconAnchor: [half, half], html }));
     }
   }, [mapZoom]);
@@ -2178,7 +2185,48 @@ export function VeierlandApp() {
           </div>
         )}
 
-        {mode === 'places' ? (
+        {/* "Nærmest meg" — flat distance-sorted view, offered only while
+            position tracking is on (it needs a here to measure from). */}
+        {mode === 'places' && userPos && (
+          <button
+            className={`vl-nearestbtn${sortByNearest ? ' on' : ''}`}
+            aria-pressed={sortByNearest}
+            onClick={() => setSortByNearest(v => !v)}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3.4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>
+            </svg>
+            {lang === 'no' ? 'Nærmest meg' : 'Nearest me'}
+          </button>
+        )}
+
+        {mode === 'places' && sortByNearest && userPos ? (
+          <>
+            {filteredPOIs
+              .filter(p => p.kategori !== 'stedsnavn' && p.coordinates)
+              .map(p => ({ p, d: distanceM(userPos[0], userPos[1], p.coordinates![0], p.coordinates![1]) }))
+              .sort((a, b) => a.d - b.d)
+              .map(({ p, d }) => {
+                const cat = getCat(p.kategori);
+                return (
+                  <div key={p.id} className="vl-poi-card">
+                    <div className="vl-poi-zone" {...pressable(() => showOnMap(p))}>
+                      <div className="vl-poi-ico" style={{ background: `${cat.color}1a`, color: cat.color }}
+                        dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
+                      <div className="vl-poi-body">
+                        <h4>{p.navn}</h4>
+                        <p>{d < 950 ? `${Math.round(d / 50) * 50} m` : `${(d / 1000).toFixed(1)} km`} · {walkShort(p.coordinates)} · {lang === 'no' ? cat.no : cat.en}</p>
+                      </div>
+                    </div>
+                    <div className="vl-poi-sep" />
+                    <div className="vl-poi-arr" aria-label={lang === 'no' ? `Åpne ${p.navn}` : `Open ${p.navn}`} {...pressable(() => selectPOI(p))}>
+                      <ChevSvg />
+                    </div>
+                  </div>
+                );
+              })}
+          </>
+        ) : mode === 'places' ? (
           <>
             {/* Place-name lookups (66 of ~98 entries) would drown the real count.
                 Only shown once the user is actually searching/filtering, where
@@ -2592,6 +2640,41 @@ export function VeierlandApp() {
             {lang === 'no' ? 'Ingen tilleggsinformasjon tilgjengelig.' : 'No additional information available.'}
           </p>
         )}
+
+        {/* Related places: the three nearest real POIs, so the detail card
+            ends with a "keep exploring" step instead of a dead stop. Pure
+            distance beats same-category-only here — on a small island the
+            neighbouring bathing spot, quay, or burial mound is a natural
+            next stop regardless of type. */}
+        {(() => {
+          if (!poi.coordinates) return null;
+          const related = allPOIs
+            .filter(p => p.id !== poi.id && p.kategori !== 'stedsnavn' && p.coordinates)
+            .map(p => ({ p, d: distanceM(poi.coordinates![0], poi.coordinates![1], p.coordinates![0], p.coordinates![1]) }))
+            .sort((a, b) => a.d - b.d)
+            .slice(0, 3);
+          if (related.length === 0) return null;
+          return (
+            <div style={{ marginTop: 18 }}>
+              <p className="vl-api-label">{lang === 'no' ? 'I nærheten' : 'Nearby'}</p>
+              {related.map(({ p, d }) => {
+                const rcat = getCat(p.kategori);
+                return (
+                  <div key={p.id} className="vl-poi-card">
+                    <div className="vl-poi-zone" {...pressable(() => selectPOI(p))}>
+                      <div className="vl-poi-ico" style={{ background: `${rcat.color}1a`, color: rcat.color }}
+                        dangerouslySetInnerHTML={{ __html: iconSvg(rcat.icon) }} />
+                      <div className="vl-poi-body">
+                        <h4>{p.navn}</h4>
+                        <p>{lang === 'no' ? rcat.no : rcat.en} · {d < 950 ? `${Math.round(d / 50) * 50} m` : `${(d / 1000).toFixed(1)} km`}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
       </>
     );
   }

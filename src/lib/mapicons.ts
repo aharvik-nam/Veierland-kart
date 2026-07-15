@@ -8,20 +8,25 @@ export function markerSize(zoom: number): number {
   return Math.round(Math.max(14, Math.min(34, 14 + (zoom - 11) * 5)));
 }
 
-export function makeIconHtml(icon: string, color: string, selected: boolean, sz: number): string {
+// `historic` renders the pin as a rounded square instead of a circle —
+// a shape distinction (readable without color vision and without a legend)
+// between cultural-heritage places and present-day experiences. Driven by
+// the admin-editable showInHistory flag on the category, not a hardcoded
+// category list.
+export function makeIconHtml(icon: string, color: string, selected: boolean, sz: number, historic = false): string {
   const svgSz = Math.round(sz * 0.59);
   const svg = `<svg viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="${svgSz}" height="${svgSz}">${ICONS[icon] ?? ICONS.wc}</svg>`;
-  return `<div class="vl-pin${selected ? ' sel' : ''}" style="--pc:${color};width:${sz}px;height:${sz}px">${svg}</div>`;
+  return `<div class="vl-pin${selected ? ' sel' : ''}${historic ? ' hist' : ''}" style="--pc:${color};width:${sz}px;height:${sz}px">${svg}</div>`;
 }
 
 // Bigger pin with the place name shown directly beneath it, for activity-mode
 // map views (e.g. "Bade") where tapping to see a name isn't realistic for
 // young or elderly users. Kept separate from makeIconHtml so the hot default
 // per-marker render path (called for every POI, every render) stays untouched.
-export function makeLabeledIconHtml(icon: string, color: string, selected: boolean, sz: number, label: string, labelAbove = false): string {
+export function makeLabeledIconHtml(icon: string, color: string, selected: boolean, sz: number, label: string, labelAbove = false, historic = false): string {
   const svgSz = Math.round(sz * 0.55);
   const svg = `<svg viewBox="-12 -12 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" width="${svgSz}" height="${svgSz}">${ICONS[icon] ?? ICONS.wc}</svg>`;
-  return `<div class="vl-pin-labeled-wrap${labelAbove ? ' above' : ''}"><div class="vl-pin vl-pin-lg${selected ? ' sel' : ''}" style="--pc:${color};width:${sz}px;height:${sz}px">${svg}</div><div class="vl-pin-label">${label}</div></div>`;
+  return `<div class="vl-pin-labeled-wrap${labelAbove ? ' above' : ''}"><div class="vl-pin vl-pin-lg${selected ? ' sel' : ''}${historic ? ' hist' : ''}" style="--pc:${color};width:${sz}px;height:${sz}px">${svg}</div><div class="vl-pin-label">${label}</div></div>`;
 }
 
 // The dock's "Hva vil du i dag?" tiles come in two kinds. Filter tiles
