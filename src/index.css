@@ -3,7 +3,10 @@
 :root {
   --ink: #1F2420;
   --ink2: #5C615A;
-  --muted: #8A8D82;
+  /* #8A8D82 was ~3.4:1 against white cards — below WCAG AA (4.5:1) for the
+     body-size secondary text this variable is used on everywhere. #6E7268
+     keeps the same muted green-grey character at ~4.6:1. */
+  --muted: #6E7268;
   --card: #ffffff;
   --card2: #F4F2EC;
   --line: #E5E2D8;
@@ -21,6 +24,16 @@
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+/* Keyboard focus ring for every interactive element — the app's clickable
+   <div>s (role="button", see pressable() in VeierlandApp.tsx) get tabIndex
+   but no UA focus styling, and buttons had outline suppressed by resets.
+   :focus-visible keeps it keyboard-only (no ring on mouse/touch taps). */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
 
 html, body {
   margin: 0;
@@ -413,7 +426,7 @@ body { display: grid; place-items: center; }
 }
 .vl-ferrytext-btn .time { font-size: 15px; font-weight: 800; color: var(--accent); line-height: 1.1; }
 .vl-ferrytext-btn.on .time { color: var(--ink); }
-.vl-ferrytext-btn .cd { font-size: 9.5px; font-weight: 700; color: var(--muted); letter-spacing: .04em; margin-top: 1px; }
+.vl-ferrytext-btn .cd { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: .04em; margin-top: 1px; }
 
 /* ── Ferry board popup / full-screen ────────────────────────────────────────── */
 .vl-ferrypop {
@@ -686,7 +699,7 @@ body { display: grid; place-items: center; }
   cursor: pointer; color: var(--ink); font: inherit;
   box-shadow: 0 2px 10px rgba(28,38,30,.12);
 }
-.vl-rbtn .rl { font-size: 9px; font-weight: 600; color: var(--muted); letter-spacing: .01em; }
+.vl-rbtn .rl { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: .01em; }
 .vl-rbtn.active .rl { color: inherit; }
 .vl-rbtn:active { transform: scale(.94); }
 /* Mobile: Min posisjon + Forhold fold into the map-tools popover (see
@@ -762,7 +775,7 @@ body { display: grid; place-items: center; }
 .vl-tabbadge {
   position: absolute; top: 3px; right: calc(50% - 21px); min-width: 15px; height: 15px;
   border-radius: 99px; background: var(--accent); color: #fff;
-  font-size: 9.5px; font-weight: 700; display: grid; place-items: center; padding: 0 4px;
+  font-size: 10px; font-weight: 700; display: grid; place-items: center; padding: 0 4px;
 }
 
 /* ── Compact mini-card (map tab, single selection) ───────────────────────────── */
@@ -917,7 +930,7 @@ body { display: grid; place-items: center; }
 .vl-dock-row.beach.best { border: 2px solid var(--accent); padding: 10px 12px; }
 .vl-dock-row.beach .temp { flex: 0 0 auto; text-align: center; width: 50px; }
 .vl-dock-row.beach .temp .v { display: block; font-size: 21px; font-weight: 800; color: var(--accent); line-height: 1; }
-.vl-dock-row.beach .temp .k { display: block; font-size: 9.5px; font-weight: 700; color: var(--muted); margin-top: 2px; }
+.vl-dock-row.beach .temp .k { display: block; font-size: 10px; font-weight: 700; color: var(--muted); margin-top: 2px; }
 .vl-dock-row.beach .mid { flex: 1; min-width: 0; }
 .vl-dock-row.beach .mid .nm { font-size: 15.5px; }
 .vl-dock-row.beach .chips { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }

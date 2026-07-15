@@ -56,6 +56,25 @@ function hideBrokenImg(e: React.SyntheticEvent<HTMLImageElement>) {
   e.currentTarget.style.display = 'none';
 }
 
+// Keyboard + screen-reader affordances for the app's clickable <div>s (filter
+// chips, list rows, popover options). These stay <div>s rather than <button>s
+// because each carries nested block layout and per-class styling that button
+// UA defaults would fight — role="button" + tabIndex + Enter/Space gives
+// assistive tech the same semantics without a restyling pass. `pressed` maps
+// to aria-pressed for toggle-style controls (chips); leave it undefined for
+// plain activate-once rows.
+function pressable(onClick: () => void, pressed?: boolean) {
+  return {
+    role: 'button' as const,
+    tabIndex: 0,
+    'aria-pressed': pressed,
+    onClick,
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); }
+    },
+  };
+}
+
 const MAP_CENTER: [number, number] = [59.1506, 10.3521];
 const MAP_ZOOM = 13;
 const MAP_MIN_ZOOM = 13; // don't let people scroll/pinch out further than this
@@ -1402,7 +1421,7 @@ export function VeierlandApp() {
           </div>
           {selectedNature.photoUrl && (
             <div style={{ marginBottom: 14 }}>
-              <img src={selectedNature.photoUrl} alt={selectedNature.popularName || selectedNature.scientificName} className="vl-api-img" onError={hideBrokenImg} />
+              <img src={selectedNature.photoUrl} alt={selectedNature.popularName || selectedNature.scientificName} className="vl-api-img" loading="lazy" decoding="async" onError={hideBrokenImg} />
               {selectedNature.photoAttribution && (
                 <p style={{ fontSize: 11, color: 'var(--muted)', margin: '4px 0 0' }}
                   dangerouslySetInnerHTML={{ __html: selectedNature.photoAttribution }} />
@@ -1434,7 +1453,7 @@ export function VeierlandApp() {
           {speciesWiki && (
             <div className="vl-api-section">
               {!selectedNature.photoUrl && speciesWiki.imageUrl && (
-                <img src={speciesWiki.imageUrl} alt={speciesWiki.title} className="vl-api-img" onError={hideBrokenImg} />
+                <img src={speciesWiki.imageUrl} alt={speciesWiki.title} className="vl-api-img" loading="lazy" decoding="async" onError={hideBrokenImg} />
               )}
               <p className="vl-api-text">{speciesWiki.extract}</p>
               <a href={speciesWiki.pageUrl} target="_blank" rel="noreferrer" className="vl-api-link">
@@ -1507,7 +1526,7 @@ export function VeierlandApp() {
           {speciesWiki && (
             <div className="vl-api-section">
               {speciesWiki.imageUrl && (
-                <img src={speciesWiki.imageUrl} alt={speciesWiki.title} className="vl-api-img" onError={hideBrokenImg} />
+                <img src={speciesWiki.imageUrl} alt={speciesWiki.title} className="vl-api-img" loading="lazy" decoding="async" onError={hideBrokenImg} />
               )}
               <p className="vl-api-text">{speciesWiki.extract}</p>
               <a href={speciesWiki.pageUrl} target="_blank" rel="noreferrer" className="vl-api-link">
@@ -1667,7 +1686,7 @@ export function VeierlandApp() {
               <div className="vl-chips">
                 {kats.map(k => (
                   <div key={k.id} className={`vl-chip lbl${artsKategoriId === k.id ? ' on' : ''}`}
-                    onClick={() => { setArtsKategoriId(k.id); setNatureListN(20); }} title={k.beskrivelse}>
+                    {...pressable(() => { setArtsKategoriId(k.id); setNatureListN(20); }, artsKategoriId === k.id)} title={k.beskrivelse}>
                     <span className="cl">{k.tittel}</span>
                   </div>
                 ))}
@@ -1707,12 +1726,12 @@ export function VeierlandApp() {
     const viewToggle = (
       <div className="vl-chips" style={{ marginBottom: 14 }}>
         <div className={`vl-chip${historyView === 'tidslinje' ? ' on' : ''}`}
-          onClick={() => { setHistoryView('tidslinje'); setSelectedEra(null); setSelectedFarm(null); }}>
+          {...pressable(() => { setHistoryView('tidslinje'); setSelectedEra(null); setSelectedFarm(null); }, historyView === 'tidslinje')}>
           <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('kart') }} />
           <span className="cl">{T.tidslinje}</span>
         </div>
         <div className={`vl-chip${historyView === 'garder' ? ' on' : ''}`}
-          onClick={() => { setHistoryView('garder'); setSelectedEra(null); setSelectedFarm(null); }}>
+          {...pressable(() => { setHistoryView('garder'); setSelectedEra(null); setSelectedFarm(null); }, historyView === 'garder')}>
           <span className="ci" dangerouslySetInnerHTML={{ __html: iconSvg('hus') }} />
           <span className="cl">{T.garder}</span>
         </div>
@@ -1769,7 +1788,7 @@ export function VeierlandApp() {
           <div className="vl-sub" style={{ marginBottom: 12 }}>{selectedEra.era}</div>
           {selectedEra.image && (
             <div className="vl-era-img">
-              <img src={selectedEra.image} alt={selectedEra.image_caption || selectedEra.era} onError={hideBrokenImg} />
+              <img src={selectedEra.image} alt={selectedEra.image_caption || selectedEra.era} loading="lazy" decoding="async" onError={hideBrokenImg} />
               {selectedEra.image_caption && (
                 <span className="vl-era-img-caption">{selectedEra.image_caption}</span>
               )}
@@ -2030,9 +2049,9 @@ export function VeierlandApp() {
           const coords = farmCoords[farm.name];
           return (
             <div key={i} className="vl-poi-card">
-              <div className="vl-poi-zone" onClick={() => {
+              <div className="vl-poi-zone" {...pressable(() => {
                 if (coords) mapRef.current?.setView(coords, Math.max(mapZoom, 14));
-              }}>
+              })}>
                 <div className="vl-poi-ico"
                   style={{ background: 'color-mix(in srgb, var(--accent) 12%, transparent)', color: 'var(--accent)' }}
                   dangerouslySetInnerHTML={{ __html: iconSvg('hus') }} />
@@ -2042,11 +2061,11 @@ export function VeierlandApp() {
                 </div>
               </div>
               <div className="vl-poi-sep" />
-              <div className="vl-poi-arr" onClick={() => {
+              <div className="vl-poi-arr" aria-label={lang === 'no' ? `Åpne ${farm.name}` : `Open ${farm.name}`} {...pressable(() => {
                 setSelectedFarm(farm);
                 setSheetOpen(true);
                 if (coords) mapRef.current?.setView(coords, Math.max(mapZoom, 14));
-              }}>
+              })}>
                 <ChevSvg />
               </div>
             </div>
@@ -2070,7 +2089,7 @@ export function VeierlandApp() {
             of things and which were one specific thing. */}
         {mode === 'places' && (
           <div className="vl-chips vl-panel-chips">
-            <div className={`vl-chip lbl${activeCats.size === 0 ? ' on' : ''}`} onClick={() => setActiveCats(new Set())} title={T.all}>
+            <div className={`vl-chip lbl${activeCats.size === 0 ? ' on' : ''}`} {...pressable(() => setActiveCats(new Set()), activeCats.size === 0)} title={T.all}>
               <span className="cl">{T.all}</span>
             </div>
             {[...catGroups.entries()].map(([groupName, groupCats]) => {
@@ -2079,7 +2098,7 @@ export function VeierlandApp() {
               return (
                 <div key={groupName} className={`vl-chip lbl${on ? ' on' : ''}`}
                   style={{ '--chip-color': groupColor } as React.CSSProperties}
-                  onClick={() => toggleGroup(groupCats)} title={groupName}>
+                  {...pressable(() => toggleGroup(groupCats), on)} title={groupName}>
                   <span className="cd" />
                   <span className="cl">{groupName}</span>
                 </div>
@@ -2091,7 +2110,7 @@ export function VeierlandApp() {
               return (
                 <div key={k} className={`vl-chip lbl${on ? ' on' : ''}`}
                   style={{ '--chip-color': cat.color } as React.CSSProperties}
-                  onClick={() => toggleCat(k)} title={lang === 'no' ? cat.no : cat.en}>
+                  {...pressable(() => toggleCat(k), on)} title={lang === 'no' ? cat.no : cat.en}>
                   <span className="cd" />
                   <span className="cl">{lang === 'no' ? cat.no : cat.en}</span>
                 </div>
@@ -2152,7 +2171,7 @@ export function VeierlandApp() {
               const isOpen = expandedPlaceCats.has(catKey) || !!searchQ || activeCats.size > 0;
               return (
                 <div key={catKey} className={`vl-nat-grp${isOpen ? ' open' : ''}`}>
-                  <div className="vl-grp-hdr" onClick={() => toggleExpandedPlaceCat(catKey)}>
+                  <div className="vl-grp-hdr" aria-expanded={isOpen} {...pressable(() => toggleExpandedPlaceCat(catKey))}>
                     <span className="vl-grp-ico" style={{ color: isOpen ? cat.color : undefined }} dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
                     <span className="vl-grp-lbl" style={{ color: isOpen ? cat.color : undefined }}>{lang === 'no' ? cat.no : cat.en}</span>
                     <span className="vl-grp-cnt">{pois.length}</span>
@@ -2163,7 +2182,7 @@ export function VeierlandApp() {
                       {pois.map(poi => (
                         <div key={poi.id} className="vl-poi-card">
                           <div className="vl-poi-zone"
-                            onClick={() => showOnMap(poi)}>
+                            {...pressable(() => showOnMap(poi))}>
                             <div className="vl-poi-ico"
                               style={{ background: `${cat.color}1a`, color: cat.color }}
                               dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
@@ -2173,7 +2192,7 @@ export function VeierlandApp() {
                             </div>
                           </div>
                           <div className="vl-poi-sep" />
-                          <div className="vl-poi-arr" onClick={() => selectPOI(poi)}>
+                          <div className="vl-poi-arr" aria-label={lang === 'no' ? `Åpne ${poi.navn}` : `Open ${poi.navn}`} {...pressable(() => selectPOI(poi))}>
                             <ChevSvg />
                           </div>
                         </div>
@@ -2199,7 +2218,7 @@ export function VeierlandApp() {
             )}
             {trails.map(tr => (
               <div key={tr.id} className="vl-poi-card">
-                <div className="vl-poi-zone" onClick={() => selectTrail(tr)}>
+                <div className="vl-poi-zone" {...pressable(() => selectTrail(tr))}>
                   <div className="vl-poi-ico"
                     style={{ background: 'color-mix(in srgb, var(--accent) 14%, transparent)', color: 'var(--accent)' }}
                     dangerouslySetInnerHTML={{ __html: iconSvg('tur') }} />
@@ -2209,7 +2228,7 @@ export function VeierlandApp() {
                   </div>
                 </div>
                 <div className="vl-poi-sep" />
-                <div className="vl-poi-arr" onClick={() => selectTrail(tr)}>
+                <div className="vl-poi-arr" aria-label={lang === 'no' ? `Åpne ${tr.name}` : `Open ${tr.en}`} {...pressable(() => selectTrail(tr))}>
                   <ChevSvg />
                 </div>
               </div>
@@ -2241,7 +2260,7 @@ export function VeierlandApp() {
           const cat = getCat(poi.kategori);
           return (
             <div key={poi.id} className="vl-poi-card">
-              <div className="vl-poi-zone" onClick={() => showOnMap(poi)}>
+              <div className="vl-poi-zone" {...pressable(() => showOnMap(poi))}>
                 <div className="vl-poi-ico" style={{ background: `${cat.color}1a`, color: cat.color }}
                   dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
                 <div className="vl-poi-body">
@@ -2250,7 +2269,7 @@ export function VeierlandApp() {
                 </div>
               </div>
               <div className="vl-poi-sep" />
-              <div className="vl-poi-arr" onClick={() => selectPOI(poi)}>
+              <div className="vl-poi-arr" aria-label={lang === 'no' ? `Åpne ${poi.navn}` : `Open ${poi.navn}`} {...pressable(() => selectPOI(poi))}>
                 <ChevSvg />
               </div>
             </div>
@@ -2258,7 +2277,7 @@ export function VeierlandApp() {
         })}
         {savedTrails.map(tr => (
           <div key={tr.id} className="vl-poi-card">
-            <div className="vl-poi-zone" onClick={() => selectTrail(tr)}>
+            <div className="vl-poi-zone" {...pressable(() => selectTrail(tr))}>
               <div className="vl-poi-ico" style={{ background: 'color-mix(in srgb, var(--accent) 14%, transparent)', color: 'var(--accent)' }}
                 dangerouslySetInnerHTML={{ __html: iconSvg('tur') }} />
               <div className="vl-poi-body">
@@ -2267,7 +2286,7 @@ export function VeierlandApp() {
               </div>
             </div>
             <div className="vl-poi-sep" />
-            <div className="vl-poi-arr" onClick={() => selectTrail(tr)}>
+            <div className="vl-poi-arr" aria-label={lang === 'no' ? `Åpne ${tr.name}` : `Open ${tr.en}`} {...pressable(() => selectTrail(tr))}>
               <ChevSvg />
             </div>
           </div>
@@ -2412,14 +2431,14 @@ export function VeierlandApp() {
 
         {poi.bilde && (
           <div className="vl-poi-static-img">
-            <img src={poi.bilde} alt={poi.navn} onError={hideBrokenImg} />
+            <img src={poi.bilde} alt={poi.navn} loading="lazy" decoding="async" onError={hideBrokenImg} />
             {poi.bilde_lisens && <span className="vl-photo-credit">{poi.bilde_lisens}</span>}
           </div>
         )}
 
         {wikimediaImages.length === 1 && (
           <a href={wikimediaImages[0].pageUrl} target="_blank" rel="noreferrer" className="vl-poi-static-img" style={{ display: 'block', textDecoration: 'none' }}>
-            <img src={wikimediaImages[0].thumbUrl} alt={wikimediaImages[0].title} style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 10, display: 'block' }} onError={hideBrokenImg} />
+            <img src={wikimediaImages[0].thumbUrl} alt={wikimediaImages[0].title} style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 10, display: 'block' }} loading="lazy" decoding="async" onError={hideBrokenImg} />
             {wikimediaImages[0].author && (
               <span className="vl-photo-credit">{wikimediaImages[0].license} · {wikimediaImages[0].author}</span>
             )}
@@ -2430,7 +2449,7 @@ export function VeierlandApp() {
             <div className="vl-photo-strip">
               {wikimediaImages.map((img, i) => (
                 <a key={i} href={img.pageUrl} target="_blank" rel="noreferrer" className="vl-photo-thumb">
-                  <img src={img.thumbUrl} alt={img.title} onError={hideBrokenImg} />
+                  <img src={img.thumbUrl} alt={img.title} loading="lazy" decoding="async" onError={hideBrokenImg} />
                   {img.author && (
                     <span className="vl-photo-credit">{img.license} · {img.author}</span>
                   )}
@@ -2483,7 +2502,7 @@ export function VeierlandApp() {
             <div className="vl-api-section">
               <p className="vl-api-label">Lokalhistoriewiki</p>
               {lokalData.bilde && (
-                <img src={lokalData.bilde} alt={lokalData.tittel} className="vl-api-img" onError={hideBrokenImg} />
+                <img src={lokalData.bilde} alt={lokalData.tittel} className="vl-api-img" loading="lazy" decoding="async" onError={hideBrokenImg} />
               )}
               <p className="vl-api-text">{displayText}</p>
               {isTruncatable && (
@@ -2516,7 +2535,7 @@ export function VeierlandApp() {
             {dimuData.map(img => (
               <div key={img.id} style={{ marginBottom: 12 }}>
                 {img.bilde600 && (
-                  <img src={img.bilde600} alt={img.tittel} className="vl-api-img" onError={hideBrokenImg} />
+                  <img src={img.bilde600} alt={img.tittel} className="vl-api-img" loading="lazy" decoding="async" onError={hideBrokenImg} />
                 )}
                 <p style={{ fontSize: 12, color: 'var(--muted)', margin: '4px 0 2px' }}>
                   {img.tittel}{img.fraTid ? ` (${img.fraTid})` : ''}
@@ -2694,10 +2713,10 @@ export function VeierlandApp() {
                     const grp = NATURE_GROUPS[obs.group];
                     return (
                       <div key={obs.gbifKey} className="vl-poi-card">
-                        <div className="vl-poi-zone" onClick={() => {
+                        <div className="vl-poi-zone" {...pressable(() => {
                           selectNatureSpecies(obs);
                           setMode('nature');
-                        }}>
+                        })}>
                           <div className="vl-poi-ico" style={{ background: `${grp.color}1a`, color: grp.color }}
                             dangerouslySetInnerHTML={{ __html: iconSvg(grp.icon) }} />
                           <div className="vl-poi-body">
@@ -2709,7 +2728,7 @@ export function VeierlandApp() {
                           </div>
                         </div>
                         <div className="vl-poi-sep" />
-                        <div className="vl-poi-arr" onClick={() => { selectNatureSpecies(obs); setMode('nature'); }}>
+                        <div className="vl-poi-arr" aria-label={lang === 'no' ? `Åpne ${obs.popularName || obs.scientificName}` : `Open ${obs.popularName || obs.scientificName}`} {...pressable(() => { selectNatureSpecies(obs); setMode('nature'); })}>
                           <ChevSvg />
                         </div>
                       </div>
@@ -2752,7 +2771,7 @@ export function VeierlandApp() {
                   const cat = getCat(poi.kategori);
                   return (
                     <div key={poi.id} className="vl-poi-card">
-                      <div className="vl-poi-zone" onClick={() => showOnMap(poi)}>
+                      <div className="vl-poi-zone" {...pressable(() => showOnMap(poi))}>
                         <div className="vl-poi-ico"
                           style={{ background: `${cat.color}1a`, color: cat.color }}
                           dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
@@ -2762,7 +2781,7 @@ export function VeierlandApp() {
                         </div>
                       </div>
                       <div className="vl-poi-sep" />
-                      <div className="vl-poi-arr" onClick={() => selectPOI(poi)}>
+                      <div className="vl-poi-arr" aria-label={lang === 'no' ? `Åpne ${poi.navn}` : `Open ${poi.navn}`} {...pressable(() => selectPOI(poi))}>
                         <ChevSvg />
                       </div>
                     </div>
@@ -3201,7 +3220,7 @@ export function VeierlandApp() {
             separate rail buttons (see .vl-rbtn.posisjon/.forhold CSS) since
             there's room and no need to consolidate there. */}
         <div className="vl-pop-mobileonly">
-          <div className={`vl-opt${locating ? ' on' : ''}`} onClick={() => { locate(); setShowLayerPop(false); }}>
+          <div className={`vl-opt${locating ? ' on' : ''}`} {...pressable(() => { locate(); setShowLayerPop(false); }, locating)}>
             <span className="sw vl-opt-ic" style={{ color: 'var(--ink)' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="3.4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>
@@ -3211,7 +3230,7 @@ export function VeierlandApp() {
             <span className="chk">{locating && <CheckSvg />}</span>
           </div>
           {hasDomGrid && (
-            <div className={`vl-opt${condLayer ? ' on' : ''}`} onClick={() => { setCondLayer(c => c ? null : 'best'); setShowLayerPop(false); }}>
+            <div className={`vl-opt${condLayer ? ' on' : ''}`} {...pressable(() => { setCondLayer(c => c ? null : 'best'); setShowLayerPop(false); }, !!condLayer)}>
               <span className="sw vl-opt-ic" style={{ color: 'var(--ink)' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/></svg>
               </span>
@@ -3231,7 +3250,7 @@ export function VeierlandApp() {
             <div
               key={k}
               className={`vl-opt${on ? ' on' : ''}`}
-              onClick={() => { setCurrentLayer(k); setShowLayerPop(false); try { localStorage.setItem('vl-layer', k); } catch {} }}
+              {...pressable(() => { setCurrentLayer(k); setShowLayerPop(false); try { localStorage.setItem('vl-layer', k); } catch {} }, on)}
             >
               <span className="sw" style={{ background: cfg.sw, filter: custom ? buildFilterString(custom) : undefined }} />
               <span className="nm">{label}</span>
@@ -3247,7 +3266,8 @@ export function VeierlandApp() {
           return (
             <div key={k} className={`vl-opt${on ? ' on' : ''}${!hasData ? ' vl-opt-dim' : ''}`}
               title={!hasData ? (lang === 'no' ? cfg.noDataMsg.no : cfg.noDataMsg.en) : undefined}
-              onClick={() => { if (hasData) { setGeoLayer(on ? null : k); setShowLayerPop(false); } }}
+              {...pressable(() => { if (hasData) { setGeoLayer(on ? null : k); setShowLayerPop(false); } }, on)}
+              aria-disabled={!hasData}
             >
               <span className="sw" style={{ background: cfg.sw }} />
               <span className="nm">{lang === 'no' ? cfg.label.no : cfg.label.en}</span>
@@ -3659,7 +3679,7 @@ export function VeierlandApp() {
             <div className="vl-dock-list">
               {beachRanking.map((b, i) => (
                 <div key={b.poi.id} className={`vl-dock-row beach${i === 0 ? ' best' : ''}`}
-                  onClick={() => { const poi = allPOIs.find(p => p.id === b.poi.id); if (poi) showOnMap(poi); setDockExpanded(false); }}>
+                  {...pressable(() => { const poi = allPOIs.find(p => p.id === b.poi.id); if (poi) showOnMap(poi); setDockExpanded(false); })}>
                   <div className="temp">
                     <span className="v">{seaTemp !== null ? Math.round(seaTemp) + '°' : '—'}</span>
                     <span className="k">{lang === 'no' ? 'I VANNET' : 'IN WATER'}</span>
@@ -3685,7 +3705,7 @@ export function VeierlandApp() {
           {activityTile && activityTile !== 'bade' && dockExpanded && (
             <div className="vl-dock-list">
               {filteredPOIs.map(poi => (
-                <div key={poi.id} className="vl-dock-row" onClick={() => { showOnMap(poi); setDockExpanded(false); }}>
+                <div key={poi.id} className="vl-dock-row" {...pressable(() => { showOnMap(poi); setDockExpanded(false); })}>
                   <div className="nm">{poi.navn}</div>
                   <div className="sub">{walkShort(poi.coordinates)}</div>
                 </div>
