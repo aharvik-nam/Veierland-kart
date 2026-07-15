@@ -841,6 +841,13 @@ body { display: grid; place-items: center; }
   font-size: 12px; font-weight: 700; text-transform: uppercase;
   letter-spacing: .07em; color: var(--muted); margin: 0;
 }
+/* First-open greeting variant — a warmer, larger line replacing the small
+   uppercase label for this one first impression, folded into the same dock
+   instead of a separate welcome layer. */
+.vl-dock-title.welcome {
+  font-family: var(--display); font-size: 16.5px; font-weight: 600;
+  text-transform: none; letter-spacing: -.005em; color: var(--ink);
+}
 /* Always-visible Kart/Liste entry point — see JSX comment on
    .vl-dock-listbtn for why this exists (there was previously no way to
    reach the full place list from the default map screen without the menu). */
@@ -875,12 +882,17 @@ body { display: grid; place-items: center; }
   box-shadow: 0 4px 12px color-mix(in srgb, var(--tc) 35%, transparent);
 }
 .vl-dock-tile.on .lbl { color: #fff; }
+/* Toned down from a full content-card treatment (border + card background +
+   large emoji) to a quieter hint row — it's a nice-to-know suggestion, not
+   something that should compete visually with the tiles above it. */
 .vl-dock-reco {
-  display: flex; align-items: center; gap: 11px; margin-top: 12px;
-  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
-  padding: 11px 14px; font-size: 13.5px; line-height: 1.4; color: var(--ink); cursor: pointer;
+  display: flex; align-items: center; gap: 8px; margin-top: 10px;
+  background: var(--card2); border-radius: 12px;
+  padding: 8px 12px; font-size: 12.5px; line-height: 1.35; color: var(--ink2); cursor: pointer;
 }
-.vl-dock-reco .em { font-size: 20px; line-height: 1; flex: 0 0 auto; }
+.vl-dock-reco .em { font-size: 15px; line-height: 1; flex: 0 0 auto; opacity: .8; }
+.vl-dock-reco b { font-weight: 600; color: var(--ink); }
+.vl-dock-reco svg { width: 14px; height: 14px; opacity: .55; }
 .vl-dock-summary { display: flex; align-items: center; gap: 10px; }
 .vl-dock-summary .back {
   width: 38px; height: 38px; flex: 0 0 auto; border-radius: 11px;
@@ -916,63 +928,6 @@ body { display: grid; place-items: center; }
 .vl-dock-row.beach .chip.sun { background: rgba(245,177,32,.16); color: #8a6a10; }
 .vl-dock-row.beach .chip.lee { background: rgba(95,148,56,.14); color: #4c7a2c; }
 .vl-dock-row.beach svg { width: 18px; height: 18px; flex: 0 0 auto; color: var(--muted); }
-
-/* ── Welcome overlay (first open of the day) ─────────────────────────────────── */
-.vl-welcome { position: fixed; inset: 0; z-index: 950; }
-.vl-welcome-scrim { position: absolute; inset: 0; background: rgba(20,28,20,.32); }
-.vl-welcome-sheet {
-  position: absolute; left: 0; right: 0; bottom: 0; top: 26%;
-  background: var(--card); border-radius: 28px 28px 0 0;
-  box-shadow: 0 -20px 50px rgba(20,28,20,.25);
-  padding: 10px 22px 28px; display: flex; flex-direction: column;
-  overflow-y: auto;
-}
-.vl-welcome-sheet .vl-dock-grab { align-self: center; }
-.vl-welcome-chip {
-  display: inline-flex; align-self: flex-start; align-items: center; gap: 6px;
-  background: var(--card2); border: 1px solid var(--line); color: var(--ink2);
-  font-size: 12px; font-weight: 700; padding: 5px 11px; border-radius: 999px;
-  margin: 10px 0 14px;
-}
-.vl-welcome-h {
-  font-family: var(--display); font-size: 30px; font-weight: 600;
-  color: var(--ink); margin: 0 0 6px; line-height: 1.1;
-}
-.vl-welcome-p { font-size: 14.5px; color: var(--ink2); line-height: 1.5; margin: 0 0 20px; max-width: 320px; }
-.vl-welcome-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
-.vl-welcome-card {
-  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
-  padding: 14px 6px; text-align: center; cursor: pointer; font: inherit;
-  display: flex; flex-direction: column; align-items: center;
-}
-.vl-welcome-card .ic {
-  width: 40px; height: 40px; border-radius: 12px; background: var(--card2);
-  display: grid; place-items: center; margin-bottom: 8px; color: var(--ink);
-}
-.vl-welcome-card .ic svg { width: 19px; height: 19px; }
-.vl-welcome-card .t { font-size: 12.5px; font-weight: 700; color: var(--ink); }
-.vl-welcome-card .sub { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
-/* One combined status row (weather | ferry) instead of two separate chip
-   boxes — same information, half the visual weight competing with the
-   three action cards above. */
-.vl-welcome-info {
-  display: flex; margin-bottom: 20px; background: var(--card2);
-  border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
-}
-.vl-welcome-info .half {
-  flex: 1; min-width: 0; text-align: left; background: none; border: none;
-  padding: 9px 12px; cursor: pointer; font: inherit;
-}
-.vl-welcome-info .half + .half { border-left: 1px solid var(--line); }
-.vl-welcome-info .half .k {
-  display: block; font-size: 12px; font-weight: 700; color: var(--ink);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.vl-welcome-info .half .v { display: block; font-size: 10.5px; color: var(--muted); margin-top: 1px; }
-.vl-welcome-dismiss {
-  text-align: center; font-size: 13.5px; font-weight: 700; color: var(--accent);
-  background: none; border: none; cursor: pointer; font: inherit; padding: 0;
-}
 
 /* ── Bottom sheet ───────────────────────────────────────────────────────────── */
 .vl-map-area { position: absolute; top: 0; left: 0; right: 0; bottom: var(--dock-h); }

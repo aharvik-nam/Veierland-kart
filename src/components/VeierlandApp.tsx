@@ -569,6 +569,7 @@ export function VeierlandApp() {
     setMapReady(true);
   }, []);
   const onMapClick = useCallback(() => {
+    dismissWelcome();
     setShowLayerPop(false);
     setShowFerryPop(false);
     if (selectedNature || selectedCuratedArt) { setSelectedNature(null); setSelectedNatureObs([]); setSelectedCuratedArt(null); }
@@ -584,6 +585,7 @@ export function VeierlandApp() {
   // to just the grab handle so there's a real "map only" state, restored by
   // tapping the handle again (see dockPeeked).
   const onMapDragStart = useCallback(() => {
+    dismissWelcome();
     setDockExpanded(false);
     setDockPeeked(true);
   }, []);
@@ -776,6 +778,7 @@ export function VeierlandApp() {
 
   // Actions
   function selectPOI(poi: POI) {
+    dismissWelcome();
     setSelectedPOI(poi);
     setSelectedTrail(null);
     setTrailPath(null);
@@ -845,6 +848,7 @@ export function VeierlandApp() {
   }
 
   function selectTab(t: 'map' | 'places' | 'trails' | 'nature' | 'history' | 'saved') {
+    dismissWelcome();
     // Re-tapping Kart with nothing open re-centres the island (replaces the
     // old "home" rail button)
     if (t === 'map' && tab === 'map' && !sheetOpen) {
@@ -891,6 +895,7 @@ export function VeierlandApp() {
   // filtered view — those features are already built and better than anything
   // a quick filter could offer, so this reuses them wholesale.
   function applyActivityTile(tile: FilterTile | 'gatur' | 'historie' | 'natur') {
+    dismissWelcome();
     if (tile === 'gatur') { selectTab('trails'); return; }
     if (tile === 'historie') { selectTab('history'); return; }
     if (tile === 'natur') { selectTab('nature'); return; }
@@ -2773,61 +2778,6 @@ export function VeierlandApp() {
     <div className="vl-app">
       {/* Map area */}
       <div className="vl-map-area" style={{ '--dock-h': `${dockReservedH}px` } as React.CSSProperties}>
-      {/* First-open-of-the-day welcome overlay */}
-      {showWelcome && (() => {
-        const hour = new Date().getHours();
-        const greeting = hour < 10 ? (lang === 'no' ? 'God morgen!' : 'Good morning!')
-          : hour < 17 ? (lang === 'no' ? 'God dag!' : 'Good day!')
-          : (lang === 'no' ? 'God kveld!' : 'Good evening!');
-        const matCount = allPOIs.filter(p => (p.kategorier ?? [p.kategori]).includes('mat')).length;
-        return (
-          <div className="vl-welcome">
-            <div className="vl-welcome-scrim" onClick={dismissWelcome} />
-            <div className="vl-welcome-sheet">
-              <div className="vl-dock-grab"><div className="bar" /></div>
-              <div className="vl-welcome-chip">{lang === 'no' ? 'Veierland, Nøtterøy' : 'Veierland, Norway'}</div>
-              <h2 className="vl-welcome-h">{greeting}</h2>
-              <p className="vl-welcome-p">
-                {lang === 'no' ? 'Hva vil du gjøre først?' : 'What do you want to do first?'}
-              </p>
-              <div className="vl-welcome-cards">
-                <button className="vl-welcome-card" onClick={() => { dismissWelcome(); applyActivityTile('gatur'); }}>
-                  <span className="ic" dangerouslySetInnerHTML={{ __html: iconSvg('gaatur') }} />
-                  <span className="t">{lang === 'no' ? 'Gå en tur' : 'Take a walk'}</span>
-                  <span className="sub">{lang === 'no' ? `${trails.length} turstier` : `${trails.length} trails`}</span>
-                </button>
-                <button className="vl-welcome-card" onClick={() => { dismissWelcome(); applyActivityTile('bade'); }}>
-                  <span className="ic" dangerouslySetInnerHTML={{ __html: iconSvg('bade') }} />
-                  <span className="t">{lang === 'no' ? 'Finn en strand' : 'Find a beach'}</span>
-                  <span className="sub">{seaTemp !== null ? `${Math.round(seaTemp)}° ${lang === 'no' ? 'i vannet' : 'in the water'}` : (lang === 'no' ? 'Se badeplasser' : 'See beaches')}</span>
-                </button>
-                <button className="vl-welcome-card" onClick={() => { dismissWelcome(); applyActivityTile('spise'); }}>
-                  <span className="ic" dangerouslySetInnerHTML={{ __html: iconSvg('mat') }} />
-                  <span className="t">{lang === 'no' ? 'Spis & rast' : 'Eat & rest'}</span>
-                  <span className="sub">{lang === 'no' ? `${matCount} steder` : `${matCount} places`}</span>
-                </button>
-              </div>
-              <div className="vl-welcome-info">
-                <button className="half" onClick={() => { dismissWelcome(); if (hasDomGrid) setCondLayer('best'); }}>
-                  <span className="k">
-                    {weatherNow
-                      ? `${Math.round(weatherNow.airTemp)}° ${lang === 'no' ? 'og' : 'and'} ${weatherKindLabel(weatherIconKind(weatherNow.symbolCode), lang).toLowerCase()}`
-                      : (lang === 'no' ? 'Henter vær…' : 'Loading weather…')}
-                  </span>
-                  <span className="v">{lang === 'no' ? 'Forhold på kartet' : 'Conditions on the map'}</span>
-                </button>
-                <button className="half" onClick={() => { dismissWelcome(); toggleFerryPop(); }}>
-                  <span className="k">{nextFromIsland ? `${lang === 'no' ? 'Neste ferje' : 'Next ferry'} ${fmtDepTime(nextFromIsland.time)}` : (lang === 'no' ? 'Fergetider' : 'Ferry times')}</span>
-                  {nextFromIsland && <span className="v">{lang === 'no' ? `om ${minsUntil(nextFromIsland.time)} min` : `in ${minsUntil(nextFromIsland.time)} min`}</span>}
-                </button>
-              </div>
-              <button className="vl-welcome-dismiss" onClick={dismissWelcome}>
-                {lang === 'no' ? 'Utforsk kartet selv →' : 'Explore the map yourself →'}
-              </button>
-            </div>
-          </div>
-        );
-      })()}
       <MapContainer
         center={MAP_CENTER}
         zoom={MAP_ZOOM}
@@ -3601,7 +3551,21 @@ export function VeierlandApp() {
           {!activityTile ? (
             <>
               <div className="vl-dock-titlerow">
-                <div className="vl-dock-title">{lang === 'no' ? 'Hva vil du i dag?' : 'What do you want today?'}</div>
+                {/* First-open-of-the-day greeting, folded straight into the
+                    dock's existing title instead of a separate full-screen
+                    layer — the map is visible underneath from the very first
+                    frame now, and the four tiles below ARE the "three ways to
+                    start" (Bade/Gå tur/Spise cover the old welcome cards
+                    exactly), so there's no separate card grid to maintain. */}
+                <div className={`vl-dock-title${showWelcome ? ' welcome' : ''}`}>
+                  {showWelcome ? (() => {
+                    const hour = new Date().getHours();
+                    const greeting = hour < 10 ? (lang === 'no' ? 'God morgen!' : 'Good morning!')
+                      : hour < 17 ? (lang === 'no' ? 'God dag!' : 'Good day!')
+                      : (lang === 'no' ? 'God kveld!' : 'Good evening!');
+                    return `${greeting} ${lang === 'no' ? 'Hva vil du gjøre først?' : 'What do you want to do first?'}`;
+                  })() : (lang === 'no' ? 'Hva vil du i dag?' : 'What do you want today?')}
+                </div>
                 {/* A clear, always-visible way to jump straight to the full
                     place list without going through the hamburger menu — the
                     map screen previously had no map/list toggle at all until
