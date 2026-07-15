@@ -2788,9 +2788,7 @@ export function VeierlandApp() {
               <div className="vl-welcome-chip">{lang === 'no' ? 'Veierland, Nøtterøy' : 'Veierland, Norway'}</div>
               <h2 className="vl-welcome-h">{greeting}</h2>
               <p className="vl-welcome-p">
-                {lang === 'no'
-                  ? 'Velkommen til øya. Her er tre gode måter å starte besøket på:'
-                  : 'Welcome to the island. Here are three good ways to start your visit:'}
+                {lang === 'no' ? 'Hva vil du gjøre først?' : 'What do you want to do first?'}
               </p>
               <div className="vl-welcome-cards">
                 <button className="vl-welcome-card" onClick={() => { dismissWelcome(); applyActivityTile('gatur'); }}>
