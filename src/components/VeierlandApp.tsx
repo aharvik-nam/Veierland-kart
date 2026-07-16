@@ -99,7 +99,7 @@ export function VeierlandApp() {
   const [activeCats, setActiveCats] = useState<Set<string>>(new Set());
   const [expandedPlaceCats, setExpandedPlaceCats] = useState<Set<string>>(new Set());
   const [mode, setMode] = useState<'places' | 'trails' | 'nature' | 'history'>('places');
-  const [tab, setTab] = useState<'map' | 'places' | 'trails' | 'nature' | 'history' | 'saved'>('map');
+  const [tab, setTab] = useState<'map' | 'places' | 'trails' | 'nature' | 'history' | 'saved' | 'settings'>('map');
   const [searchQ, setSearchQ] = useState('');
   // "Nærmest meg" sort in the Steder list — only offered while position
   // tracking is on (it needs somewhere to measure from), and falls back to
@@ -936,8 +936,21 @@ export function VeierlandApp() {
     }
   }
 
-  function selectTab(t: 'map' | 'places' | 'trails' | 'nature' | 'history' | 'saved') {
+  function selectTab(t: 'map' | 'places' | 'trails' | 'nature' | 'history' | 'saved' | 'settings') {
     dismissWelcome();
+    // Settings has no map mode/layer of its own — it's a plain static screen,
+    // so it skips all the map-mode bookkeeping below rather than forcing a
+    // fake "mode" for it.
+    if (t === 'settings') {
+      setShowLayerPop(false);
+      setSelectedPOI(null);
+      setSelectedTrail(null);
+      setView('browse');
+      setTab(t);
+      setDockPeeked(false);
+      setSheetOpen(true);
+      return;
+    }
     // Re-tapping Kart with nothing open re-centres the island (replaces the
     // old "home" rail button)
     if (t === 'map' && tab === 'map' && !sheetOpen) {
@@ -1421,7 +1434,7 @@ export function VeierlandApp() {
   // Text strings
   const T = lang === 'no' ? {
     search: 'Søk på Veierland', all: 'Alle', explore: 'Utforsk Veierland',
-    map: 'Kart', saved: 'Lagret',
+    map: 'Kart', saved: 'Lagret', settings: 'Innstillinger',
     places: 'Steder', trails: 'Turer', nature: 'Natur', history: 'Historie', back: 'Tilbake',
     directions: 'Veibeskrivelse', length: 'Lengde', duration: 'Tid', diff: 'Vanskelighet', climb: 'Stigning',
     layers: 'Kartlag', nohit: 'Ingen treff', easy: 'Lett', showRoute: 'Vis rute',
@@ -1431,7 +1444,7 @@ export function VeierlandApp() {
     kontekst: 'Norsk kontekst', anekdoter: 'Historier',
   } : {
     search: 'Search Veierland', all: 'All', explore: 'Explore Veierland',
-    map: 'Map', saved: 'Saved',
+    map: 'Map', saved: 'Saved', settings: 'Settings',
     places: 'Places', trails: 'Trails', nature: 'Nature', history: 'History', back: 'Back',
     directions: 'Directions', length: 'Length', duration: 'Time', diff: 'Difficulty', climb: 'Climb',
     layers: 'Map layer', nohit: 'No matches', easy: 'Easy', showRoute: 'Show route',
@@ -2389,6 +2402,46 @@ export function VeierlandApp() {
     );
   }
 
+  // ── Render: Innstillinger (settings) ────────────────────────────────────────
+
+  function renderSettings() {
+    return (
+      <>
+        <div className="vl-settings-group">
+          <div className="vl-settings-label">{lang === 'no' ? 'Språk' : 'Language'}</div>
+          <div className="vl-seg">
+            <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>Norsk</button>
+            <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>English</button>
+          </div>
+        </div>
+        <div className="vl-settings-group">
+          <div className="vl-settings-label">{lang === 'no' ? 'Om appen' : 'About'}</div>
+          <p className="vl-settings-text">
+            {lang === 'no'
+              ? 'Veierland øykart samler praktisk informasjon og lokalhistorie om øya på ett sted — steder, turer, natur og historie.'
+              : 'Veierland island map brings together practical information and local history about the island in one place — places, trails, nature and history.'}
+          </p>
+        </div>
+        <div className="vl-settings-group">
+          <div className="vl-settings-label">{lang === 'no' ? 'Kilder' : 'Sources'}</div>
+          <p className="vl-settings-text">
+            {lang === 'no'
+              ? 'Kart: OpenStreetMap · CARTO. Vær: MET Norway. Historisk innhold: Lokalhistoriewiki, DigitaltMuseum, Wikimedia Commons.'
+              : 'Map: OpenStreetMap · CARTO. Weather: MET Norway. Historical content: Lokalhistoriewiki, DigitaltMuseum, Wikimedia Commons.'}
+          </p>
+        </div>
+        <div className="vl-settings-group">
+          <div className="vl-settings-label">{lang === 'no' ? 'Personvern' : 'Privacy'}</div>
+          <p className="vl-settings-text">
+            {lang === 'no'
+              ? 'Posisjonen din brukes kun lokalt i appen for å vise avstand og «nærmest meg» — den lagres ikke og deles ikke.'
+              : 'Your location is only used locally in the app to show distance and "nearest me" — it is not stored or shared.'}
+          </p>
+        </div>
+      </>
+    );
+  }
+
   // ── Render: POI detail ──────────────────────────────────────────────────────
 
   function renderPOIDetail(poi: POI) {
@@ -3295,10 +3348,10 @@ export function VeierlandApp() {
             {savedIds.size > 0 && <span className="vl-menu-badge">{savedIds.size}</span>}
           </button>
           <div className="vl-menu-divider" />
-          <div className="vl-menu-lang">
-            <button className={lang === 'no' ? 'on' : ''} onClick={() => setLang('no')}>Norsk</button>
-            <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>English</button>
-          </div>
+          <button className="vl-menu-item" onClick={() => { setShowMenu(false); exitActivityTile(); selectTab('settings'); }}>
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>{T.settings}</span>
+          </button>
         </div>
       )}
 
@@ -3899,6 +3952,10 @@ export function VeierlandApp() {
             <HeartSvg /><span>{T.saved}</span>
             {savedIds.size > 0 && <span className="vl-tabbadge">{savedIds.size}</span>}
           </button>
+          <button className={`vl-tabbtn${tab === 'settings' ? ' on' : ''}`} onClick={() => selectTab('settings')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>{T.settings}</span>
+          </button>
         </nav>
         <div className="vl-grab" onPointerDown={onGrabPointerDown}>
           <div className="bar" />
@@ -3914,7 +3971,7 @@ export function VeierlandApp() {
             </button>
             <h2 className="vl-fsheader-title">
               {tab === 'places' ? T.places : tab === 'trails' ? T.trails : tab === 'nature' ? T.nature
-                : tab === 'history' ? T.history : T.saved}
+                : tab === 'history' ? T.history : tab === 'settings' ? T.settings : T.saved}
             </h2>
           </div>
         )}
@@ -3922,6 +3979,7 @@ export function VeierlandApp() {
           {view === 'browse' && tab === 'nature' && renderNature()}
           {view === 'browse' && tab === 'history' && renderHistory()}
           {view === 'browse' && tab === 'saved' && renderSaved()}
+          {view === 'browse' && tab === 'settings' && renderSettings()}
           {view === 'browse' && (tab === 'map' || tab === 'places' || tab === 'trails') && renderBrowse()}
           {view === 'detail' && selectedPOI && renderPOIDetail(selectedPOI)}
           {view === 'detail' && selectedTrail && renderTrailDetail(selectedTrail)}
