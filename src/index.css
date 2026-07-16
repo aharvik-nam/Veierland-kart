@@ -80,7 +80,7 @@ body { display: grid; place-items: center; }
   box-shadow: 0 12px 50px rgba(28,38,30,.10);
   border: 1px solid var(--line);
 }
-@media (min-width: 520px) { .vl-app { border-radius: 26px; } }
+@media (min-width: 520px) { .vl-app { border-radius: var(--radius-lg); } }
 
 /* ── Markers ───────────────────────────────────────────────────────────────── */
 .vl-pin {
