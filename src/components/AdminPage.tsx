@@ -57,8 +57,8 @@ function useReportDirty(dirty: boolean) {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const S = {
-  page: { minHeight: '100vh', background: 'var(--page)', color: 'var(--ink)', fontFamily: "'Hanken Grotesk', system-ui, sans-serif", fontSize: 14 } as React.CSSProperties,
-  pill: (v: 'primary' | 'secondary' | 'danger'): React.CSSProperties => ({ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, background: v === 'primary' ? 'var(--accent)' : v === 'danger' ? '#dc2626' : 'var(--card)', color: v === 'secondary' ? 'var(--ink)' : '#fff', boxShadow: v === 'secondary' ? 'inset 0 0 0 1px var(--line)' : v === 'primary' ? '0 1px 4px rgba(74,124,100,.25)' : '0 1px 3px rgba(220,38,38,.2)', letterSpacing: '-.01em' }),
+  page: { minHeight: '100vh', background: 'var(--page)', color: 'var(--ink)', fontFamily: 'var(--font)', fontSize: 14 } as React.CSSProperties,
+  pill: (v: 'primary' | 'secondary' | 'danger'): React.CSSProperties => ({ padding: '8px 16px', borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, background: v === 'primary' ? 'var(--accent)' : v === 'danger' ? '#dc2626' : 'var(--card)', color: v === 'secondary' ? 'var(--ink)' : '#fff', boxShadow: v === 'secondary' ? 'inset 0 0 0 1px var(--line)' : v === 'primary' ? '0 1px 4px color-mix(in srgb, var(--accent) 25%, transparent)' : '0 1px 3px rgba(220,38,38,.2)', letterSpacing: '-.01em' }),
   editGrid: { padding: '20px 24px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '14px 20px' } as React.CSSProperties,
   // ── Master-detail split layout (Steder / Stedsnavn / Turer) ──
   splitRoot: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } as React.CSSProperties,
@@ -91,10 +91,10 @@ const S = {
   infoBox: { background: 'color-mix(in srgb, var(--accent) 8%, var(--card))', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 13, lineHeight: 1.55 },
   login: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--page)' },
   loginCard: { background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 20, padding: '40px 36px', width: 340, boxShadow: '0 4px 28px rgba(0,0,0,.09)' },
-  loginTitle: { fontSize: 26, fontWeight: 600, marginBottom: 4, textAlign: 'center' as const, fontFamily: "'Newsreader', Georgia, serif", letterSpacing: '-.02em' },
+  loginTitle: { fontSize: 26, fontWeight: 400, marginBottom: 4, textAlign: 'center' as const, fontFamily: 'var(--display)', letterSpacing: '-.02em' },
   loginSub: { fontSize: 13, color: 'var(--muted)', textAlign: 'center' as const, marginBottom: 24 },
   loginInput: { width: '100%', boxSizing: 'border-box' as const, padding: '11px 14px', borderRadius: 10, border: '1px solid var(--line)', background: 'var(--card2)', color: 'var(--ink)', fontSize: 15, font: 'inherit', marginBottom: 10 },
-  loginBtn: { width: '100%', padding: '12px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', font: 'inherit', letterSpacing: '-.01em', boxShadow: '0 2px 10px rgba(74,124,100,.3)' },
+  loginBtn: { width: '100%', padding: '12px', borderRadius: 999, border: 'none', background: 'var(--accent)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', font: 'inherit', letterSpacing: '-.01em', boxShadow: '0 2px 10px color-mix(in srgb, var(--accent) 30%, transparent)' },
   error: { color: '#dc2626', fontSize: 13, marginTop: 10, textAlign: 'center' as const, fontWeight: 500 },
   notConfigured: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--page)' },
   toolbar: { display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' as const },

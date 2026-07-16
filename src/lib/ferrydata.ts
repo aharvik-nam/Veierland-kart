@@ -299,3 +299,24 @@ export function fmtDepTime(d: Date): string {
 export function minsUntil(d: Date): number {
   return Math.round((d.getTime() - osloNow().getTime()) / 60000);
 }
+
+/** Formats a minute count as "N min" (<60), "T t M min" (60min–24h), or
+ * "1 døgn" (+ remaining hours) beyond 24h — raw minute counts like "395 min"
+ * are unreadable at a glance for longer waits. */
+export function fmtCountdown(mins: number, lang: 'no' | 'en'): string {
+  const m = Math.max(0, mins);
+  if (m < 60) return lang === 'no' ? `${m} min` : `${m} min`;
+  if (m < 24 * 60) {
+    const h = Math.floor(m / 60);
+    const rem = m % 60;
+    return lang === 'no'
+      ? (rem > 0 ? `${h} t ${rem} min` : `${h} t`)
+      : (rem > 0 ? `${h}h ${rem}min` : `${h}h`);
+  }
+  const days = Math.floor(m / (24 * 60));
+  const remHours = Math.floor((m % (24 * 60)) / 60);
+  const dayLabel = lang === 'no' ? (days === 1 ? 'døgn' : 'døgn') : (days === 1 ? 'day' : 'days');
+  return remHours > 0
+    ? (lang === 'no' ? `${days} ${dayLabel} ${remHours} t` : `${days} ${dayLabel} ${remHours}h`)
+    : `${days} ${dayLabel}`;
+}

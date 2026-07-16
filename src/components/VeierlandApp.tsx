@@ -28,7 +28,7 @@ import {
   ChevSvg, BackSvg, HeartSvg, RouteSvg, CheckSvg, UpChevSvg,
   MapTabSvg, PlacesTabSvg, TrailsTabSvg, NatureTabSvg, HistoryTabSvg, WeatherIcon,
 } from './UiIcons';
-import { fetchFerryDepartures, fetchQuaySailings, nearestQuay, FerryBoard, FERRY_QUAYS, fmtDepTime, minsUntil } from '../lib/ferrydata';
+import { fetchFerryDepartures, fetchQuaySailings, nearestQuay, FerryBoard, FERRY_QUAYS, fmtDepTime, minsUntil, fmtCountdown } from '../lib/ferrydata';
 import {
   hasDomGrid, sunPosition, sunlitAt, shelterAt, computeContours,
   makeSunShadowOverlay, makeShelterOverlay, makeEffectiveTempOverlay, makeBestSpotsOverlay, BestSpotsInfo,
@@ -2469,7 +2469,7 @@ export function VeierlandApp() {
                 <div className="hd">
                   <b>{fmtDepTime(sl.time)}</b>
                   <span className="fq">→ {sl.calls.map(c => `${c.name} ${fmtDepTime(c.time)}`).join(' · ')}</span>
-                  {!quayBoard.tomorrow && <span className="in">{minsUntil(sl.time)} min</span>}
+                  {!quayBoard.tomorrow && <span className="in">{fmtCountdown(minsUntil(sl.time), lang)}</span>}
                 </div>
               </div>
             ))}
@@ -3192,7 +3192,13 @@ export function VeierlandApp() {
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
         <div className="vl-topbar2-info">
-          <div className="vl-topbar2-weather">
+          <button
+            className={`vl-topbar2-weather${condLayer ? ' on' : ''}`}
+            disabled={!hasDomGrid}
+            onClick={e => { e.stopPropagation(); setCondLayer(c => c ? null : 'best'); }}
+            aria-label={lang === 'no' ? 'Forhold nå (beste steder, sol, vind, temperatur)' : 'Conditions now (best spots, sun, wind, temperature)'}
+            title={lang === 'no' ? 'Forhold nå' : 'Conditions now'}
+          >
             {weatherNow ? (
               <>
                 <span className="wico"><WeatherIcon kind={weatherIconKind(weatherNow.symbolCode)} /></span>
@@ -3201,7 +3207,7 @@ export function VeierlandApp() {
                 <span className="wphrase">{weatherKindLabel(weatherIconKind(weatherNow.symbolCode), lang)}</span>
               </>
             ) : (lang === 'no' ? 'Henter vær…' : 'Loading weather…')}
-          </div>
+          </button>
         </div>
         <button className={`vl-ferrytext-btn${showFerryPop ? ' on' : ''}`}
           onClick={e => { e.stopPropagation(); toggleFerryPop(); }}
@@ -3211,7 +3217,7 @@ export function VeierlandApp() {
             {nextFromIsland
               ? (ferryTomorrow
                   ? (lang === 'no' ? 'I MORGEN' : 'TOMORROW')
-                  : (lang === 'no' ? `FERJE OM ${minsUntil(nextFromIsland.time)} MIN` : `FERRY IN ${minsUntil(nextFromIsland.time)} MIN`))
+                  : (lang === 'no' ? `FERJE OM ${fmtCountdown(minsUntil(nextFromIsland.time), lang).toUpperCase()}` : `FERRY IN ${fmtCountdown(minsUntil(nextFromIsland.time), lang).toUpperCase()}`))
               : (lang === 'no' ? 'FERGETIDER' : 'FERRY TIMES')}
           </div>
         </button>
@@ -3287,8 +3293,8 @@ export function VeierlandApp() {
                     <span className="fq">{lang === 'no' ? 'fra' : 'from'} {d.fromName}</span>
                     {!ferryTomorrow && (
                       i === 0
-                        ? <span className="in pill">{lang === 'no' ? 'om' : 'in'} {minsUntil(d.time)} min</span>
-                        : <span className="in">{minsUntil(d.time)} min</span>
+                        ? <span className="in pill">{lang === 'no' ? 'om' : 'in'} {fmtCountdown(minsUntil(d.time), lang)}</span>
+                        : <span className="in">{fmtCountdown(minsUntil(d.time), lang)}</span>
                     )}
                   </div>
                   <div className="ds">
@@ -3304,8 +3310,8 @@ export function VeierlandApp() {
                     <span className="fq">{lang === 'no' ? 'fra' : 'from'} {d.fromName}</span>
                     {!ferryTomorrow && (
                       i === 0
-                        ? <span className="in pill">{lang === 'no' ? 'om' : 'in'} {minsUntil(d.time)} min</span>
-                        : <span className="in">{minsUntil(d.time)} min</span>
+                        ? <span className="in pill">{lang === 'no' ? 'om' : 'in'} {fmtCountdown(minsUntil(d.time), lang)}</span>
+                        : <span className="in">{fmtCountdown(minsUntil(d.time), lang)}</span>
                     )}
                   </div>
                   <div className="ds">
@@ -3334,12 +3340,12 @@ export function VeierlandApp() {
         style={{ bottom: railBottom }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Mobile-only: Min posisjon + Forhold fold into this same popover
-            instead of their own rail buttons, so the mobile map screen has
-            one floating "map tools" entry point instead of three separate
-            icon buttons competing for thumb space. Desktop keeps its own
-            separate rail buttons (see .vl-rbtn.posisjon/.forhold CSS) since
-            there's room and no need to consolidate there. */}
+        {/* Mobile-only: Min posisjon folds into this same popover instead of
+            its own rail button, so the mobile map screen has one floating
+            "map tools" entry point instead of two separate icon buttons
+            competing for thumb space. Forhold is no longer reachable from
+            here or from a desktop rail button — the weather pill in the top
+            bar is the sole entry point, on both breakpoints. */}
         <div className="vl-pop-mobileonly">
           <div className={`vl-opt${locating ? ' on' : ''}`} {...pressable(() => { locate(); setShowLayerPop(false); }, locating)}>
             <span className="sw vl-opt-ic" style={{ color: 'var(--ink)' }}>
@@ -3350,15 +3356,6 @@ export function VeierlandApp() {
             <span className="nm">{lang === 'no' ? (locating ? 'Stopp sporing' : 'Min posisjon') : (locating ? 'Stop tracking' : 'My location')}</span>
             <span className="chk">{locating && <CheckSvg />}</span>
           </div>
-          {hasDomGrid && (
-            <div className={`vl-opt${condLayer ? ' on' : ''}`} {...pressable(() => { setCondLayer(c => c ? null : 'best'); setShowLayerPop(false); }, !!condLayer)}>
-              <span className="sw vl-opt-ic" style={{ color: 'var(--ink)' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/></svg>
-              </span>
-              <span className="nm">{lang === 'no' ? 'Forhold nå' : 'Conditions now'}</span>
-              <span className="chk">{condLayer && <CheckSvg />}</span>
-            </div>
-          )}
           <div className="vl-pop-sep" />
         </div>
         <h5>{T.layers}</h5>
@@ -3437,18 +3434,6 @@ export function VeierlandApp() {
           </svg>
           <span className="rl">{lang === 'no' ? 'Posisjon' : 'Locate'}</span>
         </button>
-        {hasDomGrid && (
-          <button
-            className={`vl-rbtn forhold${condLayer ? ' active' : ''}`}
-            aria-label={lang === 'no' ? 'Forhold nå (beste steder, sol, vind, temperatur)' : 'Conditions now (best spots, sun, wind, temperature)'}
-            title={lang === 'no' ? 'Forhold nå' : 'Conditions now'}
-            onClick={e => { e.stopPropagation(); setCondLayer(c => c ? null : 'best'); }}
-            style={condLayer ? { background: 'var(--accent)', color: '#fff' } : undefined}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/></svg>
-            <span className="rl">{lang === 'no' ? 'Forhold' : 'Conditions'}</span>
-          </button>
-        )}
       </div>
 
       {/* Legend for the active conditions overlay */}
