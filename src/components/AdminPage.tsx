@@ -77,7 +77,7 @@ const S = {
   }),
   listRowName: (active: boolean): React.CSSProperties => ({
     flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-    fontSize: 13.5, fontWeight: active ? 600 : 400, color: active ? 'var(--accent)' : 'var(--ink)', letterSpacing: '-.01em',
+    fontSize: 13.5, fontWeight: active ? 600 : 400, color: active ? 'var(--accent-700)' : 'var(--ink)', letterSpacing: '-.01em',
   }),
   listRowMeta: { fontSize: 10.5, color: 'var(--muted)', flexShrink: 0, background: 'var(--line2)', borderRadius: 6, padding: '1px 6px', fontWeight: 500 } as React.CSSProperties,
   fullSpan: { gridColumn: '1 / -1' } as React.CSSProperties,
@@ -86,7 +86,7 @@ const S = {
   textarea: { width: '100%', boxSizing: 'border-box' as const, padding: '8px 11px', borderRadius: 8, border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)', fontSize: 13.5, font: 'inherit', resize: 'vertical' as const, minHeight: 80 },
   imgPreview: { marginTop: 8, borderRadius: 10, maxHeight: 140, maxWidth: '100%', border: '1px solid var(--line)', objectFit: 'cover' as const, display: 'block' },
   deleteBtn: { gridColumn: '1 / -1', padding: '8px 16px', borderRadius: 8, border: '1px solid #fecaca', background: '#fff5f5', color: '#dc2626', fontSize: 13, cursor: 'pointer', fontWeight: 500, justifySelf: 'end', letterSpacing: '-.01em' } as React.CSSProperties,
-  addBtn: { width: '100%', padding: '12px', borderRadius: 12, border: '2px dashed var(--line)', background: 'none', color: 'var(--accent)', fontSize: 14, cursor: 'pointer', marginTop: 10, fontWeight: 500, letterSpacing: '-.01em' },
+  addBtn: { width: '100%', padding: '12px', borderRadius: 12, border: '2px dashed var(--line)', background: 'none', color: 'var(--accent-700)', fontSize: 14, cursor: 'pointer', marginTop: 10, fontWeight: 500, letterSpacing: '-.01em' },
   fileActions: { display: 'flex', gap: 8, marginBottom: 18, alignItems: 'center', flexWrap: 'wrap' as const, padding: '12px 16px', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12 },
   infoBox: { background: 'color-mix(in srgb, var(--accent) 8%, var(--card))', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 13, lineHeight: 1.55 },
   login: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--page)' },
@@ -1419,7 +1419,7 @@ function FarmEditor({ farm, onChange }: {
   };
   const addBtnSt: React.CSSProperties = {
     background: 'none', border: '1px dashed var(--line)', borderRadius: 8,
-    color: 'var(--accent)', cursor: 'pointer', padding: '6px 14px', fontSize: 13, marginTop: 6, display: 'block',
+    color: 'var(--accent-700)', cursor: 'pointer', padding: '6px 14px', fontSize: 13, marginTop: 6, display: 'block',
   };
   const secHdr: React.CSSProperties = {
     fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase',
@@ -1751,7 +1751,7 @@ function TidslinjeTab() {
               <div style={{ flex: 1 }}>
                 <span style={{ fontWeight: 600, fontSize: 14 }}>{sec.era}</span>
                 <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 8 }}>{sec.period}</span>
-                {sec.image && <span style={{ fontSize: 11, color: 'var(--accent)', marginLeft: 8 }}>🖼 bilde</span>}
+                {sec.image && <span style={{ fontSize: 11, color: 'var(--accent-700)', marginLeft: 8 }}>🖼 bilde</span>}
               </div>
               <span style={{ color: 'var(--muted)', fontSize: 11 }}>{isOpen ? '▲' : '▼'}</span>
             </div>
@@ -2292,7 +2292,7 @@ export function AdminPage() {
             Legg til <code>VITE_FIREBASE_*</code>-variabler i <code>.env</code> for å aktivere admin-siden.
             Se <code>.env.example</code> for detaljer.
           </p>
-          <a href="/" style={{ color: 'var(--accent)', textDecoration: 'none', fontSize: 14 }}>← Tilbake til kart</a>
+          <a href="/" style={{ color: 'var(--accent-700)', textDecoration: 'none', fontSize: 14 }}>← Tilbake til kart</a>
         </div>
       </div>
     );
@@ -2342,16 +2342,16 @@ export function AdminPage() {
                         borderRadius: 10, border: 'none', font: 'inherit', fontWeight: 600, fontSize: 13.5,
                         cursor: 'pointer', textAlign: 'left', marginBottom: 1,
                         background: on ? 'color-mix(in srgb, var(--accent) 13%, transparent)' : 'transparent',
-                        color: on ? 'var(--accent)' : 'var(--ink)',
+                        color: on ? 'var(--accent-700)' : 'var(--ink)',
                       }}>
-                      <span style={{ color: on ? 'var(--accent)' : 'var(--muted)', display: 'flex', flexShrink: 0 }}>{NAV_ICON[it.key]}</span>
+                      <span style={{ color: on ? 'var(--accent-700)' : 'var(--muted)', display: 'flex', flexShrink: 0 }}>{NAV_ICON[it.key]}</span>
                       {!narrow && <span style={{ flex: 1 }}>{it.label}</span>}
                       {!narrow && counts[it.key] !== undefined && (
                         <span style={{
                           fontSize: 11, fontWeight: 700, borderRadius: 99, padding: '1px 8px',
                           background: on ? 'var(--card)' : 'var(--card2)',
                           border: '1px solid var(--line)',
-                          color: on ? 'var(--accent)' : 'var(--muted)',
+                          color: on ? 'var(--accent-700)' : 'var(--muted)',
                         }}>{counts[it.key]}</span>
                       )}
                     </button>
@@ -2365,13 +2365,13 @@ export function AdminPage() {
             <a href="/" title="Til kartet" style={{
               display: 'flex', alignItems: 'center', gap: 9, padding: narrow ? '8px 0' : '7px 10px',
               justifyContent: narrow ? 'center' : 'flex-start',
-              borderRadius: 9, fontSize: 13, fontWeight: 600, color: 'var(--accent)', textDecoration: 'none',
+              borderRadius: 9, fontSize: 13, fontWeight: 600, color: 'var(--accent-700)', textDecoration: 'none',
             }}>
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
               {!narrow && 'Til kartet'}
             </a>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: narrow ? '0' : '2px 10px 4px', justifyContent: narrow ? 'center' : 'flex-start' }}>
-              <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'color-mix(in srgb, var(--accent) 16%, var(--card))', color: 'var(--accent)', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0 }}>{initial}</span>
+              <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'color-mix(in srgb, var(--accent) 16%, var(--card))', color: 'var(--accent-700)', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0 }}>{initial}</span>
               {!narrow && (
                 <span style={{ flex: 1, minWidth: 0, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={user.email ?? ''}>
                   {user.email}
@@ -2399,7 +2399,7 @@ export function AdminPage() {
               {NAV_GROUPS.flatMap(g => g.items).find(i => i.key === tab)?.sub}
             </span>
             {dirty && (
-              <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 700, color: 'var(--accent)' }}>
+              <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 700, color: 'var(--accent-700)' }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)' }} />
                 Ulagrede endringer
               </span>
