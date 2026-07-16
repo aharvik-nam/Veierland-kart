@@ -344,13 +344,34 @@ body { display: grid; place-items: center; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
-  .vl-loading-blink, .vl-spinner, .vl-btn.sec.heart-pop { animation: none !important; }
+  .vl-loading-blink, .vl-spinner, .vl-btn.sec.heart-pop, .vl-skel-ico, .vl-skel-line { animation: none !important; }
 }
 
 .vl-loading-blink {
   color: var(--accent);
   animation: vlBlink 1.1s ease-in-out infinite;
 }
+
+/* ── Loading skeleton (screen 18 «Laster») ─────────────────────────────────── */
+@keyframes vlShimmer {
+  0% { background-position: 180% 0; }
+  100% { background-position: -80% 0; }
+}
+.vl-skel-tag {
+  display: inline-block; margin: 6px 0 10px; padding: 4px 12px;
+  border-radius: 999px; background: var(--card2); border: 1px solid var(--line);
+  font-size: 11.5px; font-weight: 700; color: var(--muted);
+}
+.vl-skel-row { display: flex; align-items: center; gap: 11px; padding: 9px 2px; }
+.vl-skel-ico, .vl-skel-line {
+  background: linear-gradient(90deg, var(--card2) 30%, var(--line2) 50%, var(--card2) 70%);
+  background-size: 250% 100%;
+  animation: vlShimmer 1.4s ease-in-out infinite;
+}
+.vl-skel-ico { width: 34px; height: 34px; border-radius: 10px; flex: 0 0 34px; }
+.vl-skel-lines { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.vl-skel-line { height: 12px; border-radius: 999px; }
+.vl-skel-line.thin { height: 9px; opacity: .7; }
 
 /* ── Era image ─────────────────────────────────────────────────────────────── */
 .vl-era-img {
@@ -1043,7 +1064,9 @@ body { display: grid; place-items: center; }
   display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
 .vl-fsheader-title {
-  font-family: var(--display); font-size: 22px; font-weight: 600;
+  /* Caprasimo ships only weight 400 — anything heavier is browser-synthesized
+     faux bold, which the design system forbids. */
+  font-family: var(--display); font-size: 22px; font-weight: 400;
   color: var(--ink); margin: 0;
 }
 
@@ -1111,7 +1134,7 @@ body { display: grid; place-items: center; }
   background: var(--card2); color: var(--muted); border: 1px solid var(--line);
 }
 .vl-h2 {
-  margin: 11px 0 2px; font-size: 30px; font-weight: 500;
+  margin: 11px 0 2px; font-size: 30px; font-weight: 400;
   font-family: var(--display);
   letter-spacing: -.01em; line-height: 1.1;
 }
@@ -1175,6 +1198,35 @@ body { display: grid; place-items: center; }
 .vl-tmode { display: flex; align-items: center; gap: 6px; }
 .vl-tmode .ic { display: flex; color: var(--accent); flex: 0 0 auto; }
 .vl-tmode .tid { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+
+/* ── POI photo header (design screen 3) ─────────────────────────────────────── */
+.vl-poi-hero {
+  position: relative;
+  /* Bleed past the sheet body's side padding so the photo reads as a header,
+     not an inline image. */
+  margin: 0 calc(-1 * var(--pad)) 14px;
+  overflow: hidden;
+}
+.vl-poi-hero img {
+  width: 100%; height: 230px; object-fit: cover; display: block;
+  filter: saturate(0.6) contrast(0.85) brightness(1.1) opacity(0.94);
+}
+.vl-poi-hero .hbtn {
+  position: absolute; top: 12px;
+  width: 38px; height: 38px; border-radius: 50%; border: none;
+  background: rgba(249,244,237,.92); color: var(--ink);
+  display: grid; place-items: center; cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+.vl-poi-hero .hbtn svg { width: 18px; height: 18px; }
+.vl-poi-hero .hbtn.back { left: 12px; }
+.vl-poi-hero .hbtn.save { right: 12px; }
+.vl-poi-hero .hbtn.save.on { background: var(--accent); color: #fff; }
+.vl-poi-hero .vl-photo-credit {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: color-mix(in srgb, var(--ink) 55%, transparent); color: #fff;
+  border-radius: 0;
+}
 
 /* ── Static POI image ───────────────────────────────────────────────────────── */
 .vl-poi-static-img { margin: 0 0 14px; position: relative; }

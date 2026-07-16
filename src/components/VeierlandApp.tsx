@@ -1762,9 +1762,18 @@ export function VeierlandApp() {
         })}
 
         {natureLoading && (
-          <p className="vl-loading-blink" style={{ fontSize: 13, margin: '8px 0' }}>
-            {lang === 'no' ? 'Henter siste observasjoner fra Artsdatabanken…' : 'Fetching latest observations from Artsdatabanken…'}
-          </p>
+          <div aria-live="polite">
+            <span className="vl-skel-tag">{lang === 'no' ? 'Henter arter …' : 'Fetching species …'}</span>
+            {[0, 1, 2, 3].map(i => (
+              <div key={i} className="vl-skel-row" aria-hidden="true">
+                <div className="vl-skel-ico" />
+                <div className="vl-skel-lines">
+                  <div className="vl-skel-line" style={{ width: `${72 - i * 9}%` }} />
+                  <div className="vl-skel-line thin" style={{ width: `${48 - i * 5}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
         )}
 
         {selectedKategori && (
@@ -2356,7 +2365,10 @@ export function VeierlandApp() {
       return (
         <div className="vl-empty">
           <div style={{ opacity: 0.5, marginBottom: 8, display: 'flex', justifyContent: 'center' }}><HeartSvg /></div>
-          <p>{lang === 'no' ? 'Ingenting lagret ennå. Trykk på hjertet på et sted eller en tur.' : 'Nothing saved yet. Tap the heart on a place or trail.'}</p>
+          <p>{lang === 'no' ? 'Ingen lagrede steder ennå. Trykk på hjertet på et sted eller en tur.' : 'No saved places yet. Tap the heart on a place or trail.'}</p>
+          <button className="vl-empty-clear" onClick={() => selectTab('map')}>
+            {lang === 'no' ? 'Utforsk kartet' : 'Explore the map'}
+          </button>
         </div>
       );
     }
@@ -2455,7 +2467,28 @@ export function VeierlandApp() {
     const backRedundant = tab === 'map' && !isDesktopView();
     return (
       <>
-        {!backRedundant && <button className="vl-back" onClick={goBack}><BackSvg />{T.back}</button>}
+        {/* Photo header (design screen 3): the POI photo sits at the top with
+            back/save floating on it. POIs without a photo keep the plain
+            text back-button row. */}
+        {poi.bilde ? (
+          <div className="vl-poi-hero">
+            <img src={poi.bilde} alt={poi.navn} loading="lazy" decoding="async" onError={hideBrokenImg} />
+            {!backRedundant && (
+              <button className="hbtn back" onClick={goBack} aria-label={T.back}><BackSvg /></button>
+            )}
+            <button
+              className={`hbtn save${saved ? ' on' : ''}`}
+              onClick={() => { toggleSaved(poi.id); setHeartAnim(true); setTimeout(() => setHeartAnim(false), 350); }}
+              aria-label={saved ? (lang === 'no' ? 'Fjern fra lagret' : 'Remove from saved') : (lang === 'no' ? 'Lagre' : 'Save')}
+              aria-pressed={saved}
+            >
+              <HeartSvg />
+            </button>
+            {poi.bilde_lisens && <span className="vl-photo-credit">{poi.bilde_lisens}</span>}
+          </div>
+        ) : (
+          !backRedundant && <button className="vl-back" onClick={goBack}><BackSvg />{T.back}</button>
+        )}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {(poi.kategorier ?? [poi.kategori]).map(k => {
             const c = getCat(k);
@@ -2573,13 +2606,6 @@ export function VeierlandApp() {
           <div className="vl-fact">
             <div className="vl-fact-label">{lang === 'no' ? 'Visste du at' : 'Did you know'}</div>
             <p className="vl-fact-text">{poi.visste_du_at}</p>
-          </div>
-        )}
-
-        {poi.bilde && (
-          <div className="vl-poi-static-img">
-            <img src={poi.bilde} alt={poi.navn} loading="lazy" decoding="async" onError={hideBrokenImg} />
-            {poi.bilde_lisens && <span className="vl-photo-credit">{poi.bilde_lisens}</span>}
           </div>
         )}
 
