@@ -3186,7 +3186,7 @@ export function VeierlandApp() {
             />
             <Polyline
               positions={trailPath}
-              pathOptions={{ color: '#4a7c64', weight: 3.6, opacity: 1, lineCap: 'round', lineJoin: 'round' }}
+              pathOptions={{ color: '#c67139', weight: 3.6, opacity: 1, lineCap: 'round', lineJoin: 'round' }}
             />
           </>
         )}
