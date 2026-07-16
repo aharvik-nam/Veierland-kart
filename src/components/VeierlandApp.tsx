@@ -430,6 +430,14 @@ export function VeierlandApp() {
     return rankBeaches(beaches, weatherNow?.windFromDeg ?? null, new Date());
   }, [allPOIs, weatherNow]);
 
+  // First real POI photo (prefers a beach, for a welcoming shot) — the
+  // welcome hero uses actual island photography, not a placeholder image.
+  const welcomeHeroPhoto = useMemo(() => {
+    const withPhoto = allPOIs.filter(p => !!p.bilde);
+    const beach = withPhoto.find(p => (p.kategorier ?? [p.kategori]).includes('bad'));
+    return (beach ?? withPhoto[0])?.bilde ?? null;
+  }, [allPOIs]);
+
   const recoText = useMemo(
     () => dailyRecommendation(beachRanking, seaTemp, lang),
     [beachRanking, seaTemp, lang]
@@ -2933,6 +2941,42 @@ export function VeierlandApp() {
 
   return (
     <div className="vl-app">
+      {/* First-open-of-the-day welcome: a full-screen hero over the map
+          (per the Organic redesign's screen 1), not folded into the dock —
+          the map itself only becomes visible once the visitor dismisses it. */}
+      {showWelcome && (
+        <div
+          className="vl-welcome-hero"
+          style={welcomeHeroPhoto ? { backgroundImage: `url(${welcomeHeroPhoto})` } : undefined}
+          {...pressable(dismissWelcome)}
+        >
+          <div className="vl-welcome-scrim" />
+          <div className="vl-welcome-content" onClick={e => e.stopPropagation()}>
+            <h1 className="vl-welcome-title">{lang === 'no' ? 'Velkommen til Veierland' : 'Welcome to Veierland'}</h1>
+            <p className="vl-welcome-sub">
+              {lang === 'no' ? 'Hva vil du gjøre først?' : 'What do you want to do first?'}
+            </p>
+            <div className="vl-welcome-chips">
+              <button className="vl-welcome-chip" onClick={() => applyActivityTile('bade')}>
+                <span dangerouslySetInnerHTML={{ __html: iconSvg('bade') }} />
+                {lang === 'no' ? 'Bade' : 'Swim'}
+              </button>
+              <button className="vl-welcome-chip" onClick={() => applyActivityTile('gatur')}>
+                <span dangerouslySetInnerHTML={{ __html: iconSvg('tur') }} />
+                {lang === 'no' ? 'Gå tur' : 'Walk'}
+              </button>
+              <button className="vl-welcome-chip" onClick={() => applyActivityTile('spise')}>
+                <span dangerouslySetInnerHTML={{ __html: iconSvg('mat') }} />
+                {lang === 'no' ? 'Spise' : 'Eat'}
+              </button>
+            </div>
+            <button className="vl-welcome-cta" onClick={dismissWelcome}>
+              {lang === 'no' ? 'Start utforsking' : 'Start exploring'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Map area */}
       <div className="vl-map-area" style={{ '--dock-h': `${dockReservedH}px` } as React.CSSProperties}>
       <MapContainer
@@ -3696,20 +3740,8 @@ export function VeierlandApp() {
           {!activityTile ? (
             <>
               <div className="vl-dock-titlerow">
-                {/* First-open-of-the-day greeting, folded straight into the
-                    dock's existing title instead of a separate full-screen
-                    layer — the map is visible underneath from the very first
-                    frame now, and the four tiles below ARE the "three ways to
-                    start" (Bade/Gå tur/Spise cover the old welcome cards
-                    exactly), so there's no separate card grid to maintain. */}
-                <div className={`vl-dock-title${showWelcome ? ' welcome' : ''}`}>
-                  {showWelcome ? (() => {
-                    const hour = new Date().getHours();
-                    const greeting = hour < 10 ? (lang === 'no' ? 'God morgen!' : 'Good morning!')
-                      : hour < 17 ? (lang === 'no' ? 'God dag!' : 'Good day!')
-                      : (lang === 'no' ? 'God kveld!' : 'Good evening!');
-                    return `${greeting} ${lang === 'no' ? 'Hva vil du gjøre først?' : 'What do you want to do first?'}`;
-                  })() : (lang === 'no' ? 'Hva vil du i dag?' : 'What do you want today?')}
+                <div className="vl-dock-title">
+                  {lang === 'no' ? 'Hva vil du i dag?' : 'What do you want today?'}
                 </div>
                 {/* A clear, always-visible way to jump straight to the full
                     place list without going through the hamburger menu — the
