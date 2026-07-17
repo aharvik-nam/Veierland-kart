@@ -275,7 +275,8 @@ body { display: grid; place-items: center; }
 }
 .vl-poi-zone:active { background: var(--card2); }
 .vl-poi-ico {
-  width: 38px; height: 38px; border-radius: 10px; flex: 0 0 38px;
+  /* Design screen 4: solid category-color circles with white glyphs */
+  width: 40px; height: 40px; border-radius: 50%; flex: 0 0 40px;
   display: grid; place-items: center; pointer-events: none;
 }
 .vl-poi-ico svg { width: 20px; height: 20px; }
@@ -650,12 +651,6 @@ body { display: grid; place-items: center; }
 .vl-quayferry .vl-fdep + .vl-fdep { border-top: 1px solid var(--line); }
 .vl-quayferry .vl-flink { border-top: 1px solid var(--line); }
 
-/* ── Walk-time line in POI detail ──────────────────────────────────────────── */
-.vl-walkline {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 13px; font-weight: 600; color: var(--muted); margin: 6px 0 10px;
-}
-.vl-walkline svg { color: var(--accent); flex: 0 0 auto; }
 
 .vl-chips {
   display: flex; gap: 7px; margin-top: 9px; overflow-x: auto;
@@ -745,18 +740,20 @@ body { display: grid; place-items: center; }
   display: flex; flex-direction: column; gap: 10px;
   transition: bottom .34s cubic-bezier(.3,.8,.3,1);
 }
+/* Design screen 2: small solid-accent circles with white glyphs, no text
+   label (the label lives in aria-label/title). */
 .vl-rbtn {
-  width: 54px; border-radius: var(--r);
-  border: 1px solid var(--line);
-  background: var(--card);
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 8px 2px 5px;
-  cursor: pointer; color: var(--ink); font: inherit;
-  box-shadow: 0 2px 10px rgba(28,38,30,.12);
+  width: 46px; height: 46px; border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  display: grid; place-items: center;
+  padding: 0;
+  cursor: pointer; color: #fff; font: inherit;
+  box-shadow: var(--shadow-md);
 }
-.vl-rbtn .rl { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: .01em; }
-.vl-rbtn.active .rl { color: inherit; }
-.vl-rbtn:active { transform: scale(.94); }
+.vl-rbtn .rl { display: none; }
+.vl-rbtn:hover { background: var(--accent-600); }
+.vl-rbtn:active { transform: scale(.94); background: var(--accent-700); }
 /* Mobile: Min posisjon folds into the map-tools popover (see
    .vl-pop-mobileonly) instead of its own rail button — one floating button
    instead of two competing for thumb space. Desktop has room to keep it
@@ -895,11 +892,17 @@ body { display: grid; place-items: center; }
   padding: 0 24px calc(40px + env(safe-area-inset-bottom, 0px));
   cursor: default;
 }
+.vl-welcome-tag {
+  display: inline-block; margin-bottom: 10px;
+  padding: 4px 12px; border-radius: 999px;
+  background: rgba(249,244,237,.85); color: var(--ink);
+  font-size: 11.5px; font-weight: 600;
+}
 .vl-welcome-title {
   font-family: var(--display); font-weight: 400; font-size: 32px; line-height: 1.1;
   color: #fff; margin: 0 0 8px;
 }
-.vl-welcome-sub { font-size: 15px; font-weight: 500; color: rgba(255,255,255,.85); margin: 0 0 20px; }
+.vl-welcome-sub { font-size: 14.5px; font-weight: 500; line-height: 1.5; color: rgba(255,255,255,.88); margin: 0 0 20px; }
 .vl-welcome-chips { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
 .vl-welcome-chip {
   display: inline-flex; align-items: center; gap: 7px;
@@ -941,8 +944,13 @@ body { display: grid; place-items: center; }
 .vl-dock-grab .bar { width: 40px; height: 4px; border-radius: 99px; background: var(--line); margin: 0 auto; }
 .vl-dock-titlerow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 2px 10px; }
 .vl-dock-title {
-  font-size: 12px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .07em; color: var(--muted); margin: 0;
+  font-family: var(--display); font-weight: 400; font-size: 18.5px;
+  letter-spacing: -.01em; color: var(--ink); margin: 0; line-height: 1.15;
+}
+/* Daily recommendation as the title's subtitle (design screen 2) */
+.vl-dock-sub {
+  font-size: 12.5px; line-height: 1.4; color: var(--muted);
+  margin: -7px 2px 11px;
 }
 /* Always-visible Kart/Liste entry point — see JSX comment on
    .vl-dock-listbtn for why this exists (there was previously no way to
@@ -959,16 +967,17 @@ body { display: grid; place-items: center; }
 .vl-dock-tiles-sec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 9px; }
 .vl-dock-tile-sm {
   display: flex; align-items: center; justify-content: center; gap: 6px;
-  border: 1px solid var(--line); background: var(--card);
-  border-radius: 12px; padding: 9px 6px; min-height: 40px;
+  border: none; background: var(--card2);
+  border-radius: 14px; padding: 9px 6px; min-height: 40px;
   font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
 }
 .vl-dock-tile-sm svg { width: 17px; height: 17px; flex: 0 0 auto; }
 .vl-dock-tile-sm .lbl { color: var(--ink); white-space: nowrap; }
 .vl-dock-tile {
+  /* Design screen 2: soft tinted tiles without hairline borders */
   display: flex; flex-direction: column; align-items: center; gap: 7px;
-  border: 1px solid var(--line); background: var(--card);
-  border-radius: 16px; padding: 14px 4px 11px;
+  border: none; background: var(--card2);
+  border-radius: 18px; padding: 14px 4px 11px;
   font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
 }
 .vl-dock-tile svg { width: 26px; height: 26px; }
@@ -981,14 +990,6 @@ body { display: grid; place-items: center; }
 /* Toned down from a full content-card treatment (border + card background +
    large emoji) to a quieter hint row — it's a nice-to-know suggestion, not
    something that should compete visually with the tiles above it. */
-.vl-dock-reco {
-  display: flex; align-items: center; gap: 8px; margin-top: 10px;
-  background: var(--card2); border-radius: 12px;
-  padding: 8px 12px; font-size: 12.5px; line-height: 1.35; color: var(--ink2); cursor: pointer;
-}
-.vl-dock-reco .em { font-size: 15px; line-height: 1; flex: 0 0 auto; opacity: .8; }
-.vl-dock-reco b { font-weight: 600; color: var(--ink); }
-.vl-dock-reco svg { width: 14px; height: 14px; opacity: .55; }
 .vl-dock-summary { display: flex; align-items: center; gap: 10px; }
 .vl-dock-summary .back {
   width: 38px; height: 38px; flex: 0 0 auto; border-radius: 11px;
@@ -1146,14 +1147,22 @@ body { display: grid; place-items: center; }
 .vl-factcard { background: var(--card2); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; }
 .vl-factcard .k { font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
 .vl-factcard .v { font-size: 14px; font-weight: 700; color: var(--ink); margin-top: 2px; }
-.vl-fact { margin: 0 0 16px; }
-.vl-fact-label {
-  font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;
-  letter-spacing: .06em; margin-bottom: 8px;
+/* Design screen 3: sage-tinted rounded fact card with a feather glyph */
+.vl-fact {
+  margin: 0 0 16px;
+  background: var(--accent2-100);
+  border-radius: var(--r);
+  padding: 13px 15px;
 }
+.vl-fact-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12.5px; font-weight: 700; color: var(--accent2-800);
+  margin-bottom: 5px;
+}
+.vl-fact-label svg { width: 14px; height: 14px; flex: 0 0 auto; }
 .vl-fact-text {
-  font-size: 13.5px; line-height: 1.55; color: var(--ink2);
-  border-left: 3px solid var(--accent); padding-left: 10px; margin: 0;
+  font-size: 13.5px; line-height: 1.55; color: var(--ink);
+  margin: 0;
 }
 .vl-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
 .vl-tag {
@@ -1168,11 +1177,15 @@ body { display: grid; place-items: center; }
   gap: 6px; padding: 8px 14px; border-radius: 999px; border: 1px solid transparent; font: inherit;
   font-weight: 500; font-size: 13px; cursor: pointer; text-decoration: none;
 }
+/* Solid accent fill (design screen 3 / Organic .btn-primary) */
 .vl-btn.pri {
-  background: color-mix(in srgb, var(--accent) 10%, var(--card));
-  color: var(--accent-700);
-  border-color: color-mix(in srgb, var(--accent) 22%, transparent);
+  background: var(--accent);
+  color: var(--onaccent);
+  border-color: transparent;
+  font-weight: 700;
 }
+.vl-btn.pri:hover { background: var(--accent-600); }
+.vl-btn.pri:active { background: var(--accent-700); }
 .vl-btn.sec {
   flex: 0 0 auto; width: 52px;
   background: var(--card);
@@ -1487,11 +1500,10 @@ body { display: grid; place-items: center; }
   .vl-poi-zone:hover { background: var(--card2); }
   .vl-poi-arr:hover { background: var(--card2); border-color: var(--muted); }
   .vl-tabbar-desktop .vl-tabbtn:not(.on):hover { background: var(--card2); }
-  .vl-dock-tile:hover { border-color: var(--muted); box-shadow: 0 3px 10px rgba(28,38,30,.08); }
-  .vl-dock-tile-sm:hover { background: var(--card2); }
+  .vl-dock-tile:hover, .vl-dock-tile-sm:hover { background: color-mix(in srgb, var(--tc, var(--accent)) 12%, var(--card2)); }
   .vl-menubtn:hover, .vl-ferrytext-btn:hover { background: var(--card2); }
   .vl-dock-row:hover { background: var(--card2); }
-  .vl-rbtn:hover { background: var(--card2); }
+  .vl-rbtn:hover { background: var(--accent-600); }
   .vl-cond-tabs button:not(.on):hover { background: var(--card2); }
   .vl-condhours button:not(.on):hover { background: var(--card2); }
   .vl-zoomctl button:hover { background: var(--card2); }

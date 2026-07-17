@@ -1439,7 +1439,7 @@ export function VeierlandApp() {
     map: 'Kart', saved: 'Lagret', settings: 'Innstillinger',
     places: 'Steder', trails: 'Turer', nature: 'Natur', history: 'Historie', back: 'Tilbake',
     directions: 'Veibeskrivelse', length: 'Lengde', duration: 'Tid', diff: 'Vanskelighet', climb: 'Stigning',
-    layers: 'Kartlag', nohit: 'Ingen treff', easy: 'Lett', showRoute: 'Vis rute',
+    layers: 'Kartlag', nohit: 'Ingen treff', easy: 'Lett', showRoute: 'Vis rute dit',
     np: (n: number) => `${n} ${n === 1 ? 'sted' : 'steder'}`,
     nt: (n: number) => `${n} ${n === 1 ? 'tur' : 'turer'}`,
     tidslinje: 'Tidslinje', garder: 'Gårder',
@@ -2243,7 +2243,7 @@ export function VeierlandApp() {
                 return (
                   <div key={p.id} className="vl-poi-card">
                     <div className="vl-poi-zone" {...pressable(() => showOnMap(p))}>
-                      <div className="vl-poi-ico" style={{ background: `${cat.color}1a`, color: cat.color }}
+                      <div className="vl-poi-ico" style={{ background: cat.color, color: '#fff' }}
                         dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
                       <div className="vl-poi-body">
                         <h4>{p.navn}</h4>
@@ -2302,7 +2302,7 @@ export function VeierlandApp() {
                           <div className="vl-poi-zone"
                             {...pressable(() => showOnMap(poi))}>
                             <div className="vl-poi-ico"
-                              style={{ background: `${cat.color}1a`, color: cat.color }}
+                              style={{ background: cat.color, color: '#fff' }}
                               dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
                             <div className="vl-poi-body">
                               <h4>{poi.navn}</h4>
@@ -2382,7 +2382,7 @@ export function VeierlandApp() {
           return (
             <div key={poi.id} className="vl-poi-card">
               <div className="vl-poi-zone" {...pressable(() => showOnMap(poi))}>
-                <div className="vl-poi-ico" style={{ background: `${cat.color}1a`, color: cat.color }}
+                <div className="vl-poi-ico" style={{ background: cat.color, color: '#fff' }}
                   dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
                 <div className="vl-poi-body">
                   <h4>{poi.navn}</h4>
@@ -2505,12 +2505,10 @@ export function VeierlandApp() {
               </span>
             );
           })}
+          {/* Walk time sits in the tag row (design screen 3), not on its own line */}
+          <span className="vl-catpill">{walkLong(poi.coordinates)}</span>
         </div>
         <div className="vl-h2">{poi.navn}</div>
-        <div className="vl-walkline">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="13" cy="4" r="1.7"/><path d="M11 8l3 2 1 4M11 8l-2 4-2 5M14 14l-1 6M9 12l-3 3"/></svg>
-          {walkLong(poi.coordinates)}
-        </div>
         {isBeachPOI && (() => {
           const sun = hasDomGrid ? sunlitAt(poi.coordinates[0], poi.coordinates[1], new Date()) : null;
           const lee = hasDomGrid && weatherNow ? shelterAt(poi.coordinates[0], poi.coordinates[1], weatherNow.windFromDeg) : null;
@@ -2606,7 +2604,10 @@ export function VeierlandApp() {
         )}
         {poi.visste_du_at && (
           <div className="vl-fact">
-            <div className="vl-fact-label">{lang === 'no' ? 'Visste du at' : 'Did you know'}</div>
+            <div className="vl-fact-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.2 3.8c-2.3-2.3-7-1.2-9.8 1.6-2.2 2.2-3 5.6-2.3 8.5L3 19l1.4 1.4 2-2 2.6.5c2.4.2 5-.7 6.8-2.5 2.8-2.8 6.7-10.3 4.4-12.6z"/><path d="M8.5 15.5 15 9"/></svg>
+              {lang === 'no' ? 'Visste du at?' : 'Did you know?'}
+            </div>
             <p className="vl-fact-text">{poi.visste_du_at}</p>
           </div>
         )}
@@ -2649,6 +2650,12 @@ export function VeierlandApp() {
             aria-label={saved ? 'Fjern fra favoritter' : 'Lagre som favoritt'}
           >
             <HeartSvg />
+          </button>
+          {/* Design screen 3: primary "Vis rute dit" — jump to the map with
+              the place selected; the walking route draws via the existing
+              selected-POI route effect. */}
+          <button className="vl-btn pri" onClick={() => showOnMap(poi)}>
+            <RouteSvg /> {T.showRoute}
           </button>
           {poi.nettside && (
             <a href={poi.nettside} target="_blank" rel="noreferrer" className="vl-btn pri">
@@ -2983,7 +2990,7 @@ export function VeierlandApp() {
                     <div key={poi.id} className="vl-poi-card">
                       <div className="vl-poi-zone" {...pressable(() => showOnMap(poi))}>
                         <div className="vl-poi-ico"
-                          style={{ background: `${cat.color}1a`, color: cat.color }}
+                          style={{ background: cat.color, color: '#fff' }}
                           dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
                         <div className="vl-poi-body">
                           <h4>{poi.navn}</h4>
@@ -3033,9 +3040,12 @@ export function VeierlandApp() {
         >
           <div className="vl-welcome-scrim" />
           <div className="vl-welcome-content" onClick={e => e.stopPropagation()}>
+            <span className="vl-welcome-tag">Færder kommune · Vestfold</span>
             <h1 className="vl-welcome-title">{lang === 'no' ? 'Velkommen til Veierland' : 'Welcome to Veierland'}</h1>
             <p className="vl-welcome-sub">
-              {lang === 'no' ? 'Hva vil du gjøre først?' : 'What do you want to do first?'}
+              {lang === 'no'
+                ? 'En bilfri øy med sandstrender, en tusen år gammel bosetning og et lite fellesskap som fortsatt lever av sjøen.'
+                : 'A car-free island with sandy beaches, a thousand-year-old settlement and a small community that still lives off the sea.'}
             </p>
             <div className="vl-welcome-chips">
               <button className="vl-welcome-chip" onClick={() => applyActivityTile('bade')}>
@@ -3046,9 +3056,9 @@ export function VeierlandApp() {
                 <span dangerouslySetInnerHTML={{ __html: iconSvg('tur') }} />
                 {lang === 'no' ? 'Gå tur' : 'Walk'}
               </button>
-              <button className="vl-welcome-chip" onClick={() => applyActivityTile('spise')}>
-                <span dangerouslySetInnerHTML={{ __html: iconSvg('mat') }} />
-                {lang === 'no' ? 'Spise' : 'Eat'}
+              <button className="vl-welcome-chip" onClick={() => applyActivityTile('historie')}>
+                <span dangerouslySetInnerHTML={{ __html: iconSvg('kultur') }} />
+                {lang === 'no' ? 'Historie' : 'History'}
               </button>
             </div>
             <button className="vl-welcome-cta" onClick={dismissWelcome}>
@@ -3552,7 +3562,7 @@ export function VeierlandApp() {
           aria-label="Min posisjon"
           title={lang === 'no' ? (locating ? 'Stopp sporing' : 'Min posisjon') : (locating ? 'Stop tracking' : 'My location')}
           onClick={locate}
-          style={locating ? { background: 'var(--accent)', color: '#fff' } : undefined}
+          style={locating ? { background: 'var(--ink)' } : undefined}
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="3.4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>
@@ -3744,7 +3754,7 @@ export function VeierlandApp() {
         const saved = savedIds.has(selectedPOI.id);
         return (
           <div className="vl-minicard" onClick={() => { setView('detail'); setSheetOpen(true); }}>
-            <div className="vl-ic" style={{ background: `${cat.color}1a`, color: cat.color }}
+            <div className="vl-ic" style={{ background: cat.color, color: '#fff' }}
               dangerouslySetInnerHTML={{ __html: iconSvg(cat.icon) }} />
             <div className="tx">
               <h4>{selectedPOI.navn}</h4>
@@ -3822,7 +3832,7 @@ export function VeierlandApp() {
             <>
               <div className="vl-dock-titlerow">
                 <div className="vl-dock-title">
-                  {lang === 'no' ? 'Hva vil du i dag?' : 'What do you want today?'}
+                  {lang === 'no' ? 'Hva vil du oppleve i dag?' : 'What do you want to experience today?'}
                 </div>
                 {/* A clear, always-visible way to jump straight to the full
                     place list without going through the hamburger menu — the
@@ -3834,6 +3844,9 @@ export function VeierlandApp() {
                   {lang === 'no' ? 'Liste' : 'List'}
                 </button>
               </div>
+              {/* Design screen 2: the daily recommendation is the dock title's
+                  subtitle, not a separate banner at the bottom. */}
+              {recoText && <div className="vl-dock-sub">{recoText}</div>}
               <div className="vl-dock-tiles">
                 <button className="vl-dock-tile" style={{ color: catCfg.bad?.color ?? '#2f9e8f' } as React.CSSProperties} onClick={() => applyActivityTile('bade')}>
                   <span dangerouslySetInnerHTML={{ __html: iconSvg('bade') }} />
@@ -3872,16 +3885,6 @@ export function VeierlandApp() {
                   <span className="lbl">{lang === 'no' ? 'Tjenester' : 'Services'}</span>
                 </button>
               </div>
-              {recoText && (
-                <div className="vl-dock-reco" onClick={() => applyActivityTile('bade')}>
-                  <span className="em">☀️</span>
-                  {/* min-width:0 lets this flex child actually wrap instead of
-                      being clipped by the row — flex items default to
-                      min-width:auto, which blocks wrapping */}
-                  <div style={{ flex: 1, minWidth: 0 }}><b>{recoText}</b></div>
-                  <ChevSvg />
-                </div>
-              )}
             </>
           ) : (
             <div className="vl-dock-summary">
