@@ -37,6 +37,7 @@ import {
   rankBeaches, dailyRecommendation, BeachConditionScore,
 } from '../lib/conditions';
 import { networkWalkDistanceM, networkWalkRoute } from '../lib/routing';
+import { loadThemeCfg, applyThemeCfg } from '../lib/themecfg';
 
 const TRAIL_CAT_GROUPS: Record<'alle' | 'historie' | 'natur' | 'mat' | 'kultur', { no: string; en: string; cats: string[] | null }> = {
   alle:     { no: 'Alle',        en: 'All',          cats: null },
@@ -569,6 +570,7 @@ export function VeierlandApp() {
     loadAllPOIs().then(setAllPOIs);
     loadTurkartGeoJSON().then(geo => setTrails(trailsFromGeoJSON(geo)));
     loadCatCfg().then(setCatCfg);
+    loadThemeCfg().then(applyThemeCfg);
     loadMapAppearance().then(setMapAppearance);
     loadMapLayerCfg().then(setMapLayerCfg);
     loadFarmData().then(setFarmData);

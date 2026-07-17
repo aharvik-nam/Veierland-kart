@@ -6,6 +6,7 @@ import { poiFallback, stedsnavnFallback, turkartFallback, GeoCollection } from '
 import { DEFAULT_CAT_CFG, CatCfgMap, CatEntry, loadCatCfg, saveCatCfg } from '../lib/catcfg';
 import { DEFAULT_MAP_APPEARANCE, MapAppearance, loadMapAppearance, saveMapAppearance } from '../lib/mapsettings';
 import { DEFAULT_MAP_LAYER_CFG, MapLayerCfgMap, MapLayerAppearance, buildFilterString, loadMapLayerCfg, saveMapLayerCfg } from '../lib/maplayersettings';
+import { DEFAULT_THEME_CFG, ThemeCfg, loadThemeCfg, saveThemeCfg, applyThemeCfg, mixHex, contrastRatio } from '../lib/themecfg';
 import { LAYERS, LAYER_ORDER } from '../lib/maplayers';
 import { loadFarmData, saveFarmData, DEFAULT_FARM_DATA, Farm, FarmPerson, FarmShip } from '../lib/farmdata';
 import { loadTimelineSections, saveTimelineSections, DEFAULT_TIMELINE_SECTIONS, TimelineSection } from '../lib/timelinedata';
@@ -19,7 +20,7 @@ import {
   applyAssessments,
 } from '../lib/naturedata';
 
-type Tab = 'poi' | 'stedsnavn' | 'turer' | 'kategorier' | 'kartutseende' | 'garder' | 'tidslinje' | 'natur';
+type Tab = 'poi' | 'stedsnavn' | 'turer' | 'kategorier' | 'kartutseende' | 'tema' | 'garder' | 'tidslinje' | 'natur';
 type GeoTab = 'poi' | 'stedsnavn' | 'turer';
 
 const COL = 'geodata';
@@ -2170,6 +2171,142 @@ function MapAppearanceTab() {
   );
 }
 
+// ─── Tema tab (app-farger) ────────────────────────────────────────────────────
+
+const THEME_FIELDS: { key: keyof ThemeCfg; label: string; desc: string }[] = [
+  { key: 'accent',  label: 'Hovedfarge',      desc: 'Knapper, aktive valg, lenker og ferjetid' },
+  { key: 'accent2', label: 'Sekundærfarge',   desc: '«Min posisjon»-prikken og gruppelinjer' },
+  { key: 'page',    label: 'Bakgrunn',        desc: 'Grunnfargen bak alt innhold' },
+  { key: 'card',    label: 'Kort',            desc: 'Paneler, ark og kort' },
+  { key: 'card2',   label: 'Kort (tonet)',    desc: 'Sekundære flater, hover og tellere' },
+  { key: 'ink',     label: 'Tekst',           desc: 'All tekst; nyanser og delelinjer avledes' },
+];
+
+function ThemeTab() {
+  const [cfg, setCfg] = useState<ThemeCfg>(DEFAULT_THEME_CFG);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [dirtyLocal, setDirtyLocal] = useState(false);
+  useReportDirty(dirtyLocal);
+
+  useEffect(() => {
+    loadThemeCfg().then(t => { setCfg(t); applyThemeCfg(t); });
+  }, []);
+
+  // Every change repaints the whole admin live — the page IS the preview.
+  const set = (key: keyof ThemeCfg, val: string) => {
+    setCfg(prev => {
+      const next = { ...prev, [key]: val };
+      if (/^#[0-9a-fA-F]{6}$/.test(val)) applyThemeCfg(next);
+      return next;
+    });
+    setSaved(false); setDirtyLocal(true);
+  };
+
+  const reset = () => {
+    setCfg(DEFAULT_THEME_CFG);
+    applyThemeCfg(DEFAULT_THEME_CFG);
+    setSaved(false); setDirtyLocal(true);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try { await saveThemeCfg(cfg); setSaved(true); setDirtyLocal(false); }
+    catch (e: any) { alert(e.message); }
+    finally { setSaving(false); }
+  };
+
+  // WCAG checks on the combinations the app actually renders
+  const checks: { label: string; ratio: number; need: number }[] = [
+    { label: 'Tekst på kort',            ratio: contrastRatio(cfg.ink, cfg.card), need: 4.5 },
+    { label: 'Tekst på bakgrunn',        ratio: contrastRatio(cfg.ink, cfg.page), need: 4.5 },
+    { label: 'Lenkefarge på kort',       ratio: contrastRatio(mixHex(cfg.accent, '#000000', 0.30), cfg.card), need: 4.5 },
+    { label: 'Hovedfarge som knappflate', ratio: contrastRatio(cfg.accent, cfg.page), need: 3 },
+  ];
+
+  const accent700 = mixHex(cfg.accent, '#000000', 0.30);
+
+  return (
+    <div style={{ maxWidth: 720 }}>
+      <div style={{ ...S.infoBox, marginBottom: 16 }}>
+        Fargene her styrer hele appens utseende (knapper, paneler, tekst og bakgrunner) — hele
+        admin-siden farges om direkte mens du prøver deg frem, så det du ser her er det besøkende
+        får. Kartnålenes farger styres per kategori under «Kategorier», ikke her. Lysere/mørkere
+        nyanser (hover, trykk-tilstander, delelinjer, dempet tekst) avledes automatisk.
+      </div>
+
+      <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12, padding: '4px 18px 18px', marginBottom: 16 }}>
+        {THEME_FIELDS.map(f => (
+          <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 14, borderTop: '1px solid var(--line2)', padding: '12px 0' }}>
+            <input
+              type="color"
+              value={/^#[0-9a-fA-F]{6}$/.test(cfg[f.key]) ? cfg[f.key] : '#000000'}
+              onChange={e => set(f.key, e.target.value)}
+              style={{ width: 46, height: 36, padding: 2, border: '1px solid var(--line)', borderRadius: 9, background: 'var(--card)', cursor: 'pointer', flexShrink: 0 }}
+            />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>{f.label}</div>
+              <div style={{ fontSize: 12, color: 'var(--muted)' }}>{f.desc}</div>
+            </div>
+            <input
+              value={cfg[f.key]}
+              onChange={e => set(f.key, e.target.value)}
+              spellCheck={false}
+              style={{ ...S.input, width: 96, fontFamily: 'monospace', fontSize: 12.5, flexShrink: 0 }}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Mini preview in app context */}
+      <div style={{ background: cfg.page, border: '1px solid var(--line)', borderRadius: 14, padding: 18, marginBottom: 16 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: mixHex(cfg.ink, cfg.card2, 0.33), textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>
+          Forhåndsvisning
+        </div>
+        <div style={{ background: cfg.card, borderRadius: 14, padding: 14, boxShadow: '0 3px 10px rgba(46,43,37,.16)', marginBottom: 12, maxWidth: 340 }}>
+          <div style={{ fontFamily: 'var(--display)', fontWeight: 400, fontSize: 19, color: cfg.ink, marginBottom: 3 }}>Hverveoddbukta badeplass</div>
+          <div style={{ fontSize: 12.5, color: mixHex(cfg.ink, cfg.card2, 0.33), marginBottom: 10 }}>Populær badeplass sør på øya, sandbunn og brygge.</div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ background: cfg.accent, color: cfg.page, borderRadius: 999, padding: '7px 16px', fontSize: 12.5, fontWeight: 700 }}>Vis rute</span>
+            <span style={{ background: cfg.card2, color: cfg.ink, borderRadius: 999, padding: '7px 14px', fontSize: 12.5, fontWeight: 600, border: `1px solid ${mixHex(cfg.ink, cfg.card2, 0.7)}` }}>Lagre</span>
+            <span style={{ color: accent700, fontSize: 12.5, fontWeight: 700 }}>Les mer →</span>
+            <span style={{ width: 13, height: 13, borderRadius: '50%', background: cfg.accent2, border: '2.5px solid #fff', boxShadow: '0 1px 4px rgba(0,0,0,.3)', display: 'inline-block' }} title="Min posisjon" />
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {checks.map(c => {
+            const ok = c.ratio >= c.need;
+            return (
+              <span key={c.label} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5, borderRadius: 999, padding: '3px 10px',
+                fontSize: 11.5, fontWeight: 600,
+                background: ok ? 'rgba(22,163,74,.12)' : 'rgba(220,38,38,.12)',
+                color: ok ? '#166534' : '#b91c1c',
+              }}>
+                {ok ? '✓' : '✕'} {c.label} {c.ratio.toFixed(1)}:1
+              </span>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '16px 20px', background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12 }}>
+        <button style={S.pill('primary')} onClick={save} disabled={saving}>
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M13 13H3V3h7l3 3v7z"/><path d="M10 13V9H6v4"/><path d="M6 3v3h5"/></svg>
+          {saving ? 'Lagrer…' : 'Lagre til Firebase'}
+        </button>
+        <button style={S.pill('secondary')} onClick={reset}>Tilbakestill til standard</button>
+        {saved && (
+          <span style={{ fontSize: 13, color: '#16a34a', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 500 }}>
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="2,8 6,12 14,4"/></svg>
+            Lagret! Gjelder alle besøkende ved neste innlasting.
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Shell ────────────────────────────────────────────────────────────────────
 
 const NAV_ICON: Record<Tab, React.ReactNode> = {
@@ -2178,6 +2315,7 @@ const NAV_ICON: Record<Tab, React.ReactNode> = {
   turer: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 21c-4-6 4-7 5-11 .8-3.2 5.5-2.8 3.5-7"/><circle cx="17" cy="3" r="1.4"/></svg>,
   kategorier: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.6"/><rect x="3" y="14" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/></svg>,
   kartutseende: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2V6z"/><path d="M9 4v14M15 6v14"/></svg>,
+  tema: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 2-.9 2-2 0-.6-.2-1-.6-1.4-.3-.4-.6-.8-.6-1.4 0-1.1.9-2 2-2h2.4A4.8 4.8 0 0 0 21 9.7C20.2 5.9 16.5 3 12 3z"/><circle cx="7.5" cy="11.5" r="1.1"/><circle cx="11" cy="7.5" r="1.1"/><circle cx="15.5" cy="8.5" r="1.1"/></svg>,
   garder: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10l9-7 9 7"/><path d="M5 9v11h14V9"/><path d="M10 20v-6h4v6"/></svg>,
   tidslinje: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>,
   natur: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21Q4 13 12 3q8 10 0 18z"/><path d="M12 3q-2 9 0 18"/></svg>,
@@ -2190,6 +2328,12 @@ const NAV_GROUPS: { title: string; items: { key: Tab; label: string; sub: string
       { key: 'poi', label: 'Steder', sub: 'Attraksjoner og punkter på kartet' },
       { key: 'stedsnavn', label: 'Stedsnavn', sub: 'Navneoppslag med forklaringer' },
       { key: 'turer', label: 'Turer', sub: 'Turruter med lengde og beskrivelse' },
+    ],
+  },
+  {
+    title: 'Utseende',
+    items: [
+      { key: 'tema', label: 'App-farger', sub: 'Fargepalett for hele appen' },
       { key: 'kategorier', label: 'Kategorier', sub: 'Farger, ikoner og filtergrupper' },
       { key: 'kartutseende', label: 'Kartutseende', sub: 'Høydekurver og kartstil' },
     ],
@@ -2211,7 +2355,8 @@ const NAV_GROUPS: { title: string; items: { key: Tab; label: string; sub: string
 
 const SECTION_TITLE: Record<Tab, string> = {
   poi: 'Steder', stedsnavn: 'Stedsnavn', turer: 'Turer',
-  kategorier: 'Kategorier', kartutseende: 'Kartutseende', garder: 'Gårder', tidslinje: 'Tidslinje', natur: 'Naturdata',
+  kategorier: 'Kategorier', kartutseende: 'Kartutseende', tema: 'App-farger',
+  garder: 'Gårder', tidslinje: 'Tidslinje', natur: 'Naturdata',
 };
 
 function useIsNarrow(bp = 900): boolean {
@@ -2245,6 +2390,11 @@ export function AdminPage() {
     if (!isFirebaseConfigured) return;
     const unsub = onAuthStateChanged(auth, u => setUser(u));
     return unsub;
+  }, []);
+
+  // Admin renders with the same saved palette as the public app
+  useEffect(() => {
+    loadThemeCfg().then(applyThemeCfg);
   }, []);
 
   // Warn before the browser tab closes with unsaved edits
@@ -2319,7 +2469,7 @@ export function AdminPage() {
             </span>
             {!narrow && (
               <span>
-                <b style={{ display: 'block', fontSize: 15, letterSpacing: '-.01em' }}>Veierland</b>
+                <b style={{ display: 'block', fontSize: 16, fontWeight: 400, fontFamily: 'var(--display)', letterSpacing: '-.01em' }}>Veierland</b>
                 <span style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 600 }}>Admin</span>
               </span>
             )}
@@ -2394,7 +2544,7 @@ export function AdminPage() {
         {/* ── Main ── */}
         <main style={{ display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 24px', background: 'var(--card)', borderBottom: '1px solid var(--line)', flexShrink: 0 }}>
-            <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, letterSpacing: '-.01em' }}>{SECTION_TITLE[tab]}</h2>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 400, fontFamily: 'var(--display)', letterSpacing: '-.01em' }}>{SECTION_TITLE[tab]}</h2>
             <span style={{ fontSize: 12.5, color: 'var(--muted)', fontWeight: 500 }}>
               {NAV_GROUPS.flatMap(g => g.items).find(i => i.key === tab)?.sub}
             </span>
@@ -2416,6 +2566,7 @@ export function AdminPage() {
               <div style={{ padding: '22px 24px 48px', maxWidth: 1100 }}>
                 {tab === 'kategorier' && <CategoryConfigTab />}
                 {tab === 'kartutseende' && <MapAppearanceTab />}
+                {tab === 'tema' && <ThemeTab />}
                 {tab === 'garder' && <GarderTab />}
                 {tab === 'tidslinje' && <TidslinjeTab />}
                 {tab === 'natur' && <NaturTab />}
