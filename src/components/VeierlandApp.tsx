@@ -52,6 +52,20 @@ function isDesktopView(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(min-width: 900px)').matches;
 }
 
+// .vl-app caps at max-height:940px on the mobile/phone-frame layout (desktop
+// resets max-height to none — see index.css). On a viewport taller than
+// 940px — some tablets, or a phone with the browser's toolbar collapsed —
+// window.innerHeight exceeds the app frame's actual rendered height. Sizing
+// a full-height sheet (or any bottom-anchored offset) against the raw window
+// height then makes it taller than the frame it's absolutely positioned
+// inside, pushing its top — including a full-screen sheet's back/close
+// button — above the visible area. Every mobile sheet/rail height
+// calculation should read this instead of window.innerHeight directly.
+function appViewportH(): number {
+  if (typeof window === 'undefined') return 0;
+  return isDesktopView() ? window.innerHeight : Math.min(window.innerHeight, 940);
+}
+
 // Hide <img> elements whose remote source fails instead of showing a broken-image icon
 function hideBrokenImg(e: React.SyntheticEvent<HTMLImageElement>) {
   e.currentTarget.style.display = 'none';
@@ -876,7 +890,7 @@ export function VeierlandApp() {
   function flyToAboveSheet(coordinates: [number, number], zoom: number) {
     const map = mapRef.current;
     if (!map) return;
-    const expandedH = Math.min(window.innerHeight * 0.55, 680);
+    const expandedH = Math.min(appViewportH() * 0.55, 680);
     const offsetPx = expandedH / 2;
     const targetPoint = map.project(L.latLng(coordinates), zoom).add(L.point(0, offsetPx));
     map.flyTo(map.unproject(targetPoint, zoom), zoom, { duration: 0.7 });
@@ -918,7 +932,7 @@ export function VeierlandApp() {
             flyToAboveSheet([allObs[0].lat, allObs[0].lng], Math.max(map.getZoom(), 14));
           } else {
             const bounds = L.latLngBounds(allObs.map(o => [o.lat, o.lng] as [number, number]));
-            const sheetH = Math.min(window.innerHeight * 0.55, 680);
+            const sheetH = Math.min(appViewportH() * 0.55, 680);
             map.fitBounds(bounds.pad(0.25), { paddingBottomRight: [0, sheetH], animate: true });
           }
         }
@@ -1351,7 +1365,7 @@ export function VeierlandApp() {
   // Browse lists are capped lower than detail so the map always stays in view
   // (interactions like the sea-level slider have a visible effect). Natur is
   // capped lower still — its content is about the map.
-  const SHEET_MAX_H = isFullScreenBrowse ? window.innerHeight : Math.min(window.innerHeight * (
+  const SHEET_MAX_H = isFullScreenBrowse ? appViewportH() : Math.min(appViewportH() * (
     view === 'detail' || selectedNature || selectedCuratedArt ? 0.82 : tab === 'nature' ? 0.45 : 0.62
   ), 720);
   const TAB_BAR_H = 62; // floor for the rail's resting offset (the mobile tab bar itself is gone)
@@ -1488,7 +1502,7 @@ export function VeierlandApp() {
         // Resting state (dock closed, nothing selected): sit well above the
         // dock instead of hugging it, so the cluster reads as map controls
         // rather than part of the dock.
-        : Math.max(TAB_BAR_H + 14, window.innerHeight * 0.32);
+        : Math.max(TAB_BAR_H + 14, appViewportH() * 0.32);
   // A tall open sheet (e.g. Historie) pushes the rail's "bottom" offset up so
   // far that the 3-button cluster's top edge climbs above the glass top bar
   // and overlaps it. Cap how high the rail can go so its top edge always
@@ -1497,7 +1511,7 @@ export function VeierlandApp() {
   const TOPBAR_CLEARANCE = 130;     // top bar's usual bottom edge + a margin
   const railBottom = Math.min(
     rawRailBottom,
-    Math.max(TAB_BAR_H + 14, window.innerHeight - TOPBAR_CLEARANCE - RAIL_HEIGHT_ESTIMATE)
+    Math.max(TAB_BAR_H + 14, appViewportH() - TOPBAR_CLEARANCE - RAIL_HEIGHT_ESTIMATE)
   );
 
   // Text strings
