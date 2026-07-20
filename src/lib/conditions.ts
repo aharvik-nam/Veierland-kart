@@ -355,7 +355,8 @@ function boxBlur(vals: Float32Array, cols: number, rows: number, radius: number)
 // Current sun exposure: sunlit cells tinted sun-yellow, shaded cells tinted
 // dark — both semi-transparent so the map stays visible underneath.
 const SUNLIT = { r: 250, g: 191, b: 36 };
-const SHADED = { r: 22, g: 26, b: 33 };
+// Design canvas 2b: shadow is a soft blue-grey ink, not near-black
+const SHADED = { r: 38, g: 44, b: 56 };
 export function makeSunShadowOverlay(date: Date): OverlayImage | null {
   if (!DOM_GRID) return null;
   const g = DOM_GRID;
@@ -418,9 +419,14 @@ function windExposureField(g: DomGrid, windFromDeg: number): Float32Array {
   return boxBlur(exposure, g.cols, g.rows, 1);
 }
 
-// Wind exposure for the current wind: sheltered (le) cells get no colour at
-// all; exposed cells are tinted by current wind strength (calm green to
-// orkan magenta), fading in as exposure increases.
+// Wind exposure for the current wind (design canvas 2c): lee zones are
+// filled in sage — the same visual language as "Best nå" — and exposed
+// areas in terracotta. Wind STRENGTH is communicated by the m/s badges on
+// the actual spots, not by the zone colour, so the zones stay calm and
+// readable. windSpeed still nudges the exposed alpha slightly so a storm
+// reads more urgent than a breeze.
+const LEE_FILL = { r: 143, g: 160, b: 115 };   // sage (accent-2-500)
+const EXPOSED_FILL = { r: 140, g: 73, b: 26 }; // terracotta (accent-700)
 export function makeShelterOverlay(windFromDeg: number, windSpeed: number): OverlayImage | null {
   if (!DOM_GRID) return null;
   const g = DOM_GRID;
@@ -428,17 +434,27 @@ export function makeShelterOverlay(windFromDeg: number, windSpeed: number): Over
   if (!ctx) return null;
   const img = ctx.createImageData(g.cols, g.rows);
   const d = img.data;
-  const col = windColor(windSpeed);
+  // Breeze ≈ .30, full storm ≈ .55 max alpha on the exposed tint
+  const exposedAlpha = 0.30 + 0.25 * Math.min(1, windSpeed / ORKAN_MS);
 
   const smooth = windExposureField(g, windFromDeg);
 
   for (let r = 0; r < g.rows; r++) {
     for (let c = 0; c < g.cols; c++) {
+      if (isWaterCell(g, r, c)) continue;
       const e = smooth[r * g.cols + c];
-      if (e <= 0.02 || isWaterCell(g, r, c)) continue; // invisible, or fjord water (see isWaterCell)
       const i = (r * g.cols + c) * 4;
-      d[i] = col.r; d[i + 1] = col.g; d[i + 2] = col.b;
-      d[i + 3] = Math.round(255 * col.alpha * e);
+      if (e <= 0.25) {
+        // Lee: sage, strongest where the shelter is best
+        const t = 1 - e / 0.25;
+        d[i] = LEE_FILL.r; d[i + 1] = LEE_FILL.g; d[i + 2] = LEE_FILL.b;
+        d[i + 3] = Math.round(255 * 0.42 * t);
+      } else {
+        // Exposed: terracotta, fading in with exposure
+        const t = (e - 0.25) / 0.75;
+        d[i] = EXPOSED_FILL.r; d[i + 1] = EXPOSED_FILL.g; d[i + 2] = EXPOSED_FILL.b;
+        d[i + 3] = Math.round(255 * exposedAlpha * t);
+      }
     }
   }
   ctx.putImageData(img, 0, 0);
@@ -620,6 +636,26 @@ export function effectiveTempColor(tempC: number, minT = -20, maxT = 40): { r: n
 // (with a floor so a dead-calm day doesn't blow up a near-zero spread into
 // visual noise), the same way you'd autoscale a chart's y-axis.
 const MIN_SPAN = 2; // °C — minimum colour-scale width, even if the real spread is smaller
+
+// Design canvas 2d: the temperature ramp used for isotherm lines and the
+// legend's degree tags — green through amber to red, in the design's own
+// warm palette (not a rainbow).
+const TEMP_RAMP = [
+  { r: 95, g: 148, b: 56 },   // #5f9438
+  { r: 143, g: 174, b: 74 },  // #8fae4a
+  { r: 250, g: 191, b: 36 },  // #fabf24
+  { r: 224, g: 138, b: 51 },  // #e08a33
+  { r: 192, g: 57, b: 43 },   // #c0392b
+];
+export function tempRampHex(t01: number): string {
+  const t = Math.min(1, Math.max(0, t01)) * (TEMP_RAMP.length - 1);
+  const i = Math.min(TEMP_RAMP.length - 2, Math.floor(t));
+  const f = t - i;
+  const a = TEMP_RAMP[i], b = TEMP_RAMP[i + 1];
+  const c = (x: number, y: number) => Math.round(x + (y - x) * f);
+  return `rgb(${c(a.r, b.r)},${c(a.g, b.g)},${c(a.b, b.b)})`;
+}
+
 export function makeEffectiveTempOverlay(airTempC: number, windSpeedMs: number, windFromDeg: number, humidity: number): OverlayImage | null {
   if (!DOM_GRID) return null;
   const g = DOM_GRID;
@@ -660,20 +696,72 @@ export function makeEffectiveTempOverlay(airTempC: number, windSpeedMs: number, 
     maxT = mid + MIN_SPAN / 2;
   }
 
+  // Design canvas 2d: a FAINT fill gradient (so the layer stays warm and
+  // inviting) with crisp isotherm contour lines on top carrying the exact
+  // values — "1b made softer, less technical".
+  const span = maxT - minT || 1;
   for (let r = 0; r < g.rows; r++) {
     for (let c = 0; c < g.cols; c++) {
       const i = (r * g.cols + c) * 4;
       if (isWaterCell(g, r, c)) { d[i + 3] = 0; continue; }
-      const col = effectiveTempColor(smooth[r * g.cols + c], minT, maxT);
-      d[i] = col.r;
-      d[i + 1] = col.g;
-      d[i + 2] = col.b;
-      d[i + 3] = Math.round(255 * col.alpha);
+      const t01 = (smooth[r * g.cols + c] - minT) / span;
+      const ti = Math.min(1, Math.max(0, t01)) * (TEMP_RAMP.length - 1);
+      const lo = Math.min(TEMP_RAMP.length - 2, Math.floor(ti));
+      const f = ti - lo;
+      d[i] = Math.round(TEMP_RAMP[lo].r + (TEMP_RAMP[lo + 1].r - TEMP_RAMP[lo].r) * f);
+      d[i + 1] = Math.round(TEMP_RAMP[lo].g + (TEMP_RAMP[lo + 1].g - TEMP_RAMP[lo].g) * f);
+      d[i + 2] = Math.round(TEMP_RAMP[lo].b + (TEMP_RAMP[lo + 1].b - TEMP_RAMP[lo].b) * f);
+      d[i + 3] = Math.round(255 * 0.26);
     }
   }
   ctx.putImageData(img, 0, 0);
+
+  // Upscale the faint fill, then stroke whole-degree isotherms on top.
+  // Contouring runs on the same smoothed field the fill uses (grid row/col
+  // as coordinates — triangleCrossing is generic interpolation), so lines
+  // and fill always agree. Water cells poison their triangles via NaN.
+  const scale = 4;
+  const out = document.createElement('canvas');
+  out.width = g.cols * scale;
+  out.height = g.rows * scale;
+  const octx = out.getContext('2d');
+  if (!octx) {
+    return {
+      dataUrl: toSmoothDataUrl(ctx.canvas),
+      bounds: [[g.minLat, g.minLng], [g.maxLat, g.maxLng]],
+      tempRange: [minT, maxT],
+    };
+  }
+  octx.imageSmoothingEnabled = true;
+  octx.imageSmoothingQuality = 'high';
+  octx.drawImage(ctx.canvas, 0, 0, out.width, out.height);
+  const node = (r: number, c: number) => ({
+    lat: r, lng: c,
+    e: isWaterCell(g, r, c) ? NaN : smooth[r * g.cols + c],
+  });
+  const px = (v: number) => (v + 0.5) * scale;
+  octx.lineWidth = 2.25;
+  octx.lineCap = 'round';
+  octx.globalAlpha = 0.85;
+  for (let level = Math.ceil(minT); level <= Math.floor(maxT); level++) {
+    octx.strokeStyle = tempRampHex((level - minT) / span);
+    octx.beginPath();
+    for (let r = 0; r < g.rows - 1; r++) {
+      for (let c = 0; c < g.cols - 1; c++) {
+        const tl = node(r, c), tr = node(r, c + 1), bl = node(r + 1, c), br = node(r + 1, c + 1);
+        if (Number.isNaN(tl.e) || Number.isNaN(tr.e) || Number.isNaN(bl.e) || Number.isNaN(br.e)) continue;
+        const s1 = triangleCrossing(tl, tr, bl, level);
+        if (s1) { octx.moveTo(px(s1[0][1]), px(s1[0][0])); octx.lineTo(px(s1[1][1]), px(s1[1][0])); }
+        const s2 = triangleCrossing(tr, br, bl, level);
+        if (s2) { octx.moveTo(px(s2[0][1]), px(s2[0][0])); octx.lineTo(px(s2[1][1]), px(s2[1][0])); }
+      }
+    }
+    octx.stroke();
+  }
+  octx.globalAlpha = 1;
+
   return {
-    dataUrl: toSmoothDataUrl(ctx.canvas),
+    dataUrl: out.toDataURL(),
     bounds: [[g.minLat, g.minLng], [g.maxLat, g.maxLng]],
     tempRange: [minT, maxT],
   };
@@ -702,7 +790,9 @@ export interface BestSpotsInfo {
 const SUN_GAIN_MAX_C = 7;
 const COMFORT_IDEAL_C = 22.5;
 const COMFORT_SIGMA_C = 6;
-const GLOW = { r: 246, g: 178, b: 60 };
+// Design canvas 2a: "Best nå" zones glow in sage (the second accent), not
+// golden — same visual language as the lee zones on the wind layer.
+const GLOW = { r: 143, g: 160, b: 115 };
 
 export function makeBestSpotsOverlay(
   w: { airTemp: number; windSpeed: number; windFromDeg: number; humidity: number; cloudFraction: number },

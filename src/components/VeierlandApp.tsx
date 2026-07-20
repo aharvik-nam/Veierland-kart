@@ -23,7 +23,7 @@ import {
 import { pointToPolylineDistM } from '../lib/geo';
 import { ICONS } from '../lib/icons';
 import { MapSetup, TileController } from './MapSetup';
-import { GradientBar, ElevationChart } from './SmallCharts';
+import { ElevationChart } from './SmallCharts';
 import {
   ChevSvg, BackSvg, HeartSvg, RouteSvg, CheckSvg, UpChevSvg,
   MapTabSvg, PlacesTabSvg, TrailsTabSvg, NatureTabSvg, HistoryTabSvg, WeatherIcon,
@@ -33,7 +33,7 @@ import {
   hasDomGrid, sunPosition, sunlitAt, shelterAt, computeContours,
   makeSunShadowOverlay, makeShelterOverlay, makeEffectiveTempOverlay, makeBestSpotsOverlay, BestSpotsInfo,
   fetchWeatherNow, fetchWeatherSeries, fetchSeaTemp, WeatherNow, WeatherPoint, windDirLabel, weatherIconKind, WeatherIconKind, weatherKindLabel,
-  windColor, ORKAN_MS, effectiveTemp, effectiveTempColor,
+  effectiveTemp, tempRampHex,
   rankBeaches, dailyRecommendation, BeachConditionScore,
 } from '../lib/conditions';
 import { networkWalkDistanceM, networkWalkRoute } from '../lib/routing';
@@ -316,6 +316,9 @@ export function VeierlandApp() {
   const [tempRange, setTempRange] = useState<[number, number] | null>(null);
   const [bestInfo, setBestInfo] = useState<BestSpotsInfo | null>(null);
   const condOverlayRef = useRef<L.ImageOverlay | null>(null);
+  // Value badges (star/lee/temp) drawn on the spots while a Forhold layer is
+  // active — see the overlay effect below.
+  const condBadgesRef = useRef<L.LayerGroup | null>(null);
   // Forhold ("conditions") can be scrubbed forward through the next ~24h so
   // people can plan ahead, not just see the current moment. condHourOffset is
   // an index into weatherSeries (0 = now); it's shared across all the
@@ -524,6 +527,7 @@ export function VeierlandApp() {
     let cancelled = false;
     const clear = () => {
       if (condOverlayRef.current) { map.removeLayer(condOverlayRef.current); condOverlayRef.current = null; }
+      if (condBadgesRef.current) { map.removeLayer(condBadgesRef.current); condBadgesRef.current = null; }
     };
     clear();
     if (!condLayer || !hasDomGrid) return;
@@ -559,11 +563,64 @@ export function VeierlandApp() {
       setBestInfo(img.best ?? null);
       clear();
       condOverlayRef.current = L.imageOverlay(img.dataUrl, img.bounds, { opacity: 0.8, interactive: false }).addTo(map);
+
+      // Tappable value badges on the real spots (design canvas: "1a's warmth
+      // with 1c's badges") — exact numbers live ON the map, on the beaches,
+      // not only in the legend. Clicking one opens that place.
+      if (point) {
+        const beaches = allPOIs.filter(p => (p.kategorier ?? [p.kategori]).includes('bad'));
+        const group = L.layerGroup();
+        const addBadge = (poi: POI, html: string, size: [number, number]) => {
+          const m = L.marker(poi.coordinates as [number, number], {
+            icon: L.divIcon({ className: '', iconSize: size, iconAnchor: [size[0] / 2, size[1] / 2], html }),
+            zIndexOffset: 1200,
+          });
+          m.on('click', () => showOnMap(poi));
+          group.addLayer(m);
+        };
+        if (condLayer === 'best') {
+          // Size + tone = how recommended (design 2a): biggest/darkest badge
+          // is the top spot right now.
+          const ranked = rankBeaches(beaches, point.windFromDeg, date).slice(0, 4);
+          ranked.forEach((r, i) => {
+            const sz = i === 0 ? 40 : i === 1 ? 32 : 28;
+            const bg = i === 0 ? '#56633f' : '#728157';
+            addBadge(r.poi as POI,
+              `<div class="vl-cond-badge" style="width:${sz}px;height:${sz}px;background:${bg}">
+                 <svg viewBox="0 0 24 24" style="width:${Math.round(sz * 0.45)}px;height:${Math.round(sz * 0.45)}px" fill="none" stroke="#fff" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.4l-5.4 3 1-6.1-4.4-4.3 6.1-.9L12 2.5z"/></svg>
+               </div>`, [sz, sz]);
+          });
+        } else if (condLayer === 'wind') {
+          // Design 2c: lee spots get a sage pill with a check, exposed spots
+          // a cream pill — local wind strength in m/s on each.
+          for (const poi of beaches) {
+            const shelter = shelterAt(poi.coordinates[0], poi.coordinates[1], point.windFromDeg);
+            if (shelter === null) continue;
+            const local = Math.max(0, Math.round(point.windSpeed * (1 - shelter)));
+            const lee = shelter > 0.55;
+            const label = lee
+              ? `<svg viewBox="0 0 24 24" style="width:12px;height:12px" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>${lang === 'no' ? 'Le' : 'Lee'} · ${local} m/s`
+              : `${lang === 'no' ? 'Åpent' : 'Open'} · ${local} m/s`;
+            addBadge(poi, `<div class="vl-cond-pill${lee ? ' lee' : ''}">${label}</div>`, [86, 26]);
+          }
+        } else if (condLayer === 'effectiveTemp') {
+          // Design 2d/1c: exact feels-like values in tappable badges on the
+          // actual spots.
+          for (const poi of beaches) {
+            const shelter = shelterAt(poi.coordinates[0], poi.coordinates[1], point.windFromDeg) ?? 0;
+            const t = Math.round(effectiveTemp(point.airTemp, point.windSpeed * (1 - shelter), point.humidity));
+            addBadge(poi, `<div class="vl-cond-badge temp">${t}°</div>`, [34, 34]);
+          }
+        }
+        if (group.getLayers().length > 0) {
+          condBadgesRef.current = group.addTo(map);
+        }
+      }
     })();
     return () => { cancelled = true; clear(); };
   // weatherSeries is read once at activation; re-running on its change would flicker
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [condLayer, mapReady, condHourOffset]);
+  }, [condLayer, mapReady, condHourOffset, allPOIs, lang]);
 
   // Load POIs and trails from Firestore (or local JSON fallback)
   useEffect(() => {
@@ -3598,7 +3655,28 @@ export function VeierlandApp() {
           return <svg {...p}><path d="M12 14.5V4.5a2 2 0 1 0-4 0v10a4 4 0 1 0 4 0z"/></svg>;
         };
 
+        // Design 2b: a small sun disc at the map edge in the sun's actual
+        // direction, with a dashed ray toward the island — explains WHY the
+        // shadows fall where they do. Screen position from the azimuth
+        // (0 = north = up); the ray points back toward the centre.
+        const sunInd = (() => {
+          if (condLayer !== 'sun') return null;
+          const sun = sunPosition(condDate, 59.155, 10.351);
+          if (sun.elevation <= 0) return null;
+          const rad = (sun.azimuth * Math.PI) / 180;
+          const left = 50 + Math.sin(rad) * 40;
+          const top = 46 - Math.cos(rad) * 34;
+          return (
+            <div className="vl-sunind" style={{ left: `${left}%`, top: `${top}%`, transform: `translate(-50%,-50%) rotate(${sun.azimuth}deg)` }} aria-hidden="true">
+              <div className="disc" />
+              <div className="ray" />
+            </div>
+          );
+        })();
+
         return (
+          <>
+          {sunInd}
           <div className="vl-condlegend" onClick={e => e.stopPropagation()}>
             <div className="vl-condlegend-hd">
               <span className="t">{condTitle} · {condTimeLabel}</span>
@@ -3695,18 +3773,12 @@ export function VeierlandApp() {
                     <span className="big">{Math.round(condPoint.windSpeed)} m/s</span>
                     <span className="sub">{lang === 'no' ? `fra ${windDirLabel(condPoint.windFromDeg, 'no')}` : `from ${windDirLabel(condPoint.windFromDeg, 'en')}`}</span>
                   </div>
-                  {(() => {
-                    const windStops = [0, ORKAN_MS / 4, ORKAN_MS / 2, ORKAN_MS * 3 / 4, ORKAN_MS].map(s => windColor(s));
-                    const windT = Math.min(1, condPoint.windSpeed / ORKAN_MS);
-                    return (
-                      <>
-                        <GradientBar stops={windStops} posT={windT} />
-                        <div className="vl-cond-scale">
-                          <span>{lang === 'no' ? 'Stille' : 'Calm'}</span><span>{lang === 'no' ? 'Orkan' : 'Hurricane'}</span>
-                        </div>
-                      </>
-                    );
-                  })()}
+                  {/* Design 2c: zone colours, not a strength gradient — the
+                      m/s numbers live in the badges on the spots. */}
+                  <div className="vl-cond-keys">
+                    <span className="k"><i style={{ background: '#8fa073' }} />{lang === 'no' ? 'Le' : 'Lee'}</span>
+                    <span className="k"><i style={{ background: '#8c491a' }} />{lang === 'no' ? 'Eksponert' : 'Exposed'}</span>
+                  </div>
                 </>
               ) : (
                 <span className="vl-cond-note">{lang === 'no' ? 'Henter vind…' : 'Loading wind…'}</span>
@@ -3719,24 +3791,21 @@ export function VeierlandApp() {
                     <span className="sub">{lang === 'no' ? `luft ${Math.round(condPoint.airTemp)}°` : `air ${Math.round(condPoint.airTemp)}°`}</span>
                   </div>
                   {(() => {
-                    // The overlay's colour scale is stretched to the actual spread of
-                    // effective temperature across the island at the selected hour
-                    // (see makeEffectiveTempOverlay), so the legend mirrors that same
-                    // range instead of a fixed -20..40°C — otherwise a 1-2°C wind
-                    // effect would never register as a visible position on a
-                    // 60°-wide bar.
-                    const [MIN_T, MAX_T] = tempRange ?? [-20, 40];
-                    const tempStops = [MIN_T, MIN_T + (MAX_T - MIN_T) / 4, (MIN_T + MAX_T) / 2, MAX_T - (MAX_T - MIN_T) / 4, MAX_T]
-                      .map(t => effectiveTempColor(t, MIN_T, MAX_T));
-                    const effTemp = effectiveTemp(condPoint.airTemp, condPoint.windSpeed, condPoint.humidity);
-                    const tempT = Math.min(1, Math.max(0, (effTemp - MIN_T) / (MAX_T - MIN_T)));
+                    // Design 2d: the legend mirrors the isotherm lines — one
+                    // coloured tag per whole degree present on the island at
+                    // the selected hour (the overlay's autoscaled range), so
+                    // ring colour → exact value is a one-glance lookup.
+                    const [MIN_T, MAX_T] = tempRange ?? [10, 20];
+                    const span = MAX_T - MIN_T || 1;
+                    const levels: number[] = [];
+                    for (let t = Math.ceil(MIN_T); t <= Math.floor(MAX_T); t++) levels.push(t);
+                    if (levels.length === 0) levels.push(Math.round((MIN_T + MAX_T) / 2));
                     return (
-                      <>
-                        <GradientBar stops={tempStops} posT={tempT} />
-                        <div className="vl-cond-scale">
-                          <span>{Math.round(MIN_T)}°</span><span>{Math.round(MAX_T)}°</span>
-                        </div>
-                      </>
+                      <div className="vl-cond-temptags">
+                        {levels.map(t => (
+                          <span key={t} style={{ background: tempRampHex((t - MIN_T) / span) }}>{t}°</span>
+                        ))}
+                      </div>
                     );
                   })()}
                 </>
@@ -3745,6 +3814,7 @@ export function VeierlandApp() {
               )
             )}
           </div>
+          </>
         );
       })()}
 
