@@ -23,7 +23,7 @@ import {
 import { pointToPolylineDistM } from '../lib/geo';
 import { ICONS } from '../lib/icons';
 import { MapSetup, TileController } from './MapSetup';
-import { ElevationChart } from './SmallCharts';
+import { GradientBar, ElevationChart } from './SmallCharts';
 import {
   ChevSvg, BackSvg, HeartSvg, RouteSvg, CheckSvg, UpChevSvg,
   MapTabSvg, PlacesTabSvg, TrailsTabSvg, NatureTabSvg, HistoryTabSvg, WeatherIcon,
@@ -33,7 +33,7 @@ import {
   hasDomGrid, sunPosition, sunlitAt, shelterAt, computeContours,
   makeSunShadowOverlay, makeShelterOverlay, makeEffectiveTempOverlay, makeBestSpotsOverlay, BestSpotsInfo,
   fetchWeatherNow, fetchWeatherSeries, fetchSeaTemp, WeatherNow, WeatherPoint, windDirLabel, weatherIconKind, WeatherIconKind, weatherKindLabel,
-  effectiveTemp, tempRampHex,
+  effectiveTemp,
   rankBeaches, dailyRecommendation, BeachConditionScore,
 } from '../lib/conditions';
 import { networkWalkDistanceM, networkWalkRoute } from '../lib/routing';
@@ -311,6 +311,12 @@ export function VeierlandApp() {
   // matches the Claude Design prototype's condCard (Best/Vind/Sol/Felt).
   const COND_VIEWS = ['best', 'sun', 'wind', 'effectiveTemp'] as const;
   const [condLayer, setCondLayer] = useState<'best' | 'sun' | 'wind' | 'effectiveTemp' | null>(null);
+  // Whether the Forhold panel is slid up as a full bottom sheet (design
+  // screen 06) — separate from condLayer so the sheet can be closed while
+  // still, in principle, tracking which layer was last selected. In
+  // practice the two are opened/closed together; kept apart to mirror the
+  // sheetOpen/selectedPOI split the POI detail sheet already uses.
+  const [condSheetOpen, setCondSheetOpen] = useState(false);
   const [weatherNow, setWeatherNow] = useState<WeatherNow | null>(null);
   const [seaTemp, setSeaTemp] = useState<number | null>(null);
   const [tempRange, setTempRange] = useState<[number, number] | null>(null);
@@ -1475,10 +1481,14 @@ export function VeierlandApp() {
     ? sheetCurrentH + 16
     : showMiniCard
       ? MINI_CARD_H + 28
-      // Resting state (dock closed, nothing selected): sit well above the
-      // dock instead of hugging it, so the cluster reads as map controls
-      // rather than part of the dock.
-      : Math.max(TAB_BAR_H + 14, window.innerHeight * 0.32);
+      : condSheetOpen
+        // The Forhold sheet occupies the dock's spot — lift the rail above
+        // it the same way it lifts above the POI/trail detail sheet.
+        ? 376
+        // Resting state (dock closed, nothing selected): sit well above the
+        // dock instead of hugging it, so the cluster reads as map controls
+        // rather than part of the dock.
+        : Math.max(TAB_BAR_H + 14, window.innerHeight * 0.32);
   // A tall open sheet (e.g. Historie) pushes the rail's "bottom" offset up so
   // far that the 3-button cluster's top edge climbs above the glass top bar
   // and overlaps it. Cap how high the rail can go so its top edge always
@@ -3080,9 +3090,12 @@ export function VeierlandApp() {
   // The expanded list is intentionally NOT accounted for here — it overlays
   // on top of the already-rendered map instead of resizing it, to avoid
   // needing a Leaflet invalidateSize() pass on every expand/collapse.
-  const dockShown = tab === 'map' && !sheetOpen && !selectedPOI && !selectedTrail;
+  const dockShown = tab === 'map' && !sheetOpen && !selectedPOI && !selectedTrail && !condSheetOpen;
   const DOCK_PEEK_H = 40; // just the grab handle
-  const dockReservedH = dockShown ? (dockPeeked ? DOCK_PEEK_H : activityTile ? 84 : 268) : 12;
+  // The Forhold sheet takes the dock's spot when open — reserve roughly its
+  // own height instead (tile grid + content + hour chips is taller than the
+  // dock's resting state).
+  const dockReservedH = dockShown ? (dockPeeked ? DOCK_PEEK_H : activityTile ? 84 : 268) : condSheetOpen ? 360 : 12;
 
   return (
     <div className="vl-app">
@@ -3387,7 +3400,14 @@ export function VeierlandApp() {
           <button
             className={`vl-topbar2-weather${condLayer ? ' on' : ''}`}
             disabled={!hasDomGrid}
-            onClick={e => { e.stopPropagation(); setCondLayer(c => c ? null : 'best'); }}
+            onClick={e => {
+              e.stopPropagation();
+              setCondLayer(c => {
+                if (c) { setCondSheetOpen(false); return null; }
+                setCondSheetOpen(true);
+                return 'best';
+              });
+            }}
             aria-label={lang === 'no' ? 'Forhold nå (beste steder, sol, vind, temperatur)' : 'Conditions now (best spots, sun, wind, temperature)'}
             title={lang === 'no' ? 'Forhold nå' : 'Conditions now'}
           >
@@ -3632,9 +3652,6 @@ export function VeierlandApp() {
       {condLayer && hasDomGrid && (() => {
         const condPoint = weatherSeries?.[Math.min(condHourOffset, weatherSeries.length - 1)] ?? null;
         const condDate = condPoint ? new Date(condPoint.time) : new Date();
-        const condTimeLabel = condHourOffset === 0
-          ? (lang === 'no' ? 'nå' : 'now')
-          : `${lang === 'no' ? 'kl.' : 'at'} ${String(condDate.getHours()).padStart(2, '0')}:${String(condDate.getMinutes()).padStart(2, '0')}`;
         const HOUR_STEPS = [0, 3, 6, 12, 24];
 
         const COND_TITLES: Record<string, [string, string]> = {
@@ -3643,7 +3660,6 @@ export function VeierlandApp() {
           wind: ['Vindeksponering', 'Wind exposure'],
           effectiveTemp: ['Effektiv temperatur', 'Feels like'],
         };
-        const condTitle = COND_TITLES[condLayer][lang === 'no' ? 0 : 1];
         // Icon per view, matching the Claude Design prototype's 4-icon tab
         // row (Best/Vind/Sol/Felt) — direct taps instead of swipe-only, which
         // wasn't discoverable without the pager dots as a hint.
@@ -3674,144 +3690,161 @@ export function VeierlandApp() {
           );
         })();
 
+        const closeCondSheet = () => { setCondLayer(null); setCondSheetOpen(false); };
+
         return (
           <>
           {sunInd}
-          <div className="vl-condlegend" onClick={e => e.stopPropagation()}>
-            <div className="vl-condlegend-hd">
-              <span className="t">{condTitle} · {condTimeLabel}</span>
-              <button className="vl-condlegend-close" aria-label={lang === 'no' ? 'Lukk' : 'Close'}
-                onClick={() => setCondLayer(null)}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          <div className={`vl-condsheet${condSheetOpen ? '' : ' closed'}`} onClick={e => e.stopPropagation()}>
+            <div className="vl-grab"><div className="bar" /></div>
+            <div className="vl-condsheet-hd">
+              <span className="eyebrow">{lang === 'no' ? 'Forhold' : 'Conditions'}</span>
+              <button className="vl-condsheet-close" aria-label={lang === 'no' ? 'Lukk' : 'Close'} onClick={closeCondSheet}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
               </button>
             </div>
-            <div className="vl-cond-tabs">
+
+            <div className="vl-condsheet-tiles">
               {COND_VIEWS.map(v => (
-                <button key={v} className={condLayer === v ? 'on' : ''} title={COND_TITLES[v][lang === 'no' ? 0 : 1]}
+                <button key={v} className={`vl-condsheet-tile${condLayer === v ? ' on' : ''}`}
                   onClick={() => setCondLayer(v)}>
                   <CondIcon view={v} />
+                  <span className="lbl">{COND_TITLES[v][lang === 'no' ? 0 : 1]}</span>
                 </button>
               ))}
             </div>
-            {weatherSeries && (
-              <div className="vl-condhours">
-                {HOUR_STEPS.filter(h => h < weatherSeries.length).map(h => (
-                  <button key={h} className={condHourOffset === h ? 'on' : ''} onClick={() => setCondHourOffset(h)}>
-                    {h === 0 ? (lang === 'no' ? 'Nå' : 'Now') : `+${h}t`}
-                  </button>
-                ))}
-              </div>
-            )}
-            {condLayer === 'best' ? (
-              condPoint && bestInfo ? (() => {
-                const place = nearestPlaceName(bestInfo.lat, bestInfo.lng);
-                const traits = [
-                  bestInfo.sunlit && (lang === 'no' ? 'sol' : 'sun'),
-                  bestInfo.sheltered && (lang === 'no' ? 'godt le for vind' : 'good shelter from wind'),
-                ].filter(Boolean).join(lang === 'no' ? ' og ' : ' and ');
-                return (
+
+            <div className="vl-condsheet-body">
+              {condLayer === 'best' ? (
+                condPoint && bestInfo ? (() => {
+                  const place = nearestPlaceName(bestInfo.lat, bestInfo.lng);
+                  const traits = [
+                    bestInfo.sunlit && (lang === 'no' ? 'sol' : 'sun'),
+                    bestInfo.sheltered && (lang === 'no' ? 'godt le for vind' : 'good shelter from wind'),
+                  ].filter(Boolean).join(lang === 'no' ? ' og ' : ' and ');
+                  return (
+                    <>
+                      <div className="vl-cond-conclusion">
+                        {place
+                          ? (lang === 'no' ? `Best nå: ${place}` : `Best now: ${place}`)
+                          : (lang === 'no' ? 'Best nå: i nærheten' : 'Best now: nearby')}
+                      </div>
+                      <p className="vl-cond-note" style={{ marginBottom: 8 }}>
+                        {traits
+                          ? (lang === 'no' ? `${traits.charAt(0).toUpperCase()}${traits.slice(1)} akkurat nå.` : `${traits.charAt(0).toUpperCase()}${traits.slice(1)} right now.`)
+                          : (lang === 'no' ? 'Mildest sted på øya akkurat nå.' : 'Mildest spot on the island right now.')}
+                      </p>
+                      <div className="vl-cond-main">
+                        <span className="big">{Math.round(bestInfo.perceivedC)}°</span>
+                        <span className="sub">{lang === 'no' ? 'føles som' : 'feels like'}</span>
+                      </div>
+                      <div className="vl-cond-keys">
+                        {bestInfo.sunlit && <span className="k"><i style={{ background: '#fabf24' }} />{lang === 'no' ? 'Sol' : 'Sun'}</span>}
+                        {bestInfo.sheltered && <span className="k"><i style={{ background: '#5f9438' }} />{lang === 'no' ? 'God le' : 'Sheltered'}</span>}
+                        {!bestInfo.sunlit && !bestInfo.sheltered && (
+                          <span className="k"><i style={{ background: '#f6b23c' }} />{lang === 'no' ? 'Mildest' : 'Mildest'}</span>
+                        )}
+                      </div>
+                    </>
+                  );
+                })() : (
+                  <span className="vl-cond-note">{lang === 'no' ? 'Henter vær…' : 'Loading weather…'}</span>
+                )
+              ) : condLayer === 'sun' ? (() => {
+                const sun = sunPosition(condDate, 59.155, 10.351);
+                return sun.elevation > 0 ? (
                   <>
-                    <div className="vl-cond-conclusion">
-                      {place
-                        ? (lang === 'no' ? `Best nå: ${place}` : `Best now: ${place}`)
-                        : (lang === 'no' ? 'Best nå: i nærheten' : 'Best now: nearby')}
-                    </div>
-                    <p className="vl-cond-note" style={{ marginBottom: 8 }}>
-                      {traits
-                        ? (lang === 'no' ? `${traits.charAt(0).toUpperCase()}${traits.slice(1)} akkurat nå.` : `${traits.charAt(0).toUpperCase()}${traits.slice(1)} right now.`)
-                        : (lang === 'no' ? 'Mildest sted på øya akkurat nå.' : 'Mildest spot on the island right now.')}
-                    </p>
                     <div className="vl-cond-main">
-                      <span className="big">{Math.round(bestInfo.perceivedC)}°</span>
-                      <span className="sub">{lang === 'no' ? 'føles som' : 'feels like'}</span>
+                      <svg width="30" height="30" viewBox="0 0 24 24" fill="none"
+                        style={{ transform: `rotate(${sun.azimuth}deg)`, flexShrink: 0, color: '#f5b120' }}>
+                        <path d="M12 2 L12 20 M12 2 L6 9 M12 2 L18 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span className="big">{Math.round(sun.elevation)}°</span>
+                      <span className="sub">{lang === 'no' ? 'over horisonten' : 'above horizon'}</span>
                     </div>
                     <div className="vl-cond-keys">
-                      {bestInfo.sunlit && <span className="k"><i style={{ background: '#fabf24' }} />{lang === 'no' ? 'Sol' : 'Sun'}</span>}
-                      {bestInfo.sheltered && <span className="k"><i style={{ background: '#5f9438' }} />{lang === 'no' ? 'God le' : 'Sheltered'}</span>}
-                      {!bestInfo.sunlit && !bestInfo.sheltered && (
-                        <span className="k"><i style={{ background: '#f6b23c' }} />{lang === 'no' ? 'Mildest' : 'Mildest'}</span>
-                      )}
+                      <span className="k"><i style={{ background: '#fabf24' }} />{lang === 'no' ? 'Sol' : 'Sun'}</span>
+                      <span className="k"><i style={{ background: '#3a4250' }} />{lang === 'no' ? 'Skygge' : 'Shade'}</span>
                     </div>
+                    <p className="vl-cond-note" style={{ marginTop: 8 }}>
+                      {lang === 'no' ? 'Skyggen tegnes der terrenget og skogen faktisk kaster den.' : 'Shadows are drawn where the terrain and forest actually cast them.'}
+                    </p>
                   </>
+                ) : (
+                  <span className="vl-cond-note">{lang === 'no'
+                    ? 'Sola er under horisonten — velg et senere tidspunkt for å se morgensola.'
+                    : 'The sun is below the horizon — pick a later hour to see morning sun.'}</span>
                 );
-              })() : (
-                <span className="vl-cond-note">{lang === 'no' ? 'Henter vær…' : 'Loading weather…'}</span>
-              )
-            ) : condLayer === 'sun' ? (() => {
-              const sun = sunPosition(condDate, 59.155, 10.351);
-              return sun.elevation > 0 ? (
-                <>
-                  <div className="vl-cond-main">
-                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none"
-                      style={{ transform: `rotate(${sun.azimuth}deg)`, flexShrink: 0, color: '#f5b120' }}>
-                      <path d="M12 2 L12 20 M12 2 L6 9 M12 2 L18 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <span className="big">{Math.round(sun.elevation)}°</span>
-                    <span className="sub">{lang === 'no' ? 'over horisonten' : 'above horizon'}</span>
-                  </div>
-                  <div className="vl-cond-keys">
-                    <span className="k"><i style={{ background: '#fabf24' }} />{lang === 'no' ? 'Sol' : 'Sun'}</span>
-                    <span className="k"><i style={{ background: '#3a4250' }} />{lang === 'no' ? 'Skygge' : 'Shade'}</span>
-                  </div>
-                </>
+              })() : condLayer === 'wind' ? (
+                condPoint ? (
+                  <>
+                    <div className="vl-cond-main">
+                      {/* windFromDeg is meteorological convention (direction the wind
+                          blows FROM); the arrow itself should point where it's blowing
+                          TO, hence the +180. */}
+                      <svg width="30" height="30" viewBox="0 0 24 24" fill="none"
+                        style={{ transform: `rotate(${condPoint.windFromDeg + 180}deg)`, flexShrink: 0, color: 'var(--accent)' }}>
+                        <path d="M12 2 L12 20 M12 2 L6 9 M12 2 L18 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span className="big">{Math.round(condPoint.windSpeed)} m/s</span>
+                      <span className="sub">{lang === 'no' ? `fra ${windDirLabel(condPoint.windFromDeg, 'no')}` : `from ${windDirLabel(condPoint.windFromDeg, 'en')}`}</span>
+                    </div>
+                    {/* Zone colours, not a strength gradient — the m/s numbers
+                        live in the badges on the spots. */}
+                    <div className="vl-cond-keys">
+                      <span className="k"><i style={{ background: '#8fa073' }} />{lang === 'no' ? 'Le' : 'Lee'}</span>
+                      <span className="k"><i style={{ background: '#8c491a' }} />{lang === 'no' ? 'Eksponert' : 'Exposed'}</span>
+                    </div>
+                    <p className="vl-cond-note" style={{ marginTop: 8 }}>
+                      {lang === 'no' ? 'Trykk på et sted på kartet for lokal vindstyrke der.' : 'Tap a spot on the map for its local wind strength.'}
+                    </p>
+                  </>
+                ) : (
+                  <span className="vl-cond-note">{lang === 'no' ? 'Henter vind…' : 'Loading wind…'}</span>
+                )
               ) : (
-                <span className="vl-cond-note">{lang === 'no'
-                  ? 'Sola er under horisonten — velg et senere tidspunkt for å se morgensola.'
-                  : 'The sun is below the horizon — pick a later hour to see morning sun.'}</span>
-              );
-            })() : condLayer === 'wind' ? (
-              condPoint ? (
-                <>
-                  <div className="vl-cond-main">
-                    {/* windFromDeg is meteorological convention (direction the wind
-                        blows FROM); the arrow itself should point where it's blowing
-                        TO, hence the +180. */}
-                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none"
-                      style={{ transform: `rotate(${condPoint.windFromDeg + 180}deg)`, flexShrink: 0, color: 'var(--accent)' }}>
-                      <path d="M12 2 L12 20 M12 2 L6 9 M12 2 L18 9" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <span className="big">{Math.round(condPoint.windSpeed)} m/s</span>
-                    <span className="sub">{lang === 'no' ? `fra ${windDirLabel(condPoint.windFromDeg, 'no')}` : `from ${windDirLabel(condPoint.windFromDeg, 'en')}`}</span>
-                  </div>
-                  {/* Design 2c: zone colours, not a strength gradient — the
-                      m/s numbers live in the badges on the spots. */}
-                  <div className="vl-cond-keys">
-                    <span className="k"><i style={{ background: '#8fa073' }} />{lang === 'no' ? 'Le' : 'Lee'}</span>
-                    <span className="k"><i style={{ background: '#8c491a' }} />{lang === 'no' ? 'Eksponert' : 'Exposed'}</span>
-                  </div>
-                </>
-              ) : (
-                <span className="vl-cond-note">{lang === 'no' ? 'Henter vind…' : 'Loading wind…'}</span>
-              )
-            ) : (
-              condPoint ? (
-                <>
-                  <div className="vl-cond-main">
-                    <span className="big">{Math.round(effectiveTemp(condPoint.airTemp, condPoint.windSpeed, condPoint.humidity))}°</span>
-                    <span className="sub">{lang === 'no' ? `luft ${Math.round(condPoint.airTemp)}°` : `air ${Math.round(condPoint.airTemp)}°`}</span>
-                  </div>
-                  {(() => {
-                    // Design 2d: the legend mirrors the isotherm lines — one
-                    // coloured tag per whole degree present on the island at
-                    // the selected hour (the overlay's autoscaled range), so
-                    // ring colour → exact value is a one-glance lookup.
-                    const [MIN_T, MAX_T] = tempRange ?? [10, 20];
-                    const span = MAX_T - MIN_T || 1;
-                    const levels: number[] = [];
-                    for (let t = Math.ceil(MIN_T); t <= Math.floor(MAX_T); t++) levels.push(t);
-                    if (levels.length === 0) levels.push(Math.round((MIN_T + MAX_T) / 2));
-                    return (
-                      <div className="vl-cond-temptags">
-                        {levels.map(t => (
-                          <span key={t} style={{ background: tempRampHex((t - MIN_T) / span) }}>{t}°</span>
-                        ))}
+                condPoint ? (() => {
+                  // Blue→green→yellow→red — a familiar weather-map scale for
+                  // the legend bar, distinct from the isotherms' warm-only
+                  // ramp drawn on the map itself.
+                  const tempBarStops = [
+                    { r: 61, g: 110, b: 165 },
+                    { r: 95, g: 148, b: 56 },
+                    { r: 250, g: 191, b: 36 },
+                    { r: 192, g: 57, b: 43 },
+                  ];
+                  const [MIN_T, MAX_T] = tempRange ?? [10, 20];
+                  const effTemp = effectiveTemp(condPoint.airTemp, condPoint.windSpeed, condPoint.humidity);
+                  const tempT = Math.min(1, Math.max(0, (effTemp - MIN_T) / (MAX_T - MIN_T || 1)));
+                  return (
+                    <>
+                      <div className="vl-cond-main">
+                        <span className="big">{Math.round(effTemp)}°</span>
+                        <span className="sub">{lang === 'no' ? `føles som · luft ${Math.round(condPoint.airTemp)}°` : `feels like · air ${Math.round(condPoint.airTemp)}°`}</span>
                       </div>
-                    );
-                  })()}
-                </>
-              ) : (
-                <span className="vl-cond-note">{lang === 'no' ? 'Henter temperatur…' : 'Loading temperature…'}</span>
-              )
+                      <GradientBar stops={tempBarStops} posT={tempT} />
+                      <div className="vl-cond-scale">
+                        <span>{Math.round(MIN_T)}°</span><span>{Math.round(MAX_T)}°</span>
+                      </div>
+                    </>
+                  );
+                })() : (
+                  <span className="vl-cond-note">{lang === 'no' ? 'Henter temperatur…' : 'Loading temperature…'}</span>
+                )
+              )}
+            </div>
+
+            {weatherSeries && (
+              <div className="vl-condsheet-timesec">
+                <div className="eyebrow">{lang === 'no' ? 'Tidspunkt' : 'Time'}</div>
+                <div className="vl-condhours">
+                  {HOUR_STEPS.filter(h => h < weatherSeries.length).map(h => (
+                    <button key={h} className={condHourOffset === h ? 'on' : ''} onClick={() => setCondHourOffset(h)}>
+                      {h === 0 ? (lang === 'no' ? 'Nå' : 'Now') : `+${h}t`}
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
           </>
@@ -3893,7 +3926,7 @@ export function VeierlandApp() {
           (Phase 6 of the redesign); this only shows while browsing the map
           with nothing selected (the mini-card takes over once a POI/trail
           is tapped, and this is hidden on desktop via CSS). */}
-      {tab === 'map' && !sheetOpen && !selectedPOI && !selectedTrail && (
+      {tab === 'map' && !sheetOpen && !selectedPOI && !selectedTrail && !condSheetOpen && (
         <div className={`vl-dock${dockExpanded ? ' expanded' : ''}${dockPeeked ? ' peeked' : ''}`}>
           <div className="vl-dock-grab" onPointerDown={onDockGrabPointerDown}>
             <div className="bar" />
