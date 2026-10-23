@@ -37,6 +37,7 @@ import {
   rankBeaches, dailyRecommendation, BeachConditionScore,
 } from '../lib/conditions';
 import { networkWalkDistanceM, networkWalkRoute } from '../lib/routing';
+import { cachedOrsWalkRoute, fetchOrsWalkRoute } from '../lib/orsrouting';
 import { loadThemeCfg, applyThemeCfg } from '../lib/themecfg';
 
 const TRAIL_CAT_GROUPS: Record<'alle' | 'historie' | 'natur' | 'mat' | 'kultur', { no: string; en: string; cats: string[] | null }> = {
@@ -1143,7 +1144,9 @@ export function VeierlandApp() {
   }
 
   // Walking estimate: from the user's position when tracking, otherwise from
-  // Vestgården quay (where visitors arrive). 5 km/h. Uses the real path/road
+  // Vestgården quay (where visitors arrive). 5 km/h. Prefers the
+  // openrouteservice distance when that route has already been fetched (the
+  // selected place, see the effect below), then the bundled path/road
   // network (src/data/road_network.json, see scripts/generate_road_network.mjs)
   // when both ends are close enough to a known path; a 30% path factor on the
   // straight-line distance is the fallback for points the network can't
@@ -1151,7 +1154,7 @@ export function VeierlandApp() {
   const WALK_BASIS_QUAY = FERRY_QUAYS[0]; // Vestgården
   function walkMins(coords: [number, number]): number {
     const from = userPos ?? [WALK_BASIS_QUAY.lat, WALK_BASIS_QUAY.lng];
-    const networkM = networkWalkDistanceM(from, coords);
+    const networkM = cachedOrsWalkRoute(from, coords)?.distanceM ?? networkWalkDistanceM(from, coords);
     const mins = networkM !== null
       ? (networkM / 1000) * 12
       : (distanceM(from[0], from[1], coords[0], coords[1]) / 1000) * 1.3 * 12;
@@ -1171,13 +1174,25 @@ export function VeierlandApp() {
   // the full detail view and in the map's mini-card state (a place tapped
   // straight on the map), from the user's live position when tracking or
   // from Vestgården quay otherwise — recomputed whenever either changes, so
-  // it follows along as you walk.
+  // it follows along as you walk. The bundled network gives an instant route;
+  // the openrouteservice one replaces it when it arrives (debounced so live
+  // GPS updates don't fire a request each).
   useEffect(() => {
     const wantRoute = !!selectedPOI && (view === 'detail' || (tab === 'map' && !sheetOpen));
     if (!wantRoute) { setWalkRoutePath(null); return; }
-    const from = userPos ?? [WALK_BASIS_QUAY.lat, WALK_BASIS_QUAY.lng];
-    const route = networkWalkRoute(from, selectedPOI!.coordinates);
-    setWalkRoutePath(route?.path ?? null);
+    const from: [number, number] = userPos ?? [WALK_BASIS_QUAY.lat, WALK_BASIS_QUAY.lng];
+    const to = selectedPOI!.coordinates;
+    const cached = cachedOrsWalkRoute(from, to);
+    setWalkRoutePath((cached ?? networkWalkRoute(from, to))?.path ?? null);
+    if (cached !== undefined) return;
+    let cancelled = false;
+    const t = setTimeout(() => {
+      fetchOrsWalkRoute(from, to).then(route => {
+        if (cancelled || !route) return;
+        setWalkRoutePath(route.path);
+      });
+    }, 600);
+    return () => { cancelled = true; clearTimeout(t); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPOI, view, tab, sheetOpen, userPos]);
 

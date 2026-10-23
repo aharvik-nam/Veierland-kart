@@ -19,6 +19,22 @@ View your app in AI Studio: https://ai.studio/apps/b6b22ff7-7955-411a-8042-71789
 3. Run the app:
    `npm run dev`
 
+## Gangruter (openrouteservice)
+
+Gangruten til valgt sted hentes fra [openrouteservice](https://github.com/GIScience/openrouteservice)
+(profil `foot-walking`) via appens eget endepunkt `/api/route` (`api/route.ts` på
+Vercel, `server.ts` lokalt) — API-nøkkelen ligger kun på serveren, og endepunktet
+godtar bare koordinater på/rundt Veierland.
+
+1. Lag en gratis nøkkel på <https://openrouteservice.org/dev>
+2. Sett `ORS_API_KEY` i `.env.local` lokalt og som Environment Variable i Vercel
+3. (Valgfritt) Kjør egen ORS-instans (Docker) og sett `ORS_BASE_URL`, f.eks.
+   `http://localhost:8080/ors` — da trengs ingen nøkkel
+
+Appen tegner først ruten fra det innebygde stinettet (`src/data/road_network.json`,
+virker offline) og bytter til ORS-ruten når den kommer. Mangler nøkkelen eller er
+ORS nede, brukes det innebygde nettet som før.
+
 ## Sol- og vindforhold (DOM-høydedata)
 
 Kart-appen viser sol/skygge- og vind/le-lag over hele øya, og sol/le/badetemp
